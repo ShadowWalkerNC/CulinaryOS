@@ -1,6 +1,7 @@
 # CulinaryOS — Domain Model (MVP)
 
-> v1.0 — Frozen June 15, 2026
+> v1.1 — Updated June 19, 2026
+> Changes from v1.0: Added `timezone` to Restaurant, `receiptNumber` to Order, `firedAt` to CourseGroup, `tenderAmount` to PaymentIntent.
 
 ---
 
@@ -24,11 +25,19 @@ Multi-location (multiple Restaurants per Organization) is modeled from day one b
 
 ```
 Order
-  ├── id, restaurantId, tableId, status, createdAt, closedAt
+  ├── id
+  ├── restaurantId          ← tenant scope key — ALWAYS present in every query
+  ├── tableId
+  ├── status: OPEN | CLOSED | VOIDED
+  ├── receiptNumber         ← human-readable, auto-incremented per restaurant per day
+  │                           format: RCP-YYYY-NNNN (e.g. RCP-2026-0001)
+  │                           used for cash drawer reconciliation + customer disputes
+  ├── createdAt
+  ├── closedAt
   ├── OrderLine[]
   │     ├── id, menuItemId, quantity, unitPrice, modifiers[]
   │     ├── Modifier { id, name, priceDelta }
-  │     └── stationTarget[] (routing tags)
+  │     └── stationTarget[]   ← routing tags assigned at order creation
   ├── Discount { type: PERCENT | FLAT, value, reason }
   ├── Void { lineId, reason, authorizedBy }
   └── Comp { lineId, reason, authorizedBy }
@@ -55,6 +64,8 @@ TicketEvent (append-only)
 
 CourseGroup
   ├── id, orderId, courseNumber
+  ├── firedAt               ← timestamp when course was fired to kitchen
+  │                           required for avgFireToComplete metric in Reporting
   └── orderLines[]
 ```
 
@@ -66,12 +77,13 @@ CourseGroup
 CustomerOrder
   ├── id, restaurantId, customerId (nullable for guest), status
   ├── fulfillmentType: PICKUP | DELIVERY
+  ├── source: TABLE | ONLINE   ← all orders share one pipeline; source differentiates origin
   ├── items: OrderLine[]
   └── statusHistory[]
 
 MenuSnapshot
   ├── id, restaurantId, publishedAt, version
-  └── items[] (point-in-time copy of live menu)
+  └── items[]   ← point-in-time copy of live menu; version mismatch triggers re-validation
 
 OrderStatus (WebSocket push)
   ├── orderId, status, estimatedReadyAt
@@ -98,7 +110,7 @@ ReorderRule
 PurchaseOrder
   ├── id, restaurantId, status, createdAt
   ├── items: [ { inventoryItemId, quantity, unitCost } ]
-  └── status: DRAFT | SUBMITTED | RECEIVED  (manual workflow at MVP)
+  └── status: DRAFT | SUBMITTED | RECEIVED   ← manual workflow at MVP
 ```
 
 ---
@@ -119,9 +131,9 @@ VoidAndCompReport
   └── lines: [ { type: VOID | COMP, amount, reason, authorizedBy, occurredAt } ]
 
 OperationalMetricsDashboard
-  ├── throughput: ordersPerHour by station
-  ├── ticketTimes: avg fire-to-complete by station
-  └── topItems: top N menu items by quantity sold
+  ├── throughput:   ordersPerHour by station
+  ├── ticketTimes:  avg firedAt → COMPLETED by station   ← uses CourseGroup.firedAt
+  └── topItems:     top N menu items by quantity sold
 ```
 
 > Labor scheduling and deep labor analytics are later-phase. Operational Metrics covers throughput, ticket times, and item performance only at MVP.
@@ -132,9 +144,26 @@ OperationalMetricsDashboard
 
 ```
 PaymentIntent / Payment Record (Prototype)
-  ├── id, orderId, method: CASH | CARD | OTHER
-  ├── amount, tip, total
+  ├── id
+  ├── orderId
+  ├── receiptNumber         ← foreign reference to Order.receiptNumber
+  ├── method: CASH | CARD | OTHER
+  ├── amount                ← order total due
+  ├── tenderAmount          ← what customer physically handed over (cash)
+  │                           change = tenderAmount - amount
+  ├── tip
+  ├── total                 ← amount + tip
   └── status: PENDING | COMPLETED
 ```
 
-Real payment processing (Stripe, terminal readers, reconciliation) is **deferred**. MVP records payment method and amount for receipt generation and sales reporting only. No live card processing at MVP.
+> Real payment processing (Stripe, terminal readers, reconciliation) is **deferred to Phase 10**.
+> MVP records payment method and amount for receipt generation and sales reporting only.
+> **No live card processing. No card data stored. PCI scope = zero at MVP.**
+
+---
+
+## Tenant Isolation Rule
+
+> Every single database query in the entire system MUST include `restaurantId` as a filter.
+> This is enforced at the Ktor plugin layer — not per-route, not per-developer.
+> A query without `restaurantId` scoping is a critical bug, not a style issue.

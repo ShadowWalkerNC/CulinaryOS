@@ -1,0 +1,56 @@
+version: '3.9'
+
+# CulinaryOS — Local Development Environment
+# Usage: docker compose up
+# Starts: PostgreSQL database + Ktor backend
+# Requires: .env file (copy from .env.example)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: culinaryos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-culinaryos}
+      POSTGRES_USER: ${DB_USER:-culinaryos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdevpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-culinaryos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: culinaryos_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-culinaryos}
+      DB_USER: ${DB_USER:-culinaryos}
+      DB_PASSWORD: ${DB_PASSWORD:-localdevpassword}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-in-production}
+      JWT_ISSUER: ${JWT_ISSUER:-culinaryos-local}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-culinaryos-clients}
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
