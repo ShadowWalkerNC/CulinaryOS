@@ -1,93 +1,196 @@
 # CulinaryOS — Architecture
 
-> v1.0 — Frozen June 15, 2026
+> v2.0 — Updated June 19, 2026
 
 ---
 
-## Stack Defaults
+## Governing Constraint
 
-| Layer | Technology | Notes |
+Restaurant software runs in hostile conditions: poor WiFi, rushed staff, mid-service emergencies,
+zero tolerance for downtime. Every architectural decision must survive that environment.
+
+**The hardest requirement:** A cook must be able to receive and complete kitchen tickets
+even when the server is unreachable.
+
+---
+
+## Client Surface Map
+
+| Client | Platform | Users | Connectivity |
+|---|---|---|---|
+| POS Terminal | Android tablet / JVM desktop | Server, Cashier | Must work offline |
+| KDS Display | Android tablet / JVM desktop | Cook | Must work offline |
+| Admin Panel | JVM desktop (Compose) | Manager, Owner | Online preferred |
+| Customer Ordering | Web (React/Next.js) | Guest customer | Online required |
+| Manager Dashboard | Web (React/Next.js) | Manager, Owner | Online preferred |
+
+Operational clients (POS, KDS, Admin) are **Compose Multiplatform**.
+Customer-facing and manager-facing web are **React/Next.js**.
+
+This split is intentional:
+- Operational clients need offline capability, native device APIs (printer, scanner), and native-feel UI.
+- Web clients need SEO, browser accessibility, and zero-install delivery.
+
+---
+
+## Stack Decisions
+
+### Kotlin Multiplatform (KMP) — `:shared` module
+
+All business logic lives in `:shared` and compiles to Android + JVM.
+This includes:
+- `CulinaryEvent` — universal event envelope
+- `LocalEventQueue` SQLDelight schema — the offline queue
+- Domain value objects and validation rules
+
+The backend (`:backend`) and all Compose clients import `:shared`.
+This means a bug fixed in shared logic is fixed everywhere simultaneously.
+
+### Ktor Backend — `:backend` module
+
+Ktor is coroutine-native and shares Kotlin types directly with `:shared`.
+No DTO translation layer needed between the backend and shared models.
+
+Key Ktor plugins used:
+- `Authentication` — JWT validation on every protected route
+- `ContentNegotiation` — kotlinx.serialization JSON
+- `StatusPages` — global exception → clean JSON error responses
+- `WebSockets` — real-time KDS push (Phase 3)
+
+### PostgreSQL + Exposed + Flyway
+
+- **PostgreSQL** — ACID, UUID primary keys (`gen_random_uuid()`), append-only event tables
+- **Exposed** — type-safe Kotlin DSL over JDBC; all queries are Kotlin, no raw SQL in application code
+- **Flyway** — numbered, immutable migrations; runs automatically on startup; never edit a committed migration
+
+Migration naming convention:
+```
+V1__baseline.sql          ← empty baseline
+V2__auth_tenant.sql       ← Phase 1
+V3__pos_core.sql          ← Phase 2
+V4__kds.sql               ← Phase 3
+V5__online_ordering.sql   ← Phase 4
+V6__inventory.sql         ← Phase 5
+V7__reporting.sql         ← Phase 6
+V8__payments.sql          ← Phase 7
+```
+
+### SQLDelight — Local Event Queue
+
+SQLDelight generates type-safe Kotlin from `.sq` files.
+The local event queue (`LocalEventQueue.sq`) is a SQLite table that:
+- Persists events across app crashes and device reboots
+- Never deletes events — sets `synced_at` when server confirms
+- Generates `insertEvent`, `selectPending`, `markSynced` as type-safe Kotlin functions
+
+---
+
+## Local-First Architecture
+
+### The Rule
+
+```
+Write locally first → apply to UI immediately → sync to server in background
+```
+
+No user action in POS or KDS waits for a server round-trip.
+
+### Event Flow
+
+```
+User action (e.g. place order)
+  ↓
+ CulinaryEvent created with:
+  - eventId: UUID v4 (client-generated)
+  - restaurantId: from JWT
+  - deviceId: terminal identifier
+  - clientSequence: monotonic integer (never resets)
+  - clientTimestamp: Unix epoch ms
+  - type: ORDER_CREATED
+  - payload: JSON
+  ↓
+Inserted into local_event_queue (SQLDelight)
+  ↓
+UI state updated optimistically
+  ↓
+Sync engine (background coroutine) picks it up
+  ↓
+POST /sync/events → server processes → assigns serverSequence
+  ↓
+local_event_queue.synced_at = now()
+```
+
+### Connectivity States
+
+| State | POS Behavior | KDS Behavior |
 |---|---|---|
-| Shared business logic | Kotlin Multiplatform (KMP) | Shared across Android, iOS, Desktop, Backend |
-| Operational clients | Compose Multiplatform | POS terminal, KDS display, admin panel |
-| Customer ordering frontend | React / Next.js | Public-facing; separate deployment |
-| Backend | Ktor (Kotlin) | REST + WebSocket server |
-| Database | PostgreSQL | Primary persistent store |
-| Realtime | WebSockets | Order routing, KDS ticket updates, status push |
-| Auth | JWT + RBAC | Short-lived tokens, refresh rotation, tenant-scoped roles |
-| Data model | Event-sourced, local-first | See Local-First section below |
+| Online | Events sync in real time | Tickets delivered via WebSocket |
+| Offline | Events queue locally, UI works normally | Last-known state shown; bumps queue locally |
+| Reconnecting | Queue drains automatically, catch-up from server | Pulls all missed events since last ack |
 
----
+### Server Authority Domains
 
-## Local-First Event-Sourced Model
+Not everything is optimistic. These domains require a confirmed server round-trip:
 
-CulinaryOS is local-first. All operational clients (POS, KDS) write events to a local queue before syncing to the server. This guarantees the system remains fully functional during network interruption.
-
-### What "local-first" means in practice
-
-- An order can be created, modified, routed to kitchen stations, and marked complete with zero network connectivity.
-- Events are immutable append-only records: `OrderPlaced`, `OrderLineAdded`, `TicketFired`, `TicketBumped`, `TicketCompleted`.
-- The local event log is the source of truth for the client. The server log is the source of truth for the system.
-- On reconnection, the client syncs its local queue to the server. The server processes and acknowledges each event.
-
-### Conflict resolution
-
-| Domain | Strategy |
+| Domain | Rule |
 |---|---|
-| Order flow (non-financial) | Last-write-wins; local state applied immediately |
-| Financial events (payment intents) | Server-authoritative; blocked until server confirms |
-| Inventory reconciliation | Server-authoritative; local depletion is optimistic, reconciled on sync |
-| Report finalization | Server-authoritative; reports generated server-side only |
+| Financial events (Void, Comp, Discount, Payment) | Server blocks conflicting concurrent events (HTTP 409) |
+| Inventory reconciliation | Server-authoritative only; client never resolves stock conflicts |
+| Report generation | Always generated server-side from event log; never from client cache |
+
+See [`docs/sync-protocol.md`](sync-protocol.md) for the complete conflict resolution specification.
 
 ---
 
-## Server Authority — Protected Domains
+## Tenant Isolation
 
-These domains require a confirmed server round-trip before state is committed:
+Every row in every table has a `restaurant_id` foreign key.
+Every query in the application must filter by `restaurant_id`.
 
-1. **Payment intents** — no payment record is final without server acknowledgment
-2. **Inventory reconciliation** — stock levels are reconciled server-side on sync
-3. **Report finalization** — all reports are generated from the server event log, not the client cache
+This is enforced architecturally via the `call.restaurantId()` Ktor extension:
 
-All other domains use optimistic local-first writes.
-
----
-
-## Auth & RBAC
-
-- JWT issued at login, short-lived (15 min), with refresh token rotation
-- All tokens are tenant-scoped — a user's token is valid only within their Organization
-- Permissions are enforced at the API layer; client UI adjusts by role but never replaces server validation
-
-### Roles
-
-| Role | Access |
-|---|---|
-| `owner` | Full access including billing and org settings |
-| `manager` | Ops, reporting, user management |
-| `server` | POS, table management |
-| `cook` | KDS only |
-| `cashier` | POS, limited void |
-
----
-
-## Deployment Topology (MVP)
-
-```
-[ Compose Multiplatform Client ]
-  POS Terminal / KDS / Admin
-         │ WebSocket + REST
-         ▼
-  [ Ktor Backend ]
-         │
-         ▼
-  [ PostgreSQL ]
-
-[ React / Next.js ]
-  Customer Online Ordering
-         │ REST
-         ▼
-  [ Ktor Backend ]
+```kotlin
+// In plugins/Auth.kt — available on every authenticated call
+fun ApplicationCall.restaurantId(): String =
+    principal<JWTPrincipal>()
+        ?.payload?.getClaim("restaurantId")?.asString()
+        ?: throw SecurityException("restaurantId missing from token")
 ```
 
-Single backend serves both operational clients and the customer ordering frontend. WebSocket connections are maintained by operational clients for realtime KDS routing and order status updates.
+A PR that introduces a query without `restaurantId` scoping is a critical bug and will be rejected.
+
+---
+
+## WebSocket Outbox (Phase 3+)
+
+To guarantee zero missed KDS tickets, the server uses a `pending_push` outbox table:
+
+```
+Event processed → row inserted in pending_push → WebSocket push sent
+  → client acks → delivered_at set
+  → on reconnect: client sends last ack ID → server replays all undelivered rows
+```
+
+This means a KDS display that was offline for 30 seconds will receive every ticket
+that fired during that window the moment it reconnects.
+
+---
+
+## Performance Targets
+
+| Metric | Target |
+|---|---|
+| POS order → KDS ticket display | ≤ 500ms on local network |
+| API p95 response (read endpoints) | ≤ 200ms |
+| MenuSnapshot load (client in-memory cache) | ≤ 100ms |
+| Offline POS order operations | Zero degradation |
+
+---
+
+## Security Defaults
+
+- JWT: 15-minute access tokens, 7-day single-use refresh tokens (SHA-256 hashed in DB, never raw)
+- BCrypt cost factor 12 for password hashing
+- No card data stored at any phase before Phase 10
+- All Flyway migrations are immutable — editing a committed migration causes a startup failure
+- `restaurantId` scoping enforced at plugin layer — not per-developer
