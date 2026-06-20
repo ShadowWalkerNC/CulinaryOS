@@ -1,0 +1,38 @@
+{
+  "id": "com.yourname.ext.my_extension",
+  "name": "My Extension",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "url": "https://example.com"
+  },
+  "description": "What your extension does in one sentence.",
+  "category": "ordering",
+  "entry_point": "lib/main.dart",
+  "permissions": [
+    "menu.read",
+    "orders.write"
+  ],
+  "hooks": [
+    {
+      "hook": "pos.toolbar.button",
+      "label": "My Button",
+      "icon": "star",
+      "handler": "onButtonPressed"
+    }
+  ],
+  "settings_schema": [
+    {
+      "key": "example_toggle",
+      "label": "Enable example feature",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}
