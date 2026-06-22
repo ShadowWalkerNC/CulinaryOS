@@ -1,98 +1,77 @@
 // ============================================================
 // CulinaryOS Event Broker
-//
-// This is the single POST /internal/events endpoint handler.
-// Services call this to emit events; the broker fans out to
-// all registered handlers synchronously (in-process for dev).
-//
-// For production: swap dispatchToHandlers() for a queue
-// (Supabase pg_cron, BullMQ, etc.) — the handler interface
-// stays identical.
+// Routes incoming domain events to registered handlers.
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js';
-import type { DomainEvent, EventType } from './types';
-import { handlers } from './handlers/index';
+import { createClient }           from '@supabase/supabase-js';
+import { handleOrderCreated }     from './handlers/pos-order-created';
+import { handleTicketBumped }     from './handlers/kds-ticket-bumped';
+import { handleOrderCancelled }   from './handlers/pos-order-cancelled';
+import { handleMenuItemSold }     from './handlers/pos-menu-item-sold';
+import { handleCourseFired }      from './handlers/kds-course-fired';
+import type { DomainEvent }       from './types';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!  // broker needs service role to bypass RLS
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export type EventHandler<T = unknown> = (
-  event: DomainEvent<T>,
-  supabase: ReturnType<typeof createClient>
-) => Promise<void>;
+const HANDLERS: Record<string, (event: any, supabase: any) => Promise<void>> = {
+  'pos:order:created':         handleOrderCreated,
+  'kds:ticket:bumped':         handleTicketBumped,
+  'pos:order:cancelled':       handleOrderCancelled,
+  'pos:menu:item-sold':        handleMenuItemSold,
+  'kds:course:fired':          handleCourseFired,
+};
 
-// ---- Main entry point ----
-
-export async function handleIncomingEvent(raw: unknown): Promise<{ ok: boolean; error?: string }> {
-  // 1. Validate envelope shape
-  if (!isValidEvent(raw)) {
-    return { ok: false, error: 'Invalid event envelope' };
+export async function handleIncomingEvent(
+  raw: unknown
+): Promise<{ ok: boolean; error?: string }> {
+  if (typeof raw !== 'object' || raw === null) {
+    return { ok: false, error: 'Invalid event envelope: must be a non-null object' };
   }
-  const event = raw as DomainEvent;
 
-  // 2. Persist to audit log (service-role bypasses RLS)
-  const { error: insertError } = await supabase.from('domain_events').insert({
-    event_id:   event.eventId,
-    event_type: event.eventType,
-    tenant_id:  event.tenantId,
-    source:     event.source,
-    version:    event.version,
-    payload:    event.payload,
+  const event = raw as Record<string, unknown>;
+  const required = ['eventId', 'eventType', 'tenantId', 'source', 'timestamp', 'version'];
+  for (const field of required) {
+    if (!(field in event)) {
+      return { ok: false, error: `Invalid event envelope: missing field "${field}"` };
+    }
+  }
+
+  const domainEvent = raw as DomainEvent<unknown>;
+
+  // Write to domain_events ledger
+  await supabase.from('domain_events').insert({
+    event_id:   domainEvent.eventId,
+    event_type: domainEvent.eventType,
+    tenant_id:  domainEvent.tenantId,
+    source:     domainEvent.source,
+    version:    domainEvent.version,
+    payload:    domainEvent.payload,
+    processed:  false,
   });
 
-  if (insertError) {
-    // Duplicate event_id = already processed, skip silently
-    if (insertError.code === '23505') return { ok: true };
-    console.error('[EventBus] Failed to persist event:', insertError.message);
-    return { ok: false, error: insertError.message };
+  const handler = HANDLERS[domainEvent.eventType];
+  if (!handler) {
+    console.log(`[broker] No handler for event type: ${domainEvent.eventType}`);
+    return { ok: true };
   }
 
-  // 3. Fan out to handlers
-  await dispatchToHandlers(event);
-
-  return { ok: true };
-}
-
-// ---- Dispatch ----
-
-async function dispatchToHandlers(event: DomainEvent): Promise<void> {
-  const relevant = handlers.filter((h) => h.eventType === event.eventType);
-  if (relevant.length === 0) return;
-
-  await Promise.allSettled(
-    relevant.map(async (h) => {
-      try {
-        await h.handle(event, supabase);
-        await supabase
-          .from('domain_events')
-          .update({ processed: true, processed_at: new Date().toISOString() })
-          .eq('event_id', event.eventId);
-      } catch (err: any) {
-        console.error(`[EventBus] Handler ${h.name} failed for ${event.eventType}:`, err.message);
-        await supabase
-          .from('domain_events')
-          .update({ error: err.message })
-          .eq('event_id', event.eventId);
-      }
-    })
-  );
-}
-
-// ---- Validation ----
-
-function isValidEvent(raw: unknown): raw is DomainEvent {
-  if (typeof raw !== 'object' || raw === null) return false;
-  const e = raw as Record<string, unknown>;
-  return (
-    typeof e.eventId    === 'string' &&
-    typeof e.eventType  === 'string' &&
-    typeof e.tenantId   === 'string' &&
-    typeof e.source     === 'string' &&
-    typeof e.timestamp  === 'string' &&
-    typeof e.version    === 'number' &&
-    e.payload !== undefined
-  );
+  try {
+    await handler(domainEvent, supabase);
+    await supabase
+      .from('domain_events')
+      .update({ processed: true, processed_at: new Date().toISOString() })
+      .eq('event_id', domainEvent.eventId);
+    return { ok: true };
+  } catch (e: any) {
+    const errMsg = e?.message ?? String(e);
+    console.error(`[broker] Handler error for ${domainEvent.eventType}:`, errMsg);
+    await supabase
+      .from('domain_events')
+      .update({ error: errMsg })
+      .eq('event_id', domainEvent.eventId);
+    return { ok: false, error: errMsg };
+  }
 }

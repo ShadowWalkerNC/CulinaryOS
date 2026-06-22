@@ -1,14 +1,13 @@
 // ============================================================
-// POS — /v1/orders routes
+// POS — /v1/orders routes  (extended with manual course fire)
 //
-// GET    /v1/orders                 list orders
-// GET    /v1/orders/:id             get order + line items
 // POST   /v1/orders                 create order
-// PATCH  /v1/orders/:id             update order (fire, void, status)
-// POST   /v1/orders/:id/items       add line item
-// PATCH  /v1/orders/:id/items/:iid  update line item
-// DELETE /v1/orders/:id/items/:iid  void line item
-// GET    /v1/orders/:id/payments    list payments for order
+// GET    /v1/orders                 list active orders
+// GET    /v1/orders/:id             get order detail
+// PATCH  /v1/orders/:id/send        send to kitchen (fire course 1)
+// PATCH  /v1/orders/:id/void        void order
+// POST   /v1/orders/:id/fire-course  manually fire a held course
+// PATCH  /v1/orders/:id/items/:itemId/void  void a single line item
 // ============================================================
 
 import { Hono } from 'hono';
@@ -16,25 +15,48 @@ import { ok, err } from '../../../backend/middleware/auth';
 
 const app = new Hono();
 
+// POST /v1/orders
+app.post('/', async (c) => {
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const body      = await c.req.json();
+
+  if (!body.tableNumber && !body.takeaway)
+    return err(c, 'VALIDATION_ERROR', 'tableNumber or takeaway:true is required', 422);
+
+  const { data, error } = await supabase
+    .from('pos_orders')
+    .insert({
+      tenant_id:    tenantId,
+      table_number: body.tableNumber ?? null,
+      cover_count:  body.coverCount  ?? null,
+      server_name:  body.serverName  ?? null,
+      status:       'open',
+      subtotal:     0,
+      tax:          0,
+      total:        0,
+    })
+    .select()
+    .single();
+
+  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
+  return ok(c, data, 201);
+});
+
 // GET /v1/orders
 app.get('/', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const status   = c.req.query('status');
-  const tabId    = c.req.query('tab_id');
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const status    = c.req.query('status');
 
   let q = supabase
     .from('pos_orders')
-    .select('*, items:pos_order_line_items(*, modifiers:line_item_modifiers(*))')
+    .select('*, items:pos_order_line_items(*)')
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false });
 
-  if (status) {
-    status.includes(',')
-      ? q = q.in('status', status.split(','))
-      : q = q.eq('status', status);
-  }
-  if (tabId) q = q.eq('tab_id', tabId);
+  if (status) q = q.eq('status', status);
+  else q = q.in('status', ['open','sent','in-progress','ready']);
 
   const { data, error } = await q;
   if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
@@ -43,244 +65,212 @@ app.get('/', async (c) => {
 
 // GET /v1/orders/:id
 app.get('/:id', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const { id }    = c.req.param();
 
   const { data, error } = await supabase
     .from('pos_orders')
-    .select('*, items:pos_order_line_items(*, modifiers:line_item_modifiers(*))')
-    .eq('id', id)
-    .eq('tenant_id', tenantId)
-    .single();
-
-  if (error) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
-  return ok(c, data);
-});
-
-// POST /v1/orders
-app.post('/', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const body     = await c.req.json();
-
-  const { data, error } = await supabase
-    .from('pos_orders')
-    .insert({
-      tenant_id:    tenantId,
-      tab_id:       body.tab_id ?? null,
-      table_number: body.table_number ?? null,
-      cover_count:  body.cover_count ?? null,
-      server_name:  body.server_name ?? null,
-      notes:        body.notes ?? null,
-      status:       'open',
-      subtotal: 0, tax: 0, total: 0,
-    })
-    .select()
-    .single();
-
-  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
-  return ok(c, data, 201);
-});
-
-// PATCH /v1/orders/:id
-app.patch('/:id', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
-  const body     = await c.req.json();
-
-  const allowed = ['status', 'notes', 'server_name', 'fired_at', 'paid_at', 'voided_at', 'void_reason', 'subtotal', 'tax', 'total'];
-  const updates: Record<string, unknown> = {};
-  for (const key of allowed) if (key in body) updates[key] = body[key];
-
-  if (updates.status === 'sent'   && !updates.fired_at)  updates.fired_at  = new Date().toISOString();
-  if (updates.status === 'voided' && !updates.voided_at) updates.voided_at = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from('pos_orders')
-    .update(updates)
-    .eq('id', id)
-    .eq('tenant_id', tenantId)
     .select('*, items:pos_order_line_items(*)')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
     .single();
 
   if (error) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
-
-  // Emit event if order was just fired
-  if (updates.status === 'sent') {
-    await emitOrderCreated(data, tenantId);
-  }
-  if (updates.status === 'voided') {
-    await emitEvent('pos:order:cancelled', tenantId, { orderId: id, reason: body.void_reason });
-  }
-
   return ok(c, data);
 });
 
-// POST /v1/orders/:id/items
-app.post('/:id/items', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
-  const body     = await c.req.json();
+// PATCH /v1/orders/:id/send  — sends order to kitchen
+// Items in body carry courseNumber; course > 1 tickets are held automatically
+app.patch('/:id/send', async (c) => {
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const { id }    = c.req.param();
 
-  // Fetch menu item for snapshot
-  const { data: menuItem, error: miErr } = await supabase
-    .from('menu_items')
-    .select('id, name, price, station')
-    .eq('id', body.menu_item_id)
+  const { data: order, error: orderErr } = await supabase
+    .from('pos_orders')
+    .select('*, items:pos_order_line_items(*)')
+    .eq('id', id)
     .eq('tenant_id', tenantId)
     .single();
 
-  if (miErr || !menuItem) return err(c, 'NOT_FOUND', `Menu item ${body.menu_item_id} not found`, 404);
+  if (orderErr || !order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+  if (!['open'].includes(order.status))
+    return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
 
-  const qty        = body.quantity ?? 1;
-  const unit_price = menuItem.price;
-  const line_total = unit_price * qty;
+  // Update order status to sent
+  await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id);
 
-  const { data, error } = await supabase
-    .from('pos_order_line_items')
-    .insert({
-      order_id:      id,
-      tenant_id:     tenantId,
-      menu_item_id:  menuItem.id,
-      name:          menuItem.name,
-      quantity:      qty,
-      unit_price,
-      line_total,
-      station:       menuItem.station,
-      course_number: body.course_number ?? 1,
-      notes:         body.notes ?? null,
-    })
-    .select()
-    .single();
+  // Emit pos:order:created to trigger ticket fire via event bus
+  const busUrl = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
+  await fetch(`${busUrl}/internal/events`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
+      'X-Tenant-Id': tenantId,
+      'X-Caller-Service': 'pos',
+    },
+    body: JSON.stringify({
+      eventId:   crypto.randomUUID(),
+      eventType: 'pos:order:created',
+      tenantId,
+      source:    'pos',
+      timestamp: new Date().toISOString(),
+      version:   1,
+      payload: {
+        orderId:     id,
+        tableNumber: order.table_number,
+        serverName:  order.server_name,
+        items:       (order.items ?? []).map((li: any) => ({
+          menuItemId:   li.menu_item_id,
+          name:         li.name,
+          quantity:     li.quantity,
+          station:      li.station ?? 'hot',
+          courseNumber: li.course_number ?? 1,
+          modifiers:    li.modifiers ?? [],
+          notes:        li.notes ?? null,
+        })),
+      },
+    }),
+  }).catch(() => null);
 
-  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
-
-  // Recalculate order totals
-  await recalcOrderTotals(supabase, id, tenantId);
-
-  return ok(c, data, 201);
+  return ok(c, { orderId: id, status: 'sent' });
 });
 
-// PATCH /v1/orders/:id/items/:iid
-app.patch('/:id/items/:iid', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { iid }  = c.req.param();
-  const body     = await c.req.json();
+// POST /v1/orders/:id/fire-course
+// Manually fires a held course — used by server at the table
+app.post('/:id/fire-course', async (c) => {
+  const supabase    = c.get('supabase');
+  const tenantId    = c.get('tenantId');
+  const { id }      = c.req.param();
+  const body        = await c.req.json();
 
-  const allowed = ['quantity', 'notes', 'course_number', 'is_voided', 'void_reason'];
-  const updates: Record<string, unknown> = {};
-  for (const key of allowed) if (key in body) updates[key] = body[key];
+  if (!body.courseNumber)
+    return err(c, 'VALIDATION_ERROR', 'courseNumber is required', 422);
 
-  const { data, error } = await supabase
-    .from('pos_order_line_items')
-    .update(updates)
-    .eq('id', iid)
+  const courseNumber = Number(body.courseNumber);
+  if (isNaN(courseNumber) || courseNumber < 2)
+    return err(c, 'VALIDATION_ERROR', 'courseNumber must be 2 or greater', 422);
+
+  // Verify order belongs to tenant
+  const { data: order, error: orderErr } = await supabase
+    .from('pos_orders').select('id, status').eq('id', id).eq('tenant_id', tenantId).single();
+
+  if (orderErr || !order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+  if (['paid','voided'].includes(order.status))
+    return err(c, 'CONFLICT', `Cannot fire course on a ${order.status} order`, 409);
+
+  // Release held tickets for this course
+  const now = new Date().toISOString();
+  const { data: heldTickets, error: heldErr } = await supabase
+    .from('kitchen_tickets')
+    .select('id')
     .eq('tenant_id', tenantId)
-    .select()
-    .single();
-
-  if (error) return err(c, 'NOT_FOUND', `Line item ${iid} not found`, 404);
-
-  await recalcOrderTotals(supabase, data.order_id, tenantId);
-  return ok(c, data);
-});
-
-// DELETE /v1/orders/:id/items/:iid  (soft void)
-app.delete('/:id/items/:iid', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id, iid } = c.req.param();
-
-  const { data, error } = await supabase
-    .from('pos_order_line_items')
-    .update({ is_voided: true, void_reason: 'Removed by server' })
-    .eq('id', iid)
-    .eq('tenant_id', tenantId)
-    .select()
-    .single();
-
-  if (error) return err(c, 'NOT_FOUND', `Line item ${iid} not found`, 404);
-  await recalcOrderTotals(supabase, id, tenantId);
-  return ok(c, data);
-});
-
-// GET /v1/orders/:id/payments
-app.get('/:id/payments', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
-
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
     .eq('order_id', id)
-    .eq('tenant_id', tenantId)
-    .order('created_at');
+    .eq('course_number', courseNumber)
+    .eq('course_hold_status', 'held');
 
-  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
-  return ok(c, data);
-});
+  if (heldErr) return err(c, 'INTERNAL_ERROR', heldErr.message, 500);
+  if (!heldTickets || heldTickets.length === 0)
+    return err(c, 'NOT_FOUND', `No held tickets for course ${courseNumber} on order ${id}`, 404);
 
-// ---- Helpers ----
+  const heldIds = heldTickets.map((t: any) => t.id);
 
-async function recalcOrderTotals(supabase: any, orderId: string, tenantId: string) {
-  const { data: items } = await supabase
-    .from('pos_order_line_items')
-    .select('line_total, is_voided')
-    .eq('order_id', orderId)
+  await supabase
+    .from('kitchen_tickets')
+    .update({ course_hold_status: 'fired', status: 'queued', fired_at: now })
+    .in('id', heldIds)
     .eq('tenant_id', tenantId);
 
-  const subtotal = (items ?? []).filter((i: any) => !i.is_voided).reduce((s: number, i: any) => s + i.line_total, 0);
-  const tax      = Math.round(subtotal * 0.1);
-  const total    = subtotal + tax;
-
-  await supabase.from('pos_orders').update({ subtotal, tax, total }).eq('id', orderId);
-}
-
-async function emitOrderCreated(order: any, tenantId: string) {
-  const items = (order.items ?? []).map((i: any) => ({
-    lineItemId:   i.id,
-    menuItemId:   i.menu_item_id,
-    name:         i.name,
-    quantity:     i.quantity,
-    modifiers:    [],
-    station:      i.station,
-    courseNumber: i.course_number,
-    recipeId:     i.recipe_id ?? undefined,
-  }));
-
-  await emitEvent('pos:order:created', tenantId, {
-    orderId:     order.id,
-    tableNumber: order.table_number,
-    serverName:  order.server_name,
-    items,
-    createdAt:   order.created_at,
+  await supabase.from('course_fire_log').insert({
+    tenant_id:     tenantId,
+    order_id:      id,
+    course_number: courseNumber,
+    fired_by:      body.serverName ?? 'server',
+    fired_at:      now,
+    ticket_ids:    heldIds,
   });
-}
 
-async function emitEvent(eventType: string, tenantId: string, payload: unknown) {
-  const url = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
-  try {
-    await fetch(`${url}/internal/events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
-        'X-Tenant-Id': tenantId,
-        'X-Caller-Service': 'pos',
+  // Emit kds:course:fired event
+  const busUrl = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
+  await fetch(`${busUrl}/internal/events`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
+      'X-Tenant-Id': tenantId,
+      'X-Caller-Service': 'pos',
+    },
+    body: JSON.stringify({
+      eventId:   crypto.randomUUID(),
+      eventType: 'kds:course:fired',
+      tenantId,
+      source:    'pos',
+      timestamp: now,
+      version:   1,
+      payload: {
+        orderId:        id,
+        courseNumber,
+        firedTicketIds: heldIds,
+        firedBy:        body.serverName ?? 'server',
       },
-      body: JSON.stringify({
-        eventId: crypto.randomUUID(), eventType, tenantId,
-        source: 'pos', timestamp: new Date().toISOString(), version: 1, payload,
-      }),
-    });
-  } catch {
-    console.warn(`[POS] Failed to emit ${eventType} (non-fatal)`);
-  }
-}
+    }),
+  }).catch(() => null);
+
+  return ok(c, {
+    orderId:     id,
+    courseNumber,
+    firedTickets: heldIds.length,
+    firedBy:     body.serverName ?? 'server',
+  });
+});
+
+// PATCH /v1/orders/:id/void
+app.patch('/:id/void', async (c) => {
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const { id }    = c.req.param();
+  const body      = await c.req.json().catch(() => ({}));
+
+  const { data, error } = await supabase
+    .from('pos_orders')
+    .update({ status: 'voided', void_reason: body.reason ?? null })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select()
+    .single();
+
+  if (error) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+
+  // Void all non-bumped tickets (including held ones)
+  await supabase
+    .from('kitchen_tickets')
+    .update({ status: 'voided' })
+    .eq('tenant_id', tenantId)
+    .eq('order_id', id)
+    .not('status', 'in', '("bumped","voided")');
+
+  return ok(c, data);
+});
+
+// PATCH /v1/orders/:id/items/:itemId/void
+app.patch('/:id/items/:itemId/void', async (c) => {
+  const supabase   = c.get('supabase');
+  const tenantId   = c.get('tenantId');
+  const { id, itemId } = c.req.param();
+  const body       = await c.req.json().catch(() => ({}));
+
+  const { data, error } = await supabase
+    .from('pos_order_line_items')
+    .update({ is_voided: true, void_reason: body.reason ?? null })
+    .eq('id', itemId)
+    .eq('order_id', id)
+    .select()
+    .single();
+
+  if (error) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
+  return ok(c, data);
+});
 
 export { app as orderRoutes };
