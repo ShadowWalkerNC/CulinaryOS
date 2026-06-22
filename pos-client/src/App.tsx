@@ -1,8 +1,9 @@
 import { usePOSStore } from './lib/store';
-import { TablesView } from './views/TablesView';
-import { OrderView } from './views/OrderView';
-import { MenuView } from './views/MenuView';
+import { TablesView }   from './views/TablesView';
+import { OrderView }    from './views/OrderView';
+import { MenuView }     from './views/MenuView';
 import { CheckoutView } from './views/CheckoutView';
+import { ConnectionStatus } from './components/ConnectionStatus';
 
 export function App() {
   const view = usePOSStore((s) => s.view);
@@ -16,17 +17,15 @@ export function App() {
         </div>
         <nav className="flex gap-1">
           {(['tables','order','menu','checkout'] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => usePOSStore.getState().setView(v)}
+            <button key={v} onClick={() => usePOSStore.getState().setView(v)}
               className={`px-3 py-1.5 rounded text-xs font-bold tracking-wide transition-colors ${
                 view === v ? 'bg-green-600 text-white' : 'text-[#888888] hover:text-white'
-              }`}
-            >
+              }`}>
               {v.toUpperCase()}
             </button>
           ))}
         </nav>
+        <ConnectionStatus />
       </header>
       <main className="flex-1 overflow-auto">
         {view === 'tables'   && <TablesView />}

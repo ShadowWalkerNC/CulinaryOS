@@ -1,23 +1,18 @@
 import { useState, useEffect } from 'react';
-import { formatDistanceToNowStrict } from 'date-fns';
-import { useBumpTicket, useRecallTicket } from '../lib/queries';
+import { useTicketStore } from '../lib/useTicketStore';
+import { useKDSStore } from '../lib/store';
 import type { KitchenTicket } from '../../../../shared/types';
 
 const STATION_COLORS: Record<string, string> = {
-  hot:    '#ef4444',
-  cold:   '#3b82f6',
-  grill:  '#f97316',
-  fry:    '#eab308',
-  sauce:  '#8b5cf6',
-  pastry: '#ec4899',
-  pass:   '#10b981',
-  bar:    '#06b6d4',
+  hot: '#ef4444', cold: '#3b82f6', grill: '#f97316',
+  fry: '#eab308', sauce: '#8b5cf6', pastry: '#ec4899',
+  pass: '#10b981', bar: '#06b6d4',
 };
 
-const WARN_SECONDS  = 600;   // 10 min — yellow
-const DANGER_SECONDS = 900;  // 15 min — red
+const WARN_SECONDS   = 600;
+const DANGER_SECONDS = 900;
 
-function useElapsed(firedAt?: string): number {
+function useElapsed(firedAt?: string | null): number {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!firedAt) return;
@@ -30,65 +25,61 @@ function useElapsed(firedAt?: string): number {
   return elapsed;
 }
 
-function timerClass(elapsed: number): string {
-  if (elapsed >= DANGER_SECONDS) return 'timer-danger';
-  if (elapsed >= WARN_SECONDS)   return 'timer-warn';
+function timerClass(s: number) {
+  if (s >= DANGER_SECONDS) return 'timer-danger';
+  if (s >= WARN_SECONDS)   return 'timer-warn';
   return 'timer-ok';
 }
 
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
+function fmt(s: number) {
+  return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
 }
 
 interface Props { ticket: KitchenTicket; }
 
 export function TicketCard({ ticket }: Props) {
+  const activeStation = useKDSStore((s) => s.activeStation);
+  // Get store actions from the station-specific store
+  const { bumpTicket, recallTicket } = useTicketStore(activeStation);
   const elapsed = useElapsed(ticket.firedAt ?? ticket.createdAt);
-  const { mutate: bump, isPending: bumping } = useBumpTicket();
-  const { mutate: recall } = useRecallTicket();
+  const [bumping, setBumping] = useState(false);
   const stationColor = STATION_COLORS[ticket.station] ?? '#888888';
-  const isRush = ticket.priority === 'rush';
+  const isRush   = ticket.priority === 'rush';
   const isBumped = ticket.status === 'bumped';
+
+  async function handleBump() {
+    setBumping(true);
+    await bumpTicket(ticket.id, elapsed);
+    setBumping(false);
+  }
 
   return (
     <div
-      className={`rounded-xl border-2 bg-[#111111] flex flex-col overflow-hidden ${
-        isRush ? 'ticket-rush' : ''
-      }`}
+      className={`rounded-xl border-2 bg-[#111111] flex flex-col overflow-hidden ${isRush ? 'ticket-rush' : ''}`}
       style={{ borderColor: isRush ? '#ef4444' : stationColor + '66' }}
     >
-      {/* Ticket header */}
+      {/* Header */}
       <div className="flex items-center justify-between px-3 py-2" style={{ backgroundColor: stationColor + '22' }}>
         <div className="flex items-center gap-2">
           <span className="font-black text-white text-lg">#{ticket.orderNumber}</span>
-          {ticket.tableNumber && (
-            <span className="text-xs text-[#888888]">Table {ticket.tableNumber}</span>
-          )}
+          {ticket.tableNumber && <span className="text-xs text-[#888888]">Table {ticket.tableNumber}</span>}
         </div>
         <div className="flex items-center gap-2">
           {isRush && <span className="text-xs font-bold text-red-400 bg-red-950 px-2 py-0.5 rounded">RUSH</span>}
           {ticket.priority === 'allergy' && <span className="text-xs font-bold text-yellow-400 bg-yellow-950 px-2 py-0.5 rounded">ALLERGY</span>}
-          <span
-            className={`font-mono text-sm font-bold ${isBumped ? 'text-[#444444]' : timerClass(elapsed)}`}
-          >
-            {isBumped ? 'DONE' : formatTime(elapsed)}
+          <span className={`font-mono text-sm font-bold ${isBumped ? 'text-[#444444]' : timerClass(elapsed)}`}>
+            {isBumped ? 'DONE' : fmt(elapsed)}
           </span>
         </div>
       </div>
 
       {/* Station badge */}
       <div className="px-3 pt-2 pb-1">
-        <span
-          className="text-[10px] font-bold tracking-widest px-2 py-0.5 rounded"
-          style={{ color: stationColor, backgroundColor: stationColor + '22' }}
-        >
+        <span className="text-[10px] font-bold tracking-widest px-2 py-0.5 rounded"
+          style={{ color: stationColor, backgroundColor: stationColor + '22' }}>
           {ticket.station.toUpperCase()}
         </span>
-        {ticket.coverCount && (
-          <span className="text-[10px] text-[#555555] ml-2">{ticket.coverCount} covers</span>
-        )}
+        {ticket.coverCount && <span className="text-[10px] text-[#555555] ml-2">{ticket.coverCount} covers</span>}
       </div>
 
       {/* Items */}
@@ -104,9 +95,7 @@ export function TicketCard({ ticket }: Props) {
             {item.modifiers.map((mod, j) => (
               <div key={j} className="text-[#888888] text-xs ml-2 mt-0.5">— {mod}</div>
             ))}
-            {item.notes && (
-              <div className="text-yellow-400 text-xs ml-2 mt-0.5 font-medium">{item.notes}</div>
-            )}
+            {item.notes && <div className="text-yellow-400 text-xs ml-2 mt-0.5 font-medium">{item.notes}</div>}
           </div>
         ))}
         {ticket.notes && (
@@ -117,18 +106,13 @@ export function TicketCard({ ticket }: Props) {
       {/* Actions */}
       <div className="flex gap-2 px-3 py-2 border-t border-[#1a1a1a]">
         {isBumped ? (
-          <button
-            onClick={() => recall(ticket.id)}
-            className="flex-1 py-2 rounded text-xs font-bold bg-[#1a1a1a] text-[#888888] hover:bg-[#222222] hover:text-white transition-colors"
-          >
+          <button onClick={() => recallTicket(ticket.id)}
+            className="flex-1 py-2 rounded text-xs font-bold bg-[#1a1a1a] text-[#888888] hover:bg-[#222222] hover:text-white transition-colors">
             RECALL
           </button>
         ) : (
-          <button
-            onClick={() => bump({ ticketId: ticket.id, cookTimeSeconds: elapsed })}
-            disabled={bumping}
-            className="flex-1 py-2.5 rounded text-sm font-black bg-green-600 hover:bg-green-500 text-white transition-colors disabled:opacity-50"
-          >
+          <button onClick={handleBump} disabled={bumping}
+            className="flex-1 py-2.5 rounded text-sm font-black bg-green-600 hover:bg-green-500 text-white transition-colors disabled:opacity-50">
             {bumping ? '...' : 'BUMP'}
           </button>
         )}
