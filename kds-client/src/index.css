@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #0a0a0a;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+}
+
+/* KDS ticket card pulse animation for RUSH orders */
+@keyframes rush-pulse {
+  0%, 100% { border-color: #ef4444; }
+  50% { border-color: #fca5a5; }
+}
+.ticket-rush { animation: rush-pulse 1s ease-in-out infinite; }
+
+/* Cook timer color thresholds */
+.timer-ok     { color: #4ade80; }
+.timer-warn   { color: #facc15; }
+.timer-danger { color: #ef4444; }
