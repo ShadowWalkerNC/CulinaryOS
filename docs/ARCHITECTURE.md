@@ -1,126 +1,196 @@
-# CulinaryOS — System Architecture
+# CulinaryOS — Architecture
 
-## Overview
-
-CulinaryOS is the **orchestration layer** — it provides auth, tenant management, inter-service routing, and the unified GUI/CLI/MCP surface. It does not own domain logic.
-
-Domain logic lives in services:
-
-```
-CulinaryOS (port 3000)  — orchestrator, event bus, tenant shell
-├── RecipeOS  (port 3001)  — recipes, scaling, pantry, prep lists
-├── KDS       (port 3002)  — kitchen display, tickets, station routing
-└── POS       (port 3003)  — orders, payments, tabs, menus
-```
+> v2.0 — Updated June 19, 2026
 
 ---
 
-## Interface Layer (per service)
+## Governing Constraint
 
-Every service exposes three interfaces:
+Restaurant software runs in hostile conditions: poor WiFi, rushed staff, mid-service emergencies,
+zero tolerance for downtime. Every architectural decision must survive that environment.
 
-| Interface | Tool | Entry point |
+**The hardest requirement:** A cook must be able to receive and complete kitchen tickets
+even when the server is unreachable.
+
+---
+
+## Client Surface Map
+
+| Client | Platform | Users | Connectivity |
+|---|---|---|---|
+| POS Terminal | Android tablet / JVM desktop | Server, Cashier | Must work offline |
+| KDS Display | Android tablet / JVM desktop | Cook | Must work offline |
+| Admin Panel | JVM desktop (Compose) | Manager, Owner | Online preferred |
+| Customer Ordering | Web (React/Next.js) | Guest customer | Online required |
+| Manager Dashboard | Web (React/Next.js) | Manager, Owner | Online preferred |
+
+Operational clients (POS, KDS, Admin) are **Compose Multiplatform**.
+Customer-facing and manager-facing web are **React/Next.js**.
+
+This split is intentional:
+- Operational clients need offline capability, native device APIs (printer, scanner), and native-feel UI.
+- Web clients need SEO, browser accessibility, and zero-install delivery.
+
+---
+
+## Stack Decisions
+
+### Kotlin Multiplatform (KMP) — `:shared` module
+
+All business logic lives in `:shared` and compiles to Android + JVM.
+This includes:
+- `CulinaryEvent` — universal event envelope
+- `LocalEventQueue` SQLDelight schema — the offline queue
+- Domain value objects and validation rules
+
+The backend (`:backend`) and all Compose clients import `:shared`.
+This means a bug fixed in shared logic is fixed everywhere simultaneously.
+
+### Ktor Backend — `:backend` module
+
+Ktor is coroutine-native and shares Kotlin types directly with `:shared`.
+No DTO translation layer needed between the backend and shared models.
+
+Key Ktor plugins used:
+- `Authentication` — JWT validation on every protected route
+- `ContentNegotiation` — kotlinx.serialization JSON
+- `StatusPages` — global exception → clean JSON error responses
+- `WebSockets` — real-time KDS push (Phase 3)
+
+### PostgreSQL + Exposed + Flyway
+
+- **PostgreSQL** — ACID, UUID primary keys (`gen_random_uuid()`), append-only event tables
+- **Exposed** — type-safe Kotlin DSL over JDBC; all queries are Kotlin, no raw SQL in application code
+- **Flyway** — numbered, immutable migrations; runs automatically on startup; never edit a committed migration
+
+Migration naming convention:
+```
+V1__baseline.sql          ← empty baseline
+V2__auth_tenant.sql       ← Phase 1
+V3__pos_core.sql          ← Phase 2
+V4__kds.sql               ← Phase 3
+V5__online_ordering.sql   ← Phase 4
+V6__inventory.sql         ← Phase 5
+V7__reporting.sql         ← Phase 6
+V8__payments.sql          ← Phase 7
+```
+
+### SQLDelight — Local Event Queue
+
+SQLDelight generates type-safe Kotlin from `.sq` files.
+The local event queue (`LocalEventQueue.sq`) is a SQLite table that:
+- Persists events across app crashes and device reboots
+- Never deletes events — sets `synced_at` when server confirms
+- Generates `insertEvent`, `selectPending`, `markSynced` as type-safe Kotlin functions
+
+---
+
+## Local-First Architecture
+
+### The Rule
+
+```
+Write locally first → apply to UI immediately → sync to server in background
+```
+
+No user action in POS or KDS waits for a server round-trip.
+
+### Event Flow
+
+```
+User action (e.g. place order)
+  ↓
+ CulinaryEvent created with:
+  - eventId: UUID v4 (client-generated)
+  - restaurantId: from JWT
+  - deviceId: terminal identifier
+  - clientSequence: monotonic integer (never resets)
+  - clientTimestamp: Unix epoch ms
+  - type: ORDER_CREATED
+  - payload: JSON
+  ↓
+Inserted into local_event_queue (SQLDelight)
+  ↓
+UI state updated optimistically
+  ↓
+Sync engine (background coroutine) picks it up
+  ↓
+POST /sync/events → server processes → assigns serverSequence
+  ↓
+local_event_queue.synced_at = now()
+```
+
+### Connectivity States
+
+| State | POS Behavior | KDS Behavior |
 |---|---|---|
-| GUI | React / React Native | `web/`, `mobile/` |
-| CLI | Commander.js | `cli/src/index.ts` |
-| MCP | MCP SDK | `mcp/*-server.ts` |
+| Online | Events sync in real time | Tickets delivered via WebSocket |
+| Offline | Events queue locally, UI works normally | Last-known state shown; bumps queue locally |
+| Reconnecting | Queue drains automatically, catch-up from server | Pulls all missed events since last ack |
 
-CulinaryOS CLI (`culinary` command) aggregates all service CLIs. CulinaryOS MCP server aggregates all service MCP tools.
+### Server Authority Domains
 
----
+Not everything is optimistic. These domains require a confirmed server round-trip:
 
-## Inter-Service Communication
+| Domain | Rule |
+|---|---|
+| Financial events (Void, Comp, Discount, Payment) | Server blocks conflicting concurrent events (HTTP 409) |
+| Inventory reconciliation | Server-authoritative only; client never resolves stock conflicts |
+| Report generation | Always generated server-side from event log; never from client cache |
 
-### Request/Response
-
-Services call each other using `ServiceClient` from `shared/service-client/`.
-
-```
-POS → RecipeOS: GET /v1/recipes/{id}  (when rendering menu item detail)
-POS → KDS:      POST /v1/tickets      (when order is fired)
-KDS → POS:      PATCH /v1/orders/{id} (when ticket is bumped)
-```
-
-### Event Bus
-
-Fire-and-forget domain events for non-critical cross-service notifications:
-
-```
-POS emits  → pos:order:created    → KDS receives  → creates tickets per station
-KDS emits  → kds:ticket:bumped    → POS receives  → updates order status
-POS emits  → pos:menu:item-sold   → RecipeOS      → decrements pantry stock
-RecipeOS   → recipeos:pantry:low-stock → CulinaryOS → sends alert to owner
-```
-
-### Critical Flow: Order → Kitchen
-
-```
-1. Server takes order in POS
-2. POS emits pos:order:created with items + station routing
-3. KDS receives event, creates one KitchenTicket per station
-4. KDS displays tickets on station screens
-5. Chef bumps ticket when complete
-6. KDS emits kds:ticket:bumped back to POS
-7. POS updates order status
-8. All tickets bumped → order status → 'ready'
-```
+See [`docs/sync-protocol.md`](sync-protocol.md) for the complete conflict resolution specification.
 
 ---
 
 ## Tenant Isolation
 
-- Every request carries `X-Tenant-Id` header
-- Every DB query is scoped by `tenant_id` column
-- Services **reject** requests missing tenant context
-- RLS policies in Supabase provide a second layer of enforcement
+Every row in every table has a `restaurant_id` foreign key.
+Every query in the application must filter by `restaurant_id`.
+
+This is enforced architecturally via the `call.restaurantId()` Ktor extension:
+
+```kotlin
+// In plugins/Auth.kt — available on every authenticated call
+fun ApplicationCall.restaurantId(): String =
+    principal<JWTPrincipal>()
+        ?.payload?.getClaim("restaurantId")?.asString()
+        ?: throw SecurityException("restaurantId missing from token")
+```
+
+A PR that introduces a query without `restaurantId` scoping is a critical bug and will be rejected.
 
 ---
 
-## Shared Package
+## WebSocket Outbox (Phase 3+)
 
-`shared/` is a local TypeScript package imported by all services:
+To guarantee zero missed KDS tickets, the server uses a `pending_push` outbox table:
 
 ```
-shared/
-├── types/
-│   ├── service.ts     — ServiceRequest, ServiceResponse, TenantContext
-│   ├── events.ts      — DomainEvent, EventType, all payload shapes
-│   ├── order.ts       — Order, KitchenTicket, OrderLineItem
-│   └── menu.ts        — Menu, MenuItem, ModifierGroup
-├── service-client/
-│   ├── index.ts       — ServiceClient class
-│   └── registry.ts    — EnvServiceRegistry (URL resolution from env)
-└── api-conventions.md — headers, envelope, error codes, event bus rules
+Event processed → row inserted in pending_push → WebSocket push sent
+  → client acks → delivered_at set
+  → on reconnect: client sends last ack ID → server replays all undelivered rows
 ```
 
-To import in any service:
-```typescript
-import type { Order, KitchenTicket } from '../../shared/types';
-import { ServiceClient } from '../../shared/service-client';
-```
+This means a KDS display that was offline for 30 seconds will receive every ticket
+that fired during that window the moment it reconnects.
 
 ---
 
-## Environment Variables
+## Performance Targets
 
-```bash
-# CulinaryOS knows where all services live
-CULINARYOS_URL=http://localhost:3000
-RECIPEOS_URL=http://localhost:3001
-KDS_URL=http://localhost:3002
-POS_URL=http://localhost:3003
-
-# Service-to-service auth
-INTERNAL_API_KEY=your-shared-secret
-```
+| Metric | Target |
+|---|---|
+| POS order → KDS ticket display | ≤ 500ms on local network |
+| API p95 response (read endpoints) | ≤ 200ms |
+| MenuSnapshot load (client in-memory cache) | ≤ 100ms |
+| Offline POS order operations | Zero degradation |
 
 ---
 
-## Service Status
+## Security Defaults
 
-| Service | Scaffold | Schema | Live Screens | CLI | MCP |
-|---|---|---|---|---|---|
-| CulinaryOS | ✅ | ✅ | ✅ | ✅ | ✅ |
-| RecipeOS | ✅ | ✅ | ✅ | ✅ | ✅ |
-| KDS | ❌ | ❌ | ❌ | ❌ | ❌ |
-| POS | ❌ | ❌ | ❌ | ❌ | ❌ |
+- JWT: 15-minute access tokens, 7-day single-use refresh tokens (SHA-256 hashed in DB, never raw)
+- BCrypt cost factor 12 for password hashing
+- No card data stored at any phase before Phase 10
+- All Flyway migrations are immutable — editing a committed migration causes a startup failure
+- `restaurantId` scoping enforced at plugin layer — not per-developer
