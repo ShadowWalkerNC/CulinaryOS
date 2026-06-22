@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ---- Type check all TypeScript ----
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - name: Install backend deps
+        run: cd backend && bun install
+      - name: Typecheck backend
+        run: cd backend && bun tsc --noEmit
+
+  # ---- Unit + integration tests ----
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL:             ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      INTERNAL_API_KEY:         test-key-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - name: Install deps
+        run: cd backend && bun install
+      - name: Run tests
+        run: bun test tests/
+
+  # ---- Docker build smoke test ----
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -f backend/Dockerfile -t culinaryos-backend:ci .
+      - name: Build kds image
+        run: docker build -f kds/Dockerfile -t culinaryos-kds:ci .
+      - name: Build pos image
+        run: docker build -f pos/Dockerfile -t culinaryos-pos:ci .
+      - name: Build recipeos image
+        run: docker build -f recipeos/Dockerfile -t culinaryos-recipeos:ci .
