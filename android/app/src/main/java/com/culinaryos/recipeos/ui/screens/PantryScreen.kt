@@ -17,30 +17,14 @@ import com.culinaryos.recipeos.ui.theme.SuccessGreen
 import com.culinaryos.recipeos.ui.theme.SurfaceBg
 import com.culinaryos.recipeos.ui.theme.TextMuted
 import com.culinaryos.recipeos.ui.theme.WarningAmber
-
-data class MockPantryItem(
-    val id: String,
-    val name: String,
-    val onHand: Double,
-    val par: Double,
-    val unit: String,
-    val binLocation: String
-)
+import com.culinaryos.recipeos.viewmodel.RecipeViewModel
 
 @Composable
-fun PantryScreen() {
-    val pantryItems = remember {
-        mutableStateListOf(
-            MockPantryItem("1", "Unbleached Bread Flour", 12.0, 50.0, "kg", "Dry Storage A"),
-            MockPantryItem("2", "Active Sourdough Starter", 2.5, 5.0, "kg", "Bake Prep Counter"),
-            MockPantryItem("3", "Fine Sea Salt", 8.2, 10.0, "kg", "Spices Row C"),
-            MockPantryItem("4", "Unsalted Butter", 25.0, 20.0, "kg", "Walk-in Cooler 1"),
-            MockPantryItem("5", "Ground Cinnamon", 1.8, 1.0, "kg", "Spices Row A")
-        )
-    }
+fun PantryScreen(viewModel: RecipeViewModel) {
+    val pantryItems by viewModel.pantryItems.collectAsState(initial = emptyList())
 
-    val criticalItemsCount = pantryItems.count { it.onHand < it.par * 0.5 }
-    val warningItemsCount = pantryItems.count { it.onHand >= it.par * 0.5 && it.onHand < it.par }
+    val criticalItemsCount = pantryItems.count { it.quantityOnHand < it.parLevel * 0.5 }
+    val warningItemsCount = pantryItems.count { it.quantityOnHand >= it.parLevel * 0.5 && it.quantityOnHand < it.parLevel }
 
     Column(
         modifier = Modifier
@@ -109,7 +93,7 @@ fun PantryScreen() {
         // Pantry List
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(pantryItems) { item ->
-                val ratio = item.onHand / item.par
+                val ratio = item.quantityOnHand / item.parLevel
                 val (statusText, statusColor) = when {
                     ratio < 0.5 -> "CRITICAL" to DangerRed
                     ratio < 1.0 -> "LOW STOCK" to WarningAmber
@@ -129,15 +113,46 @@ fun PantryScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(item.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("Bin: ${item.binLocation}", color = TextMuted, fontSize = 12.sp)
+                        Column(modifier = Modifier.weight(1.5f)) {
+                            Text(item.ingredientName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("Bin: ${item.binLocation ?: "Main Storage"}", color = TextMuted, fontSize = 12.sp)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "On-Hand: ${item.onHand} ${item.unit} / Par: ${item.par} ${item.unit}",
+                                text = "On-Hand: ${item.quantityOnHand} ${item.quantityUnit} / Par: ${item.parLevel} ${item.quantityUnit}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
+                        }
+
+                        // Adjustment controls
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Button(
+                                onClick = { 
+                                    val nextQty = maxOf(0.0, item.quantityOnHand - 1.0)
+                                    viewModel.updatePantryStock(item.id, nextQty)
+                                },
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(36.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
+                            
+                            Button(
+                                onClick = { 
+                                    val nextQty = item.quantityOnHand + 1.0
+                                    viewModel.updatePantryStock(item.id, nextQty)
+                                },
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(36.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
 
                         Surface(
@@ -147,9 +162,9 @@ fun PantryScreen() {
                             Text(
                                 text = statusText,
                                 color = DarkBg,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }

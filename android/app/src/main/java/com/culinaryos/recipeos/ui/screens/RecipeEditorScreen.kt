@@ -16,27 +16,25 @@ import com.culinaryos.recipeos.engine.RatioBlueprintEngine
 import com.culinaryos.recipeos.ui.theme.DarkBg
 import com.culinaryos.recipeos.ui.theme.SurfaceBg
 import com.culinaryos.recipeos.ui.theme.TextMuted
+import com.culinaryos.recipeos.viewmodel.RecipeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeEditorScreen(
-    recipeName: String = "Cinnamon Sourdough",
-    baseIngredients: List<RecipeIngredientWithInfo> = listOf(
-        RecipeIngredientWithInfo("1", "Bread Flour", "Flour", false, 80.0, 800.0, true, true),
-        RecipeIngredientWithInfo("2", "Whole Wheat", "Flour", false, 20.0, 200.0, true, true),
-        RecipeIngredientWithInfo("3", "Water", "Liquid", false, 78.0, 780.0, false, true),
-        RecipeIngredientWithInfo("4", "Sourdough Starter", "Leaven", false, 20.0, 200.0, false, true),
-        RecipeIngredientWithInfo("5", "Fine Sea Salt", "Spice", false, 2.2, 22.0, false, false),
-        RecipeIngredientWithInfo("6", "Cinnamon", "Spice", false, 1.5, 15.0, false, true)
-    )
-) {
+fun RecipeEditorScreen(viewModel: RecipeViewModel) {
+    val recipes by viewModel.recipes.collectAsState(initial = emptyList())
+    val activeRecipe = recipes.firstOrNull { it.id == "c30f40d8-19b8-4c6e-82d2-8b2b64d420c2" }
+    
+    val baseIngredients by (activeRecipe?.let { viewModel.getRecipeIngredients(it.id) }
+        ?: remember { mutableStateOf(null) })?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
+
     var totalWeightInput by remember { mutableStateOf("1817.0") }
     var scaleMultiplier by remember { mutableStateOf(1.0f) }
     var scaleByTotalMode by remember { mutableStateOf(true) }
 
     // Derive scaled ingredients dynamically
-    val scaledIngredients = remember(scaleMultiplier, scaleByTotalMode, totalWeightInput) {
-        if (scaleByTotalMode) {
+    val scaledIngredients = remember(scaleMultiplier, scaleByTotalMode, totalWeightInput, baseIngredients) {
+        if (baseIngredients.isEmpty()) emptyList()
+        else if (scaleByTotalMode) {
             val targetWeight = totalWeightInput.toDoubleOrNull() ?: 1817.0
             RatioBlueprintEngine.scaleByTargetTotalWeight(baseIngredients, targetWeight)
         } else {
@@ -53,7 +51,7 @@ fun RecipeEditorScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = recipeName,
+            text = activeRecipe?.name ?: "Loading Formula...",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 8.dp)

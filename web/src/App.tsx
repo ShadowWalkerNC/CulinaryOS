@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, MonitorPlay, Box, Users, Calendar } from 'lucide-react';
 import { POSDashboard } from './components/POSDashboard';
 import { KDSScreen } from './components/KDSScreen';
@@ -35,8 +35,22 @@ const INITIAL_KDS_TICKETS: KDSTicket[] = [
 ];
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('pos');
-  const [tickets, setTickets] = useState<KDSTicket[]>(INITIAL_KDS_TICKETS);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return localStorage.getItem('activeTab') || 'pos';
+  });
+
+  const [tickets, setTickets] = useState<KDSTicket[]>(() => {
+    const raw = localStorage.getItem('kds_tickets');
+    return raw ? JSON.parse(raw) : INITIAL_KDS_TICKETS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('kds_tickets', JSON.stringify(tickets));
+  }, [tickets]);
 
   // Adds a new ticket to KDS when POS checkouts
   const handleOrderComplete = (cartItems: OrderItem[], table: string) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, CreditCard, Wifi, WifiOff } from 'lucide-react';
 import { Product, OrderItem } from '../types';
 
@@ -18,7 +18,13 @@ const PRODUCTS: Product[] = [
 export const POSDashboard: React.FC<POSProps> = ({ onOrderComplete }) => {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [tableNum, setTableNum] = useState<string>('Takeout');
-  const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [isOffline, setIsOffline] = useState<boolean>(() => {
+    return localStorage.getItem('pos_isOffline') === 'true';
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('pos_isOffline', isOffline.toString());
+  }, [isOffline]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [paymentDone, setPaymentDone] = useState<boolean>(false);
   

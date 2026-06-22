@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clipboard, CheckCircle2 } from 'lucide-react';
 import { InventoryItem } from '../types';
 
@@ -12,11 +12,25 @@ const INITIAL_INVENTORY: InventoryItem[] = [
 ];
 
 export const InventoryManager: React.FC = () => {
-  const [items, setItems] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [items, setItems] = useState<InventoryItem[]>(() => {
+    const raw = localStorage.getItem('inventory_items');
+    return raw ? JSON.parse(raw) : INITIAL_INVENTORY;
+  });
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [physicalCount, setPhysicalCount] = useState<string>('');
-  const [varianceLog, setVarianceLog] = useState<{ name: string; variance: number; loss: number }[]>([]);
+  const [varianceLog, setVarianceLog] = useState<{ name: string; variance: number; loss: number }[]>(() => {
+    const raw = localStorage.getItem('inventory_variance_log');
+    return raw ? JSON.parse(raw) : [];
+  });
   const [successMsg, setSuccessMsg] = useState<string>('');
+
+  useEffect(() => {
+    localStorage.setItem('inventory_items', JSON.stringify(items));
+  }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem('inventory_variance_log', JSON.stringify(varianceLog));
+  }, [varianceLog]);
 
   const handleAudit = (e: React.FormEvent) => {
     e.preventDefault();

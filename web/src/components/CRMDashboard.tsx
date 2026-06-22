@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Award, Shield, UserPlus } from 'lucide-react';
 import { CRMCustomer } from '../types';
 
@@ -10,7 +10,14 @@ const INITIAL_CUSTOMERS: CRMCustomer[] = [
 ];
 
 export const CRMDashboard: React.FC = () => {
-  const [customers, setCustomers] = useState<CRMCustomer[]>(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState<CRMCustomer[]>(() => {
+    const raw = localStorage.getItem('crm_customers');
+    return raw ? JSON.parse(raw) : INITIAL_CUSTOMERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('crm_customers', JSON.stringify(customers));
+  }, [customers]);
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   

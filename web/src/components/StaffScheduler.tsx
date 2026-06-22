@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, UserPlus, Check, X, ShieldAlert } from 'lucide-react';
 import { StaffShift } from '../types';
 
@@ -10,14 +10,36 @@ const INITIAL_SHIFTS: StaffShift[] = [
   { id: 's5', staffName: 'Dave H.', role: 'Server', startTime: '16:00', endTime: '22:00', hourlyRate: 15.00 }
 ];
 
-const MOCK_REQUESTS = [
+interface TimeOffRequest {
+  id: string;
+  staffName: string;
+  date: string;
+  reason: string;
+  status: string;
+}
+
+const MOCK_REQUESTS: TimeOffRequest[] = [
   { id: 'r1', staffName: 'Sarah K.', date: '2026-06-20', reason: 'Doctor Appointment', status: 'pending' },
   { id: 'r2', staffName: 'Emily R.', date: '2026-06-22', reason: 'Family Event', status: 'pending' }
 ];
 
 export const StaffScheduler: React.FC = () => {
-  const [shifts, setShifts] = useState<StaffShift[]>(INITIAL_SHIFTS);
-  const [requests, setRequests] = useState(MOCK_REQUESTS);
+  const [shifts, setShifts] = useState<StaffShift[]>(() => {
+    const raw = localStorage.getItem('staff_shifts');
+    return raw ? JSON.parse(raw) : INITIAL_SHIFTS;
+  });
+  const [requests, setRequests] = useState<TimeOffRequest[]>(() => {
+    const raw = localStorage.getItem('staff_timeoff_requests');
+    return raw ? JSON.parse(raw) : MOCK_REQUESTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('staff_shifts', JSON.stringify(shifts));
+  }, [shifts]);
+
+  useEffect(() => {
+    localStorage.setItem('staff_timeoff_requests', JSON.stringify(requests));
+  }, [requests]);
   
   // New shift form state
   const [staffName, setStaffName] = useState<string>('');
@@ -56,6 +78,20 @@ export const StaffScheduler: React.FC = () => {
 
     if (startTime >= endTime) {
       setErrorMsg('End time must be after start time.');
+      return;
+    }
+
+    const checkTimeOffConflict = (name: string): boolean => {
+      const currentDateStr = "2026-06-22"; // Static check matching mock requests date context
+      return requests.some(r => 
+        r.staffName.toLowerCase() === name.toLowerCase() && 
+        r.date === currentDateStr && 
+        r.status === 'Approved'
+      );
+    };
+
+    if (checkTimeOffConflict(staffName)) {
+      setErrorMsg(`Scheduling Conflict: ${staffName} has approved time-off for today.`);
       return;
     }
 

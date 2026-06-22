@@ -8,32 +8,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.culinaryos.recipeos.data.AppDatabase
 import com.culinaryos.recipeos.ui.theme.DarkBg
 import com.culinaryos.recipeos.ui.theme.SurfaceBg
 import com.culinaryos.recipeos.ui.theme.TextMuted
-
-data class MockPrepTask(
-    val id: String,
-    val description: String,
-    val detail: String,
-    var isDone: Boolean = false
-)
+import com.culinaryos.recipeos.viewmodel.RecipeViewModel
 
 @Composable
-fun PrepListScreen() {
-    val tasks = remember {
-        mutableStateListOf(
-            MockPrepTask("1", "Autolyse Flour + Water (Sourdough)", "Let sit for 45 mins - target temp 76°F"),
-            MockPrepTask("2", "Feed Starter (Sourdough)", "Ratio 1:2:2 - need 1000g active starter"),
-            MockPrepTask("3", "Scale Dry Spices (Sourdough + Babka)", "Cinnamon, Sea Salt, Sugar batches"),
-            MockPrepTask("4", "Consolidate Flour Weights", "Bread Flour: 4,800.0g total"),
-            MockPrepTask("5", "Prepare Egg Wash (Babka)", "Whisk 4 eggs with 30ml heavy cream")
-        )
-    }
+fun PrepListScreen(viewModel: RecipeViewModel) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context) }
+    
+    // Flow of active prep items for the seeded prep list "pl-01"
+    val tasks by db.recipeDao().getPrepItemsFlow("pl-01").collectAsState(initial = emptyList())
 
     Column(
         modifier = Modifier
@@ -47,7 +39,7 @@ fun PrepListScreen() {
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Text(
-            text = "Target Date: June 15, 2026",
+            text = "Target Date: June 22, 2026",
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
@@ -67,48 +59,55 @@ fun PrepListScreen() {
                 )
             }
 
-            items(tasks) { task ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = SurfaceBg),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Row(
+            if (tasks.isEmpty()) {
+                item {
+                    Text(
+                        text = "No active prep items for today.",
+                        color = TextMuted,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                items(tasks) { task ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SurfaceBg),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 4.dp)
                     ) {
-                        Checkbox(
-                            checked = task.isDone,
-                            onCheckedChange = { isChecked ->
-                                val index = tasks.indexOf(task)
-                                if (index != -1) {
-                                    tasks[index] = task.copy(isDone = isChecked)
-                                }
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.primary,
-                                checkmarkColor = DarkBg
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = task.isCompleted,
+                                onCheckedChange = { isChecked ->
+                                    viewModel.togglePrepItem(task.id, isChecked)
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = MaterialTheme.colorScheme.primary,
+                                    checkmarkColor = DarkBg
+                                )
                             )
-                        )
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Column {
-                            Text(
-                                text = task.description,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp,
-                                textDecoration = if (task.isDone) TextDecoration.LineThrough else TextDecoration.None,
-                                color = if (task.isDone) TextMuted else MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = task.detail,
-                                fontSize = 12.sp,
-                                color = TextMuted
-                            )
+                            Column {
+                                Text(
+                                    text = task.taskDescription,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp,
+                                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                                    color = if (task.isCompleted) TextMuted else MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = "Batch Size: ${task.scaledBatchSize}x",
+                                    fontSize = 12.sp,
+                                    color = TextMuted
+                                )
+                            }
                         }
                     }
                 }
