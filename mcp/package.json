@@ -1,0 +1,20 @@
+{
+  "name": "culinaryos-mcp-server",
+  "version": "1.0.0",
+  "description": "CulinaryOS MCP server — exposes recipes, inventory, menus, and orders as AI agent tools",
+  "main": "dist/culinary-os-server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/culinary-os-server.js",
+    "dev": "ts-node culinary-os-server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.12.0"
+  }
+}
