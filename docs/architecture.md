@@ -1,35 +1,37 @@
 # CulinaryOS — Architecture
 
-> v2.0 — Updated June 19, 2026
+> v3.0 — Updated June 22, 2026
 
 ---
 
 ## Governing Constraint
 
-Restaurant software runs in hostile conditions: poor WiFi, rushed staff, mid-service emergencies,
-zero tolerance for downtime. Every architectural decision must survive that environment.
+Restaurant software runs in hostile conditions: poor WiFi, rushed staff, mid-service emergencies, zero tolerance for downtime. Every architectural decision must survive that environment.
 
-**The hardest requirement:** A cook must be able to receive and complete kitchen tickets
-even when the server is unreachable.
+**The hardest requirement:** A cook must be able to receive and complete kitchen tickets even when the server is unreachable.
 
 ---
 
 ## Client Surface Map
 
-| Client | Platform | Users | Connectivity |
-|---|---|---|---|
-| POS Terminal | Android tablet / JVM desktop | Server, Cashier | Must work offline |
-| KDS Display | Android tablet / JVM desktop | Cook | Must work offline |
-| Admin Panel | JVM desktop (Compose) | Manager, Owner | Online preferred |
-| Customer Ordering | Web (React/Next.js) | Guest customer | Online required |
-| Manager Dashboard | Web (React/Next.js) | Manager, Owner | Online preferred |
+| Client | Platform | Tech | Users | Connectivity |
+|---|---|---|---|---|
+| POS Terminal | Android tablet / JVM desktop | Compose Multiplatform (KMP) | Server, Cashier | Must work offline |
+| KDS Display | Android tablet / JVM desktop | Compose Multiplatform (KMP) | Cook | Must work offline |
+| Admin Panel | JVM desktop | Compose Desktop (KMP) | Manager, Owner | Online preferred |
+| Customer Ordering | Web (iOS, Android, Desktop browser) | React / Next.js | Guest customer | Online required |
+| Manager Dashboard | Web (iOS, Android, Desktop browser) | React / Next.js | Manager, Owner | Online preferred |
+| RecipeOS Mobile | iOS + Android | React Native + Expo (TypeScript) | Chefs, food entrepreneurs | Offline-first |
+| RecipeOS MCP | Node.js server | TypeScript | CulinaryOS AI agent | Online required |
 
-Operational clients (POS, KDS, Admin) are **Compose Multiplatform**.
-Customer-facing and manager-facing web are **React/Next.js**.
+Operational clients (POS, KDS, Admin) are **Compose Multiplatform** — full platform support on Android and JVM desktop.
+Customer-facing and manager-facing web are **React / Next.js** — runs on all browsers (iOS, Android, Desktop).
+RecipeOS is a **TypeScript / React Native** external module that integrates via MCP.
 
 This split is intentional:
 - Operational clients need offline capability, native device APIs (printer, scanner), and native-feel UI.
-- Web clients need SEO, browser accessibility, and zero-install delivery.
+- Web clients need SEO, browser accessibility, and zero-install delivery across all platforms.
+- RecipeOS operates independently but plugs into CulinaryOS as a registered MCP extension.
 
 ---
 
@@ -83,6 +85,11 @@ The local event queue (`LocalEventQueue.sq`) is a SQLite table that:
 - Never deletes events — sets `synced_at` when server confirms
 - Generates `insertEvent`, `selectPending`, `markSynced` as type-safe Kotlin functions
 
+### React / Next.js — Web Clients
+
+Customer ordering and manager dashboard are **React / Next.js** — SSR for SEO, runs on all browsers (iOS Safari, Android Chrome, Desktop).
+No native app install required for customer-facing surfaces.
+
 ---
 
 ## Local-First Architecture
@@ -100,7 +107,7 @@ No user action in POS or KDS waits for a server round-trip.
 ```
 User action (e.g. place order)
   ↓
- CulinaryEvent created with:
+CulinaryEvent created with:
   - eventId: UUID v4 (client-generated)
   - restaurantId: from JWT
   - deviceId: terminal identifier
@@ -142,6 +149,30 @@ See [`docs/sync-protocol.md`](sync-protocol.md) for the complete conflict resolu
 
 ---
 
+## MCP Extensions
+
+CulinaryOS supports external MCP servers that register tools for use by the AI agent layer.
+
+### RecipeOS MCP Server
+
+[RecipeOS](https://github.com/ShadowWalkerNC/RecipeOS) is the first registered MCP extension. It is a separate TypeScript application that exposes 10 tools to the CulinaryOS agent:
+
+| Tool Category | Tools |
+|---|---|
+| Recipe | `list_recipes`, `get_recipe`, `create_recipe`, `scale_recipe` |
+| Pantry | `list_pantry`, `check_ingredient`, `update_pantry_item` |
+| Prep | `generate_prep_list`, `get_prep_list` |
+| Scale | `scale_by_ratio` |
+
+Phase 4 integration enables:
+- Recipe → CulinaryOS MenuItem sync
+- PantryItem → CulinaryOS purchasing module
+- PrepList → CulinaryOS labor/shift planning
+- Recipe steps → KDS display via WebSocket
+- Joint auth: CulinaryOS JWT accepted by RecipeOS Supabase Edge Function
+
+---
+
 ## Tenant Isolation
 
 Every row in every table has a `restaurant_id` foreign key.
@@ -171,8 +202,7 @@ Event processed → row inserted in pending_push → WebSocket push sent
   → on reconnect: client sends last ack ID → server replays all undelivered rows
 ```
 
-This means a KDS display that was offline for 30 seconds will receive every ticket
-that fired during that window the moment it reconnects.
+This means a KDS display that was offline for 30 seconds will receive every ticket that fired during that window the moment it reconnects.
 
 ---
 
