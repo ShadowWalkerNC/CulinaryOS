@@ -8,13 +8,17 @@
     "build": "tsc",
     "start-pos": "node dist/pos-server.js",
     "start-kds": "node dist/kds-server.js",
-    "start-inventory": "node dist/inventory-server.js"
+    "start-inventory": "node dist/inventory-server.js",
+    "start-culinary": "node dist/culinary-os-server.js",
+    "dev-culinary": "ts-node culinary-os-server.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1"
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.12.0"
   }
 }

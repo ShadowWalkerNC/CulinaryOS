@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { background: #0a0a0a; color: #e5e5e5; font-family: system-ui, sans-serif; }
+
+.card {
+  @apply bg-[#111111] rounded-xl border border-[#222222] p-5;
+}
+.badge-ok     { @apply text-green-400  bg-green-950  text-xs font-bold px-2 py-0.5 rounded; }
+.badge-low    { @apply text-yellow-400 bg-yellow-950 text-xs font-bold px-2 py-0.5 rounded; }
+.badge-out    { @apply text-red-400    bg-red-950    text-xs font-bold px-2 py-0.5 rounded; }
+.badge-info   { @apply text-blue-400   bg-blue-950   text-xs font-bold px-2 py-0.5 rounded; }
