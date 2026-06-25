@@ -6,6 +6,7 @@ import { InventoryManager } from './components/InventoryManager';
 import { StaffScheduler } from './components/StaffScheduler';
 import { CRMDashboard } from './components/CRMDashboard';
 import { KDSTicket, OrderItem } from './types';
+import { mcp } from './services/mcpClient';
 
 const INITIAL_KDS_TICKETS: KDSTicket[] = [
   {
@@ -52,27 +53,52 @@ const App: React.FC = () => {
     localStorage.setItem('kds_tickets', JSON.stringify(tickets));
   }, [tickets]);
 
-  // Adds a new ticket to KDS when POS checkouts
-  const handleOrderComplete = (cartItems: OrderItem[], table: string) => {
-    const newTicket: KDSTicket = {
-      id: `t-${Math.floor(100 + Math.random() * 900)}`,
-      orderId: `o-${Math.floor(200 + Math.random() * 900)}`,
-      tableNumber: table,
-      status: 'queued',
-      elapsedSeconds: 0,
-      priority: 'low',
-      items: cartItems.map((item, idx) => ({
-        id: `i-${idx}-${Date.now()}`,
-        productName: item.productName,
-        quantity: item.quantity,
-        price: item.price
-      }))
-    };
-    setTickets(prev => [...prev, newTicket]);
+  // Establish local-first MCP server connections on client start
+  useEffect(() => {
+    mcp.connect("pos-server", "stdio://pos-server");
+    mcp.connect("kds-server", "stdio://kds-server");
+    mcp.connect("inventory-server", "stdio://inventory-server");
+  }, []);
+
+  // Adds a new ticket to KDS when POS checkouts via POS MCP Server
+  const handleOrderComplete = async (cartItems: OrderItem[], table: string) => {
+    try {
+      const response = await mcp.callTool<any>("pos-server", "create_order", {
+        tableNumber: table,
+        items: cartItems.map(item => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      });
+
+      const newTicket: KDSTicket = {
+        id: response.ticketId,
+        orderId: response.orderId,
+        tableNumber: response.tableNumber,
+        status: 'queued',
+        elapsedSeconds: 0,
+        priority: 'low',
+        items: cartItems.map((item, idx) => ({
+          id: `i-${idx}-${Date.now()}`,
+          productName: item.productName,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      };
+      setTickets(prev => [...prev, newTicket]);
+    } catch (error) {
+      console.error("Failed to submit order via MCP:", error);
+    }
   };
 
-  const handleBumpTicket = (id: string) => {
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, status: 'bumped' } : t));
+  const handleBumpTicket = async (id: string) => {
+    try {
+      await mcp.callTool("kds-server", "bump_kds_ticket", { ticketId: id });
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, status: 'bumped' } : t));
+    } catch (error) {
+      console.error("Failed to bump ticket via MCP:", error);
+    }
   };
 
   const activeTicketsCount = tickets.filter(t => t.status !== 'bumped').length;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clipboard, CheckCircle2 } from 'lucide-react';
 import { InventoryItem } from '../types';
+import { mcp } from '../services/mcpClient';
 
 const INITIAL_INVENTORY: InventoryItem[] = [
   { id: 'i1', name: 'Unbleached Bread Flour', stockQty: 12.500, parLevel: 50.000, unit: 'kg', costPerUnit: 2.00 },
@@ -32,20 +33,27 @@ export const InventoryManager: React.FC = () => {
     localStorage.setItem('inventory_variance_log', JSON.stringify(varianceLog));
   }, [varianceLog]);
 
-  const handleAudit = (e: React.FormEvent) => {
+  const handleAudit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedItem || !physicalCount) return;
 
     const count = parseFloat(physicalCount);
     if (isNaN(count)) return;
 
-    const variance = count - selectedItem.stockQty;
-    const loss = Math.abs(variance * selectedItem.costPerUnit);
+    try {
+      // Call tool on the local Inventory MCP Server
+      const result = await mcp.callTool<any>("inventory-server", "log_audit_count", {
+        itemId: selectedItem.id,
+        physicalQty: count
+      });
 
-    // Update state
-    setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, stockQty: count } : i));
-    setVarianceLog(prev => [{ name: selectedItem.name, variance, loss }, ...prev]);
-    setSuccessMsg(`Audited ${selectedItem.name}. Variance of ${variance.toFixed(3)} ${selectedItem.unit} logged.`);
+      // Update state using responses from MCP Server
+      setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, stockQty: result.actualQty } : i));
+      setVarianceLog(prev => [{ name: selectedItem.name, variance: result.variance, loss: result.loss }, ...prev]);
+      setSuccessMsg(`Audited ${selectedItem.name}. Variance of ${result.variance.toFixed(3)} ${selectedItem.unit} logged.`);
+    } catch (error) {
+      console.error("Failed to log inventory audit via MCP:", error);
+    }
     
     // Clear inputs
     setSelectedItem(null);

@@ -2,34 +2,31 @@
 
 > The all-in-one culinary intelligence platform — built for professional kitchens, food entrepreneurs, and culinary creators. 
 
-CulinaryOS is designed as a unified ecosystem addressing both consumer/pro recipe workflows and commercial enterprise operations. The platform exists in two parallel tracks designed to sync into a single cohesive experience.
+CulinaryOS is designed as a local-first, modular platform orchestrating microservices via the **Model Context Protocol (MCP)**. This architecture ensures high-speed, offline-capable kitchen tools (POS, KDS, Inventory) that can later sync to cloud SaaS/PaaS backends.
 
 ---
 
 ## 🗺️ Architectural Ecosystem
 
 ```
-CulinaryOS Platform
+CulinaryOS Core Platform
 ├── Mobile (Android — Track A)
 │   ├── Recipe Engine + Ratio Blueprint System
 │   ├── Prep List Manager
-│   ├── Pantry Intelligence
 │   └── AI Chef Assistant (Anthropic API)
 │
-├── Web / ERP (React + Base44 — Track B)
+├── MCP Microservices Layer (Local-first / STDIO & SSE)
+│   ├── POS MCP Server (create_order, apply_loyalty)
+│   ├── KDS MCP Server (fetch_kds_tickets, bump_kds_ticket)
+│   └── Inventory MCP Server (get_inventory_levels, log_audit_count)
+│
+├── Web / ERP Interface (React + Base44 — Track B)
 │   ├── POS · KDS · Inventory · Scheduling
-│   ├── CRM + Loyalty · QC · Team Chat
-│   ├── Reporting Suite (40+ reports)
-│   └── Workflow Automation
+│   └── CRM + Loyalty · Scheduling CRM · Team Chat
 │
-├── Desktop (Electron — Phase 4)
-│   ├── KDS display mode
-│   └── Bulk import/export tools
-│
-└── CulinaryOS API
-    ├── Recipe data syndication
-    ├── RestRevive AI bridge
-    └── Third-party integrations
+└── Desktop App (Electron) & SaaS Sync (Supabase)
+    ├── Local-first Room to Supabase Sync
+    └── RestRevive AI Data Bridge
 ```
 
 ---
@@ -37,6 +34,9 @@ CulinaryOS Platform
 ## 📁 Repository Documentation Hub
 
 Explore the detailed blueprints for CulinaryOS modules and specifications:
+
+### 🔌 [MCP Microservices Spec](file:///c:/Users/User/Documents/CulinaryOS/docs/mcp_architecture_spec.md)
+*Detailed JSON-RPC schemas and tool specifications for local-first KDS, POS, and inventory Model Context Protocol servers.*
 
 ### 📐 [Track A — UI/UX Design Specs](file:///c:/Users/User/Documents/CulinaryOS/docs/track_a_ui_ux_specs.md)
 *Jetpack Compose styling tokens, user flows, and wireframe outlines for the Ratio Blueprint recipe engine, mobile prep list batched workflow, and responsive pantry level indicators.*
@@ -63,8 +63,9 @@ Explore the detailed blueprints for CulinaryOS modules and specifications:
 
 ## 🎯 Project Status & Roadmap
 
-| Track | Stack | Status | Target Launch |
+| Module | Stack | Status | Target Launch |
 | :--- | :--- | :--- | :--- |
 | **Track A (Android)** | Kotlin · Compose · Room | 🔵 In Development | Q3 2026 (Alpha) |
 | **Track B (Web)** | React · Base44 · Supabase · Stripe | 🔵 In Development | Q4 2026 (Pilot-ready) |
+| **MCP Servers** | Node.js · TypeScript · STDIO/SSE | 🔵 In Development | Q4 2026 (Pilot-ready) |
 | **Integrations** | Supabase Sync · Electron · Public API | ⚪ Phase 3/4 planned | Q1 2027+ |

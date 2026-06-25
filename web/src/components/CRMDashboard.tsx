@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Award, Shield, UserPlus } from 'lucide-react';
 import { CRMCustomer } from '../types';
+import { mcp } from '../services/mcpClient';
 
 const INITIAL_CUSTOMERS: CRMCustomer[] = [
   { id: 'c1', name: 'Nate D.', email: 'nate@culinaryos.com', tier: 'Platinum', points: 1250, totalSpent: 980.50 },
@@ -46,27 +47,38 @@ export const CRMDashboard: React.FC = () => {
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  const handleAdjustPoints = (multiplier: number) => {
+  const handleAdjustPoints = async (multiplier: number) => {
     if (!selectedCust) return;
     const adjustment = parseInt(pointAdjust) * multiplier;
     if (isNaN(adjustment)) return;
 
-    setCustomers(prev => prev.map(c => {
-      if (c.id === selectedCust.id) {
-        const nextPoints = Math.max(0, c.points + adjustment);
-        
-        // Auto-recalculate loyalty tier based on points
-        let nextTier: CRMCustomer['tier'] = 'Bronze';
-        if (nextPoints >= 1000) nextTier = 'Platinum';
-        else if (nextPoints >= 500) nextTier = 'Gold';
-        else if (nextPoints >= 150) nextTier = 'Silver';
-        
-        const updated = { ...c, points: nextPoints, tier: nextTier };
-        setSelectedCust(updated);
-        return updated;
-      }
-      return c;
-    }));
+    try {
+      // Call tool on the local POS MCP Server
+      await mcp.callTool("pos-server", "apply_loyalty_points", {
+        customerId: selectedCust.id,
+        pointsToAdjust: adjustment
+      });
+
+      // Update state locally on success
+      setCustomers(prev => prev.map(c => {
+        if (c.id === selectedCust.id) {
+          const nextPoints = Math.max(0, c.points + adjustment);
+          
+          // Auto-recalculate loyalty tier based on points
+          let nextTier: CRMCustomer['tier'] = 'Bronze';
+          if (nextPoints >= 1000) nextTier = 'Platinum';
+          else if (nextPoints >= 500) nextTier = 'Gold';
+          else if (nextPoints >= 150) nextTier = 'Silver';
+          
+          const updated = { ...c, points: nextPoints, tier: nextTier };
+          setSelectedCust(updated);
+          return updated;
+        }
+        return c;
+      }));
+    } catch (error) {
+      console.error("Failed to adjust customer points via MCP:", error);
+    }
   };
 
   const getTierColor = (tier: CRMCustomer['tier']): string => {
