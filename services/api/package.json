@@ -1,0 +1,26 @@
+{
+  "name": "@culinaryos/service-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev":       "tsx watch src/index.ts",
+    "build":     "tsc",
+    "start":     "node dist/index.js",
+    "lint":      "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@culinaryos/auth":      "workspace:*",
+    "@culinaryos/config":    "workspace:*",
+    "@culinaryos/db":        "workspace:*",
+    "@culinaryos/event-bus": "workspace:*",
+    "@hono/node-server":     "^1.11.0",
+    "@supabase/supabase-js": "^2.43.0",
+    "hono":                  "^4.4.0"
+  },
+  "devDependencies": {
+    "tsx":        "^4.11.0",
+    "typescript": "^5.4.0"
+  }
+}
