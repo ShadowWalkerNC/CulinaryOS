@@ -1,0 +1,65 @@
+export interface Modifier {
+  id:               string;
+  name:             string;
+  price_adjustment: number;  // cents — can be negative
+  is_default:       boolean;
+}
+
+export interface ModifierGroup {
+  id:             string;
+  name:           string;
+  required:       boolean;
+  min_selections: number;
+  max_selections: number;
+  sort_order:     number;
+  modifiers:      Modifier[];
+}
+
+export interface MenuItem {
+  id:              string;
+  name:            string;
+  description:     string | null;
+  price:           number;        // cents
+  status:          'available' | 'unavailable' | '86d';
+  station:         string;
+  allergens:       string[];
+  image_url:       string | null;
+  sort_order:      number;
+  modifier_groups: ModifierGroup[];
+}
+
+export interface MenuSection {
+  id:         string;
+  name:       string;
+  sort_order: number;
+  menu_items: MenuItem[];
+}
+
+export interface MenuData {
+  restaurant: { id: string; name: string; slug: string };
+  menu:       { id: string; name: string; description: string | null };
+  sections:   MenuSection[];
+}
+
+// Cart
+export interface CartModifier {
+  modifier_id:      string;
+  name:             string;
+  price_adjustment: number;
+}
+
+export interface CartItem {
+  id:          string;   // unique per cart line (uuid)
+  menu_item_id: string;
+  name:         string;
+  unit_price:   number;  // cents (base + selected modifiers)
+  quantity:     number;
+  modifiers:    CartModifier[];
+  notes?:       string;
+}
+
+export type CartState = {
+  items:     CartItem[];
+  total:     number;     // cents
+  itemCount: number;
+};
