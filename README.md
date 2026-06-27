@@ -192,10 +192,7 @@ const sourdough: RatioBlueprint = {
   ],
 };
 
-// Scale to 12 loaves for Saturday prep
 const scaled = scaleBlueprint(sourdough, 12);
-
-// Compute food cost against current ingredient prices
 const cost = computeCost(scaled, { 'bread-flour': 0.002, water: 0, starter: 0.01, salt: 0.001 });
 ```
 
@@ -255,24 +252,22 @@ const cost = computeCost(scaled, { 'bread-flour': 0.002, water: 0, starter: 0.01
 ## Offline & Hardware Decisions
 
 **POS offline (V1 decision — Option A):**  
-Show a "Connection Lost" banner, disable send-to-kitchen, allow order editing locally, auto-sync on reconnect via a localStorage queue → Supabase on reconnect. Full offline-first (IndexedDB + service worker + conflict resolution) is deferred to a future phase.
+Show a "Connection Lost" banner, disable send-to-kitchen, allow order editing locally, auto-sync on reconnect via a localStorage queue → Supabase on reconnect.
 
 **KDS hardware:**  
-Any 10" Android tablet in Chrome kiosk mode running `apps/kds`. A waterproof case and Power over Ethernet for kitchen environments. No proprietary hardware required.
+Any 10" Android tablet in Chrome kiosk mode running `apps/kds`. No proprietary hardware required.
 
 **Card-present hardware (Phase 11):**  
-Stripe Terminal Reader S700 (touchscreen) or BBPOS WisePOS E. Stripe's built-in offline mode queues transactions when connectivity is lost and syncs on reconnect.
+Stripe Terminal Reader S700 (touchscreen) or BBPOS WisePOS E.
 
 **Tenant onboarding (pre-Phase 3 requirement):**  
-A registration flow (name, slug, timezone, currency) must exist before POS can be used without hardcoded `tenant_id`. Planned as the first task of Phase 3.
+A registration flow (name, slug, timezone, currency) must exist before POS can be used without hardcoded `tenant_id`.
 
 ---
 
 ## MCP Server Architecture
 
-CulinaryOS exposes its full operation layer as domain-split MCP servers. Any MCP-compatible AI agent — Claude Desktop, Cursor, Copilot, custom — can connect and drive the platform.
-
-### Connection Model
+CulinaryOS exposes its full operation layer as domain-split MCP servers.
 
 ```
 AI Agent  (Claude Desktop / Cursor / custom)
@@ -290,105 +285,25 @@ services/api  (Hono · :3000)
 Supabase  (PostgreSQL + Realtime)
 ```
 
-**Every MCP server — no exceptions:**
-```typescript
-const input = InputSchema.parse(request.params.arguments);       // Zod first
-const res = await fetch(`${API_URL}/v1/...`, {
-  headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' }
-});
-if (!res.ok) {
-  const err = await res.json().catch(() => ({ error: res.statusText }));
-  throw new Error(`[culinaryos] API ${res.status}: ${err.error}`);
-}
-return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-// No `any`. No implicit returns. No direct DB access — always through services/api.
-```
-
 ### ✅ `mcp/culinary-os-server.ts` — Unified (shipped)
 `create_order` · `fire_course` · `get_course_status` · `bump_ticket` · `get_pantry_levels` · `deduct_pantry_item`
 
-Will be split into domain servers as each phase ships.
-
 ### 📋 Domain Servers (Phase 9)
+- **pos-server** · **kds-server** · **inventory-server** · **admin-server** · **payments-server**
 
-**`mcp/pos-server.ts`** — stdio  
-`create_order` · `add_item` · `void_item` · `fire_course` · `get_order` · `close_order` · `get_open_orders`
-
-**`mcp/kds-server.ts`** — stdio  
-`get_tickets` · `bump_ticket` · `get_course_status` · `get_station_analytics` · `remake_ticket`
-
-**`mcp/inventory-server.ts`** — stdio  
-`get_pantry_levels` · `get_low_stock_alerts` · `deduct_pantry_item` · `receive_delivery` · `create_purchase_order` · `get_purchase_orders` · `approve_purchase_order`
-
-**`mcp/admin-server.ts`** — stdio + SSE  
-`get_eod_report` · `get_range_report` · `get_menu` · `set_item_availability` · `get_online_orders` · `confirm_online_order`
-
-**`mcp/payments-server.ts`** — stdio  
-`create_checkout` · `capture_payment` · `refund_payment` · `get_payment_status`
-
-Full tool specs (input schemas, API calls, build rules) in [`mcp/README.md`](./mcp/README.md).
-
-### Running MCP Servers
-```bash
-pnpm --filter mcp build
-node mcp/dist/pos-server.js
-node mcp/dist/kds-server.js
-node mcp/dist/inventory-server.js
-node mcp/dist/admin-server.js
-node mcp/dist/payments-server.js
-```
-
-**Claude Desktop** (`claude_desktop_config.json`):
-```json
-{
-  "mcpServers": {
-    "culinaryos-pos":       { "command": "node", "args": ["mcp/dist/pos-server.js"],       "env": { "CULINARYOS_API_URL": "http://localhost:3000", "CULINARYOS_API_KEY": "...", "CULINARYOS_TENANT_ID": "..." } },
-    "culinaryos-kds":       { "command": "node", "args": ["mcp/dist/kds-server.js"],       "env": { "CULINARYOS_API_URL": "http://localhost:3000", "CULINARYOS_API_KEY": "..." } },
-    "culinaryos-inventory": { "command": "node", "args": ["mcp/dist/inventory-server.js"], "env": { "CULINARYOS_API_URL": "http://localhost:3000", "CULINARYOS_API_KEY": "..." } },
-    "culinaryos-admin":     { "command": "node", "args": ["mcp/dist/admin-server.js"],     "env": { "CULINARYOS_API_URL": "http://localhost:3000", "CULINARYOS_API_KEY": "..." } },
-    "culinaryos-payments":  { "command": "node", "args": ["mcp/dist/payments-server.js"],  "env": { "CULINARYOS_API_URL": "http://localhost:3000", "CULINARYOS_API_KEY": "...", "STRIPE_SECRET_KEY": "..." } }
-  }
-}
-```
+Full specs in [`mcp/README.md`](./mcp/README.md).
 
 ---
 
 ## Quick Start
 
-**Prerequisites:** Node 20+, pnpm 9+, Supabase CLI
-
 ```bash
 git clone https://github.com/ShadowWalkerNC/CulinaryOS
 cd CulinaryOS
 pnpm install
-
 cp .env.example .env
-# SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-# STRIPE_SECRET_KEY, VITE_STRIPE_PUBLISHABLE_KEY, RESEND_API_KEY
-
-supabase db reset    # V1–V12 + seed.sql
-pnpm dev             # all four apps + API in parallel
-
-# API    → http://localhost:3000/health
-# POS    → http://localhost:5173
-# KDS    → http://localhost:5174
-# Admin  → http://localhost:5175
-# Web    → http://localhost:5176/menu/:slug
-```
-
----
-
-## Development Scripts
-
-```bash
-pnpm dev              # all apps + API, watch mode
-pnpm build            # production build
-pnpm test             # Bun test suites
-pnpm lint             # ESLint
-pnpm typecheck        # tsc --noEmit
-pnpm db:types         # supabase gen types → packages/db/src/types.ts
-pnpm db:reset         # supabase db reset
-pnpm seed             # seed dev data
+supabase db reset
+pnpm dev
 ```
 
 ---
@@ -396,18 +311,12 @@ pnpm seed             # seed dev data
 ## Ground Rules
 
 1. **No Flutter, no Gradle, no Flyway** — ever
-2. **No on-device AI** — Anthropic API only, gracefully absent offline
+2. **No on-device AI** — Anthropic API only
 3. **No raw card data on server** — Stripe PaymentIntents only
-4. **Offline payments** = Stripe Terminal offline mode — not a custom sync engine
-5. **Every DB table** requires `tenant_id uuid not null` + RLS policies — no exceptions
-6. **Every mutation** writes to `domain_events` with `employee_id` + UTC timestamp
-7. **Stock mutations** write ledger deltas — never UPDATE a running total directly
-8. **MCP tools** validate all inputs with Zod before any API call — never call DB directly
-9. Build the failure case first, then the happy path
-10. Version numbers reflect reality — stay at `0.x` until something actually ships end-to-end
-11. The **What's Actually Built** table contains only code that exists in the repo
-12. The Ratio Blueprint Engine is non-negotiable — it's what makes this not Toast
-13. Every commit updates this README's AI Agent Directive phase marker
+4. **Every DB table** requires `tenant_id uuid not null` + RLS
+5. **Every mutation** writes to `domain_events` with `employee_id` + UTC timestamp
+6. **MCP tools** validate all inputs with Zod — never call DB directly
+7. The Ratio Blueprint Engine is non-negotiable
 
 ---
 
@@ -415,23 +324,46 @@ pnpm seed             # seed dev data
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md). Run `pnpm lint && pnpm typecheck && pnpm test` before opening a PR.
 
-**V1 target users:** Alley Katz and Half Baked Café — dogfood first, open source second.
-
 ---
 
 ## AI Agent Directive
 
 > **Current phase:** 0 — Foundation  
-> **Active targets (in order):**  
-> 1. Scaffold stub `package.json` in every workspace (`apps/*`, `services/api`, `packages/*`, `mcp`)  
-> 2. Implement `packages/ratio-engine/src/index.ts` — `RatioBlueprint`, `scaleBlueprint()`, `computeCost()`  
-> 3. Mount `paymentsRoutes` + `menuRoutes` in `services/api/src/index.ts`  
-> 4. Implement tenant registration flow before any POS work  
-> 5. Implement `POST /v1/online-orders` full logic + `GuestInfoForm.tsx`  
-> **MCP servers:** Full specs in MCP section above + `mcp/README.md`  
 > **Never:** Flutter · Gradle · Flyway · Gemini API · on-device AI · raw card data · direct DB from MCP  
 > **Always:** `tenant_id` + RLS · `domain_events` audit · Zod on MCP inputs · PaymentIntents · update README on every commit  
 > **Stack:** TypeScript · Hono · React 18 · Vite · Supabase · Stripe · Resend · pnpm · Turborepo · GitHub Actions
+
+---
+
+## 🚀 Agent Session Bootstrap
+
+This repo follows the **Universal Project Architect (UPA)** workflow. Start every AI session by loading the system files below and filling in the context block.
+
+**Full reference:** [BOOT.md](https://github.com/ShadowWalkerNC/.github/blob/main/BOOT.md)
+
+```
+Load and follow these files before responding:
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/AGENTS.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/SESSION_START.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/AGENT_DISPATCH.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/UPA_V1.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/UPA_LIGHT_MODE.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/UPA_ESCALATION_CHECKLIST.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/agents/AGENT_COHERENCE.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/agents/AGENT_SECURITY.md
+https://raw.githubusercontent.com/ShadowWalkerNC/.github/main/agents/AGENT_DOCS.md
+https://raw.githubusercontent.com/ShadowWalkerNC/CulinaryOS/main/AGENTS.md
+https://raw.githubusercontent.com/ShadowWalkerNC/CulinaryOS/main/ARCHITECTURE.md
+
+PROJECT:      CulinaryOS
+PHASE:        [current phase]
+LAST COMMIT:  [SHA or description]
+MODE:         [full | quick | audit | hotfix | onboard]
+AGENT:        [Perplexity | Claude | Cursor | Copilot]
+OPEN:         [2-3 open items or "see TODO"]
+SCOPE:        [what you want this session]
+OUT OF SCOPE: [what you are not doing]
+```
 
 ---
 
