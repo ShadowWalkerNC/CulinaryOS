@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, MonitorPlay, Box, Users, Calendar } from 'lucide-react';
+import { ShoppingBag, MonitorPlay, Box, Users, Calendar, Globe, Heart, Store, ShieldCheck } from 'lucide-react';
 import { POSDashboard } from './components/POSDashboard';
 import { KDSScreen } from './components/KDSScreen';
 import { InventoryManager } from './components/InventoryManager';
@@ -7,6 +7,12 @@ import { StaffScheduler } from './components/StaffScheduler';
 import { CRMDashboard } from './components/CRMDashboard';
 import { KDSTicket, OrderItem } from './types';
 import { mcp } from './services/mcpClient';
+
+// Public Pages & Landing flow
+import BetaSignup from './pages/beta';
+import BetaDashboard from './pages/admin/beta-dashboard';
+import Marketplace from './pages/marketplace';
+import FoundingCustomers from './pages/founding-customers';
 
 const INITIAL_KDS_TICKETS: KDSTicket[] = [
   {
@@ -172,6 +178,46 @@ const App: React.FC = () => {
                 <span>CRM & Loyalty</span>
               </a>
             </li>
+
+            <div className="sidebar-divider" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '15px 0' }}></div>
+            <div className="sidebar-header" style={{ padding: '0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>Public Portals</div>
+
+            <li>
+              <a 
+                onClick={() => setActiveTab('beta')}
+                className={`sidebar-link ${activeTab === 'beta' ? 'active' : ''}`}
+              >
+                <Globe size={18} />
+                <span>Beta Signup</span>
+              </a>
+            </li>
+            <li>
+              <a 
+                onClick={() => setActiveTab('beta-dashboard')}
+                className={`sidebar-link ${activeTab === 'beta-dashboard' ? 'active' : ''}`}
+              >
+                <ShieldCheck size={18} />
+                <span>Beta Admin</span>
+              </a>
+            </li>
+            <li>
+              <a 
+                onClick={() => setActiveTab('founding-customers')}
+                className={`sidebar-link ${activeTab === 'founding-customers' ? 'active' : ''}`}
+              >
+                <Heart size={18} />
+                <span>Founders List</span>
+              </a>
+            </li>
+            <li>
+              <a 
+                onClick={() => setActiveTab('marketplace')}
+                className={`sidebar-link ${activeTab === 'marketplace' ? 'active' : ''}`}
+              >
+                <Store size={18} />
+                <span>Marketplace</span>
+              </a>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -183,6 +229,10 @@ const App: React.FC = () => {
         {activeTab === 'inventory' && <InventoryManager />}
         {activeTab === 'scheduler' && <StaffScheduler />}
         {activeTab === 'crm' && <CRMDashboard />}
+        {activeTab === 'beta' && <BetaSignup />}
+        {activeTab === 'beta-dashboard' && <BetaDashboard />}
+        {activeTab === 'founding-customers' && <FoundingCustomers />}
+        {activeTab === 'marketplace' && <Marketplace />}
       </main>
     </div>
   );

@@ -26,7 +26,7 @@ export default function BetaDashboard() {
       .from('beta_applications')
       .select('*')
       .order('applied_at', { ascending: false })
-      .then(({ data }) => setApps(data ?? []));
+      .then(({ data }: { data: any }) => setApps(data ?? []));
   }, []);
 
   async function updateStatus(id: string, status: string, extra?: object) {

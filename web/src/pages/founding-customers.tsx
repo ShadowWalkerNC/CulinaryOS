@@ -18,7 +18,7 @@ export default function FoundingCustomers() {
       .select('customer_number, public_name, business_type, location, converted_at')
       .eq('public_permission', true)
       .order('customer_number')
-      .then(({ data }) => setCustomers(data ?? []));
+      .then(({ data }: { data: any }) => setCustomers(data ?? []));
   }, []);
 
   const slots = [1, 2, 3, 4, 5];

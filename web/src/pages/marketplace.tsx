@@ -36,11 +36,11 @@ export default function Marketplace() {
       .select('*')
       .eq('is_published', true)
       .order('install_count', { ascending: false })
-      .then(({ data }) => setExtensions(data ?? []));
+      .then(({ data }: { data: any }) => setExtensions(data ?? []));
 
     supabase.from('installed_extensions')
       .select('extension_id')
-      .then(({ data }) =>
+      .then(({ data }: { data: any }) =>
         setInstalled(new Set((data ?? []).map((r: any) => r.extension_id)))
       );
   }, []);
