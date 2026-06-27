@@ -1,6 +1,6 @@
 {
   "name": "culinaryos",
-  "version": "2.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Open-source, self-hostable restaurant OS",
   "scripts": {
@@ -10,7 +10,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "supabase db push",
-    "db:types": "supabase gen types typescript --local > packages/db/src/types.ts"
+    "db:types": "supabase gen types typescript --local > packages/db/src/types.ts",
+    "db:reset": "supabase db reset",
+    "seed": "tsx scripts/seed.ts"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
