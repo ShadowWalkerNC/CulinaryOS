@@ -18,16 +18,16 @@
 //   /v1/tenants/register    — Commit 13
 // ============================================================
 
-import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
-import { requireApiKey } from './middleware/auth';
-import { withSupabase } from './middleware/supabase';
-
-// Event bus — wired in Commit 3
-// import { handleIncomingEvent } from './event-bus/broker';
-// import { startRealtimeBridge } from './event-bus/realtime-bridge';
+import { serve }               from '@hono/node-server';
+import { Hono }                from 'hono';
+import { cors }                from 'hono/cors';
+import { logger }              from 'hono/logger';
+import { requireApiKey }       from './middleware/auth';
+import { withSupabase }        from './middleware/supabase';
+import {
+  handleIncomingEvent,
+  startRealtimeBridge,
+}                              from '@culinaryos/event-bus';
 
 const app = new Hono();
 
@@ -35,7 +35,7 @@ const app = new Hono();
 
 app.use('*', logger());
 app.use('*', cors({
-  origin: (origin) => origin, // tighten in production
+  origin: (origin) => origin,
   allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id', 'X-Caller-Service', 'X-Request-Id'],
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
@@ -48,8 +48,10 @@ app.use('/internal/*', requireApiKey);
 app.post('/internal/events', async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON' } }, 422);
-  // TODO Commit 3: replace with handleIncomingEvent(body)
-  return c.json({ ok: true, note: 'event-bus not yet wired — stub response' });
+
+  const result = await handleIncomingEvent(body);
+  if (!result.ok) return c.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: result.error } }, 500);
+  return c.json({ ok: true });
 });
 
 app.get('/internal/events', async (c) => {
@@ -67,18 +69,17 @@ app.get('/internal/events', async (c) => {
 // ---- Health ----
 
 app.get('/health', (c) => c.json({
-  service: 'culinaryos-api',
-  status: 'healthy',
-  version: '0.1.0',
-  uptime: Math.floor(process.uptime()),
+  service:   'culinaryos-api',
+  status:    'healthy',
+  version:   '0.1.0',
+  uptime:    Math.floor(process.uptime()),
   checkedAt: new Date().toISOString(),
 }));
 
 // ---- Boot ----
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
-
-// TODO Commit 3: startRealtimeBridge();
+startRealtimeBridge();
 
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`[culinaryos-api] listening on :${PORT}`);
