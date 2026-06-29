@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@culinaryos/config": ["../../packages/config/src/index.ts"],
+      "@culinaryos/db": ["../../packages/db/src/index.ts"],
+      "@culinaryos/auth": ["../../packages/auth/src/index.ts"],
+      "@culinaryos/event-bus": ["../../packages/event-bus/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}
