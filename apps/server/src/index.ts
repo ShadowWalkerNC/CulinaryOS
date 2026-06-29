@@ -22,12 +22,10 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { requireApiKey } from './middleware/auth';
+import { withSupabase } from './middleware/supabase';
 
-// Middleware — populated in Commit 2
-// import { authMiddleware } from './middleware/auth';
-// import { supabaseMiddleware } from './middleware/supabase';
-
-// Event bus — populated in Commit 3
+// Event bus — wired in Commit 3
 // import { handleIncomingEvent } from './event-bus/broker';
 // import { startRealtimeBridge } from './event-bus/realtime-bridge';
 
@@ -41,18 +39,11 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id', 'X-Caller-Service', 'X-Request-Id'],
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
+app.use('*', withSupabase);
 
-// ---- Internal route auth ----
+// ---- Internal routes (API key protected) ----
 
-app.use('/internal/*', async (c, next) => {
-  const key = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (key !== process.env.INTERNAL_API_KEY) {
-    return c.json({ ok: false, error: { code: 'UNAUTHORIZED', message: 'Invalid API key' } }, 401);
-  }
-  await next();
-});
-
-// ---- Event Bus (stub — real handlers wired in Commit 3) ----
+app.use('/internal/*', requireApiKey);
 
 app.post('/internal/events', async (c) => {
   const body = await c.req.json().catch(() => null);
@@ -62,8 +53,7 @@ app.post('/internal/events', async (c) => {
 });
 
 app.get('/internal/events', async (c) => {
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = c.get('supabase');
   const tenantId = c.req.header('X-Tenant-Id');
 
   let q = supabase.from('domain_events').select('*').order('created_at', { ascending: false }).limit(100);
