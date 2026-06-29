@@ -24,48 +24,61 @@ The product differentiator is the **Ratio Blueprint Engine** (`packages/ratio-en
 
 This repo is mid-migration. A legacy flat layout and the canonical Turborepo monorepo layout **both exist at root simultaneously**. The legacy directories must be removed manually before `pnpm install` will work cleanly. See [Manual Migration Steps](#manual-migration-steps) below.
 
-### Canonical layout (keep)
+### Canonical layout (keep — verified in repo)
 
 ```
-apps/           → React 18 + Vite apps (pos, kds, admin, web)
-services/       → Hono API gateway (services/api)
-packages/       → Shared TS packages (@culinaryos/*)
-mcp/            → MCP stdio/SSE servers
-supabase/       → Migrations + Edge Functions
-mobile/         → Android companion (Phase 12+)
-.github/        → CI workflows
-docs/           → Project documentation
-tests/          → Integration + E2E tests
+apps/
+  admin/          → Back-office React 18 + Vite app
+  kds/            → Kitchen Display System React 18 + Vite app
+  pos/            → POS tablet React 18 + Vite app
+  server/         → Hono API gateway (Node 20) ← canonical server location
+  web/            → Public storefront React 18 + Vite app
+packages/
+  auth/           → Auth context + session helpers
+  config/         → Env schema, constants, feature flags
+  db/             → Supabase client + generated types
+  event-bus/      → Typed in-process event emitter
+  ratio-engine/   → Ratio Blueprint Engine ← THE thing
+  shared/         → Shared types + utilities
+  ui/             → Shared React components
+mcp/              → MCP stdio/SSE servers
+supabase/         → Migrations V1–V12 + Edge Functions
+mobile/           → Android companion (Phase 12+)
+.github/          → CI workflows
+docs/             → Project documentation
+tests/            → Integration + E2E tests
 ```
 
-### Legacy directories (must be removed)
+> **Note:** The API server lives at `apps/server/` — **not** `services/api/`. All README references to `services/api` are legacy and should be read as `apps/server`.
+
+### Legacy directories (must be removed manually)
 
 | Directory | What It Is | Action |
 |---|---|---|
-| `backend/` | Old Hono server + `build.gradle.kts` skeleton — superseded by `services/api` | **Delete** |
-| `pos/` | Old POS app root — superseded by `apps/pos` | **Delete** |
-| `kds/` | Old KDS app root — superseded by `apps/kds` | **Delete** |
-| `web/` | Old web app root — superseded by `apps/web` | **Delete** |
-| `pos-client/` | Old POS client — superseded by `apps/pos` | **Delete** |
-| `kds-client/` | Old KDS client — superseded by `apps/kds` | **Delete** |
-| `admin-client/` | Old admin client — superseded by `apps/admin` | **Delete** |
-| `shared/` | Old shared code — superseded by `packages/` | **Delete** |
-| `android/` | Old Android skeleton — superseded by `mobile/recipeos` | **Delete** |
-| `recipeos/` | Duplicate RecipeOS root — superseded by `mobile/recipeos` | **Delete** |
+| `backend/` | Old Hono server — superseded by `apps/server/` | **Delete** |
+| `pos/` | Old POS app root — superseded by `apps/pos/` | **Delete** |
+| `kds/` | Old KDS app root — superseded by `apps/kds/` | **Delete** |
+| `web/` | Old web app root — superseded by `apps/web/` | **Delete** |
+| `pos-client/` | Old POS client — superseded by `apps/pos/` | **Delete** |
+| `kds-client/` | Old KDS client — superseded by `apps/kds/` | **Delete** |
+| `admin-client/` | Old admin client — superseded by `apps/admin/` | **Delete** |
+| `shared/` | Old shared code — superseded by `packages/shared/` | **Delete** |
+| `android/` | Old Android skeleton — superseded by `mobile/` | **Delete** |
+| `recipeos/` | Duplicate RecipeOS root — superseded by `mobile/` | **Delete** |
 | `gradle/` | Gradle wrapper — violates Ground Rule #1 | **Delete** |
 | `cli/` | Unspecified CLI tool — assess before deleting | **Assess** |
 | `extension_template/` | Extension scaffolding — assess relevance | **Assess** |
 | `extensions/` | Extension code — assess relevance | **Assess** |
 
-### Root files to assess
+### Root files to keep
 
 | File | Status |
 |---|---|
-| `docker-compose.yml` | ✅ Keep — self-host / local dev (document in Quick Start) |
-| `run-mcp-servers.bat` | ✅ Keep — Windows dev helper, document below |
-| `run-web.bat` | ✅ Keep — Windows dev helper, document below |
+| `docker-compose.yml` | ✅ Keep — self-host / local dev |
+| `run-mcp-servers.bat` | ✅ Keep — Windows dev helper |
+| `run-web.bat` | ✅ Keep — Windows dev helper |
 | `AGENTS.md` | ✅ Keep — AI agent conventions |
-| `CHANGELOG.md` | ✅ Keep — maintain going forward |
+| `CHANGELOG.md` | ✅ Keep |
 | `CONTRIBUTING.md` | ✅ Keep |
 | `.env.example` | ✅ Keep — ensure all vars documented |
 
@@ -86,7 +99,7 @@ git rm -r shared/
 git rm -r android/ recipeos/
 git rm -r gradle/
 
-# Assess these before deleting — open them and check if anything is worth keeping:
+# Assess these before deleting:
 # cli/  extension_template/  extensions/
 # If nothing is worth keeping:
 git rm -r cli/ extension_template/ extensions/
@@ -95,27 +108,22 @@ git add -A
 git commit -m "chore: remove legacy flat-layout directories (migration to Turborepo monorepo)"
 ```
 
-### Step 2 — Install dependencies
+### Step 2 — Verify workspace package.json files
 
-```bash
-pnpm install
-```
+Each workspace needs a valid `package.json` before `pnpm install` works cleanly.
 
-This will fail until each workspace has a valid `package.json`. The following workspaces currently have one:
+Currently confirmed with `package.json`:
 - `packages/ratio-engine` ✅
-- `packages/auth` ✅  
+- `packages/auth` ✅
 - `packages/config` ✅
-- `backend/` ⚠️ — has `package.json` but is being deleted
 
-Workspaces that still need a stub `package.json` before `pnpm install` works:
-- `apps/pos`, `apps/kds`, `apps/admin`, `apps/web`
-- `services/api`
-- `packages/db`, `packages/ui`, `packages/event-bus`
+Workspaces that need a stub `package.json` verified or added:
+- `apps/pos`, `apps/kds`, `apps/admin`, `apps/web`, `apps/server`
+- `packages/db`, `packages/ui`, `packages/shared`, `packages/event-bus`
 - `mcp/`
 
-Add a minimal stub to each:
 ```bash
-# Example — repeat for each workspace, adjusting name and description
+# Example stub — repeat for each workspace, adjusting name
 cat > apps/pos/package.json << 'EOF'
 {
   "name": "@culinaryos/pos",
@@ -126,43 +134,54 @@ cat > apps/pos/package.json << 'EOF'
 EOF
 ```
 
-### Step 3 — Scaffold apps with Vite
+### Step 3 — Install dependencies
 
 ```bash
-# React 18 + TypeScript + Vite for each frontend app
+pnpm install
+```
+
+### Step 4 — Scaffold apps with Vite (if not already done)
+
+```bash
 cd apps/pos   && pnpm create vite . --template react-ts
 cd apps/kds   && pnpm create vite . --template react-ts
 cd apps/admin && pnpm create vite . --template react-ts
 cd apps/web   && pnpm create vite . --template react-ts
 ```
 
-### Step 4 — Scaffold API service
+### Step 5 — Scaffold API server (if not already done)
 
 ```bash
-cd services/api
+cd apps/server
 pnpm init
 pnpm add hono @hono/node-server
 pnpm add -D typescript @types/node tsx
 ```
 
-### Step 5 — Migrate backend/src → services/api/src
+### Step 6 — Migrate backend/src → apps/server/src
 
 `backend/src/` contains real route code (Hono routes, middleware, event-bus). Before deleting `backend/`, copy anything worth keeping:
 
 ```bash
 # Review backend/src/ and backend/middleware/ first
-# Then copy routes into services/api/src/routes/
-cp -r backend/src/routes/* services/api/src/routes/
-cp -r backend/middleware/*  services/api/src/middleware/
-# Verify imports still resolve, then:
+cp -r backend/src/routes/*    apps/server/src/routes/
+cp -r backend/middleware/*     apps/server/src/middleware/
+# Verify imports resolve, then:
 git rm -r backend/
-git add -A && git commit -m "chore: migrate backend/src to services/api/src"
+git add -A && git commit -m "chore: migrate backend/src to apps/server/src"
 ```
 
-### Step 6 — Verify turbo builds
+### Step 7 — Mount unmounted routes
+
+Open `apps/server/src/index.ts` and mount:
+- `paymentsRoutes` → `/v1/payments`
+- `menuRoutes` → `/v1/menu`
+- `onlineOrdersRoutes` → `/v1/online-orders`
+
+### Step 8 — Verify turbo builds
 
 ```bash
-pnpm build        # should run all workspace builds via Turborepo
+pnpm build        # all workspace builds via Turborepo
 pnpm typecheck    # tsc --noEmit across all workspaces
 pnpm lint
 ```
@@ -180,12 +199,13 @@ pnpm lint
 │  :5173          :5174         :5175           :5176              │
 │       └─────────────┴──────────────┴──────────────┘             │
 │                             │                                    │
-│              services/api  (Hono · Node 20 · :3000)             │
+│              apps/server   (Hono · Node 20 · :3000)             │
 │                             │                                    │
 │  packages/                                                       │
 │    @culinaryos/db           Supabase client + generated types    │
 │    @culinaryos/event-bus    Typed in-process event emitter       │
 │    @culinaryos/ui           Shared React components              │
+│    @culinaryos/shared       Shared types + utilities             │
 │    @culinaryos/auth         Auth context + session helpers       │
 │    @culinaryos/ratio-engine Ratio Blueprint Engine ← THE thing   │
 │    @culinaryos/config       Env schema, constants, feature flags │
@@ -194,16 +214,16 @@ pnpm lint
 └──────────────────────────────────────────────────────────────────┘
 
 mcp/              → Domain MCP servers  (TypeScript · @modelcontextprotocol/sdk)
-mobile/recipeos   → Android companion   (Kotlin · Jetpack Compose · Phase 12+)
+mobile/           → Android companion   (Kotlin · Jetpack Compose · Phase 12+)
 supabase/         → Migrations V1–V12 + Edge Functions (Deno · Resend)
 ```
 
 | Layer | Technology |
 |---|---|
 | Monorepo | Turborepo + pnpm workspaces |
-| API gateway | Hono (Node 20) — `services/api/src/index.ts` · port 3000 |
+| API gateway | Hono (Node 20) — `apps/server/src/index.ts` · port 3000 |
 | Frontend apps | React 18 + Vite — tablet or browser · ports 5173–5176 |
-| Shared packages | `@culinaryos/db`, `event-bus`, `ui`, `auth`, `ratio-engine`, `config` |
+| Shared packages | `@culinaryos/db`, `event-bus`, `ui`, `shared`, `auth`, `ratio-engine`, `config` |
 | Database | Supabase PostgreSQL — V1–V12 migrations, RLS, Realtime |
 | Online payments | Stripe Elements + PaymentIntents |
 | In-venue payments | Stripe Terminal — built-in offline mode |
@@ -227,9 +247,9 @@ Three states: ✅ **Done** — code exists and runs · 🔨 **In progress** — 
 | `packages/ratio-engine` — full implementation + Bun tests | ✅ Done |
 | `packages/auth` — stub + `Session` type | ✅ Done |
 | `packages/config` — KDS thresholds, constants | ✅ Done |
-| `packages/db`, `packages/ui`, `packages/event-bus` — stubs exist, no `package.json` yet | 🔨 In progress |
-| `apps/pos`, `apps/kds`, `apps/admin`, `apps/web` — dirs exist, Vite not scaffolded | 🔨 In progress |
-| `services/api` — exists in `backend/`, migration to `services/api/src` pending | 🔨 In progress |
+| `packages/db`, `packages/ui`, `packages/shared`, `packages/event-bus` — dirs exist | 🔨 In progress |
+| `apps/pos`, `apps/kds`, `apps/admin`, `apps/web` — dirs exist, Vite scaffold TBD | 🔨 In progress |
+| `apps/server` — Hono server exists in `backend/`, migration to `apps/server/` pending | 🔨 In progress |
 | Remove legacy root directories (`backend/`, `pos/`, `kds/`, etc.) | 🔨 In progress — **manual** |
 | `package.json` stubs in every workspace so `pnpm install` succeeds | 📋 Planned |
 | GitHub Actions CI (lint + typecheck + test) | 📋 Planned |
@@ -245,14 +265,14 @@ Three states: ✅ **Done** — code exists and runs · 🔨 **In progress** — 
 ### Phase 2 — API Gateway
 | Item | Status |
 |---|---|
-| Hono server + CORS + auth middleware + `/health` | ✅ Done (`backend/server.ts` → migrate to `services/api`) |
+| Hono server + CORS + auth middleware + `/health` | ✅ Done (`backend/` → migrate to `apps/server/`) |
 | `GET /v1/kds/stations/:id/analytics` | ✅ Done |
-| `GET|POST|PATCH|DELETE /v1/pantry/**` | ✅ Done |
+| `GET\|POST\|PATCH\|DELETE /v1/pantry/**` | ✅ Done |
 | `GET /v1/reports/eod`, `GET /v1/reports/range` | ✅ Done |
-| `POST|GET /v1/payments/**` — file exists, **not mounted** | 🔨 In progress |
+| `POST\|GET /v1/payments/**` — file exists, **not mounted** | 🔨 In progress |
 | `GET /v1/menu/**` — file exists, **not mounted** | 🔨 In progress |
-| `POST|GET|PATCH /v1/online-orders/**` — stubs, **not mounted** | 📋 Planned |
-| `POST|GET|PATCH /v1/pos/orders/**` — not yet written | 📋 Planned |
+| `POST\|GET\|PATCH /v1/online-orders/**` — stubs, **not mounted** | 📋 Planned |
+| `POST\|GET\|PATCH /v1/pos/orders/**` — not yet written | 📋 Planned |
 
 ### Phase 3 — POS Core
 | Item | Status |
@@ -273,7 +293,7 @@ Three states: ✅ **Done** — code exists and runs · 🔨 **In progress** — 
 | Item | Status |
 |---|---|
 | `payments.ts` route — checkout, capture, refund | 🔨 In progress (not mounted) |
-| Mount in `index.ts` + integration test | 📋 Planned |
+| Mount in `apps/server/src/index.ts` + integration test | 📋 Planned |
 | Resend receipt Edge Function | 📋 Planned |
 
 ### Phase 6 — Inventory & Pantry
@@ -306,13 +326,13 @@ Three states: ✅ **Done** — code exists and runs · 🔨 **In progress** — 
 | `mcp/culinary-os-server.ts` — unified server (6 tools) | ✅ Done |
 | Domain servers (`pos`, `kds`, `inventory`, `admin`, `payments`) | 📋 Planned |
 
-### Phases 10–13
+### Phases 10–14
 | Phase | Name | Status |
 |---|---|---|
 | 10 | Staff management + PIN login | 📋 Planned |
 | 11 | Loyalty program | 📋 Planned |
 | 12 | Stripe Terminal (card-present) | 📋 Planned |
-| 13 | RecipeOS Android (`mobile/recipeos/`) | 📋 Planned |
+| 13 | RecipeOS Android (`mobile/`) | 📋 Planned |
 | 14 | OSS release — Docker Compose docs, seed data, public launch | 📋 Planned |
 
 ---
@@ -434,8 +454,6 @@ cp .env.example .env    # fill in required vars
 docker compose up       # builds all services, starts Supabase local, API, and apps
 ```
 
-See `docker-compose.yml` at root for service definitions.
-
 ### Windows helpers
 
 ```bat
@@ -465,7 +483,7 @@ pnpm seed             # seed dev data via scripts/seed.ts
 CulinaryOS exposes its full operation layer as domain-split MCP servers. Any MCP-compatible AI agent — Claude Desktop, Cursor, Copilot, custom — can connect and drive the platform.
 
 ```
-AI Agent  →  mcp/<domain>-server.ts  →  Zod validation  →  services/api  →  Supabase
+AI Agent  →  mcp/<domain>-server.ts  →  Zod validation  →  apps/server  →  Supabase
               stdio / SSE                                   HTTP · Bearer token
 ```
 
@@ -473,7 +491,7 @@ AI Agent  →  mcp/<domain>-server.ts  →  Zod validation  →  services/api  �
 - Validate all inputs with Zod before any API call
 - Always send `Authorization: Bearer $CULINARYOS_API_KEY`
 - Throw with context on non-2xx responses
-- Never access the database directly — always through `services/api`
+- Never access the database directly — always through `apps/server`
 - No `any`. No implicit returns. No silent failures.
 
 ### ✅ `mcp/culinary-os-server.ts` — Unified (shipped)
@@ -547,15 +565,16 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). Run `pnpm lint && pnpm typecheck && pn
 > **Active targets (in order):**  
 > 1. **Manual:** Run `git rm` to remove legacy root dirs — `backend/`, `pos/`, `kds/`, `web/`, `pos-client/`, `kds-client/`, `admin-client/`, `shared/`, `android/`, `recipeos/`, `gradle/` (see Manual Migration Steps above)  
 > 2. **Manual:** Assess `cli/`, `extension_template/`, `extensions/` before deleting  
-> 3. **Manual:** Review `backend/src/` for any routes/middleware worth migrating to `services/api/src/` before deleting  
+> 3. **Manual:** Review `backend/src/` for routes/middleware worth migrating to `apps/server/src/` before deleting  
 > 4. Add stub `package.json` to every workspace missing one so `pnpm install` succeeds  
-> 5. Scaffold `apps/pos`, `apps/kds`, `apps/admin`, `apps/web` with `pnpm create vite . --template react-ts`  
-> 6. Scaffold `services/api` with Hono + Node 20  
-> 7. Mount `paymentsRoutes` + `menuRoutes` in `services/api/src/index.ts`  
+> 5. Scaffold `apps/pos`, `apps/kds`, `apps/admin`, `apps/web` with `pnpm create vite . --template react-ts` (if not yet done)  
+> 6. Scaffold `apps/server` with Hono + Node 20 (if not yet done)  
+> 7. Mount `paymentsRoutes` + `menuRoutes` + `onlineOrdersRoutes` in `apps/server/src/index.ts`  
 > 8. Implement tenant registration flow (pre-Phase 3 blocker)  
 > **Never:** Flutter · Gradle · Flyway · Gemini API · on-device AI · raw card data · direct DB from MCP  
 > **Always:** `tenant_id` + RLS · `domain_events` audit · Zod on MCP inputs · PaymentIntents · update README on every commit  
-> **Stack:** TypeScript · Hono · React 18 · Vite · Supabase · Stripe · Resend · pnpm · Turborepo
+> **Stack:** TypeScript · Hono · React 18 · Vite · Supabase · Stripe · Resend · pnpm · Turborepo  
+> **Server location:** `apps/server/` (not `services/api/`)
 
 ---
 
