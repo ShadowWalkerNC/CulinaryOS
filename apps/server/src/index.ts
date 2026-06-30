@@ -2,20 +2,20 @@
 // CulinaryOS — API Server (apps/server)
 // Hono on Node 20 (or Bun). Entry point.
 //
-// Routes mounted here:
+// Routes mounted:
 //   GET  /health
-//   POST /internal/events   — event bus ingress
-//   GET  /internal/events   — event log (last 100)
+//   POST /internal/events        — event bus ingress
+//   GET  /internal/events        — event log (last 100)
+//   *    /v1/kds/*               — kitchen display routes
+//   *    /v1/pantry/*            — pantry / inventory routes
+//   *    /v1/reports/*           — analytics + reporting
 //
-// Routes to be mounted in upcoming commits:
-//   /v1/kds/*               — Commit 4
-//   /v1/pantry/*            — Commit 4
-//   /v1/reports/*           — Commit 4
-//   /v1/payments/*          — Commit 10
-//   /v1/menu/*              — Commit 11
-//   /v1/online-orders/*     — Commit 12
-//   /v1/pos/orders/*        — Phase 3
-//   /v1/tenants/register    — Commit 13
+// Coming in upcoming commits:
+//   /v1/payments/*               — Commit 10
+//   /v1/menu/*                   — Commit 11
+//   /v1/online-orders/*          — Commit 12
+//   /v1/pos/orders/*             — Phase 3
+//   /v1/tenants/register         — Commit 13
 // ============================================================
 
 import { serve }               from '@hono/node-server';
@@ -28,6 +28,9 @@ import {
   handleIncomingEvent,
   startRealtimeBridge,
 }                              from '@culinaryos/event-bus';
+import { kdsRoutes }           from './routes/kds';
+import { pantryRoutes }        from './routes/pantry';
+import { reportsRoutes }       from './routes/reports';
 
 const app = new Hono();
 
@@ -65,6 +68,12 @@ app.get('/internal/events', async (c) => {
   if (error) return c.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: error.message } }, 500);
   return c.json({ ok: true, data });
 });
+
+// ---- API v1 routes ----
+
+app.route('/v1/kds',     kdsRoutes);
+app.route('/v1/pantry',  pantryRoutes);
+app.route('/v1/reports', reportsRoutes);
 
 // ---- Health ----
 
