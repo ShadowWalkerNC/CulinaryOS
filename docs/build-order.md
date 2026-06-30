@@ -94,29 +94,29 @@ A phase is **complete** when ALL of the following are true:
 - [x] Write `docs/architecture.md`
 - [x] Write `docs/domain-model.md`
 - [x] Write `docs/build-order.md`
-- [ ] Write `docs/sync-protocol.md` — **REQUIRED before any local queue code**
-- [ ] Write `docs/security.md` — auth flow, RBAC matrix, OWASP checklist stub
-- [ ] Write `docs/api/auth-v1.yaml` — OpenAPI spec for Phase 1 endpoints
+- [x] Write `docs/sync-protocol.md` — **REQUIRED before any local queue code**
+- [x] Write `docs/security.md` — auth flow, RBAC matrix, OWASP checklist stub
+- [x] Write `docs/api/auth-v1.yaml` — OpenAPI spec for Phase 1 endpoints
 
 ### Scaffold
-- [ ] Initialize KMP Gradle project — modules: `:shared`, `:backend`, `:pos-client`, `:kds-client`, `:admin-client`
-- [ ] Create `web/ordering/` — Next.js project stub (no pages yet)
-- [ ] Create `web/dashboard/` — Next.js project stub (no pages yet)
+- [x] Initialize KMP Gradle project — modules: `:shared`, `:backend`, `:pos-client`, `:kds-client`, `:admin-client`
+- [x] Create `web/ordering/` — Next.js project stub (no pages yet)
+- [x] Create `web/dashboard/` — Next.js project stub (no pages yet)
 
 ### Backend
-- [ ] Ktor backend in `:backend` — single `GET /health` endpoint returning `{ "status": "ok", "version": "0.1.0" }`
-- [ ] Flyway setup — `db/migrations/` directory, one baseline migration `V1__baseline.sql` (empty schema)
-- [ ] SQLDelight in `:shared` — `LocalEvent` table schema only (no logic yet)
+- [x] Ktor backend in `:backend` — single `GET /health` endpoint returning `{ "status": "ok", "version": "0.1.0" }`
+- [x] Flyway setup — `db/migrations/` directory, one baseline migration `V1__baseline.sql` (empty schema)
+- [x] SQLDelight in `:shared` — `LocalEvent` table schema only (no logic yet)
 
 ### Infrastructure
-- [ ] `docker-compose.yml` — starts PostgreSQL + Ktor backend locally with one command
-- [ ] `docker-compose.prod.yml` — Ktor + PostgreSQL + Nginx + SSL (Let's Encrypt) for self-host
-- [ ] `.env.example` — every required environment variable documented with type and example value
-- [ ] `DATABASE_URL` env var support — accept external PostgreSQL connection string; bundled DB is default
+- [x] `docker-compose.yml` — starts PostgreSQL + Ktor backend locally with one command
+- [x] `docker-compose.prod.yml` — Ktor + PostgreSQL + Nginx + SSL (Let's Encrypt) for self-host
+- [x] `.env.example` — every required environment variable documented with type and example value
+- [x] `DATABASE_URL` env var support — accept external PostgreSQL connection string; bundled DB is default
 
 ### CI/CD
-- [ ] GitHub Actions `build.yml` — runs `./gradlew build` + lint on every push to `main` and every PR
-- [ ] PR branch protection — branch blocked if CI fails
+- [x] GitHub Actions `build.yml` — runs `./gradlew build` + lint on every push to `main` and every PR
+- [x] PR branch protection — branch blocked if CI fails
 
 ### Exit Gate
 > `docker compose up` → backend responds to `GET /health` with 200.
@@ -134,34 +134,34 @@ A phase is **complete** when ALL of the following are true:
 > This phase builds the security foundation. Every other module depends on it. The most important deliverable is the **Ktor tenant-scoping plugin** — it must inject `restaurantId` into every request context automatically so no future route can bypass tenant isolation. The cross-tenant integration test must pass before this phase is considered done.
 
 ### Database
-- [ ] Migration: `organizations` table — `id`, `name`, `billingEmail`, `createdAt`
-- [ ] Migration: `restaurants` table — `id`, `organizationId`, `name`, `address`, `phone`, `timezone`, `settings (jsonb)`, `createdAt`
-- [ ] Migration: `users` table — `id`, `restaurantId`, `name`, `email`, `passwordHash`, `role`, `pin (nullable)`, `createdAt`
-- [ ] Migration: `refresh_tokens` table — `id`, `userId`, `token (hashed)`, `expiresAt`, `revokedAt (nullable)`
+- [x] Migration: `organizations` table — `id`, `name`, `billingEmail`, `createdAt`
+- [x] Migration: `restaurants` table — `id`, `organizationId`, `name`, `address`, `phone`, `timezone`, `settings (jsonb)`, `createdAt`
+- [x] Migration: `users` table — `id`, `restaurantId`, `name`, `email`, `passwordHash`, `role`, `pin (nullable)`, `createdAt`
+- [x] Migration: `refresh_tokens` table — `id`, `userId`, `token (hashed)`, `expiresAt`, `revokedAt (nullable)`
 
 ### API Endpoints
-- [ ] `POST /auth/register` — create Organization + Restaurant + Owner user
-- [ ] `POST /auth/login` — validate credentials, return `{ accessToken, refreshToken }`
-- [ ] `POST /auth/refresh` — rotate refresh token, return new `{ accessToken, refreshToken }`
-- [ ] `POST /auth/logout` — revoke refresh token
-- [ ] `POST /auth/pin-login` — validate 4-digit PIN for POS staff switchover
+- [x] `POST /auth/register` — create Organization + Restaurant + Owner user
+- [x] `POST /auth/login` — validate credentials, return `{ accessToken, refreshToken }`
+- [x] `POST /auth/refresh` — rotate refresh token, return new `{ accessToken, refreshToken }`
+- [x] `POST /auth/logout` — revoke refresh token
+- [x] `POST /auth/pin-login` — validate 4-digit PIN for POS staff switchover
 
 ### Middleware & Plugins
-- [ ] Ktor `TenantScopePlugin` — extracts `restaurantId` from JWT, injects into request context; all protected routes automatically scoped
-- [ ] Ktor `RBACPlugin` — reads role from JWT, enforces per-route role requirements
-- [ ] JWT validation on every protected route — rejects expired, tampered, or wrong-tenant tokens
+- [x] Ktor `TenantScopePlugin` — extracts `restaurantId` from JWT, injects into request context; all protected routes automatically scoped
+- [x] Ktor `RBACPlugin` — reads role from JWT, enforces per-route role requirements
+- [x] JWT validation on every protected route — rejects expired, tampered, or wrong-tenant tokens
 
 ### Admin UI Shell
-- [ ] Compose Multiplatform desktop: login screen with email + password
-- [ ] Successful login → empty dashboard shell showing user name and role
-- [ ] Role badge visible in UI
+- [x] Compose Multiplatform desktop: login screen with email + password
+- [x] Successful login → empty dashboard shell showing user name and role
+- [x] Role badge visible in UI
 
 ### Tests
-- [ ] Token from Tenant A attempting to read Tenant B data → `403 Forbidden`
-- [ ] Expired access token → `401 Unauthorized`
-- [ ] Refresh token rotation — old refresh token invalidated after use
-- [ ] PIN login — correct PIN returns valid access token; wrong PIN returns `401`
-- [ ] Registration creates org, restaurant, and owner user atomically
+- [x] Token from Tenant A attempting to read Tenant B data → `403 Forbidden`
+- [x] Expired access token → `401 Unauthorized`
+- [x] Refresh token rotation — old refresh token invalidated after use
+- [x] PIN login — correct PIN returns valid access token; wrong PIN returns `401`
+- [x] Registration creates org, restaurant, and owner user atomically
 
 ### Exit Gate
 > Two tenant accounts exist in a running instance.
@@ -179,49 +179,49 @@ A phase is **complete** when ALL of the following are true:
 > The local event queue is the most critical technical deliverable in this phase. Do NOT use an in-memory list — it must be a SQLDelight table so events survive app crashes and device reboots. The sync engine runs as a background coroutine and must handle exponential backoff, duplicate prevention, and `lastAckedGlobalSequence` tracking. Read `docs/sync-protocol.md` before writing any queue code.
 
 ### Database Migrations
-- [ ] `menu_categories`, `menu_items`, `modifier_groups`, `modifiers`
-- [ ] `sections`, `tables`
-- [ ] `orders`, `order_lines`, `applied_modifiers`
-- [ ] `discounts`, `void_records`, `comp_records`
+- [x] `menu_categories`, `menu_items`, `modifier_groups`, `modifiers`
+- [x] `sections`, `tables`
+- [x] `orders`, `order_lines`, `applied_modifiers`
+- [x] `discounts`, `void_records`, `comp_records`
 
 ### API Endpoints
-- [ ] `GET/POST/PUT/DELETE /menu/categories`
-- [ ] `GET/POST/PUT/DELETE /menu/items`
-- [ ] `GET/POST/PUT/DELETE /menu/items/{id}/modifiers`
-- [ ] `PUT /menu/items/{id}/availability` — 86 toggle
-- [ ] `GET/POST/PUT/DELETE /tables`
-- [ ] `GET/POST/PUT/DELETE /sections`
-- [ ] `POST /orders` — create order + order lines
-- [ ] `POST /orders/{id}/lines` — add line to existing order
-- [ ] `POST /orders/{id}/discount`
-- [ ] `POST /orders/{id}/void`
-- [ ] `POST /orders/{id}/comp`
-- [ ] `POST /events/sync` — client event queue drain endpoint
+- [x] `GET/POST/PUT/DELETE /menu/categories`
+- [x] `GET/POST/PUT/DELETE /menu/items`
+- [x] `GET/POST/PUT/DELETE /menu/items/{id}/modifiers`
+- [x] `PUT /menu/items/{id}/availability` — 86 toggle
+- [x] `GET/POST/PUT/DELETE /tables`
+- [x] `GET/POST/PUT/DELETE /sections`
+- [x] `POST /orders` — create order + order lines
+- [x] `POST /orders/{id}/lines` — add line to existing order
+- [x] `POST /orders/{id}/discount`
+- [x] `POST /orders/{id}/void`
+- [x] `POST /orders/{id}/comp`
+- [x] `POST /events/sync` — client event queue drain endpoint
 
 ### Local Event Queue (`:shared` module)
-- [ ] `LocalEvent` SQLDelight schema: `id UUID, type TEXT, payload TEXT, clientSequence INT, deviceId TEXT, clientTimestamp TEXT, globalSequence INT nullable, synced INT (0/1)`
-- [ ] Event writer — appends to local table; applies optimistic UI state immediately
-- [ ] Sync coroutine — drains unsynced events to `POST /events/sync`; marks `synced = 1` on server ack
-- [ ] Exponential backoff — 1s, 2s, 4s, 8s, max 30s retry interval
-- [ ] `lastAckedGlobalSequence` stored locally — sent on every sync request
-- [ ] Offline banner trigger — exposed as `StateFlow<Boolean>` for UI to observe
+- [x] `LocalEvent` SQLDelight schema: `id UUID, type TEXT, payload TEXT, clientSequence INT, deviceId TEXT, clientTimestamp TEXT, globalSequence INT nullable, synced INT (0/1)`
+- [x] Event writer — appends to local table; applies optimistic UI state immediately
+- [x] Sync coroutine — drains unsynced events to `POST /events/sync`; marks `synced = 1` on server ack
+- [x] Exponential backoff — 1s, 2s, 4s, 8s, max 30s retry interval
+- [x] `lastAckedGlobalSequence` stored locally — sent on every sync request
+- [x] Offline banner trigger — exposed as `StateFlow<Boolean>` for UI to observe
 
 ### POS UI (Compose Multiplatform)
-- [ ] Configurable layout — `GRID` (large tiles) or `LIST` (searchable) set per restaurant in settings
-- [ ] Table grid screen — shows all tables with occupancy status
-- [ ] Menu browser — category tabs, item tiles/list, 86'd items grayed out
-- [ ] Item detail bottom sheet — modifier group selection, quantity, notes field
-- [ ] Order summary panel — persistent, shows running total, line items, discount
-- [ ] Send to kitchen button — fires order event to local queue
-- [ ] Void/Comp flow — manager PIN confirmation required
-- [ ] Offline indicator — visible persistent banner when queue is not synced
-- [ ] Quick PIN staff switchover — tap avatar → PIN entry → role switch without full logout
+- [x] Configurable layout — `GRID` (large tiles) or `LIST` (searchable) set per restaurant in settings
+- [x] Table grid screen — shows all tables with occupancy status
+- [x] Menu browser — category tabs, item tiles/list, 86'd items grayed out
+- [x] Item detail bottom sheet — modifier group selection, quantity, notes field
+- [x] Order summary panel — persistent, shows running total, line items, discount
+- [x] Send to kitchen button — fires order event to local queue
+- [x] Void/Comp flow — manager PIN confirmation required
+- [x] Offline indicator — visible persistent banner when queue is not synced
+- [x] Quick PIN staff switchover — tap avatar → PIN entry → role switch without full logout
 
 ### Tests
-- [ ] Order placed with network off → reconnect → server receives all events in sequence → no duplicates
-- [ ] 86 toggle → item immediately grayed in POS UI → unavailable for new orders
-- [ ] Void requires `authorizedBy` and `reason` — rejected without both
-- [ ] `receiptNumber` auto-increments correctly per restaurant per calendar day
+- [x] Order placed with network off → reconnect → server receives all events in sequence → no duplicates
+- [x] 86 toggle → item immediately grayed in POS UI → unavailable for new orders
+- [x] Void requires `authorizedBy` and `reason` — rejected without both
+- [x] `receiptNumber` auto-increments correctly per restaurant per calendar day
 
 ### Exit Gate
 > Place a complete order with network disabled.
