@@ -10,7 +10,7 @@ import type { EventHandler } from '../broker';
 import type { LowStockPayload, DomainEvent } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = any;
 
 export const handleLowStock: EventHandler<LowStockPayload> = async (
   event: DomainEvent<LowStockPayload>,

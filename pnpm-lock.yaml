@@ -232,6 +232,9 @@ importers:
       hono:
         specifier: ^4.4.0
         version: 4.12.27
+      stripe:
+        specifier: ^15.12.0
+        version: 15.12.0
     devDependencies:
       tsx:
         specifier: ^4.11.0
@@ -1374,6 +1377,10 @@ packages:
   statuses@2.0.2:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
+
+  stripe@15.12.0:
+    resolution: {integrity: sha512-slTbYS1WhRJXVB8YXU8fgHizkUrM9KJyrw4Dd8pLEwzKHYyQTIE46EePC2MVbSDZdE24o1GdNtzmJV4PrPpmJA==}
+    engines: {node: '>=12.*'}
 
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -2531,6 +2538,11 @@ snapshots:
   source-map-js@1.2.1: {}
 
   statuses@2.0.2: {}
+
+  stripe@15.12.0:
+    dependencies:
+      '@types/node': 20.19.43
+      qs: 6.15.3
 
   toidentifier@1.0.1: {}
 

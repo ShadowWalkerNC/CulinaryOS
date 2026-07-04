@@ -31,8 +31,9 @@ import {
 import { kdsRoutes }           from './routes/kds';
 import { pantryRoutes }        from './routes/pantry';
 import { reportsRoutes }       from './routes/reports';
+import type { Env }            from './types';
 
-const app = new Hono();
+const app = new Hono<Env>();
 
 // ---- Global middleware ----
 

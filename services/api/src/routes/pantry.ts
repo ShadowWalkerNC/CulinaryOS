@@ -282,7 +282,7 @@ pantry.patch('/purchase-orders/:poId/approve', async (c: Context) => {
 pantry.patch('/purchase-orders/:poId/send', async (c: Context) => {
   const tenantId = c.get('tenantId') as string;
   const poId     = c.req.param('poId');
-  const body     = await c.req.json<{ expected_at?: string }>().catch(() => ({}));
+  const body     = await c.req.json<{ expected_at?: string }>().catch(() => ({} as { expected_at?: string }));
 
   const { data, error } = await db()
     .from('restock_purchase_orders')

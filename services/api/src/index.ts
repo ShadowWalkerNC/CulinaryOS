@@ -12,7 +12,14 @@ import { analyticsRoutes } from './routes/analytics';
 import { pantryRoutes }    from './routes/pantry';
 import { reportsRoutes }   from './routes/reports';
 
-const app = new Hono();
+export interface Env {
+  Variables: {
+    tenantId: string;
+    userId: string;
+  };
+}
+
+const app = new Hono<Env>();
 
 // ── Global middleware ─────────────────────────────────────────────────
 app.use('*', logger());

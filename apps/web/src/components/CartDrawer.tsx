@@ -1,4 +1,3 @@
-import React from 'react';
 import type { CartState } from '../types';
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
  * Renders the cart summary. Checkout flow (Phase 4b) wires in
  * guest info collection + POST /v1/online-orders + Stripe CheckoutDrawer.
  */
-export function CartDrawer({ cart, onClose, onUpdateQty, onRemove }: Props) {
+export function CartDrawer({ cart, onClose, onUpdateQty, onRemove: _onRemove }: Props) {
   return (
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.6)' }}

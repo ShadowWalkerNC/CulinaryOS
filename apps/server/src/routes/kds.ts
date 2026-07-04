@@ -7,9 +7,10 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { requireTenant, ok, err } from '../middleware/auth';
+import { requireTenant, ok, err } from '../middleware/auth.js';
+import type { Env } from '../types.js';
 
-export const kdsRoutes = new Hono();
+export const kdsRoutes = new Hono<Env>();
 
 kdsRoutes.use('*', requireTenant);
 

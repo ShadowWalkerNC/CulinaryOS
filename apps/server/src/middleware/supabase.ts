@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Context, Next } from 'hono';
+import type { Env } from '../types.js';
 
 // Service-role client — bypasses RLS, used for backend mutations
 export const adminSupabase = () =>
@@ -14,7 +15,7 @@ export const adminSupabase = () =>
   );
 
 // Inject supabase admin client into Hono context
-export async function withSupabase(c: Context, next: Next) {
+export async function withSupabase(c: Context<Env>, next: Next) {
   c.set('supabase', adminSupabase());
   await next();
 }

@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import type { MenuSection as MenuSectionType, MenuItem, CartModifier } from '../types';
 import { ItemCard } from './ItemCard';
 

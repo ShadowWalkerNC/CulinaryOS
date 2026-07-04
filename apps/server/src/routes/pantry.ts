@@ -9,9 +9,10 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { requireTenant, ok, err } from '../middleware/auth';
+import { requireTenant, ok, err } from '../middleware/auth.js';
+import type { Env } from '../types.js';
 
-export const pantryRoutes = new Hono();
+export const pantryRoutes = new Hono<Env>();
 
 pantryRoutes.use('*', requireTenant);
 

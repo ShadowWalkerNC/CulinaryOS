@@ -4,9 +4,10 @@
 // ============================================================
 
 import type { Context, Next } from 'hono';
+import type { Env } from '../types.js';
 
 // Service-to-service API key auth
-export async function requireApiKey(c: Context, next: Next) {
+export async function requireApiKey(c: Context<Env>, next: Next) {
   const key = c.req.header('Authorization')?.replace('Bearer ', '');
   if (!key || key !== process.env.INTERNAL_API_KEY) {
     return c.json(
@@ -18,7 +19,7 @@ export async function requireApiKey(c: Context, next: Next) {
 }
 
 // Tenant context — every request must carry X-Tenant-Id
-export async function requireTenant(c: Context, next: Next) {
+export async function requireTenant(c: Context<Env>, next: Next) {
   const tenantId = c.req.header('X-Tenant-Id');
   if (!tenantId) {
     return c.json(
@@ -33,7 +34,7 @@ export async function requireTenant(c: Context, next: Next) {
 }
 
 // Standard success response
-export function ok<T>(c: Context, data: T, status = 200) {
+export function ok<T>(c: Context<Env>, data: T, status = 200) {
   return c.json({
     ok: true,
     requestId: c.get('requestId'),
@@ -44,7 +45,7 @@ export function ok<T>(c: Context, data: T, status = 200) {
 }
 
 // Standard error response
-export function err(c: Context, code: string, message: string, status = 400, details?: unknown) {
+export function err(c: Context<Env>, code: string, message: string, status = 400, details?: unknown) {
   return c.json({
     ok: false,
     requestId: c.get('requestId'),

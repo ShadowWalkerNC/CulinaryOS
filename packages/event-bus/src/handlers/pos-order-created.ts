@@ -14,7 +14,7 @@ import type { OrderCreatedPayload, OrderItem, DomainEvent } from '../types';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = any;
 
 export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
   event: DomainEvent<OrderCreatedPayload>,
@@ -27,7 +27,7 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
 
   for (const [key, groupItems] of groups.entries()) {
     const [station, courseStr] = key.split('::');
-    const courseNumber = parseInt(courseStr, 10);
+    const courseNumber = parseInt(courseStr || '1', 10);
     const hasAllergy = groupItems.some((i) =>
       i.modifiers.some((m) => /allerg/i.test(m))
     );

@@ -9,7 +9,7 @@ import type { EventHandler } from '../broker';
 import type { TicketBumpedPayload, DomainEvent } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = any;
 
 export const handleTicketBumped: EventHandler<TicketBumpedPayload> = async (
   event: DomainEvent<TicketBumpedPayload>,
@@ -28,7 +28,7 @@ export const handleTicketBumped: EventHandler<TicketBumpedPayload> = async (
   if (error) throw new Error(`Failed to fetch tickets for order ${orderId}: ${error.message}`);
   if (!tickets || tickets.length === 0) return;
 
-  const allBumped = tickets.every((t) => t.status === 'bumped');
+  const allBumped = tickets.every((t: any) => t.status === 'bumped');
   const newOrderStatus = allBumped ? 'ready' : 'in-progress';
 
   const { error: updateErr } = await supabase
@@ -38,5 +38,5 @@ export const handleTicketBumped: EventHandler<TicketBumpedPayload> = async (
     .eq('tenant_id', tenantId);
 
   if (updateErr) throw new Error(`Failed to update order status: ${updateErr.message}`);
-  console.log(`[kds:ticket:bumped] Order ${orderId} → ${newOrderStatus} (${tickets.filter((t) => t.status === 'bumped').length}/${tickets.length} tickets done)`);
+  console.log(`[kds:ticket:bumped] Order ${orderId} → ${newOrderStatus} (${tickets.filter((t: any) => t.status === 'bumped').length}/${tickets.length} tickets done)`);
 };

@@ -15,7 +15,7 @@ import type { DomainEvent }     from './types';
 
 export type EventHandler<T> = (
   event:    DomainEvent<T>,
-  supabase: ReturnType<typeof createClient>
+  supabase: any
 ) => Promise<void>;
 
 const supabase = createClient(

@@ -11,7 +11,7 @@ import type { EventHandler } from '../broker';
 import type { MenuItemSoldPayload, DomainEvent } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = any;
 
 export const handleMenuItemSold: EventHandler<MenuItemSoldPayload> = async (
   event: DomainEvent<MenuItemSoldPayload>,

@@ -7,7 +7,7 @@ import type { EventHandler } from '../broker';
 import type { OrderCancelledPayload, DomainEvent } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = any;
 
 export const handleOrderCancelled: EventHandler<OrderCancelledPayload> = async (
   event: DomainEvent<OrderCancelledPayload>,

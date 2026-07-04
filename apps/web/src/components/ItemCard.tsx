@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { MenuItem, CartModifier, Modifier } from '../types';
+import { useState } from 'react';
+import type { MenuItem, CartModifier } from '../types';
 import { AllergenBadge } from './AllergenBadge';
 
 interface Props {

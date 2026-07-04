@@ -6,9 +6,10 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { requireTenant, ok, err } from '../middleware/auth';
+import { requireTenant, ok, err } from '../middleware/auth.js';
+import type { Env } from '../types.js';
 
-export const reportsRoutes = new Hono();
+export const reportsRoutes = new Hono<Env>();
 
 reportsRoutes.use('*', requireTenant);
 
@@ -31,11 +32,15 @@ reportsRoutes.get('/kds-summary', async (c) => {
   // Aggregate by station
   const summary: Record<string, { total: number; bumped: number; avgTimeMs: number }> = {};
   for (const t of data ?? []) {
-    if (!summary[t.station]) summary[t.station] = { total: 0, bumped: 0, avgTimeMs: 0 };
-    summary[t.station].total++;
+    const station = t.station || 'unknown';
+    if (!summary[station]) {
+      summary[station] = { total: 0, bumped: 0, avgTimeMs: 0 };
+    }
+    const stat = summary[station]!;
+    stat.total++;
     if (t.status === 'bumped' && t.bumped_at && t.fired_at) {
-      summary[t.station].bumped++;
-      summary[t.station].avgTimeMs +=
+      stat.bumped++;
+      stat.avgTimeMs +=
         new Date(t.bumped_at).getTime() - new Date(t.fired_at).getTime();
     }
   }

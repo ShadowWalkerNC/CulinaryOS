@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const ALLERGEN_LABELS: Record<string, { label: string; emoji: string }> = {
   gluten:      { label: 'Gluten',      emoji: '🌾' },

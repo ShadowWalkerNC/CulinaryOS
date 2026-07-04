@@ -78,9 +78,10 @@ reports.get('/eod', async (c: Context) => {
 
   for (const o of closedOrders) {
     const hour = new Date(o.closed_at).getUTCHours();
-    hourlyMap[hour].order_count++;
-    hourlyMap[hour].revenue_cents += o.total_cents ?? 0;
-    hourlyMap[hour].covers        += o.covers      ?? 1;
+    const hr = hourlyMap[hour]!;
+    hr.order_count++;
+    hr.revenue_cents += o.total_cents ?? 0;
+    hr.covers        += o.covers      ?? 1;
   }
 
   const hourlyBreakdown = Object.entries(hourlyMap)
