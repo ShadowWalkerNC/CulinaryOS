@@ -18,7 +18,7 @@ services:
   # ----------------------------------------------------------
   - type: web
     name: culinaryos-backend
-    runtime: image
+    runtime: docker
     dockerfilePath: backend/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -38,7 +38,7 @@ services:
   # ----------------------------------------------------------
   - type: web
     name: culinaryos-kds-api
-    runtime: image
+    runtime: docker
     dockerfilePath: kds/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -66,7 +66,7 @@ services:
   # ----------------------------------------------------------
   - type: web
     name: culinaryos-pos-api
-    runtime: image
+    runtime: docker
     dockerfilePath: pos/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -94,7 +94,7 @@ services:
   # ----------------------------------------------------------
   - type: web
     name: culinaryos-recipeos
-    runtime: image
+    runtime: docker
     dockerfilePath: recipeos/Dockerfile
     healthCheckPath: /health
     envVars:
