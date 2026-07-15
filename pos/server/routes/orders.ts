@@ -15,6 +15,12 @@ import { ok, err } from '../../../backend/middleware/auth';
 
 const app = new Hono();
 
+// Resolve backend base URL from CULINARYOS_HOST (bare hostname, no scheme)
+// Render injects CULINARYOS_HOST via fromService; locally falls back to localhost.
+const CULINARYOS_URL = process.env.CULINARYOS_HOST
+  ? `https://${process.env.CULINARYOS_HOST}`
+  : 'http://localhost:3000';
+
 // POST /v1/orders
 app.post('/', async (c) => {
   const supabase  = c.get('supabase');
@@ -102,8 +108,7 @@ app.patch('/:id/send', async (c) => {
   await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id);
 
   // Emit pos:order:created to trigger ticket fire via event bus
-  const busUrl = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
-  await fetch(`${busUrl}/internal/events`, {
+  await fetch(`${CULINARYOS_URL}/internal/events`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -193,8 +198,7 @@ app.post('/:id/fire-course', async (c) => {
   });
 
   // Emit kds:course:fired event
-  const busUrl = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
-  await fetch(`${busUrl}/internal/events`, {
+  await fetch(`${CULINARYOS_URL}/internal/events`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

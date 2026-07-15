@@ -13,6 +13,12 @@ import { ok, err } from '../../../backend/middleware/auth';
 
 const app = new Hono();
 
+// Resolve backend base URL from CULINARYOS_HOST (bare hostname, no scheme)
+// Render injects CULINARYOS_HOST via fromService; locally falls back to localhost.
+const CULINARYOS_URL = process.env.CULINARYOS_HOST
+  ? `https://${process.env.CULINARYOS_HOST}`
+  : 'http://localhost:3000';
+
 // POST /v1/pantry/deduct
 // Called by event bus handler when an order is paid
 // Body: { recipeId, quantity, soldAt, orderId? }
@@ -199,9 +205,8 @@ async function emitLowStockEvent(
   tenantId: string,
   alert: { ingredientId: string; name: string; currentQty: number; unit: string; reorderAt: number }
 ) {
-  const url = process.env.CULINARYOS_URL ?? 'http://localhost:3000';
   try {
-    await fetch(`${url}/internal/events`, {
+    await fetch(`${CULINARYOS_URL}/internal/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
