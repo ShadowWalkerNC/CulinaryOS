@@ -1,14 +1,10 @@
 [build]
   builder = "dockerfile"
-  dockerfilePath = "Dockerfile"
+  dockerfilePath = "recipeos/Dockerfile"
+  contextPath = "../"
 
 [deploy]
   healthcheckPath = "/health"
   healthcheckTimeout = 30
   restartPolicyType = "on_failure"
   restartPolicyMaxRetries = 3
-
-[[services]]
-  [services.variables]
-    PORT = "3001"
-    SERVICE_NAME = "recipeos"

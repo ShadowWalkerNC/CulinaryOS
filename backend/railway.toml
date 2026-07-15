@@ -1,14 +1,10 @@
 [build]
   builder = "dockerfile"
-  dockerfilePath = "Dockerfile"
+  dockerfilePath = "backend/Dockerfile"
+  contextPath = "../"
 
 [deploy]
   healthcheckPath = "/health"
   healthcheckTimeout = 30
   restartPolicyType = "on_failure"
   restartPolicyMaxRetries = 3
-
-[[services]]
-  [services.variables]
-    PORT = "3000"
-    SERVICE_NAME = "culinaryos"

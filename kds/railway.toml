@@ -1,14 +1,10 @@
 [build]
   builder = "dockerfile"
-  dockerfilePath = "Dockerfile"
+  dockerfilePath = "kds/Dockerfile"
+  contextPath = "../"
 
 [deploy]
   healthcheckPath = "/health"
   healthcheckTimeout = 30
   restartPolicyType = "on_failure"
   restartPolicyMaxRetries = 3
-
-[[services]]
-  [services.variables]
-    PORT = "3002"
-    SERVICE_NAME = "kds"
