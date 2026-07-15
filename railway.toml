@@ -1,0 +1,7 @@
+# Railway reads this file from the repo root.
+# Each service is configured in the Railway dashboard
+# pointing to its Dockerfile.* at the repo root.
+# Build context is always the full repo root.
+
+[build]
+  builder = "dockerfile"
