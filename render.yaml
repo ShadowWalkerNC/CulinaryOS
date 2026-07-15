@@ -6,6 +6,11 @@
 # After deploy, set these secrets in Render dashboard:
 #   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
 #   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_TENANT_ID
+#
+# Note: CULINARYOS_URL is set as `https://<host>` via envVarPrefix trick.
+# The fromService `host` property gives the bare hostname; services must
+# prepend https:// in code, OR use the CULINARYOS_BASE_URL var below which
+# is set manually after first deploy to the full https URL.
 # ============================================================
 
 services:
@@ -16,7 +21,6 @@ services:
   - type: web
     name: culinaryos-backend
     runtime: image
-    rootDir: backend
     dockerfilePath: backend/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -44,7 +48,7 @@ services:
         value: 3002
       - key: SERVICE_NAME
         value: kds
-      - key: CULINARYOS_URL
+      - key: CULINARYOS_HOST
         fromService:
           name: culinaryos-backend
           type: web
@@ -72,7 +76,7 @@ services:
         value: 3003
       - key: SERVICE_NAME
         value: pos
-      - key: CULINARYOS_URL
+      - key: CULINARYOS_HOST
         fromService:
           name: culinaryos-backend
           type: web
@@ -100,7 +104,7 @@ services:
         value: 3001
       - key: SERVICE_NAME
         value: recipeos
-      - key: CULINARYOS_URL
+      - key: CULINARYOS_HOST
         fromService:
           name: culinaryos-backend
           type: web
@@ -130,7 +134,7 @@ services:
         sync: false
       - key: VITE_TENANT_ID
         sync: false
-      - key: VITE_KDS_URL
+      - key: VITE_KDS_HOST
         fromService:
           name: culinaryos-kds-api
           type: web
@@ -151,7 +155,7 @@ services:
         sync: false
       - key: VITE_TENANT_ID
         sync: false
-      - key: VITE_POS_URL
+      - key: VITE_POS_HOST
         fromService:
           name: culinaryos-pos-api
           type: web
