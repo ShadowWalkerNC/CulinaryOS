@@ -1,9 +1,3 @@
-[build]
-  builder = "dockerfile"
-  dockerfilePath = "Dockerfile.backend"
-
-[deploy]
-  healthcheckPath = "/health"
-  healthcheckTimeout = 30
-  restartPolicyType = "on_failure"
-  restartPolicyMaxRetries = 3
+# Intentionally empty — service configured via Railway dashboard.
+# Dockerfile: Dockerfile.backend (repo root)
+# Build context: repo root

@@ -1,12 +1,1 @@
-[build]
-  builder = "nixpacks"
-  buildCommand = "npm install && npm run build"
-
-[deploy]
-  startCommand = "npx serve dist -l 3006"
-  restartPolicyType = "on_failure"
-  restartPolicyMaxRetries = 3
-
-[[services]]
-  [services.variables]
-    PORT = "3006"
+# Intentionally empty — service configured via Railway dashboard.
