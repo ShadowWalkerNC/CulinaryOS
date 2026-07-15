@@ -1,7 +1,6 @@
 [build]
   builder = "dockerfile"
-  dockerfilePath = "pos/Dockerfile"
-  contextPath = "../"
+  dockerfilePath = "Dockerfile.pos"
 
 [deploy]
   healthcheckPath = "/health"

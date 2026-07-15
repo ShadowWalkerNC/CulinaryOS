@@ -1,7 +1,6 @@
 [build]
   builder = "dockerfile"
-  dockerfilePath = "recipeos/Dockerfile"
-  contextPath = "../"
+  dockerfilePath = "Dockerfile.recipeos"
 
 [deploy]
   healthcheckPath = "/health"
