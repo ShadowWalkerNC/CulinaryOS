@@ -1,0 +1,14 @@
+- [x] Consolidate Backend API Routes in `apps/server/`
+  - [x] Copy `pos/server/routes/orders.ts` into `apps/server/src/routes/`
+  - [x] Copy `pos/server/routes/tabs.ts` into `apps/server/src/routes/`
+  - [x] Copy `services/api/src/routes/menu.ts` into `apps/server/src/routes/`
+  - [x] Copy `services/api/src/routes/payments.ts` into `apps/server/src/routes/`
+  - [x] Register consolidated routes in `apps/server/src/index.ts`
+- [x] Create Workspace Dockerfiles
+  - [x] Create `apps/server/Dockerfile`
+  - [x] Create `apps/kds/Dockerfile`
+  - [x] Create `apps/pos/Dockerfile`
+  - [x] Create `apps/web/Dockerfile`
+- [x] Update `docker-compose.yml` to target monorepo packages
+- [x] Verify workspace compilation (`pnpm run build`)
+- [x] Remove legacy root directories safely

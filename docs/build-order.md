@@ -1,8 +1,8 @@
 # CulinaryOS — Build Order v2.0
 
 > **Version:** 2.0
-> **Updated:** June 18, 2026
-> **Status:** 🟡 Phase 0 — In Progress
+> **Updated:** July 18, 2026
+> **Status:** 🟡 Phase 3 — KDS — In Progress
 > **License:** AGPL v3
 
 ---
@@ -26,8 +26,8 @@ A Kotlin-first, multi-platform, multi-tenant restaurant operations SaaS. One pla
 - Migrations → Flyway
 - Self-host runtime → Docker Compose
 
-**Current phase:** Phase 0 — Foundation
-**Next action:** Initialize KMP Gradle project scaffold
+**Current phase:** Phase 3 — KDS
+**Next action:** Implement WebSocket connection and outbox reliability mechanisms
 
 **Do not:**
 - Skip phase exit gates
@@ -53,10 +53,10 @@ A Kotlin-first, multi-platform, multi-tenant restaurant operations SaaS. One pla
 
 | Phase | Name | Target | Status |
 |---|---|---|---|
-| 0 | Foundation | Jul 6, 2026 | 🟡 In Progress |
-| 1 | Auth & Tenant Shell | Jul 27, 2026 | ⬜ Not Started |
-| 2 | POS Core | Sep 7, 2026 | ⬜ Not Started |
-| 3 | KDS | Oct 5, 2026 | ⬜ Not Started |
+| 0 | Foundation | Jul 6, 2026 | ✅ Complete |
+| 1 | Auth & Tenant Shell | Jul 27, 2026 | ✅ Complete |
+| 2 | POS Core | Sep 7, 2026 | ✅ Complete |
+| 3 | KDS | Oct 5, 2026 | 🟡 In Progress |
 | 4 | Online Ordering | Nov 2, 2026 | ⬜ Not Started |
 | 5 | Inventory | Nov 30, 2026 | ⬜ Not Started |
 | 6 | Reporting | Dec 21, 2026 | ⬜ Not Started |

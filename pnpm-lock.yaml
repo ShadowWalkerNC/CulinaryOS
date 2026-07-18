@@ -72,6 +72,9 @@ importers:
       hono:
         specifier: ^4.4.0
         version: 4.12.27
+      stripe:
+        specifier: ^15.12.0
+        version: 15.12.0
       uuid:
         specifier: ^10.0.0
         version: 10.0.0

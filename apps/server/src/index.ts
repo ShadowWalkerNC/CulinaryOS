@@ -31,6 +31,10 @@ import {
 import { kdsRoutes }           from './routes/kds';
 import { pantryRoutes }        from './routes/pantry';
 import { reportsRoutes }       from './routes/reports';
+import { ordersRoutes }        from './routes/orders';
+import { tabsRoutes }          from './routes/tabs';
+import { menuRoutes }          from './routes/menu';
+import { paymentsRoutes }      from './routes/payments';
 import type { Env }            from './types';
 
 const app = new Hono<Env>();
@@ -70,11 +74,13 @@ app.get('/internal/events', async (c) => {
   return c.json({ ok: true, data });
 });
 
-// ---- API v1 routes ----
-
-app.route('/v1/kds',     kdsRoutes);
-app.route('/v1/pantry',  pantryRoutes);
-app.route('/v1/reports', reportsRoutes);
+app.route('/v1/kds',      kdsRoutes);
+app.route('/v1/pantry',   pantryRoutes);
+app.route('/v1/reports',  reportsRoutes);
+app.route('/v1/orders',   ordersRoutes);
+app.route('/v1/tabs',     tabsRoutes);
+app.route('/v1/menu',     menuRoutes);
+app.route('/v1/payments', paymentsRoutes);
 
 // ---- Health ----
 
