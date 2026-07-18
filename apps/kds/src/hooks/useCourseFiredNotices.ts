@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { CourseFireEvent } from '../types';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+let supabase: SupabaseClient | null = null;
+try {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (url && key && !url.includes('your-project')) {
+    supabase = createClient(url, key);
+  }
+} catch {
+  // Supabase not available
+}
 
 /**
  * Listens for INSERT events on course_fire_log.
@@ -16,6 +22,8 @@ export function useCourseFiredNotices(ttlMs = 5_000) {
   const [notice, setNotice] = useState<CourseFireEvent | null>(null);
 
   useEffect(() => {
+    if (!supabase) return;
+
     let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
     const channel = supabase
@@ -39,10 +47,11 @@ export function useCourseFiredNotices(ttlMs = 5_000) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase!.removeChannel(channel);
       if (clearTimer) clearTimeout(clearTimer);
     };
   }, [ttlMs]);
 
   return notice;
 }
+

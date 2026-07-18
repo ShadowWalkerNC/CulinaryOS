@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { KitchenTicket, TicketStatus } from '../types';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+let supabase: SupabaseClient | null = null;
+try {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (url && key && !url.includes('your-project')) {
+    supabase = createClient(url, key);
+  }
+} catch {
+  // Supabase not available — app will render in demo/offline mode
+}
 
 /** Derives elapsed seconds from a ticket's firedAt or createdAt */
 function elapsed(ticket: { firedAt?: string; createdAt: string }): number {
@@ -62,9 +68,15 @@ export function useRealtimeTickets(stationId: string) {
     let mounted = true;
     const ACTIVE: TicketStatus[] = ['queued', 'cooking', 'ready'];
 
+    if (!supabase) {
+      setLoading(false);
+      setError('No database configured — running in demo mode');
+      return;
+    }
+
     async function fetchInitial() {
       setLoading(true);
-      const { data, error: fetchErr } = await supabase
+      const { data, error: fetchErr } = await supabase!
         .from('kitchen_tickets')
         .select('*, ticket_items(*)')
         .eq('station_id', stationId)
@@ -81,7 +93,7 @@ export function useRealtimeTickets(stationId: string) {
     fetchInitial();
 
     // Realtime subscription
-    const channel = supabase
+    const channel = supabase!
       .channel(`kds-station-${stationId}`)
       .on(
         'postgres_changes',
@@ -110,7 +122,7 @@ export function useRealtimeTickets(stationId: string) {
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      supabase!.removeChannel(channel);
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [stationId, tick]);
