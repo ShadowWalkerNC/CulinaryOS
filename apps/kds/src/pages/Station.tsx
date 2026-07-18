@@ -66,7 +66,7 @@ export function Station() {
         background:     'var(--surface)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '20px' }}>👨‍🍳</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ color: 'var(--accent)' }}><path d="M6 18V6a6 6 0 0 1 12 0v12" /><path d="M12 10V6" /><path d="M18 14H6" /><rect width="18" height="4" x="3" y="18" rx="1" /></svg>
           <div>
             <div style={{ fontWeight: 700, fontSize: '15px' }}>Station {stationId}</div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CulinaryOS Kitchen Display</div>
@@ -111,7 +111,9 @@ export function Station() {
             textAlign: 'center',
             color:     'var(--text-muted)',
           }}>
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>✅</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
             <div style={{ fontWeight: 600 }}>All clear — no active tickets</div>
             <div style={{ fontSize: '12px', marginTop: '4px' }}>New orders will appear here in real time</div>
           </div>

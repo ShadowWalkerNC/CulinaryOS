@@ -12,6 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         {/* :slug identifies the tenant — e.g. /menu/the-blue-fig */}
         <Route path="/menu/:slug"    element={<MenuPage />} />
         <Route path="/404"           element={<NotFoundPage />} />
+        <Route path="/"              element={<Navigate to="/menu/demo" replace />} />
         <Route path="*"              element={<Navigate to="/404" replace />} />
       </Routes>
     </BrowserRouter>
