@@ -7,16 +7,26 @@
 // Call startRealtimeBridge() on server boot.
 // ============================================================
 
-import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let supabase: SupabaseClient | null = null;
+try {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && key && !url.includes('your-project')) {
+    supabase = createClient(url, key);
+  }
+} catch {
+  // Supabase not available
+}
 
 export function startRealtimeBridge(): void {
+  if (!supabase) {
+    console.log('[Realtime] Skip starting realtime bridge (Supabase offline)');
+    return;
+  }
   // ---- Kitchen Tickets → broadcast to KDS clients ----
-  const _kdsChannel: RealtimeChannel = supabase
+  const _kdsChannel: RealtimeChannel = supabase!
     .channel('kds:tickets')
     .on(
       'postgres_changes',
@@ -24,7 +34,7 @@ export function startRealtimeBridge(): void {
       (payload) => {
         const tenantId = (payload.new as any)?.tenant_id ?? (payload.old as any)?.tenant_id;
         if (!tenantId) return;
-        supabase.channel(`kds:${tenantId}`).send({
+        supabase!.channel(`kds:${tenantId}`).send({
           type:  'broadcast',
           event: 'ticket_update',
           payload: { eventType: payload.eventType, ticket: payload.new },
@@ -34,7 +44,7 @@ export function startRealtimeBridge(): void {
     .subscribe((status) => console.log('[Realtime] KDS bridge:', status));
 
   // ---- POS Orders → broadcast to POS clients ----
-  const _posChannel: RealtimeChannel = supabase
+  const _posChannel: RealtimeChannel = supabase!
     .channel('pos:orders')
     .on(
       'postgres_changes',
@@ -42,7 +52,7 @@ export function startRealtimeBridge(): void {
       (payload) => {
         const tenantId = (payload.new as any)?.tenant_id ?? (payload.old as any)?.tenant_id;
         if (!tenantId) return;
-        supabase.channel(`pos:${tenantId}`).send({
+        supabase!.channel(`pos:${tenantId}`).send({
           type:  'broadcast',
           event: 'order_update',
           payload: { eventType: payload.eventType, order: payload.new },

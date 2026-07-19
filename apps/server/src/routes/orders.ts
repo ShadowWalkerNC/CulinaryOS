@@ -11,16 +11,20 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { ok, err } from '../middleware/auth.js';
+import { requireTenant, ok, err } from '../middleware/auth.js';
 import type { Env } from '../types.js';
 
 export const ordersRoutes = new Hono<Env>();
 
+ordersRoutes.use('*', requireTenant);
+
 // Resolve backend base URL from CULINARYOS_HOST (bare hostname, no scheme)
-// Render injects CULINARYOS_HOST via fromService; locally falls back to localhost.
 const CULINARYOS_URL = process.env.CULINARYOS_HOST
   ? `https://${process.env.CULINARYOS_HOST}`
   : 'http://localhost:3000';
+
+// Local Mock Database for Offline/Demo Mode
+let mockOrders: any[] = [];
 
 // POST /v1/orders
 ordersRoutes.post('/', async (c) => {
@@ -30,6 +34,24 @@ ordersRoutes.post('/', async (c) => {
 
   if (!body.tableNumber && !body.takeaway)
     return err(c, 'VALIDATION_ERROR', 'tableNumber or takeaway:true is required', 422);
+
+  if (!supabase) {
+    const newOrder = {
+      id: `o-${Math.floor(1000 + Math.random() * 9000)}`,
+      tenant_id: tenantId,
+      table_number: body.tableNumber ?? null,
+      cover_count: body.coverCount ?? null,
+      server_name: body.serverName ?? 'AI Assistant',
+      status: 'open',
+      subtotal: 0,
+      tax: 0,
+      total: 0,
+      created_at: new Date().toISOString(),
+      items: []
+    };
+    mockOrders.push(newOrder);
+    return ok(c, newOrder, 201);
+  }
 
   const { data, error } = await supabase
     .from('pos_orders')
@@ -50,11 +72,92 @@ ordersRoutes.post('/', async (c) => {
   return ok(c, data, 201);
 });
 
+// POST /v1/orders/:id/items
+ordersRoutes.post('/:id/items', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id }   = c.req.param();
+  const body     = await c.req.json();
+
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+
+    const price = body.unitPrice ?? 0;
+    const quantity = body.quantity ?? 1;
+    const lineTotal = price * quantity;
+
+    const newItem = {
+      id: `li-${Math.floor(10000 + Math.random() * 90000)}`,
+      order_id: id,
+      menu_item_id: body.menuItemId,
+      name: body.name,
+      quantity,
+      unit_price: price,
+      line_total: lineTotal,
+      station: body.station ?? 'hot',
+      course_number: body.courseNumber ?? 1,
+      notes: body.notes ?? null,
+    };
+
+    order.items = order.items || [];
+    order.items.push(newItem);
+    order.subtotal = order.items.reduce((s: number, i: any) => s + i.line_total, 0);
+    order.tax = Math.round(order.subtotal * 0.1);
+    order.total = order.subtotal + order.tax;
+
+    return ok(c, newItem, 201);
+  }
+
+  const { data, error } = await supabase
+    .from('pos_order_line_items')
+    .insert({
+      tenant_id:     tenantId,
+      order_id:      id,
+      menu_item_id:  body.menuItemId,
+      name:          body.name,
+      quantity:      body.quantity ?? 1,
+      unit_price:    body.unitPrice,
+      line_total:    body.unitPrice * (body.quantity ?? 1),
+      station:       body.station ?? 'hot',
+      course_number: body.courseNumber ?? 1,
+      notes:         body.notes ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
+
+  // Update order subtotal and total
+  const { data: items } = await supabase
+    .from('pos_order_line_items')
+    .select('line_total')
+    .eq('order_id', id);
+
+  const subtotal = items?.reduce((sum, item) => sum + item.line_total, 0) ?? 0;
+  const tax = Math.round(subtotal * 0.1);
+  const total = subtotal + tax;
+
+  await supabase
+    .from('pos_orders')
+    .update({ subtotal, tax, total })
+    .eq('id', id);
+
+  return ok(c, data, 201);
+});
+
 // GET /v1/orders
 ordersRoutes.get('/', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
   const status    = c.req.query('status');
+
+  if (!supabase) {
+    let list = mockOrders.filter(o => o.tenant_id === tenantId);
+    if (status) list = list.filter(o => o.status === status);
+    else list = list.filter(o => ['open','sent','in-progress','ready'].includes(o.status));
+    return ok(c, list);
+  }
 
   let q = supabase
     .from('pos_orders')
@@ -76,6 +179,12 @@ ordersRoutes.get('/:id', async (c) => {
   const tenantId  = c.get('tenantId');
   const { id }    = c.req.param();
 
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    return ok(c, order);
+  }
+
   const { data, error } = await supabase
     .from('pos_orders')
     .select('*, items:pos_order_line_items(*)')
@@ -87,12 +196,24 @@ ordersRoutes.get('/:id', async (c) => {
   return ok(c, data);
 });
 
-// PATCH /v1/orders/:id/send  — sends order to kitchen
-// Items in body carry courseNumber; course > 1 tickets are held automatically
+// PATCH /v1/orders/:id/send
 ordersRoutes.patch('/:id/send', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
   const { id }    = c.req.param();
+
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    if (order.status !== 'open') return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
+
+    order.status = 'sent';
+    order.fired_at = new Date().toISOString();
+
+    // Trigger local offline event message/broadcast print mock
+    console.log(`[Offline Event Bus] order:created emitted for order ${id}`);
+    return ok(c, { orderId: id, status: 'sent' });
+  }
 
   const { data: order, error: orderErr } = await supabase
     .from('pos_orders')
@@ -105,10 +226,8 @@ ordersRoutes.patch('/:id/send', async (c) => {
   if (!['open'].includes(order.status))
     return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
 
-  // Update order status to sent
   await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id);
 
-  // Emit pos:order:created to trigger ticket fire via event bus
   await fetch(`${CULINARYOS_URL}/internal/events`, {
     method: 'POST',
     headers: {
@@ -145,7 +264,6 @@ ordersRoutes.patch('/:id/send', async (c) => {
 });
 
 // POST /v1/orders/:id/fire-course
-// Manually fires a held course — used by server at the table
 ordersRoutes.post('/:id/fire-course', async (c) => {
   const supabase    = c.get('supabase');
   const tenantId    = c.get('tenantId');
@@ -159,7 +277,12 @@ ordersRoutes.post('/:id/fire-course', async (c) => {
   if (isNaN(courseNumber) || courseNumber < 2)
     return err(c, 'VALIDATION_ERROR', 'courseNumber must be 2 or greater', 422);
 
-  // Verify order belongs to tenant
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    return ok(c, { orderId: id, courseNumber, firedTickets: 1, firedBy: body.serverName ?? 'server' });
+  }
+
   const { data: order, error: orderErr } = await supabase
     .from('pos_orders').select('id, status').eq('id', id).eq('tenant_id', tenantId).single();
 
@@ -167,7 +290,6 @@ ordersRoutes.post('/:id/fire-course', async (c) => {
   if (['paid','voided'].includes(order.status))
     return err(c, 'CONFLICT', `Cannot fire course on a ${order.status} order`, 409);
 
-  // Release held tickets for this course
   const now = new Date().toISOString();
   const { data: heldTickets, error: heldErr } = await supabase
     .from('kitchen_tickets')
@@ -198,7 +320,6 @@ ordersRoutes.post('/:id/fire-course', async (c) => {
     ticket_ids:    heldIds,
   });
 
-  // Emit kds:course:fired event
   await fetch(`${CULINARYOS_URL}/internal/events`, {
     method: 'POST',
     headers: {
@@ -238,6 +359,14 @@ ordersRoutes.patch('/:id/void', async (c) => {
   const { id }    = c.req.param();
   const body      = await c.req.json().catch(() => ({}));
 
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    order.status = 'voided';
+    order.void_reason = body.reason ?? null;
+    return ok(c, order);
+  }
+
   const { data, error } = await supabase
     .from('pos_orders')
     .update({ status: 'voided', void_reason: body.reason ?? null })
@@ -248,7 +377,6 @@ ordersRoutes.patch('/:id/void', async (c) => {
 
   if (error) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
 
-  // Void all non-bumped tickets (including held ones)
   await supabase
     .from('kitchen_tickets')
     .update({ status: 'voided' })
@@ -265,6 +393,16 @@ ordersRoutes.patch('/:id/items/:itemId/void', async (c) => {
   const tenantId   = c.get('tenantId');
   const { id, itemId } = c.req.param();
   const body       = await c.req.json().catch(() => ({}));
+
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    const item = order.items?.find((i: any) => i.id === itemId);
+    if (!item) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
+    item.is_voided = true;
+    item.void_reason = body.reason ?? null;
+    return ok(c, item);
+  }
 
   const { data, error } = await supabase
     .from('pos_order_line_items')

@@ -8,10 +8,12 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { ok, err } from '../middleware/auth.js';
+import { requireTenant, ok, err } from '../middleware/auth.js';
 import type { Env } from '../types.js';
 
 export const tabsRoutes = new Hono<Env>();
+
+tabsRoutes.use('*', requireTenant);
 
 tabsRoutes.get('/', async (c) => {
   const supabase = c.get('supabase');

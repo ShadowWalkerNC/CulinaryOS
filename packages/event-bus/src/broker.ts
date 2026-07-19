@@ -4,7 +4,7 @@
 // Routes incoming domain events to registered handlers.
 // ============================================================
 
-import { createClient }         from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { handleOrderCreated }   from './handlers/pos-order-created';
 import { handleTicketBumped }   from './handlers/kds-ticket-bumped';
 import { handleOrderCancelled } from './handlers/pos-order-cancelled';
@@ -18,10 +18,16 @@ export type EventHandler<T> = (
   supabase: any
 ) => Promise<void>;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let supabase: SupabaseClient | null = null;
+try {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && key && !url.includes('your-project')) {
+    supabase = createClient(url, key);
+  }
+} catch {
+  // Supabase not available
+}
 
 const HANDLERS: Record<string, EventHandler<any>> = {
   'pos:order:created':          handleOrderCreated,
@@ -49,7 +55,12 @@ export async function handleIncomingEvent(
 
   const domainEvent = raw as DomainEvent<unknown>;
 
-  await supabase.from('domain_events').insert({
+  if (!supabase) {
+    console.log(`[broker] Skip event routing (Supabase offline): ${domainEvent.eventType}`);
+    return { ok: true };
+  }
+
+  await supabase!.from('domain_events').insert({
     event_id:   domainEvent.eventId,
     event_type: domainEvent.eventType,
     tenant_id:  domainEvent.tenantId,

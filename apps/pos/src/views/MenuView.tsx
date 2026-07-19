@@ -110,13 +110,13 @@ export function MenuView() {
   }
 
   return (
-    <div className="flex h-full bg-[#121214] relative">
+    <div className="flex h-full bg-[#f8f9fa] relative">
       {/* Category Sidebar */}
-      <div className="w-44 bg-[#1a1a1e] border-r border-[#28282e] p-3 flex flex-col gap-1.5 shrink-0">
+      <div className="w-44 bg-white border-r border-[#e5e7eb] p-3 flex flex-col gap-1.5 shrink-0">
         {sections.map((s: any) => (
           <button key={s.id} onClick={() => setActiveSection(s.id)}
             className={`text-left px-3 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-colors ${
-              s.id === activeS ? 'bg-[#ff5f1f] text-white' : 'text-[#88888b] hover:text-white hover:bg-[#222226]'
+              s.id === activeS ? 'bg-[#ff5f1f] text-white' : 'text-[#4b5563] hover:text-[#1f2937] hover:bg-[#f3f4f6]'
             }`}>
             {s.name}
           </button>
@@ -132,15 +132,15 @@ export function MenuView() {
             .map((item: any) => (
               <button key={item.id} onClick={() => openModifierModal(item)}
                 disabled={item.status === 'unavailable'}
-                className={`bg-[#1a1a1e] rounded-xl p-4 text-left border border-[#28282e] hover:border-[#ff5f1f] transition-all flex flex-col justify-between h-32 active:scale-95 ${
+                className={`bg-white rounded-xl p-4 text-left border border-[#e5e7eb] hover:border-[#ff5f1f] transition-all flex flex-col justify-between h-32 active:scale-95 shadow-sm ${
                   item.status === 'unavailable' ? 'opacity-40' : ''
                 }`}>
                 <div>
-                  <p className="text-white font-bold text-xs leading-snug line-clamp-2">{item.name}</p>
-                  {item.description && <p className="text-[#6b7299] text-[10px] mt-1 leading-normal line-clamp-2">{item.description}</p>}
+                  <p className="text-[#1f2937] font-bold text-xs leading-snug line-clamp-2">{item.name}</p>
+                  {item.description && <p className="text-[#6b7280] text-[10px] mt-1 leading-normal line-clamp-2">{item.description}</p>}
                 </div>
                 <p className="text-[#ff5f1f] font-extrabold font-mono text-sm">${(item.price / 100).toFixed(2)}</p>
-                {item.status === 'unavailable' && <p className="text-red-400 text-[10px] mt-1">Unavailable</p>}
+                {item.status === 'unavailable' && <p className="text-red-500 text-[10px] mt-1">Unavailable</p>}
               </button>
             ))}
         </div>
@@ -148,28 +148,28 @@ export function MenuView() {
 
       {/* Toast-style Modifier Selection Modal Overlay */}
       {modifyingItem && (
-        <div className="absolute inset-0 bg-[#000000a0] flex items-center justify-center p-6 z-50 animate-fadeIn">
-          <div className="bg-[#1a1a1e] border border-[#28282e] rounded-2xl w-full max-w-lg flex flex-col max-h-[90%] overflow-hidden shadow-2xl">
+        <div className="absolute inset-0 bg-[#00000040] backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-lg flex flex-col max-h-[90%] overflow-hidden shadow-2xl">
             {/* Modal Title */}
-            <div className="p-4 border-b border-[#28282e] flex justify-between items-center bg-[#121214]">
+            <div className="p-4 border-b border-[#e5e7eb] flex justify-between items-center bg-[#f8f9fa]">
               <div>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">{modifyingItem.name}</h3>
+                <h3 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">{modifyingItem.name}</h3>
                 <p className="text-xs text-[#ff5f1f] font-bold mt-0.5">${(modifyingItem.price / 100).toFixed(2)} Base</p>
               </div>
-              <button onClick={() => setModifyingItem(null)} className="text-xs text-[#88888b] hover:text-white uppercase font-bold">
+              <button onClick={() => setModifyingItem(null)} className="text-xs text-[#6b7280] hover:text-[#1f2937] uppercase font-bold">
                 Cancel
               </button>
             </div>
 
             {/* Modal Scroll Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-white">
               {modifyingItem.modifier_groups?.map((g: any) => {
                 const selected = selectedModifiers[g.id] || [];
                 return (
-                  <div key={g.id} className="space-y-2 bg-[#121214] p-3.5 rounded-xl border border-[#222226]">
-                    <div className="flex justify-between items-center border-b border-[#28282e] pb-1.5">
-                      <span className="text-xs font-black text-white uppercase tracking-wider">{g.name}</span>
-                      <span className="text-[10px] font-bold text-[#88888b]">
+                  <div key={g.id} className="space-y-2 bg-[#f8f9fa] p-3.5 rounded-xl border border-[#e5e7eb]">
+                    <div className="flex justify-between items-center border-b border-[#e5e7eb] pb-1.5">
+                      <span className="text-xs font-black text-[#1f2937] uppercase tracking-wider">{g.name}</span>
+                      <span className="text-[10px] font-bold text-[#6b7280]">
                         {g.required ? (
                           <span className="text-[#ff5f1f] font-black mr-1">[REQUIRED]</span>
                         ) : null}
@@ -184,8 +184,8 @@ export function MenuView() {
                           <button key={m.id} onClick={() => handleSelectModifier(g, m)}
                             className={`flex justify-between items-center p-2.5 rounded-lg border text-left transition-all ${
                               isChecked
-                                ? 'bg-[#ff5f1f1a] border-[#ff5f1f] text-white'
-                                : 'bg-[#1a1a1e] border-[#222226] text-[#88888b] hover:text-white hover:border-[#333]'
+                                ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-bold'
+                                : 'bg-white border-[#e5e7eb] text-[#4b5563] hover:text-[#1f2937] hover:border-[#cbd5e1]'
                             }`}>
                             <span className="text-xs font-semibold">{m.name}</span>
                             {m.price_adjustment > 0 ? (
@@ -200,30 +200,30 @@ export function MenuView() {
               })}
 
               {/* Special Instructions Notes */}
-              <div className="space-y-2 bg-[#121214] p-3.5 rounded-xl border border-[#222226]">
-                <span className="text-xs font-black text-white uppercase tracking-wider block border-b border-[#28282e] pb-1.5">Special Notes</span>
+              <div className="space-y-2 bg-[#f8f9fa] p-3.5 rounded-xl border border-[#e5e7eb]">
+                <span className="text-xs font-black text-[#1f2937] uppercase tracking-wider block border-b border-[#e5e7eb] pb-1.5">Special Notes</span>
                 <textarea
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
                   placeholder="E.g., Dressing on the side, extra crispy..."
-                  className="w-full bg-[#1a1a1e] border border-[#28282e] rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#ff5f1f] resize-none h-16"
+                  className="w-full bg-white border border-[#d1d5db] rounded-lg p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#ff5f1f] resize-none h-16"
                 />
               </div>
             </div>
 
             {/* Modal Action Footer */}
-            <div className="p-4 border-t border-[#28282e] bg-[#121214] flex items-center justify-between">
+            <div className="p-4 border-t border-[#e5e7eb] bg-[#f8f9fa] flex items-center justify-between">
               {/* Quantity Counter */}
-              <div className="flex items-center gap-3 border border-[#28282e] rounded-lg p-1 bg-[#1a1a1e]">
+              <div className="flex items-center gap-3 border border-[#e5e7eb] rounded-lg p-1 bg-white">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded bg-[#28282e] hover:bg-[#34343a] text-white font-bold text-sm">-</button>
-                <span className="text-xs font-black w-4 text-center text-white">{quantity}</span>
+                  className="w-8 h-8 rounded bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold text-sm">-</button>
+                <span className="text-xs font-black w-4 text-center text-[#1f2937]">{quantity}</span>
                 <button onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 rounded bg-[#28282e] hover:bg-[#34343a] text-white font-bold text-sm">+</button>
+                  className="w-8 h-8 rounded bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold text-sm">+</button>
               </div>
 
               <button onClick={submitModifiers}
-                className="bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black px-6 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors">
+                className="bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black px-6 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm">
                 Add To Order
               </button>
             </div>

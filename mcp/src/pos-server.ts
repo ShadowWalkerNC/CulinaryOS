@@ -68,17 +68,76 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === "create_order") {
       const { tableNumber = "Takeout", items } = args as {
         tableNumber?: string;
-        items: { productName: string; quantity: number; price: number }[];
+        items: { productName: string; quantity: number; price: number; station?: string; menuItemId?: string }[];
       };
       
-      const orderId = `o-${Math.floor(1000 + Math.random() * 9000)}`;
-      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      
+      const API_URL = process.env.CULINARYOS_URL || "http://localhost:3000";
+      const TENANT_ID = process.env.VITE_TENANT_ID || "00000000-0000-0000-0000-000000000001";
+
+      // 1. Create order on the API gateway
+      const orderRes = await fetch(`${API_URL}/v1/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tenant-Id": TENANT_ID
+        },
+        body: JSON.stringify({
+          tableNumber: tableNumber === "Takeout" ? undefined : tableNumber,
+          takeaway: tableNumber === "Takeout",
+          coverCount: 1,
+          serverName: "AI Assistant"
+        })
+      });
+
+      if (!orderRes.ok) {
+        const errText = await orderRes.text();
+        throw new Error(`Failed to create order on API server: ${errText}`);
+      }
+
+      const orderBody = await orderRes.json() as any;
+      const order = orderBody.data;
+
+      // 2. Add line items to the order
+      for (const item of items) {
+        const itemRes = await fetch(`${API_URL}/v1/orders/${order.id}/items`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-Id": TENANT_ID
+          },
+          body: JSON.stringify({
+            menuItemId: item.menuItemId || "mock-item-id",
+            name: item.productName,
+            quantity: item.quantity ?? 1,
+            unitPrice: Math.round(item.price * 100), // convert to cents
+            station: item.station ?? "hot"
+          })
+        });
+
+        if (!itemRes.ok) {
+          const errText = await itemRes.text();
+          console.error(`Failed to add line item: ${errText}`);
+        }
+      }
+
+      // 3. Fire the order to the kitchen
+      const sendRes = await fetch(`${API_URL}/v1/orders/${order.id}/send`, {
+        method: "PATCH",
+        headers: {
+          "X-Tenant-Id": TENANT_ID
+        }
+      });
+
+      if (!sendRes.ok) {
+        const errText = await sendRes.text();
+        console.error(`Failed to send order to kitchen: ${errText}`);
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: `Success: Order ${orderId} created for ${tableNumber}. Subtotal: $${subtotal.toFixed(2)}. Ticket dispatched to KDS.`
+            text: `Success: Order ${order.id} (Table: ${tableNumber}) created and fired to kitchen. Real-time ticket dispatched to KDS.`
           }
         ]
       };

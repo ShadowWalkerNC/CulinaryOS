@@ -75,35 +75,35 @@ export function CheckoutView() {
 
   if (paid) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-[#1a1a1e] border border-[#28282e] rounded-2xl mt-12 text-center space-y-6">
+      <div className="max-w-md mx-auto p-6 bg-white border border-[#e5e7eb] rounded-2xl mt-12 text-center space-y-6 shadow-md">
         <div className="space-y-2">
           <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
-          <h2 className="text-lg font-black text-white uppercase tracking-wider">Transaction Approved</h2>
-          <p className="text-xs text-[#88888b]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+          <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">Transaction Approved</h2>
+          <p className="text-xs text-[#6b7280]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
         </div>
 
         {method === 'cash' && cashAmount > 0 && (
-          <div className="bg-[#121214] p-4 rounded-xl border border-[#28282e]">
-            <p className="text-[10px] text-[#88888b] uppercase font-bold tracking-wider">Change Due</p>
+          <div className="bg-[#f8f9fa] p-4 rounded-xl border border-[#e5e7eb]">
+            <p className="text-[10px] text-[#6b7280] uppercase font-bold tracking-wider">Change Due</p>
             <p className="text-2xl font-black text-[#22c55e] font-mono mt-1">${(changeDue / 100).toFixed(2)}</p>
           </div>
         )}
 
         {/* Receipt Options */}
-        <div className="space-y-3 text-left border-t border-[#28282e] pt-5">
-          <span className="text-[10px] text-[#88888b] font-black tracking-wider uppercase block">Select Receipt Output</span>
+        <div className="space-y-3 text-left border-t border-[#e5e7eb] pt-5">
+          <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Receipt Output</span>
           {!receiptChoice ? (
             <div className="grid grid-cols-3 gap-2">
               <button onClick={() => { setReceiptChoice('none'); setReceiptSent(true); }}
-                className="bg-[#222226] text-white hover:bg-[#28282e] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors">
+                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
                 No Receipt
               </button>
               <button onClick={() => setReceiptChoice('email')}
-                className="bg-[#222226] text-white hover:bg-[#28282e] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors">
+                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
                 Email
               </button>
               <button onClick={() => setReceiptChoice('text')}
-                className="bg-[#222226] text-white hover:bg-[#28282e] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors">
+                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
                 SMS/Text
               </button>
             </div>
@@ -113,11 +113,11 @@ export function CheckoutView() {
                 value={contactInput}
                 onChange={(e) => setContactInput(e.target.value)}
                 placeholder={receiptChoice === 'email' ? 'customer@example.com' : '(555) 000-0000'}
-                className="w-full bg-[#121214] border border-[#28282e] focus:border-[#ff5f1f] outline-none rounded-lg p-2.5 text-xs text-white"
+                className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
               />
               <div className="flex gap-2">
                 <button onClick={() => setReceiptChoice(null)}
-                  className="bg-[#222226] text-[#88888b] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
+                  className="bg-[#f3f4f6] text-[#6b7280] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
                 <button onClick={() => setReceiptSent(true)}
                   className="flex-1 bg-[#ff5f1f] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
               </div>
@@ -138,47 +138,47 @@ export function CheckoutView() {
   }
 
   return (
-    <div className="flex h-full bg-[#121214]">
+    <div className="flex h-full bg-[#f8f9fa]">
       {/* Left panel: Bill details */}
-      <div className="flex-1 p-5 overflow-y-auto border-r border-[#28282e] flex flex-col justify-between">
+      <div className="flex-1 p-5 overflow-y-auto border-r border-[#e5e7eb] flex flex-col justify-between bg-white">
         <div>
-          <h2 className="text-sm font-black text-white uppercase tracking-wider mb-4 border-b border-[#28282e] pb-2">Ticket Summary</h2>
+          <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider mb-4 border-b border-[#e5e7eb] pb-2">Ticket Summary</h2>
           <div className="space-y-3">
             {order.items?.map((item: any) => (
-              <div key={item.id} className="flex justify-between items-start text-xs border-b border-[#222226] pb-2">
+              <div key={item.id} className="flex justify-between items-start text-xs border-b border-[#f3f4f6] pb-2">
                 <div>
-                  <p className="text-white font-bold">{item.quantity}x {item.name}</p>
-                  {item.modifiers?.map((m: any) => <p key={m.id} className="text-[#88888b] text-[10px] ml-3">— {m.name}</p>)}
+                  <p className="text-[#1f2937] font-bold">{item.quantity}x {item.name}</p>
+                  {item.modifiers?.map((m: any) => <p key={m.id} className="text-[#6b7280] text-[10px] ml-3">— {m.name}</p>)}
                 </div>
-                <span className="font-mono text-[#e8eaf0]">${(item.line_total / 100).toFixed(2)}</span>
+                <span className="font-mono text-[#1f2937]">${(item.line_total / 100).toFixed(2)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#1a1a1e] border border-[#28282e] rounded-xl p-4 mt-6 space-y-2 text-xs">
-          <div className="flex justify-between text-[#88888b]"><span>Subtotal</span><span className="font-mono">${(subtotal/100).toFixed(2)}</span></div>
-          <div className="flex justify-between text-[#88888b]"><span>Tax (10%)</span><span className="font-mono">${(tax/100).toFixed(2)}</span></div>
+        <div className="bg-[#f8f9fa] border border-[#e5e7eb] rounded-xl p-4 mt-6 space-y-2 text-xs">
+          <div className="flex justify-between text-[#6b7280]"><span>Subtotal</span><span className="font-mono">${(subtotal/100).toFixed(2)}</span></div>
+          <div className="flex justify-between text-[#6b7280]"><span>Tax (10%)</span><span className="font-mono">${(tax/100).toFixed(2)}</span></div>
           {tipAmount > 0 && (
-            <div className="flex justify-between text-[#88888b]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>
+            <div className="flex justify-between text-[#6b7280]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>
           )}
-          <div className="flex justify-between text-white font-black text-sm border-t border-[#28282e] pt-2 uppercase">
+          <div className="flex justify-between text-[#1f2937] font-black text-sm border-t border-[#e5e7eb] pt-2 uppercase">
             <span>Total Bill</span><span className="font-mono text-[#ff5f1f]">${(total/100).toFixed(2)}</span>
           </div>
         </div>
       </div>
 
       {/* Right panel: Payment Dashboard */}
-      <div className="w-96 p-5 overflow-y-auto space-y-5 bg-[#1a1a1e] flex flex-col justify-between shrink-0 h-full">
+      <div className="w-96 p-5 overflow-y-auto space-y-5 bg-white border-l border-[#e5e7eb] flex flex-col justify-between shrink-0 h-full">
         <div className="space-y-5">
           {/* Tender Type Selection */}
           <div className="space-y-2">
-            <span className="text-[10px] text-[#88888b] font-black tracking-wider uppercase block">Select Tender Type</span>
+            <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Tender Type</span>
             <div className="grid grid-cols-3 gap-2">
               {METHODS.map((m) => (
                 <button key={m} onClick={() => setMethod(m)}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
-                    method === m ? 'bg-[#ff5f1f] text-white' : 'bg-[#222226] text-[#88888b] hover:bg-[#28282e] hover:text-white'
+                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
+                    method === m ? 'bg-[#ff5f1f] border-[#ff5f1f] text-white' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
                   }`}>{m}</button>
               ))}
             </div>
@@ -186,14 +186,14 @@ export function CheckoutView() {
 
           {/* Preset Tips Selection */}
           <div className="space-y-2">
-            <span className="text-[10px] text-[#88888b] font-black tracking-wider uppercase block">Tip Selector</span>
+            <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Tip Selector</span>
             <div className="grid grid-cols-5 gap-1.5">
               {([0, 15, 18, 20] as const).map((pct) => (
                 <button key={pct} onClick={() => setTipPercent(pct)}
                   className={`py-2 rounded text-[10px] font-bold transition-all border ${
                     tipPercent === pct
-                      ? 'bg-[#ff5f1f1a] border-[#ff5f1f] text-white font-black'
-                      : 'bg-[#121214] border-[#222226] text-[#88888b] hover:text-white'
+                      ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-black'
+                      : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
                   }`}>
                   {pct === 0 ? 'No Tip' : `${pct}%`}
                 </button>
@@ -201,8 +201,8 @@ export function CheckoutView() {
               <button onClick={() => setTipPercent('custom')}
                 className={`py-2 rounded text-[10px] font-bold transition-all border ${
                   tipPercent === 'custom'
-                    ? 'bg-[#ff5f1f1a] border-[#ff5f1f] text-white font-black'
-                    : 'bg-[#121214] border-[#222226] text-[#88888b] hover:text-white'
+                    ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-black'
+                    : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
                 }`}>
                 Custom
               </button>
@@ -214,7 +214,7 @@ export function CheckoutView() {
                   value={customTip}
                   onChange={(e) => setCustomTip(e.target.value)}
                   placeholder="Enter tip ($)"
-                  className="w-full bg-[#121214] border border-[#28282e] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-white font-mono"
+                  className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-[#1f2937] font-mono"
                 />
               </div>
             )}
@@ -222,14 +222,14 @@ export function CheckoutView() {
 
           {/* Cash calculator helper */}
           {method === 'cash' && (
-            <div className="space-y-2 animate-fadeIn bg-[#121214] p-3 rounded-xl border border-[#222226]">
-              <span className="text-[10px] text-[#88888b] font-black tracking-wider uppercase block border-b border-[#28282e] pb-1.5">Cash tender hotkeys</span>
+            <div className="space-y-2 animate-fadeIn bg-[#f8f9fa] p-3 rounded-xl border border-[#e5e7eb]">
+              <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block border-b border-[#e5e7eb] pb-1.5">Cash tender hotkeys</span>
               <div className="grid grid-cols-4 gap-1.5 pt-1.5">
                 {[total/100, 10, 20, 50, 100].map((amt, idx) => {
                   const val = Math.ceil(amt);
                   return (
                     <button key={idx} onClick={() => setCashTendered(val.toString())}
-                      className="bg-[#1a1a1e] border border-[#28282e] hover:border-[#ff5f1f] text-white font-bold py-2 rounded text-[10px]">
+                      className="bg-white border border-[#e5e7eb] hover:border-[#ff5f1f] text-[#1f2937] font-bold py-2 rounded text-[10px]">
                       {idx === 0 ? 'Exact' : `$${val}`}
                     </button>
                   );
@@ -240,7 +240,7 @@ export function CheckoutView() {
                 value={cashTendered}
                 onChange={(e) => setCashTendered(e.target.value)}
                 placeholder="Or input cash amount ($)"
-                className="w-full bg-[#1a1a1e] border border-[#28282e] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-white mt-3 font-mono"
+                className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-[#1f2937] mt-3 font-mono"
               />
             </div>
           )}
@@ -248,7 +248,7 @@ export function CheckoutView() {
 
         {/* Charge and Submit */}
         <button onClick={processPayment} disabled={processing}
-          className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-colors disabled:opacity-50 active:scale-98 mt-6">
+          className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-colors disabled:opacity-50 active:scale-98 mt-6 shadow-sm">
           {processing ? 'Authorizing...' : `Finalize Charge $${(total/100).toFixed(2)}`}
         </button>
       </div>
