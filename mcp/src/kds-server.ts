@@ -7,7 +7,7 @@ import {
 
 const server = new Server(
   {
-    name: "culinaryos-kds-server",
+    name: "KitchenKit",
     version: "1.0.0",
   },
   {
@@ -35,7 +35,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            ticketId: { type: "string", description: "ID of the ticket to bump (e.g. t-101)" }
+            ticketId: { type: "string", description: "ID of the ticket to bump" }
           },
           required: ["ticketId"]
         }
@@ -48,38 +48,49 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
+  const API_URL = process.env.CULINARYOS_URL || "http://localhost:3000";
+  const TENANT_ID = process.env.VITE_TENANT_ID || "00000000-0000-0000-0000-000000000001";
+
   try {
     if (name === "fetch_kds_tickets") {
-      // Return mocked active KDS tickets structure conforming to types.ts
+      const res = await fetch(`${API_URL}/v1/kds/tickets`, {
+        headers: {
+          "X-Tenant-Id": TENANT_ID
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch tickets from API: ${await res.text()}`);
+      }
+
+      const body = await res.json() as any;
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify([
-              {
-                id: "t-101",
-                orderId: "o-201",
-                tableNumber: "Table 4",
-                status: "queued",
-                elapsedSeconds: 140,
-                priority: "low",
-                items: [
-                  { id: "i-1", productName: "Sourdough Loaf", quantity: 1, price: 8.50 },
-                  { id: "i-2", productName: "Espresso Double", quantity: 1, price: 3.25 }
-                ]
-              }
-            ], null, 2)
+            text: JSON.stringify(body.data || [], null, 2)
           }
         ]
       };
     } else if (name === "bump_kds_ticket") {
       const { ticketId } = args as { ticketId: string };
       
+      const res = await fetch(`${API_URL}/v1/kds/tickets/${ticketId}/bump`, {
+        method: "PATCH",
+        headers: {
+          "X-Tenant-Id": TENANT_ID
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to bump ticket: ${await res.text()}`);
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: `Success: Ticket ${ticketId} bumped. Status updated to 'bumped' in database.`
+            text: `Success: Ticket ${ticketId} bumped on KitchenKit.`
           }
         ]
       };
@@ -102,10 +113,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("CulinaryOS KDS MCP Server running on STDIO");
+  console.error("KitchenKit KDS MCP Server running on STDIO");
 }
 
 main().catch((err) => {
-  console.error("Fatal error starting KDS MCP Server:", err);
+  console.error("Fatal error starting KitchenKit MCP Server:", err);
   process.exit(1);
 });

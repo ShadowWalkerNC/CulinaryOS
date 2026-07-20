@@ -9,6 +9,7 @@
     "start-pos": "node dist/pos-server.js",
     "start-kds": "node dist/kds-server.js",
     "start-inventory": "node dist/inventory-server.js",
+    "start-post-pilot": "node dist/post-pilot-server.js",
     "start-culinary": "node dist/culinary-os-server.js",
     "dev-culinary": "ts-node culinary-os-server.ts"
   },

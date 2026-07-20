@@ -7,7 +7,7 @@ import {
 
 const server = new Server(
   {
-    name: "culinaryos-inventory-server",
+    name: "Plated",
     version: "1.0.0",
   },
   {
@@ -35,7 +35,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            itemId: { type: "string", description: "ID of the inventory item (e.g. i1)" },
+            itemId: { type: "string", description: "ID of the inventory item" },
             physicalQty: { type: "number", description: "The physical quantity counted in store" }
           },
           required: ["itemId", "physicalQty"]
@@ -49,33 +49,71 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
+  const API_URL = process.env.CULINARYOS_URL || "http://localhost:3000";
+  const TENANT_ID = process.env.VITE_TENANT_ID || "00000000-0000-0000-0000-000000000001";
+
   try {
     if (name === "get_inventory_levels") {
+      const res = await fetch(`${API_URL}/v1/pantry`, {
+        headers: {
+          "X-Tenant-Id": TENANT_ID
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch inventory: ${await res.text()}`);
+      }
+
+      const body = await res.json() as any;
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify([
-              { id: "i1", name: "Unbleached Bread Flour", stockQty: 12.5, parLevel: 50.0, unit: "kg", costPerUnit: 2.00 },
-              { id: "i2", name: "Active Starter Culture", stockQty: 2.2, parLevel: 5.0, unit: "kg", costPerUnit: 1.50 }
-            ], null, 2)
+            text: JSON.stringify(body.data || [], null, 2)
           }
         ]
       };
     } else if (name === "log_audit_count") {
       const { itemId, physicalQty } = args as { itemId: string; physicalQty: number };
-      
-      // Calculate simple mock variance
-      const currentQty = 12.5; // bread flour mock current qty
-      const costPerUnit = 2.00;
-      const variance = physicalQty - currentQty;
-      const loss = Math.abs(variance * costPerUnit);
+
+      // 1. Fetch current details to calculate variance
+      const getRes = await fetch(`${API_URL}/v1/pantry/${itemId}`, {
+        headers: {
+          "X-Tenant-Id": TENANT_ID
+        }
+      });
+
+      if (!getRes.ok) {
+        throw new Error(`Item ${itemId} not found in inventory.`);
+      }
+
+      const getBody = await getRes.json() as any;
+      const currentItem = getBody.data;
+
+      const variance = physicalQty - (currentItem.stock_quantity ?? 0);
+      const loss = Math.abs(variance * (currentItem.cost_per_unit ?? 0));
+
+      // 2. Perform updates to pantry levels
+      const updateRes = await fetch(`${API_URL}/v1/pantry/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tenant-Id": TENANT_ID
+        },
+        body: JSON.stringify({
+          stockQuantity: physicalQty
+        })
+      });
+
+      if (!updateRes.ok) {
+        throw new Error(`Failed to log audit counts: ${await updateRes.text()}`);
+      }
 
       return {
         content: [
           {
             type: "text",
-            text: `Success: Audit logged for item ${itemId}. Variance: ${variance.toFixed(3)}. Total Loss: $${loss.toFixed(2)}.`
+            text: `Success: Audit logged for item ${currentItem.name || itemId} on Plated. Variance: ${variance.toFixed(3)}. Total Loss Calculated: $${(loss / 100).toFixed(2)}.`
           }
         ]
       };
@@ -98,10 +136,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("CulinaryOS Inventory MCP Server running on STDIO");
+  console.error("Plated Inventory MCP Server running on STDIO");
 }
 
 main().catch((err) => {
-  console.error("Fatal error starting Inventory MCP Server:", err);
+  console.error("Fatal error starting Plated MCP Server:", err);
   process.exit(1);
 });

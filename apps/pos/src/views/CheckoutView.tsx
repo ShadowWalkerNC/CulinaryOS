@@ -19,6 +19,10 @@ export function CheckoutView() {
   const [receiptChoice, setReceiptChoice] = useState<'none' | 'email' | 'text' | null>(null);
   const [contactInput, setContactInput] = useState('');
   
+  // Stripe Terminal Simulator State
+  const [stripeSimState, setStripeSimState] = useState<'idle' | 'waiting' | 'authorizing' | 'declined' | 'timeout'>('idle');
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+
   const qc = useQueryClient();
 
   if (!order) return null;
@@ -37,8 +41,8 @@ export function CheckoutView() {
   const cashAmount = parseFloat(cashTendered || '0') * 100;
   const changeDue = Math.max(0, cashAmount - total);
 
-  async function processPayment() {
-    if (!order) return;
+  // Triggers actual payment completion and database write
+  async function finalizePayment() {
     setProcessing(true);
     try {
       if (supabase) {
@@ -65,6 +69,16 @@ export function CheckoutView() {
       alert('Payment failed: ' + err.message);
     } finally {
       setProcessing(false);
+      setStripeSimState('idle');
+    }
+  }
+
+  function startPaymentFlow() {
+    if (method === 'card') {
+      // Open card reader simulator
+      setStripeSimState('waiting');
+    } else {
+      finalizePayment();
     }
   }
 
@@ -73,72 +87,131 @@ export function CheckoutView() {
     setView('tables');
   }
 
+  function triggerPrint() {
+    window.print();
+  }
+
   if (paid) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white border border-[#e5e7eb] rounded-2xl mt-12 text-center space-y-6 shadow-md">
-        <div className="space-y-2">
-          <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
-          <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">Transaction Approved</h2>
-          <p className="text-xs text-[#6b7280]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+      <div className="flex h-full bg-[#f8f9fa] p-6 gap-6 animate-fadeIn">
+        {/* Left Side: Success Message & Options */}
+        <div className="flex-1 bg-white border border-[#e5e7eb] rounded-2xl p-8 text-center flex flex-col justify-between shadow-sm">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
+              <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">Transaction Approved</h2>
+              <p className="text-xs text-[#6b7280]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+            </div>
+
+            {method === 'cash' && cashAmount > 0 && (
+              <div className="bg-[#f8f9fa] p-4 rounded-xl border border-[#e5e7eb] max-w-xs mx-auto">
+                <p className="text-[10px] text-[#6b7280] uppercase font-bold tracking-wider">Change Due</p>
+                <p className="text-2xl font-black text-[#22c55e] font-mono mt-1">${(changeDue / 100).toFixed(2)}</p>
+              </div>
+            )}
+
+            {/* Receipt Options */}
+            <div className="space-y-3 text-left border-t border-[#e5e7eb] pt-6 max-w-sm mx-auto">
+              <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Receipt Output</span>
+              {!receiptChoice ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => { setReceiptChoice('none'); setReceiptSent(true); }}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
+                    No Receipt
+                  </button>
+                  <button onClick={() => setReceiptChoice('email')}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
+                    Email
+                  </button>
+                  <button onClick={() => setReceiptChoice('text')}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
+                    SMS/Text
+                  </button>
+                </div>
+              ) : receiptChoice !== 'none' && !receiptSent ? (
+                <div className="space-y-2 animate-fadeIn">
+                  <input
+                    value={contactInput}
+                    onChange={(e) => setContactInput(e.target.value)}
+                    placeholder={receiptChoice === 'email' ? 'customer@example.com' : '(555) 000-0000'}
+                    className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => setReceiptChoice(null)}
+                      className="bg-[#f3f4f6] text-[#6b7280] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
+                    <button onClick={() => setReceiptSent(true)}
+                      className="flex-1 bg-[#ff5f1f] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-[#22c55e15] border border-[#22c55e30] rounded-xl text-center text-xs font-bold text-[#22c55e] animate-fadeIn">
+                  Receipt Dispatched Successfully
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 max-w-sm mx-auto w-full mt-8">
+            <button onClick={triggerPrint}
+              className="flex-1 bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-colors border border-[#e5e7eb]">
+              Print Guest Receipt
+            </button>
+            <button onClick={handleCloseCheckout}
+              className="flex-1 bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">
+              Done
+            </button>
+          </div>
         </div>
 
-        {method === 'cash' && cashAmount > 0 && (
-          <div className="bg-[#f8f9fa] p-4 rounded-xl border border-[#e5e7eb]">
-            <p className="text-[10px] text-[#6b7280] uppercase font-bold tracking-wider">Change Due</p>
-            <p className="text-2xl font-black text-[#22c55e] font-mono mt-1">${(changeDue / 100).toFixed(2)}</p>
-          </div>
-        )}
-
-        {/* Receipt Options */}
-        <div className="space-y-3 text-left border-t border-[#e5e7eb] pt-5">
-          <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Receipt Output</span>
-          {!receiptChoice ? (
-            <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => { setReceiptChoice('none'); setReceiptSent(true); }}
-                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                No Receipt
-              </button>
-              <button onClick={() => setReceiptChoice('email')}
-                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                Email
-              </button>
-              <button onClick={() => setReceiptChoice('text')}
-                className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                SMS/Text
-              </button>
+        {/* Right Side: Virtual Thermal Receipt Roll */}
+        <div className="w-80 bg-white border border-[#e5e7eb] rounded-2xl p-5 shadow-sm flex flex-col items-center overflow-hidden h-full shrink-0">
+          <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block mb-4">Receipt Tape Roll</span>
+          <div id="print-area" className="flex-1 w-full bg-[#fdfdfd] border border-dashed border-[#cbd5e1] p-4 font-mono text-[10px] text-black overflow-y-auto space-y-4 shadow-inner">
+            <div className="text-center space-y-1">
+              <h3 className="font-bold text-xs uppercase tracking-wider">CULINARYOS BISTRO</h3>
+              <p>100 RESTAURANT ROW</p>
+              <p>TEL: (555) 123-4567</p>
             </div>
-          ) : receiptChoice !== 'none' && !receiptSent ? (
-            <div className="space-y-2 animate-fadeIn">
-              <input
-                value={contactInput}
-                onChange={(e) => setContactInput(e.target.value)}
-                placeholder={receiptChoice === 'email' ? 'customer@example.com' : '(555) 000-0000'}
-                className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
-              />
-              <div className="flex gap-2">
-                <button onClick={() => setReceiptChoice(null)}
-                  className="bg-[#f3f4f6] text-[#6b7280] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
-                <button onClick={() => setReceiptSent(true)}
-                  className="flex-1 bg-[#ff5f1f] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
+            
+            <div className="border-t border-b border-dashed border-black py-2 space-y-1">
+              <p>CHECK: {order.id}</p>
+              <p>DATE: {new Date().toLocaleDateString()}</p>
+              <p>SERVER: {order.server_name ?? 'Server'}</p>
+            </div>
+
+            <div className="space-y-2">
+              {order.items?.map((item: any) => (
+                <div key={item.id} className="space-y-0.5">
+                  <div className="flex justify-between font-bold">
+                    <span>{item.quantity}x {item.name}</span>
+                    <span>${(item.line_total / 100).toFixed(2)}</span>
+                  </div>
+                  {item.modifiers?.map((m: any) => <p key={m.id} className="text-[9px] pl-3">— {m.name}</p>)}
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-dashed border-black pt-2 space-y-1.5 text-right">
+              <div className="flex justify-between"><span>SUBTOTAL</span><span>${(subtotal/100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>TAX (10%)</span><span>${(tax/100).toFixed(2)}</span></div>
+              {tipAmount > 0 && <div className="flex justify-between"><span>TIP</span><span>${(tipAmount/100).toFixed(2)}</span></div>}
+              <div className="flex justify-between font-bold text-xs border-t border-dashed border-black pt-1">
+                <span>TOTAL</span><span>${(total/100).toFixed(2)}</span>
               </div>
             </div>
-          ) : (
-            <div className="p-3 bg-[#22c55e15] border border-[#22c55e30] rounded-xl text-center text-xs font-bold text-[#22c55e] animate-fadeIn">
-              Receipt Dispatched Successfully
-            </div>
-          )}
-        </div>
 
-        <button onClick={handleCloseCheckout}
-          className="w-full bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">
-          Return to Dining Map
-        </button>
+            <div className="text-center pt-4 space-y-2 border-t border-dashed border-black">
+              <p className="font-bold">THANK YOU FOR DINING WITH US!</p>
+              <p className="text-[8px] text-[#888]">CulinaryOS Cloud POS platform</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full bg-[#f8f9fa]">
+    <div className="flex h-full bg-[#f8f9fa] relative">
       {/* Left panel: Bill details */}
       <div className="flex-1 p-5 overflow-y-auto border-r border-[#e5e7eb] flex flex-col justify-between bg-white">
         <div>
@@ -247,11 +320,74 @@ export function CheckoutView() {
         </div>
 
         {/* Charge and Submit */}
-        <button onClick={processPayment} disabled={processing}
+        <button onClick={startPaymentFlow} disabled={processing}
           className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-colors disabled:opacity-50 active:scale-98 mt-6 shadow-sm">
           {processing ? 'Authorizing...' : `Finalize Charge $${(total/100).toFixed(2)}`}
         </button>
       </div>
+
+      {/* Stripe Terminal Simulator Modal Overlay */}
+      {stripeSimState !== 'idle' && (
+        <div className="absolute inset-0 bg-[#00000050] backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6 text-center">
+            <div className="space-y-2">
+              <span className="text-[9px] text-[#ff5f1f] font-black tracking-wider uppercase block">Stripe Terminal Simulator</span>
+              {stripeSimState === 'waiting' && (
+                <>
+                  <h3 className="text-base font-black text-[#1f2937] uppercase">Tap, Insert, or Swipe</h3>
+                  <p className="text-xs text-[#6b7280] px-4 leading-relaxed">Please present customer card to the terminal reader.</p>
+                  <div className="w-12 h-12 border-4 border-t-transparent border-[#ff5f1f] rounded-full animate-spin mx-auto mt-4" />
+                </>
+              )}
+              {stripeSimState === 'authorizing' && (
+                <>
+                  <h3 className="text-base font-black text-[#1f2937] uppercase">Authorizing Charge</h3>
+                  <p className="text-xs text-[#6b7280]">Connecting to Stripe processing networks...</p>
+                  <div className="w-12 h-12 border-4 border-t-transparent border-[#22c55e] rounded-full animate-spin mx-auto mt-4" />
+                </>
+              )}
+              {stripeSimState === 'declined' && (
+                <>
+                  <h3 className="text-base font-black text-red-600 uppercase">Card Declined</h3>
+                  <p className="text-xs text-[#6b7280] px-4 leading-relaxed">The bank returned a decline code. Try another tender method.</p>
+                </>
+              )}
+              {stripeSimState === 'timeout' && (
+                <>
+                  <h3 className="text-base font-black text-yellow-600 uppercase">Reader Timeout</h3>
+                  <p className="text-xs text-[#6b7280] px-4 leading-relaxed">No card was presented in time. Try triggering checkout again.</p>
+                </>
+              )}
+            </div>
+
+            {/* Simulating control buttons */}
+            <div className="space-y-2 pt-4 border-t border-[#e5e7eb]">
+              {stripeSimState === 'waiting' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setStripeSimState('authorizing'); setTimeout(finalizePayment, 1500); }}
+                    className="bg-[#22c55e] hover:bg-[#16a34a] text-white text-[10px] font-black rounded-lg py-2.5 uppercase transition-colors">
+                    Simulate Success
+                  </button>
+                  <button onClick={() => setStripeSimState('declined')}
+                    className="bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg py-2.5 uppercase transition-colors">
+                    Simulate Decline
+                  </button>
+                  <button onClick={() => setStripeSimState('timeout')}
+                    className="col-span-2 bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#6b7280] text-[10px] font-bold rounded-lg py-2.5 uppercase transition-colors">
+                    Simulate Timeout
+                  </button>
+                </div>
+              )}
+              {['declined', 'timeout'].includes(stripeSimState) && (
+                <button onClick={() => setStripeSimState('idle')}
+                  className="w-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] text-xs font-black rounded-lg py-2.5 uppercase transition-colors">
+                  Cancel Checkout
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

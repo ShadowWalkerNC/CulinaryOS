@@ -3,75 +3,96 @@ import { TablesView }   from './views/TablesView';
 import { OrderView }    from './views/OrderView';
 import { MenuView }     from './views/MenuView';
 import { CheckoutView } from './views/CheckoutView';
+import { DashboardView } from './views/DashboardView';
+import { StaffView }     from './views/StaffView';
+import { RecallView }    from './views/RecallView';
+import { SettingsView }  from './views/SettingsView';
+import { TabsView }      from './views/TabsView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 
 export function App() {
-  const { view, setView, activeOrderId, setActiveOrder } = usePOSStore();
+  const { view, setView, activeOrderId, setActiveOrder, employee, setEmployee } = usePOSStore();
+
+  // 1. Force Lock Screen if no employee session is active
+  if (!employee) {
+    return <StaffView />;
+  }
 
   return (
-    <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden">
-      {/* Top Bar */}
+    <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn">
+      {/* Top Navigation Bar */}
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-[#e5e7eb] shrink-0">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <button onClick={() => setView('dashboard')} className="flex items-center gap-2 hover:opacity-85 text-left">
             <span className="font-black text-sm tracking-tight text-[#1f2937] uppercase">SquareOS Terminal</span>
-          </div>
-          <span className="text-[#6b7280] text-[10px] font-bold px-2 py-0.5 bg-[#f3f4f6] rounded uppercase">Terminal 01</span>
+          </button>
+          <span className="text-[#6b7280] text-[10px] font-bold px-2 py-0.5 bg-[#f3f4f6] rounded uppercase">
+            Server: {employee.name} ({employee.role})
+          </span>
         </div>
 
-        {/* Quick Nav Options */}
+        {/* Quick Nav Header Controls */}
         <div className="flex gap-1.5">
-          <button onClick={() => { setView('tables'); setActiveOrder(null); }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              view === 'tables' && !activeOrderId ? 'bg-[#ff5f1f] text-white' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
+          <button onClick={() => setView('dashboard')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              view === 'dashboard' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
             }`}>
-            TABLES
+            HOME
+          </button>
+          <button onClick={() => { setView('tables'); setActiveOrder(null); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              view === 'tables' && !activeOrderId ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
+            }`}>
+            FLOOR MAP
           </button>
           {activeOrderId && (
             <>
               <button onClick={() => setView('menu')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  view === 'menu' ? 'bg-[#ff5f1f] text-white' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                  view === 'menu' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
                 }`}>
-                MENU
+                TICKET MENU
               </button>
               <button onClick={() => setView('checkout')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  view === 'checkout' ? 'bg-[#ff5f1f] text-white' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                  view === 'checkout' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
                 }`}>
-                CHECKOUT
+                PAY
               </button>
             </>
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <ConnectionStatus />
+          <button onClick={() => setEmployee(null)}
+            className="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1 rounded text-[10px] uppercase">
+            LOCK
+          </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Side: Persistent Receipt/Ticket Panel */}
-        {activeOrderId && (
+        {/* Left Side: Persistent Receipt Panel (Only visible in Ticket Views: Menu, Checkout, Floor Map with Active Order) */}
+        {activeOrderId && (view === 'menu' || view === 'checkout') && (
           <div className="w-80 border-r border-[#e5e7eb] bg-white flex flex-col h-full shrink-0">
             <OrderView />
           </div>
         )}
 
-        {/* Right Side: Interactive Action Area */}
+        {/* Right Side: Active Workspace panel */}
         <div className="flex-1 h-full overflow-hidden bg-[#f8f9fa]">
-          {activeOrderId ? (
-            <>
-              {view === 'menu' && <MenuView />}
-              {view === 'checkout' && <CheckoutView />}
-              {view === 'tables' && <TablesView />}
-            </>
-          ) : (
-            <TablesView />
-          )}
+          {view === 'dashboard' && <DashboardView />}
+          {view === 'tables' && <TablesView />}
+          {view === 'menu' && <MenuView />}
+          {view === 'checkout' && <CheckoutView />}
+          {view === 'tabs' && <TabsView />}
+          {view === 'recall' && <RecallView />}
+          {view === 'settings' && <SettingsView />}
         </div>
       </div>
     </div>
   );
 }
+export default App;

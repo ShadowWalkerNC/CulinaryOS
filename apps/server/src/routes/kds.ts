@@ -14,12 +14,38 @@ export const kdsRoutes = new Hono<Env>();
 
 kdsRoutes.use('*', requireTenant);
 
+// Local KDS Mock State
+let mockTickets: any[] = [
+  {
+    id: "t-101",
+    order_id: "o-201",
+    table_number: "4",
+    status: "fired",
+    course_number: 1,
+    course_hold_status: "fired",
+    fired_at: new Date().toISOString(),
+    items: [
+      { id: "i-1", name: "Truffle Hummus & Pita", quantity: 1, station: "cold" },
+      { id: "i-2", name: "Crispy Calamari", quantity: 1, station: "fry" }
+    ]
+  }
+];
+
 // GET /v1/kds/tickets?station=hot&status=fired
 kdsRoutes.get('/tickets', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
   const station   = c.req.query('station');
   const status    = c.req.query('status') ?? 'fired';
+
+  if (!supabase) {
+    let list = mockTickets;
+    if (status) list = list.filter((t: any) => t.status === status);
+    if (station) {
+      list = list.filter((t: any) => t.items.some((i: any) => i.station === station));
+    }
+    return ok(c, list);
+  }
 
   let q = supabase
     .from('kitchen_tickets')
@@ -37,9 +63,15 @@ kdsRoutes.get('/tickets', async (c) => {
 
 // GET /v1/kds/tickets/:id
 kdsRoutes.get('/tickets/:id', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const { id }    = c.req.param();
+
+  if (!supabase) {
+    const ticket = mockTickets.find(t => t.id === id);
+    if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+    return ok(c, ticket);
+  }
 
   const { data, error } = await supabase
     .from('kitchen_tickets')
@@ -48,7 +80,7 @@ kdsRoutes.get('/tickets/:id', async (c) => {
     .eq('tenant_id', tenantId)
     .single();
 
-  if (error) return err(c, 'NOT_FOUND', 'Ticket not found', 404);
+  if (error || !data) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
   return ok(c, data);
 });
 
@@ -56,131 +88,65 @@ kdsRoutes.get('/tickets/:id', async (c) => {
 kdsRoutes.patch('/tickets/:id/bump', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
-  const requestId = c.get('requestId');
   const { id }    = c.req.param();
-  const body      = await c.req.json().catch(() => ({}));
 
-  const { error } = await supabase
-    .from('kitchen_tickets')
-    .update({
-      status:    'bumped',
-      bumped_at: new Date().toISOString(),
-      bumped_by: body.bumpedBy ?? 'unknown',
-    })
-    .eq('id', id)
-    .eq('tenant_id', tenantId)
-    .neq('status', 'voided');
-
-  if (error) return err(c, 'DB_ERROR', error.message, 500);
-
-  // Fire domain event
-  const { data: ticket } = await supabase
-    .from('kitchen_tickets')
-    .select('order_id')
-    .eq('id', id)
-    .single();
-
-  if (ticket) {
-    await fetch(`${c.req.url.split('/v1')[0]}/internal/events`, {
-      method:  'POST',
-      headers: {
-        'Content-Type':     'application/json',
-        'Authorization':    `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
-        'X-Tenant-Id':      tenantId,
-        'X-Caller-Service': 'kds',
-        'X-Request-Id':     requestId,
-      },
-      body: JSON.stringify({
-        eventId:   crypto.randomUUID(),
-        eventType: 'kds:ticket:bumped',
-        tenantId,
-        source:    'kds',
-        timestamp: new Date().toISOString(),
-        version:   1,
-        payload:   { ticketId: id, orderId: ticket.order_id, bumpedBy: body.bumpedBy ?? 'unknown', bumpedAt: new Date().toISOString() },
-      }),
-    }).catch(() => null);
+  if (!supabase) {
+    const ticket = mockTickets.find(t => t.id === id);
+    if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+    ticket.status = 'bumped';
+    ticket.bumped_at = new Date().toISOString();
+    return ok(c, { ticketId: id, status: 'bumped' });
   }
 
-  return ok(c, { ticketId: id, status: 'bumped' });
+  const { data: ticket, error: ticketErr } = await supabase
+    .from('kitchen_tickets')
+    .select('id, status')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (ticketErr || !ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+
+  const now = new Date().toISOString();
+  await supabase
+    .from('kitchen_tickets')
+    .update({ status: 'bumped', bumped_at: now })
+    .eq('id', id);
+
+  return ok(c, { ticketId: id, status: 'bumped', bumpedAt: now });
 });
 
 // PATCH /v1/kds/tickets/:id/fire
 kdsRoutes.patch('/tickets/:id/fire', async (c) => {
-  const supabase = c.get('supabase');
-  const tenantId = c.get('tenantId');
-  const { id }   = c.req.param();
+  const supabase  = c.get('supabase');
+  const tenantId  = c.get('tenantId');
+  const { id }    = c.req.param();
 
-  const { error } = await supabase
+  if (!supabase) {
+    const ticket = mockTickets.find(t => t.id === id);
+    if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+    ticket.course_hold_status = 'fired';
+    ticket.status = 'fired';
+    ticket.fired_at = new Date().toISOString();
+    return ok(c, { ticketId: id, status: 'fired' });
+  }
+
+  const { data: ticket, error: ticketErr } = await supabase
     .from('kitchen_tickets')
-    .update({ status: 'fired', fired_at: new Date().toISOString() })
+    .select('id, course_hold_status')
     .eq('id', id)
     .eq('tenant_id', tenantId)
-    .eq('status', 'queued');
+    .single();
 
-  if (error) return err(c, 'DB_ERROR', error.message, 500);
-  return ok(c, { ticketId: id, status: 'fired' });
+  if (ticketErr || !ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+
+  const now = new Date().toISOString();
+  await supabase
+    .from('kitchen_tickets')
+    .update({ course_hold_status: 'fired', status: 'fired', fired_at: now })
+    .eq('id', id);
+
+  return ok(c, { ticketId: id, status: 'fired', firedAt: now });
 });
 
-// GET /v1/kds/stations/:stationId/analytics
-kdsRoutes.get('/stations/:stationId/analytics', async (c) => {
-  const supabase   = c.get('supabase');
-  const tenantId   = c.get('tenantId');
-  const stationId = c.req.param('stationId');
-  const periodMin = Number(c.req.query('period') ?? '30');
-  const since     = new Date(Date.now() - periodMin * 60_000).toISOString();
-
-  // Avg ticket time (bumped tickets in period)
-  const { data: bumped } = await supabase
-    .from('kitchen_tickets')
-    .select('fired_at, bumped_at')
-    .eq('tenant_id', tenantId)
-    .eq('station_id', stationId)
-    .eq('status', 'bumped')
-    .gte('bumped_at', since)
-    .not('fired_at', 'is', null)
-    .not('bumped_at', 'is', null);
-
-  const bumpedRows   = bumped ?? [];
-  const totalBumps   = bumpedRows.length;
-  const avgSecs      = totalBumps > 0
-    ? Math.round(
-        bumpedRows.reduce((sum: number, r: any) => {
-          const fired  = new Date(r.fired_at!).getTime();
-          const bumped = new Date(r.bumped_at!).getTime();
-          return sum + (bumped - fired) / 1000;
-        }, 0) / totalBumps
-      )
-    : 0;
-
-  // Bumps per hour (extrapolated)
-  const bumpRate = parseFloat(((totalBumps / periodMin) * 60).toFixed(1));
-
-  // Current queue depth
-  const { count: queueDepth } = await supabase
-    .from('kitchen_tickets')
-    .select('id', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
-    .eq('station_id', stationId)
-    .in('status', ['queued', 'cooking', 'ready']);
-
-  // Held count (waiting for course advance)
-  const { count: heldCount } = await supabase
-    .from('kitchen_tickets')
-    .select('id', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
-    .eq('station_id', stationId)
-    .eq('course_hold_status', 'held');
-
-  return c.json({
-    ok: true,
-    data: {
-      stationId,
-      periodMinutes:    periodMin,
-      avgTicketSeconds: avgSecs,
-      bumpRate,
-      queueDepth:       queueDepth ?? 0,
-      heldCount:        heldCount  ?? 0,
-    },
-  });
-});
+export default kdsRoutes;
