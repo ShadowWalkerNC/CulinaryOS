@@ -1,11 +1,14 @@
 import { useOrder, useFireOrder, useVoidOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
+import { getMockOrders, saveMockOrders } from '../lib/mockDb';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function OrderView() {
   const { activeOrderId, setView, setActiveOrder } = usePOSStore();
   const { data: order, isLoading } = useOrder(activeOrderId);
   const { mutate: fireOrder, isPending: firing } = useFireOrder();
   const { mutate: voidOrder } = useVoidOrder();
+  const qc = useQueryClient();
 
   if (isLoading || !order) return (
     <div className="flex justify-center items-center h-full">
@@ -14,6 +17,36 @@ export function OrderView() {
   );
 
   const subtotal = order.items?.reduce((s: number, i: any) => s + i.line_total, 0) ?? 0;
+  
+  // Calculate Discounts
+  const discountPercent = order.discount_percent ?? 0;
+  const discountFlat = order.discount_flat ?? 0;
+  const discountAmount = Math.round(subtotal * (discountPercent / 100)) + discountFlat;
+  const taxableSubtotal = Math.max(0, subtotal - discountAmount);
+  const tax = Math.round(taxableSubtotal * 0.1);
+  const total = taxableSubtotal + tax;
+
+  function handleDiscountPrompt() {
+    const val = prompt('Select Discount Type:\n1. 10% Senior Discount\n2. $5.00 Off Coupon\n3. Remove Discounts\nEnter option (1, 2, 3):');
+    
+    // Update local DB
+    const allOrders = getMockOrders();
+    const dbOrder = allOrders.find(o => o.id === order.id);
+    if (dbOrder) {
+      if (val === '1') {
+        dbOrder.discount_percent = 10;
+        dbOrder.discount_flat = 0;
+      } else if (val === '2') {
+        dbOrder.discount_percent = 0;
+        dbOrder.discount_flat = 500;
+      } else if (val === '3') {
+        dbOrder.discount_percent = 0;
+        dbOrder.discount_flat = 0;
+      }
+      saveMockOrders(allOrders);
+    }
+    qc.invalidateQueries({ queryKey: ['orders'] });
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -60,43 +93,57 @@ export function OrderView() {
           <div className="flex justify-between">
             <span>Subtotal</span><span className="font-mono">${(subtotal / 100).toFixed(2)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-red-500 font-semibold">
+              <span>Discounts Applied</span>
+              <span className="font-mono">-${(discountAmount / 100).toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between">
-            <span>Tax (10%)</span><span className="font-mono">${(subtotal * 0.1 / 100).toFixed(2)}</span>
+            <span>Tax (10%)</span><span className="font-mono">${(tax / 100).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-xs text-[#1f2937] font-black pt-1.5 border-t border-[#e5e7eb] uppercase">
-            <span>Total</span><span className="font-mono text-[#ff5f1f]">${(subtotal * 1.1 / 100).toFixed(2)}</span>
+            <span>Total</span><span className="font-mono text-[#ff5f1f]">${(total / 100).toFixed(2)}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 pt-1">
+        <div className="grid grid-cols-3 gap-1 pt-1">
           {order.status === 'open' && (
             <button
               onClick={() => fireOrder(order.id)}
               disabled={firing || !order.items?.length}
-              className="col-span-2 bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors disabled:opacity-40"
+              className="col-span-3 bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors disabled:opacity-40"
             >
               {firing ? 'Sending...' : 'SEND TO KITCHEN'}
             </button>
           )}
 
           {['sent','in-progress','ready'].includes(order.status) && (
-            <button onClick={() => setView('checkout')} className="col-span-2 bg-[#22c55e] hover:bg-[#16a34a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors">
+            <button onClick={() => setView('checkout')} className="col-span-3 bg-[#22c55e] hover:bg-[#16a34a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors">
               PROCEED TO PAY
             </button>
           )}
 
           <button
             onClick={() => { if (confirm('Void this order?')) voidOrder({ orderId: order.id }); }}
-            className="bg-[#f3f4f6] text-[#ef4444] hover:bg-red-50 rounded-lg py-2 text-[10px] font-bold transition-colors uppercase"
+            className="bg-[#f3f4f6] text-red-600 hover:bg-red-50 rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]"
           >
-            VOID TICKET
+            Void
           </button>
 
-          <button onClick={() => setView('menu')} className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2 text-[10px] font-bold transition-colors uppercase">
-            ADD ITEMS
+          <button
+            onClick={handleDiscountPrompt}
+            className="bg-[#f3f4f6] text-[#ff5f1f] hover:bg-[#ff5f1f0a] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]"
+          >
+            Promo
+          </button>
+
+          <button onClick={() => setView('menu')} className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]">
+            Menu
           </button>
         </div>
       </div>
     </div>
   );
 }
+export default OrderView;

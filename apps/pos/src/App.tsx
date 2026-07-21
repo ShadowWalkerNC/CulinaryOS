@@ -8,6 +8,7 @@ import { StaffView }     from './views/StaffView';
 import { RecallView }    from './views/RecallView';
 import { SettingsView }  from './views/SettingsView';
 import { TabsView }      from './views/TabsView';
+import { ReportsView }   from './views/ReportsView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 
 export function App() {
@@ -90,6 +91,7 @@ export function App() {
           {view === 'tabs' && <TabsView />}
           {view === 'recall' && <RecallView />}
           {view === 'settings' && <SettingsView />}
+          {view === 'reports' && <ReportsView />}
         </div>
       </div>
     </div>

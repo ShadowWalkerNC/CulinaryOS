@@ -13,13 +13,20 @@ export function MenuView() {
   const [selectedModifiers, setSelectedModifiers] = useState<Record<string, any[]>>({});
   const [itemNotes, setItemNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   if (isLoading) return <div className="flex justify-center mt-20"><div className="w-6 h-6 border-2 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" /></div>;
   if (!menu) return <div className="text-center text-[#88888b] mt-20 p-6">No active menu found.</div>;
 
   const sections = menu.sections ?? [];
   const activeS = activeSection ?? sections[0]?.id;
-  const items = sections.find((s: any) => s.id === activeS)?.items ?? [];
+  
+  let items = [];
+  if (searchQuery.trim() !== '') {
+    items = sections.flatMap((s: any) => s.items || []).filter((i: any) => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  } else {
+    items = sections.find((s: any) => s.id === activeS)?.items ?? [];
+  }
 
   function openModifierModal(item: any) {
     if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
@@ -124,7 +131,18 @@ export function MenuView() {
       </div>
 
       {/* Grid of Menu Items */}
-      <div className="flex-1 p-5 overflow-y-auto">
+      <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4">
+        {/* Search Input Bar */}
+        <div className="relative shrink-0">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search menu items (e.g. Pizza, Salad, Beer)..."
+            className="w-full bg-white border border-[#e5e7eb] focus:border-[#ff5f1f] outline-none rounded-xl p-3 text-xs text-[#1f2937] shadow-sm font-semibold"
+          />
+        </div>
+
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
           {items
             .filter((i: any) => i.status !== '86d')

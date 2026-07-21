@@ -28,16 +28,20 @@ export function CheckoutView() {
   if (!order) return null;
 
   const subtotal = order.items?.reduce((s: number, i: any) => s + i.line_total, 0) ?? 0;
-  const tax = Math.round(subtotal * 0.1);
+  const discountPercent = order.discount_percent ?? 0;
+  const discountFlat = order.discount_flat ?? 0;
+  const discountAmount = Math.round(subtotal * (discountPercent / 100)) + discountFlat;
+  const taxableSubtotal = Math.max(0, subtotal - discountAmount);
+  const tax = Math.round(taxableSubtotal * 0.1);
   
   let tipAmount = 0;
   if (tipPercent === 'custom') {
     tipAmount = Math.round(parseFloat(customTip || '0') * 100);
   } else {
-    tipAmount = Math.round(subtotal * (tipPercent / 100));
+    tipAmount = Math.round(taxableSubtotal * (tipPercent / 100));
   }
   
-  const total = subtotal + tax + tipAmount;
+  const total = taxableSubtotal + tax + tipAmount;
   const cashAmount = parseFloat(cashTendered || '0') * 100;
   const changeDue = Math.max(0, cashAmount - total);
 
@@ -193,6 +197,7 @@ export function CheckoutView() {
 
             <div className="border-t border-dashed border-black pt-2 space-y-1.5 text-right">
               <div className="flex justify-between"><span>SUBTOTAL</span><span>${(subtotal/100).toFixed(2)}</span></div>
+              {discountAmount > 0 && <div className="flex justify-between"><span>DISCOUNT</span><span>-${(discountAmount/100).toFixed(2)}</span></div>}
               <div className="flex justify-between"><span>TAX (10%)</span><span>${(tax/100).toFixed(2)}</span></div>
               {tipAmount > 0 && <div className="flex justify-between"><span>TIP</span><span>${(tipAmount/100).toFixed(2)}</span></div>}
               <div className="flex justify-between font-bold text-xs border-t border-dashed border-black pt-1">
@@ -231,6 +236,9 @@ export function CheckoutView() {
 
         <div className="bg-[#f8f9fa] border border-[#e5e7eb] rounded-xl p-4 mt-6 space-y-2 text-xs">
           <div className="flex justify-between text-[#6b7280]"><span>Subtotal</span><span className="font-mono">${(subtotal/100).toFixed(2)}</span></div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-red-500 font-semibold"><span>Discount</span><span className="font-mono">-${(discountAmount/100).toFixed(2)}</span></div>
+          )}
           <div className="flex justify-between text-[#6b7280]"><span>Tax (10%)</span><span className="font-mono">${(tax/100).toFixed(2)}</span></div>
           {tipAmount > 0 && (
             <div className="flex justify-between text-[#6b7280]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>

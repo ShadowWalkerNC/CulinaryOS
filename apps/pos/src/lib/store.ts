@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type POSView = 'dashboard' | 'tables' | 'menu' | 'checkout' | 'tabs' | 'staff' | 'recall' | 'settings';
+export type POSView = 'dashboard' | 'tables' | 'menu' | 'checkout' | 'tabs' | 'staff' | 'recall' | 'settings' | 'reports';
 
 interface Employee {
   name: string;

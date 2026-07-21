@@ -119,7 +119,11 @@ export function DashboardView() {
         <div className="mt-4 flex gap-4">
           <button onClick={() => setView('settings')}
             className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#ff5f1f] text-center transition-colors shadow-sm">
-            Device Setup (Stripe Readers / Printers)
+            Device Setup (Stripe / Printers)
+          </button>
+          <button onClick={() => setView('reports')}
+            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#ff5f1f] text-center transition-colors shadow-sm">
+            Business Reports (Shift PM Mix)
           </button>
         </div>
       </div>
