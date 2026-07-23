@@ -7,6 +7,7 @@ export function MenuView() {
   const { mutate: addItem } = useAddLineItem();
   const { activeOrderId } = usePOSStore();
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSeat, setActiveSeat] = useState<number>(1);
   
   // Modal State
   const [modifyingItem, setModifyingItem] = useState<any | null>(null);
@@ -51,7 +52,8 @@ export function MenuView() {
         name: item.name,
         quantity: 1,
         unit_price: item.price,
-        station: item.station
+        station: item.station,
+        seat_number: activeSeat,
       });
     }
   }
@@ -61,13 +63,11 @@ export function MenuView() {
     const isAlreadySelected = groupSelected.find((m) => m.id === mod.id);
 
     if (group.max_selections === 1) {
-      // Radio selection behavior
       setSelectedModifiers({
         ...selectedModifiers,
         [group.id]: isAlreadySelected ? [] : [mod],
       });
     } else {
-      // Checkbox selection behavior
       if (isAlreadySelected) {
         setSelectedModifiers({
           ...selectedModifiers,
@@ -87,7 +87,6 @@ export function MenuView() {
   }
 
   function submitModifiers() {
-    // Validate required selections
     for (const g of modifyingItem.modifier_groups) {
       const selected = selectedModifiers[g.id] || [];
       if (g.required && selected.length < g.min_selections) {
@@ -111,6 +110,7 @@ export function MenuView() {
       station: modifyingItem.station,
       notes: itemNotes || undefined,
       selectedModifiers: flatMods,
+      seat_number: activeSeat,
     });
 
     setModifyingItem(null);
@@ -132,15 +132,30 @@ export function MenuView() {
 
       {/* Grid of Menu Items */}
       <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4">
-        {/* Search Input Bar */}
-        <div className="relative shrink-0">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search menu items (e.g. Pizza, Salad, Beer)..."
-            className="w-full bg-white border border-[#e5e7eb] focus:border-[#ff5f1f] outline-none rounded-xl p-3 text-xs text-[#1f2937] shadow-sm font-semibold"
-          />
+        {/* Top Controls: Search Bar & Seat Selector */}
+        <div className="flex gap-3 shrink-0">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search menu items (e.g. Pizza, Salad, Beer)..."
+              className="w-full bg-white border border-[#e5e7eb] focus:border-[#ff5f1f] outline-none rounded-xl p-3 text-xs text-[#1f2937] shadow-sm font-semibold"
+            />
+          </div>
+
+          {/* Seat Selector Toggle */}
+          <div className="flex bg-white border border-[#e5e7eb] rounded-xl p-1 shadow-sm items-center">
+            <span className="text-[10px] font-black text-[#6b7280] uppercase px-2">Seat</span>
+            {[1, 2, 3, 4].map(sNum => (
+              <button key={sNum} onClick={() => setActiveSeat(sNum)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-colors ${
+                  activeSeat === sNum ? 'bg-[#ff5f1f] text-white' : 'text-[#4b5563] hover:bg-[#f3f4f6]'
+                }`}>
+                {sNum}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
@@ -154,95 +169,74 @@ export function MenuView() {
                   item.status === 'unavailable' ? 'opacity-40' : ''
                 }`}>
                 <div>
-                  <p className="text-[#1f2937] font-bold text-xs leading-snug line-clamp-2">{item.name}</p>
+                  <div className="flex justify-between items-start">
+                    <p className="text-[#1f2937] font-bold text-xs leading-snug line-clamp-2">{item.name}</p>
+                    <span className="text-[9px] font-black bg-[#ff5f1f15] text-[#ff5f1f] px-1.5 py-0.5 rounded">S{activeSeat}</span>
+                  </div>
                   {item.description && <p className="text-[#6b7280] text-[10px] mt-1 leading-normal line-clamp-2">{item.description}</p>}
                 </div>
                 <p className="text-[#ff5f1f] font-extrabold font-mono text-sm">${(item.price / 100).toFixed(2)}</p>
-                {item.status === 'unavailable' && <p className="text-red-500 text-[10px] mt-1">Unavailable</p>}
               </button>
             ))}
         </div>
       </div>
 
-      {/* Toast-style Modifier Selection Modal Overlay */}
+      {/* Modifier Modal */}
       {modifyingItem && (
-        <div className="absolute inset-0 bg-[#00000040] backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
-          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-lg flex flex-col max-h-[90%] overflow-hidden shadow-2xl">
-            {/* Modal Title */}
-            <div className="p-4 border-b border-[#e5e7eb] flex justify-between items-center bg-[#f8f9fa]">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="flex justify-between items-start border-b border-[#e5e7eb] pb-3">
               <div>
-                <h3 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">{modifyingItem.name}</h3>
-                <p className="text-xs text-[#ff5f1f] font-bold mt-0.5">${(modifyingItem.price / 100).toFixed(2)} Base</p>
+                <h3 className="text-base font-black text-[#1f2937] uppercase">{modifyingItem.name}</h3>
+                <p className="text-xs text-[#6b7280]">Select options for Seat {activeSeat}</p>
               </div>
-              <button onClick={() => setModifyingItem(null)} className="text-xs text-[#6b7280] hover:text-[#1f2937] uppercase font-bold">
-                Cancel
-              </button>
+              <span className="font-mono font-bold text-[#ff5f1f]">${(modifyingItem.price / 100).toFixed(2)}</span>
             </div>
 
-            {/* Modal Scroll Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-white">
-              {modifyingItem.modifier_groups?.map((g: any) => {
-                const selected = selectedModifiers[g.id] || [];
-                return (
-                  <div key={g.id} className="space-y-2 bg-[#f8f9fa] p-3.5 rounded-xl border border-[#e5e7eb]">
-                    <div className="flex justify-between items-center border-b border-[#e5e7eb] pb-1.5">
-                      <span className="text-xs font-black text-[#1f2937] uppercase tracking-wider">{g.name}</span>
-                      <span className="text-[10px] font-bold text-[#6b7280]">
-                        {g.required ? (
-                          <span className="text-[#ff5f1f] font-black mr-1">[REQUIRED]</span>
-                        ) : null}
-                        {g.max_selections === 1 ? 'Choose 1' : `Max ${g.max_selections}`}
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      {g.modifiers?.map((m: any) => {
-                        const isChecked = !!selected.find((x) => x.id === m.id);
-                        return (
-                          <button key={m.id} onClick={() => handleSelectModifier(g, m)}
-                            className={`flex justify-between items-center p-2.5 rounded-lg border text-left transition-all ${
-                              isChecked
-                                ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-bold'
-                                : 'bg-white border-[#e5e7eb] text-[#4b5563] hover:text-[#1f2937] hover:border-[#cbd5e1]'
-                            }`}>
-                            <span className="text-xs font-semibold">{m.name}</span>
-                            {m.price_adjustment > 0 ? (
-                              <span className="text-[10px] font-bold text-[#ff5f1f] font-mono">+${(m.price_adjustment / 100).toFixed(2)}</span>
-                            ) : null}
-                          </button>
-                        );
-                      })}
-                    </div>
+            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+              {modifyingItem.modifier_groups?.map((g: any) => (
+                <div key={g.id} className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-bold text-[#1f2937] uppercase">{g.name}</span>
+                    <span className="text-[#6b7280] text-[10px]">{g.required ? 'Required' : 'Optional'}</span>
                   </div>
-                );
-              })}
+                  <div className="grid grid-cols-2 gap-2">
+                    {g.modifiers?.map((m: any) => {
+                      const isSelected = (selectedModifiers[g.id] || []).some(x => x.id === m.id);
+                      return (
+                        <button key={m.id} onClick={() => handleSelectModifier(g, m)}
+                          className={`p-2.5 rounded-xl border text-left text-xs transition-colors flex justify-between items-center ${
+                            isSelected ? 'border-[#ff5f1f] bg-[#ff5f1f0a] font-bold text-[#ff5f1f]' : 'border-[#e5e7eb] text-[#4b5563]'
+                          }`}>
+                          <span>{m.name}</span>
+                          {m.price_adjustment > 0 && <span className="font-mono text-[10px]">+{m.price_adjustment / 100}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
 
-              {/* Special Instructions Notes */}
-              <div className="space-y-2 bg-[#f8f9fa] p-3.5 rounded-xl border border-[#e5e7eb]">
-                <span className="text-xs font-black text-[#1f2937] uppercase tracking-wider block border-b border-[#e5e7eb] pb-1.5">Special Notes</span>
-                <textarea
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#1f2937] uppercase block">Special Instructions</label>
+                <input
+                  type="text"
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
-                  placeholder="E.g., Dressing on the side, extra crispy..."
-                  className="w-full bg-white border border-[#d1d5db] rounded-lg p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#ff5f1f] resize-none h-16"
+                  placeholder="e.g. Allergy, Extra Sauce, Dressing on side"
+                  className="w-full border border-[#cbd5e1] rounded-xl p-2.5 text-xs outline-none focus:border-[#ff5f1f]"
                 />
               </div>
             </div>
 
-            {/* Modal Action Footer */}
-            <div className="p-4 border-t border-[#e5e7eb] bg-[#f8f9fa] flex items-center justify-between">
-              {/* Quantity Counter */}
-              <div className="flex items-center gap-3 border border-[#e5e7eb] rounded-lg p-1 bg-white">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold text-sm">-</button>
-                <span className="text-xs font-black w-4 text-center text-[#1f2937]">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 rounded bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold text-sm">+</button>
-              </div>
-
+            <div className="flex gap-3 border-t border-[#e5e7eb] pt-4">
+              <button onClick={() => setModifyingItem(null)}
+                className="flex-1 bg-[#f3f4f6] text-[#6b7280] font-bold py-3 rounded-xl text-xs uppercase">
+                Cancel
+              </button>
               <button onClick={submitModifiers}
-                className="bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black px-6 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm">
-                Add To Order
+                className="flex-1 bg-[#ff5f1f] text-white font-black py-3 rounded-xl text-xs uppercase">
+                Add to Ticket (Seat {activeSeat})
               </button>
             </div>
           </div>

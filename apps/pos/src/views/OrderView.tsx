@@ -74,9 +74,10 @@ export function OrderView() {
           order.items?.map((item: any) => (
             <div key={item.id} className="border-b border-[#f3f4f6] pb-2 flex justify-between items-start text-xs">
               <div>
-                <p className="text-[#1f2937] font-bold">
-                  {item.quantity > 1 && <span className="text-[#ff5f1f] mr-1">{item.quantity}x</span>}
-                  {item.name}
+                <p className="text-[#1f2937] font-bold flex items-center gap-1">
+                  {item.quantity > 1 && <span className="text-[#ff5f1f]">{item.quantity}x</span>}
+                  <span>{item.name}</span>
+                  <span className="text-[9px] font-extrabold bg-[#f3f4f6] text-[#6b7280] px-1 py-0.2 rounded ml-1">S{item.seat_number ?? 1}</span>
                 </p>
                 {item.modifiers?.map((m: any) => <p key={m.id} className="text-[#6b7280] text-[10px] ml-3">— {m.name}</p>)}
                 {item.notes && <p className="text-[#f59e0b] text-[10px] ml-3 italic">{item.notes}</p>}

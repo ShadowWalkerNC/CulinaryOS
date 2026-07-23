@@ -227,6 +227,7 @@ export function useAddLineItem() {
       quantity: number;
       unit_price: number;
       station: string;
+      seat_number?: number;
       course_number?: number;
       notes?: string;
       selectedModifiers?: { modifier_id: string; name: string; price_adjustment: number }[];
@@ -248,6 +249,7 @@ export function useAddLineItem() {
             quantity: item.quantity,
             unit_price: finalUnitPrice,
             station: item.station,
+            seat_number: item.seat_number ?? 1,
             notes: item.notes || null,
             modifiers: item.selectedModifiers || []
           };

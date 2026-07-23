@@ -21,15 +21,23 @@ export function CheckoutView() {
   
   // Stripe Terminal Simulator State
   const [stripeSimState, setStripeSimState] = useState<'idle' | 'waiting' | 'authorizing' | 'declined' | 'timeout'>('idle');
-  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+  
+  // Split Check Wizard Modal State
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [selectedSeatFilter, setSelectedSeatFilter] = useState<number | null>(null);
 
   const qc = useQueryClient();
 
   if (!order) return null;
 
-  const subtotal = order.items?.reduce((s: number, i: any) => s + i.line_total, 0) ?? 0;
+  const rawItems = order.items ?? [];
+  const filteredItems = selectedSeatFilter != null 
+    ? rawItems.filter((i: any) => (i.seat_number ?? 1) === selectedSeatFilter)
+    : rawItems;
+
+  const subtotal = filteredItems.reduce((s: number, i: any) => s + i.line_total, 0);
   const discountPercent = order.discount_percent ?? 0;
-  const discountFlat = order.discount_flat ?? 0;
+  const discountFlat = selectedSeatFilter == null ? (order.discount_flat ?? 0) : 0;
   const discountAmount = Math.round(subtotal * (discountPercent / 100)) + discountFlat;
   const taxableSubtotal = Math.max(0, subtotal - discountAmount);
   const tax = Math.round(taxableSubtotal * 0.1);
@@ -45,7 +53,13 @@ export function CheckoutView() {
   const cashAmount = parseFloat(cashTendered || '0') * 100;
   const changeDue = Math.max(0, cashAmount - total);
 
-  // Triggers actual payment completion and database write
+  // Group items by seat for Split by Seat breakdown
+  const seatTotals: Record<number, number> = {};
+  rawItems.forEach((item: any) => {
+    const s = item.seat_number ?? 1;
+    seatTotals[s] = (seatTotals[s] ?? 0) + item.line_total;
+  });
+
   async function finalizePayment() {
     setProcessing(true);
     try {
@@ -79,7 +93,6 @@ export function CheckoutView() {
 
   function startPaymentFlow() {
     if (method === 'card') {
-      // Open card reader simulator
       setStripeSimState('waiting');
     } else {
       finalizePayment();
@@ -102,8 +115,10 @@ export function CheckoutView() {
         <div className="flex-1 bg-white border border-[#e5e7eb] rounded-2xl p-8 text-center flex flex-col justify-between shadow-sm">
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
-              <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">Transaction Approved</h2>
+              <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl font-black">✓</div>
+              <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">
+                {selectedSeatFilter ? `Seat ${selectedSeatFilter} Paid` : 'Transaction Approved'}
+              </h2>
               <p className="text-xs text-[#6b7280]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
             </div>
 
@@ -178,16 +193,16 @@ export function CheckoutView() {
             </div>
             
             <div className="border-t border-b border-dashed border-black py-2 space-y-1">
-              <p>CHECK: {order.id}</p>
+              <p>CHECK: {order.id} {selectedSeatFilter ? `(SEAT ${selectedSeatFilter})` : ''}</p>
               <p>DATE: {new Date().toLocaleDateString()}</p>
               <p>SERVER: {order.server_name ?? 'Server'}</p>
             </div>
 
             <div className="space-y-2">
-              {order.items?.map((item: any) => (
+              {filteredItems.map((item: any) => (
                 <div key={item.id} className="space-y-0.5">
                   <div className="flex justify-between font-bold">
-                    <span>{item.quantity}x {item.name}</span>
+                    <span>{item.quantity}x {item.name} (S{item.seat_number ?? 1})</span>
                     <span>${(item.line_total / 100).toFixed(2)}</span>
                   </div>
                   {item.modifiers?.map((m: any) => <p key={m.id} className="text-[9px] pl-3">— {m.name}</p>)}
@@ -220,12 +235,30 @@ export function CheckoutView() {
       {/* Left panel: Bill details */}
       <div className="flex-1 p-5 overflow-y-auto border-r border-[#e5e7eb] flex flex-col justify-between bg-white">
         <div>
-          <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider mb-4 border-b border-[#e5e7eb] pb-2">Ticket Summary</h2>
+          <div className="flex justify-between items-center mb-4 border-b border-[#e5e7eb] pb-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">
+                {selectedSeatFilter ? `Seat ${selectedSeatFilter} Summary` : 'Ticket Summary'}
+              </h2>
+              {selectedSeatFilter != null && (
+                <button onClick={() => setSelectedSeatFilter(null)} className="text-[9px] font-black text-[#ff5f1f] uppercase underline">
+                  Show All Seats
+                </button>
+              )}
+            </div>
+            <button onClick={() => setShowSplitModal(true)}
+              className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#ff5f1f] border border-[#e5e7eb] px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors shadow-sm">
+              Split Check Wizard
+            </button>
+          </div>
+
           <div className="space-y-3">
-            {order.items?.map((item: any) => (
+            {filteredItems.map((item: any) => (
               <div key={item.id} className="flex justify-between items-start text-xs border-b border-[#f3f4f6] pb-2">
                 <div>
-                  <p className="text-[#1f2937] font-bold">{item.quantity}x {item.name}</p>
+                  <p className="text-[#1f2937] font-bold">
+                    {item.quantity}x {item.name} <span className="text-[9px] font-extrabold text-[#6b7280] bg-[#f3f4f6] px-1 py-0.5 rounded ml-1">S{item.seat_number ?? 1}</span>
+                  </p>
                   {item.modifiers?.map((m: any) => <p key={m.id} className="text-[#6b7280] text-[10px] ml-3">— {m.name}</p>)}
                 </div>
                 <span className="font-mono text-[#1f2937]">${(item.line_total / 100).toFixed(2)}</span>
@@ -334,9 +367,66 @@ export function CheckoutView() {
         </button>
       </div>
 
+      {/* Split Checks Wizard Modal */}
+      {showSplitModal && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
+            <div className="border-b border-[#e5e7eb] pb-3">
+              <span className="text-[10px] text-[#ff5f1f] font-black tracking-wider uppercase block">Checkout Wizard</span>
+              <h3 className="text-base font-black text-[#1f2937] uppercase mt-0.5">Split Check Options</h3>
+              <p className="text-xs text-[#6b7280] mt-1">Split check evenly or pay individual seat checks.</p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Split Evenly */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-black text-[#1f2937] uppercase block">Split Evenly</span>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[2, 3, 4].map(num => (
+                    <div key={num} className="bg-[#f8f9fa] border border-[#e5e7eb] p-3 rounded-xl">
+                      <span className="text-[10px] text-[#6b7280] font-bold block">{num}-Way Split</span>
+                      <span className="font-mono text-xs font-black text-[#ff5f1f] mt-1 block">
+                        ${((total / num) / 100).toFixed(2)} / ea
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Split By Seat */}
+              <div className="space-y-2 border-t border-[#e5e7eb] pt-4">
+                <span className="text-[10px] font-black text-[#1f2937] uppercase block">Pay By Seat Check</span>
+                <div className="space-y-2">
+                  {Object.entries(seatTotals).map(([seatNumStr, seatSubtotal]) => {
+                    const seatNum = parseInt(seatNumStr, 10);
+                    const seatTax = Math.round(seatSubtotal * 0.1);
+                    const seatTotal = seatSubtotal + seatTax;
+                    return (
+                      <button key={seatNum}
+                        onClick={() => { setSelectedSeatFilter(seatNum); setShowSplitModal(false); }}
+                        className="w-full bg-white border border-[#e5e7eb] hover:border-[#ff5f1f] p-3 rounded-xl flex justify-between items-center text-xs transition-colors">
+                        <span className="font-black text-[#1f2937]">Seat {seatNum} Check</span>
+                        <span className="font-mono font-bold text-[#ff5f1f]">${(seatTotal / 100).toFixed(2)} →</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 border-t border-[#e5e7eb] pt-4">
+              <button onClick={() => { setSelectedSeatFilter(null); setShowSplitModal(false); }}
+                className="w-full bg-[#f3f4f6] text-[#1f2937] rounded-xl py-3 text-xs font-black uppercase">
+                Reset to Full Check
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stripe Terminal Simulator Modal Overlay */}
       {stripeSimState !== 'idle' && (
-        <div className="absolute inset-0 bg-[#00000050] backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
           <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6 text-center">
             <div className="space-y-2">
               <span className="text-[9px] text-[#ff5f1f] font-black tracking-wider uppercase block">Stripe Terminal Simulator</span>

@@ -19,6 +19,92 @@ function elapsed(ticket: { firedAt?: string; createdAt: string }): number {
   return Math.floor((Date.now() - new Date(base).getTime()) / 1000);
 }
 
+const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
+  {
+    id: 't-101',
+    orderId: 'o-201',
+    tableLabel: 'Table 4',
+    seatNumber: 1,
+    courseNumber: 1,
+    courseHoldStatus: 'fired',
+    status: 'cooking',
+    items: [
+      { id: 'i-1', name: 'Smash Burger Double', quantity: 2, modifiers: ['No Onions', 'Extra Cheese'], notes: 'Gluten Allergy' },
+      { id: 'i-2', name: 'Truffle Fries', quantity: 1, modifiers: ['Aioli Dip'] }
+    ],
+    createdAt: new Date(Date.now() - 320 * 1000).toISOString(),
+    firedAt: new Date(Date.now() - 320 * 1000).toISOString(),
+    elapsedSeconds: 320
+  },
+  {
+    id: 't-102',
+    orderId: 'o-202',
+    tableLabel: 'Table 12',
+    seatNumber: 2,
+    courseNumber: 2,
+    courseHoldStatus: 'fired',
+    status: 'queued',
+    items: [
+      { id: 'i-3', name: 'Ribeye Steak 12oz', quantity: 1, modifiers: ['Medium Rare', 'Herb Butter'], notes: 'Sauce on side' }
+    ],
+    createdAt: new Date(Date.now() - 650 * 1000).toISOString(),
+    firedAt: new Date(Date.now() - 650 * 1000).toISOString(),
+    elapsedSeconds: 650
+  },
+  {
+    id: 't-103',
+    orderId: 'o-203',
+    tableLabel: 'Table 8',
+    seatNumber: 1,
+    courseNumber: 1,
+    courseHoldStatus: 'fired',
+    status: 'cooking',
+    items: [
+      { id: 'i-4', name: 'Caesar Salad', quantity: 1, modifiers: ['Add Grilled Chicken', 'Dressing Side'] },
+      { id: 'i-5', name: 'Truffle Hummus', quantity: 1 }
+    ],
+    createdAt: new Date(Date.now() - 140 * 1000).toISOString(),
+    firedAt: new Date(Date.now() - 140 * 1000).toISOString(),
+    elapsedSeconds: 140
+  },
+  {
+    id: 't-104',
+    orderId: 'o-204',
+    tableLabel: 'Bar-John',
+    courseNumber: 1,
+    courseHoldStatus: 'fired',
+    status: 'cooking',
+    items: [
+      { id: 'i-6', name: 'Crispy Calamari', quantity: 2, modifiers: ['Spicy Mayo'] },
+      { id: 'i-7', name: 'Buffalo Wings', quantity: 1, notes: 'Extra Crispy' }
+    ],
+    createdAt: new Date(Date.now() - 210 * 1000).toISOString(),
+    firedAt: new Date(Date.now() - 210 * 1000).toISOString(),
+    elapsedSeconds: 210
+  },
+  {
+    id: 't-105',
+    orderId: 'o-205',
+    tableLabel: 'Bar-Sarah',
+    courseNumber: 1,
+    courseHoldStatus: 'fired',
+    status: 'ready',
+    items: [
+      { id: 'i-8', name: 'Cosmopolitan Cocktail', quantity: 1 },
+      { id: 'i-9', name: 'IPA Draft Beer', quantity: 2 }
+    ],
+    createdAt: new Date(Date.now() - 90 * 1000).toISOString(),
+    firedAt: new Date(Date.now() - 90 * 1000).toISOString(),
+    elapsedSeconds: 90
+  }
+];
+
+let globalDemoTickets: KitchenTicket[] = [...INITIAL_DEMO_TICKETS];
+
+export function bumpDemoTicket(ticketId: string) {
+  globalDemoTickets = globalDemoTickets.filter(t => t.id !== ticketId);
+}
+
 /** Snake_case DB row → camelCase KitchenTicket */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToTicket(row: any): KitchenTicket {
@@ -47,9 +133,7 @@ function rowToTicket(row: any): KitchenTicket {
 }
 
 /**
- * Subscribes to kitchen_tickets for the given station via Supabase Realtime.
- * Only shows queued/cooking/ready tickets — held and bumped are filtered client-side.
- * Returns active tickets sorted by elapsedSeconds DESC (oldest first).
+ * Subscribes to kitchen_tickets for the given station via Supabase Realtime or local demo state.
  */
 export function useRealtimeTickets(stationId: string) {
   const [tickets, setTickets]   = useState<KitchenTicket[]>([]);
@@ -57,7 +141,7 @@ export function useRealtimeTickets(stationId: string) {
   const [error,   setError]     = useState<string | null>(null);
   const timerRef                = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Refresh elapsed every 10s so timer badges update
+  // Refresh elapsed every second so timers update continuously
   const tick = useCallback(() => {
     setTickets((prev) =>
       prev.map((t) => ({ ...t, elapsedSeconds: elapsed(t) }))
@@ -70,19 +154,41 @@ export function useRealtimeTickets(stationId: string) {
 
     if (!supabase) {
       setLoading(false);
-      setError('No database configured — running in demo mode');
-      return;
+      setError(null);
+
+      const filtered = stationId === 'all'
+        ? globalDemoTickets
+        : globalDemoTickets.filter((t, idx) => {
+            if (stationId === '1') return idx % 2 === 0;
+            if (stationId === '2') return idx === 2;
+            if (stationId === '3') return idx === 3;
+            if (stationId === '4') return idx === 4;
+            return true;
+          });
+
+      setTickets(filtered.map(t => ({ ...t, elapsedSeconds: elapsed(t) })));
+
+      timerRef.current = setInterval(tick, 1000);
+      return () => {
+        mounted = false;
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
     }
 
     async function fetchInitial() {
       setLoading(true);
-      const { data, error: fetchErr } = await supabase!
+      let query = supabase!
         .from('kitchen_tickets')
         .select('*, ticket_items(*)')
-        .eq('station_id', stationId)
         .in('status', ACTIVE)
-        .eq('course_hold_status', 'fired') // never show held tickets
+        .eq('course_hold_status', 'fired')
         .order('created_at', { ascending: true });
+
+      if (stationId !== 'all') {
+        query = query.eq('station_id', stationId);
+      }
+
+      const { data, error: fetchErr } = await query;
 
       if (!mounted) return;
       if (fetchErr) { setError(fetchErr.message); setLoading(false); return; }
@@ -92,20 +198,18 @@ export function useRealtimeTickets(stationId: string) {
 
     fetchInitial();
 
-    // Realtime subscription
     const channel = supabase!
       .channel(`kds-station-${stationId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'kitchen_tickets',
-          filter: `station_id=eq.${stationId}` },
+        { event: '*', schema: 'public', table: 'kitchen_tickets' },
         (payload) => {
           if (!mounted) return;
           const row = payload.new as any;
           if (!row?.id) return;
+          if (stationId !== 'all' && row.station_id !== stationId) return;
 
           setTickets((prev) => {
-            // Remove if voided/bumped/held
             if (['voided', 'bumped'].includes(row.status) || row.course_hold_status === 'held') {
               return prev.filter((t) => t.id !== row.id);
             }
@@ -118,7 +222,7 @@ export function useRealtimeTickets(stationId: string) {
       )
       .subscribe();
 
-    timerRef.current = setInterval(tick, 10_000);
+    timerRef.current = setInterval(tick, 1000);
 
     return () => {
       mounted = false;
@@ -127,5 +231,5 @@ export function useRealtimeTickets(stationId: string) {
     };
   }, [stationId, tick]);
 
-  return { tickets, loading, error };
+  return { tickets, loading, error, setTickets };
 }
