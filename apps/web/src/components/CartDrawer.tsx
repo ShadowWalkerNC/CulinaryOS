@@ -6,14 +6,13 @@ interface Props {
   onClose:      () => void;
   onUpdateQty:  (id: string, qty: number) => void;
   onRemove:     (id: string) => void;
+  onCheckout?:  () => void;
 }
 
 /**
- * CartDrawer — Phase 4a stub.
- * Renders the cart summary. Checkout flow (Phase 4b) wires in
- * guest info collection + POST /v1/online-orders + Stripe CheckoutDrawer.
+ * CartDrawer — Renders the cart summary and initiates checkout flow.
  */
-export function CartDrawer({ cart, onClose, onUpdateQty, onRemove: _onRemove }: Props) {
+export function CartDrawer({ cart, onClose, onUpdateQty, onRemove: _onRemove, onCheckout }: Props) {
   return (
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.6)' }}
@@ -63,10 +62,12 @@ export function CartDrawer({ cart, onClose, onUpdateQty, onRemove: _onRemove }: 
               <span>Total</span>
               <span>${(cart.total / 100).toFixed(2)}</span>
             </div>
-            {/* Checkout CTA — wired in Phase 4b */}
+            {/* Checkout CTA */}
             <button
               style={{ padding: '14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}
-              onClick={() => alert('Checkout coming in Phase 4b!')}
+              onClick={() => {
+                if (onCheckout) onCheckout();
+              }}
             >
               Proceed to checkout
             </button>

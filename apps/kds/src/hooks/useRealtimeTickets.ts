@@ -28,6 +28,8 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    stationId: '1',
+    stationName: 'Hot Grill',
     items: [
       { id: 'i-1', name: 'Smash Burger Double', quantity: 2, modifiers: ['No Onions', 'Extra Cheese'], notes: 'Gluten Allergy' },
       { id: 'i-2', name: 'Truffle Fries', quantity: 1, modifiers: ['Aioli Dip'] }
@@ -42,13 +44,14 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     tableLabel: 'Table 12',
     seatNumber: 2,
     courseNumber: 2,
-    courseHoldStatus: 'fired',
+    courseHoldStatus: 'held',
     status: 'queued',
+    stationId: '1',
+    stationName: 'Hot Grill',
     items: [
       { id: 'i-3', name: 'Ribeye Steak 12oz', quantity: 1, modifiers: ['Medium Rare', 'Herb Butter'], notes: 'Sauce on side' }
     ],
     createdAt: new Date(Date.now() - 650 * 1000).toISOString(),
-    firedAt: new Date(Date.now() - 650 * 1000).toISOString(),
     elapsedSeconds: 650
   },
   {
@@ -59,6 +62,8 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    stationId: '2',
+    stationName: 'Cold Prep',
     items: [
       { id: 'i-4', name: 'Caesar Salad', quantity: 1, modifiers: ['Add Grilled Chicken', 'Dressing Side'] },
       { id: 'i-5', name: 'Truffle Hummus', quantity: 1 }
@@ -74,6 +79,8 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    stationId: '3',
+    stationName: 'Fryer',
     items: [
       { id: 'i-6', name: 'Crispy Calamari', quantity: 2, modifiers: ['Spicy Mayo'] },
       { id: 'i-7', name: 'Buffalo Wings', quantity: 1, notes: 'Extra Crispy' }
@@ -89,6 +96,8 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'ready',
+    stationId: '4',
+    stationName: 'Bar',
     items: [
       { id: 'i-8', name: 'Cosmopolitan Cocktail', quantity: 1 },
       { id: 'i-9', name: 'IPA Draft Beer', quantity: 2 }
@@ -96,6 +105,22 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     createdAt: new Date(Date.now() - 90 * 1000).toISOString(),
     firedAt: new Date(Date.now() - 90 * 1000).toISOString(),
     elapsedSeconds: 90
+  },
+  {
+    id: 't-106',
+    orderId: 'o-201',
+    tableLabel: 'Table 4',
+    seatNumber: 1,
+    courseNumber: 2,
+    courseHoldStatus: 'held',
+    status: 'queued',
+    stationId: '1',
+    stationName: 'Hot Grill',
+    items: [
+      { id: 'i-10', name: 'Grilled Salmon', quantity: 1, modifiers: ['Lemon Butter', 'Asparagus'] }
+    ],
+    createdAt: new Date(Date.now() - 280 * 1000).toISOString(),
+    elapsedSeconds: 280
   }
 ];
 
@@ -105,9 +130,31 @@ export function bumpDemoTicket(ticketId: string) {
   globalDemoTickets = globalDemoTickets.filter(t => t.id !== ticketId);
 }
 
+export function fireDemoTicket(ticketId: string) {
+  globalDemoTickets = globalDemoTickets.map(t => {
+    if (t.id === ticketId) {
+      return {
+        ...t,
+        courseHoldStatus: 'fired',
+        status: 'cooking',
+        firedAt: new Date().toISOString(),
+      };
+    }
+    return t;
+  });
+}
+
+const STATION_MAP: Record<string, string> = {
+  '1': 'Hot Grill',
+  '2': 'Cold Prep',
+  '3': 'Fryer',
+  '4': 'Bar',
+};
+
 /** Snake_case DB row → camelCase KitchenTicket */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToTicket(row: any): KitchenTicket {
+  const stationIdStr = row.station_id ? String(row.station_id) : undefined;
   return {
     id:               row.id,
     orderId:          row.order_id,
@@ -116,6 +163,8 @@ function rowToTicket(row: any): KitchenTicket {
     courseNumber:     row.course_number,
     courseHoldStatus: row.course_hold_status,
     status:           row.status,
+    stationId:        stationIdStr,
+    stationName:      row.station_name ?? (stationIdStr ? STATION_MAP[stationIdStr] : undefined),
     items:            Array.isArray(row.ticket_items)
                         ? row.ticket_items.map((i: any) => ({
                             id:        i.id,
@@ -156,15 +205,17 @@ export function useRealtimeTickets(stationId: string) {
       setLoading(false);
       setError(null);
 
-      const filtered = stationId === 'all'
-        ? globalDemoTickets
-        : globalDemoTickets.filter((t, idx) => {
-            if (stationId === '1') return idx % 2 === 0;
-            if (stationId === '2') return idx === 2;
-            if (stationId === '3') return idx === 3;
-            if (stationId === '4') return idx === 4;
-            return true;
-          });
+      let filtered: KitchenTicket[] = [];
+      if (stationId === 'expo') {
+        // Expo pass shows all active tickets across all stations (held and fired)
+        filtered = globalDemoTickets;
+      } else if (stationId === 'all') {
+        // All stations shows all fired active tickets
+        filtered = globalDemoTickets.filter(t => t.courseHoldStatus === 'fired');
+      } else {
+        // Specific station shows fired tickets for that station
+        filtered = globalDemoTickets.filter(t => t.stationId === stationId && t.courseHoldStatus === 'fired');
+      }
 
       setTickets(filtered.map(t => ({ ...t, elapsedSeconds: elapsed(t) })));
 
@@ -181,11 +232,14 @@ export function useRealtimeTickets(stationId: string) {
         .from('kitchen_tickets')
         .select('*, ticket_items(*)')
         .in('status', ACTIVE)
-        .eq('course_hold_status', 'fired')
         .order('created_at', { ascending: true });
 
-      if (stationId !== 'all') {
-        query = query.eq('station_id', stationId);
+      if (stationId === 'expo') {
+        // Expo pass: no course_hold_status filter, all stations
+      } else if (stationId === 'all') {
+        query = query.eq('course_hold_status', 'fired');
+      } else {
+        query = query.eq('course_hold_status', 'fired').eq('station_id', stationId);
       }
 
       const { data, error: fetchErr } = await query;
@@ -207,10 +261,13 @@ export function useRealtimeTickets(stationId: string) {
           if (!mounted) return;
           const row = payload.new as any;
           if (!row?.id) return;
-          if (stationId !== 'all' && row.station_id !== stationId) return;
+          if (stationId !== 'all' && stationId !== 'expo' && row.station_id !== stationId) return;
 
           setTickets((prev) => {
-            if (['voided', 'bumped'].includes(row.status) || row.course_hold_status === 'held') {
+            if (['voided', 'bumped'].includes(row.status)) {
+              return prev.filter((t) => t.id !== row.id);
+            }
+            if (stationId !== 'expo' && row.course_hold_status === 'held') {
               return prev.filter((t) => t.id !== row.id);
             }
             const updated = rowToTicket(row);

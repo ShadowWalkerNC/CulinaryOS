@@ -1,0 +1,19 @@
+{
+  "dockerCompose": {
+    "pass": false,
+    "issues": [
+      "CRITICAL HEALTHCHECK FAILURE: docker-compose.yml backend healthcheck uses 'wget', but apps/server/Dockerfile uses 'node:20-slim' base image without installing 'wget'. The healthcheck will fail with command not found (exit code 127), marking backend unhealthy and blocking dependent services (pos-client, kds-client, admin-client, web-client)."
+    ]
+  },
+  "dockerfiles": {
+    "pass": true,
+    "issues": []
+  },
+  "envVars": {
+    "pass": false,
+    "issues": [
+      "Codebase references environment variables that are NOT documented in .env.example: VITE_API_URL, VITE_STRIPE_PUBLISHABLE_KEY, PORT, SERVICE_NAME, SUPABASE_ANON_KEY, CULINARYOS_HOST, STRIPE_SECRET_KEY, CULINARY_API_URL, CULINARY_API_KEY, EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY",
+      "docker-compose.yml uses build args/env vars missing from .env.example: VITE_POS_URL, VITE_API_URL, VITE_KDS_URL"
+    ]
+  }
+}

@@ -19,6 +19,8 @@ export interface KitchenTicket {
   courseNumber: number;
   courseHoldStatus: CourseHoldStatus;
   status: TicketStatus;
+  stationId?: string;
+  stationName?: string;
   items: TicketItem[];
   createdAt: string;
   firedAt?: string;

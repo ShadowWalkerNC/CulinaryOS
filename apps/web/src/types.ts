@@ -63,3 +63,34 @@ export type CartState = {
   total:     number;     // cents
   itemCount: number;
 };
+
+// Online Order & Checkout
+export type OrderMode = 'pickup' | 'delivery';
+export type OnlineOrderStatus = 'received' | 'preparing' | 'ready' | 'out_for_delivery' | 'completed';
+
+export interface CustomerInfo {
+  name:          string;
+  phone:         string;
+  email:         string;
+  address?:      string;
+  deliveryNotes?: string;
+  pickupTime?:   string;
+}
+
+export interface OnlineOrder {
+  id:            string;
+  tenantSlug:    string;
+  orderNumber:   number;
+  mode:          OrderMode;
+  customer:      CustomerInfo;
+  items:         CartItem[];
+  subtotal:      number;      // cents
+  tax:           number;      // cents
+  deliveryFee:   number;      // cents
+  tip:           number;      // cents
+  total:         number;      // cents
+  status:        OnlineOrderStatus;
+  createdAt:     string;      // ISO timestamp
+  estimatedTime: string;
+}
+

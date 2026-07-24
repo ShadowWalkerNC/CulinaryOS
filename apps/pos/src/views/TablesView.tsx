@@ -1,9 +1,76 @@
+import { useState, useEffect } from 'react';
 import { useOrderStore } from '../lib/useOrderStore';
 import { useCreateOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 
-const STATUS_COLOR: Record<string, string> = {
-  open: '#88888b', sent: '#22c55e', 'in-progress': '#ff5f1f', ready: '#3b82f6',
+export type TableStatus = 'available' | 'occupied' | 'reserved' | 'dirty';
+export type SectionId = 'all' | 'main' | 'patio' | 'bar' | 'vip';
+
+export interface FloorTable {
+  id: string;
+  number: string;
+  label: string;
+  sectionId: Exclude<SectionId, 'all'>;
+  sectionName: string;
+  capacity: number;
+  shape: 'square' | 'round' | 'rectangle' | 'booth' | 'bar' | 'oval';
+  defaultStatus: TableStatus;
+}
+
+const DEFAULT_FLOOR_TABLES: FloorTable[] = [
+  // Main Dining
+  { id: 'tbl-1', number: '1', label: 'T1', sectionId: 'main', sectionName: 'Main Dining', capacity: 2, shape: 'square', defaultStatus: 'available' },
+  { id: 'tbl-2', number: '2', label: 'T2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available' },
+  { id: 'tbl-3', number: '3', label: 'T3', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'reserved' },
+  { id: 'tbl-4', number: '4', label: 'T4', sectionId: 'main', sectionName: 'Main Dining', capacity: 6, shape: 'rectangle', defaultStatus: 'available' },
+  { id: 'tbl-5', number: '5', label: 'T5', sectionId: 'main', sectionName: 'Main Dining', capacity: 8, shape: 'rectangle', defaultStatus: 'dirty' },
+  { id: 'tbl-b1', number: 'B1', label: 'Booth 1', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
+  { id: 'tbl-b2', number: 'B2', label: 'Booth 2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
+
+  // Patio & Garden
+  { id: 'tbl-p1', number: 'P1', label: 'Patio 1', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 2, shape: 'round', defaultStatus: 'available' },
+  { id: 'tbl-p2', number: 'P2', label: 'Patio 2', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'available' },
+  { id: 'tbl-p3', number: 'P3', label: 'Patio 3', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'reserved' },
+  { id: 'tbl-p4', number: 'P4', label: 'Patio 4', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 6, shape: 'round', defaultStatus: 'available' },
+
+  // Bar & Lounge
+  { id: 'tbl-bar1', number: 'BAR1', label: 'Bar 1', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available' },
+  { id: 'tbl-bar2', number: 'BAR2', label: 'Bar 2', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available' },
+  { id: 'tbl-bar3', number: 'BAR3', label: 'Bar 3', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 4, shape: 'square', defaultStatus: 'available' },
+
+  // VIP Private
+  { id: 'tbl-vip1', number: 'VIP1', label: 'VIP Suite', sectionId: 'vip', sectionName: 'Private VIP', capacity: 10, shape: 'oval', defaultStatus: 'reserved' },
+];
+
+const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: string; badge: string; ring: string }> = {
+  available: {
+    bg: 'bg-emerald-50/80 hover:bg-emerald-100/90',
+    border: 'border-emerald-500',
+    text: 'text-emerald-900',
+    badge: 'bg-emerald-500 text-white',
+    ring: 'ring-emerald-400/30',
+  },
+  occupied: {
+    bg: 'bg-amber-50/90 hover:bg-amber-100',
+    border: 'border-[#ff5f1f]',
+    text: 'text-amber-950',
+    badge: 'bg-[#ff5f1f] text-white',
+    ring: 'ring-[#ff5f1f]/40',
+  },
+  reserved: {
+    bg: 'bg-indigo-50/80 hover:bg-indigo-100/90',
+    border: 'border-indigo-500',
+    text: 'text-indigo-900',
+    badge: 'bg-indigo-600 text-white',
+    ring: 'ring-indigo-400/30',
+  },
+  dirty: {
+    bg: 'bg-rose-50/90 hover:bg-rose-100',
+    border: 'border-rose-500',
+    text: 'text-rose-950',
+    badge: 'bg-rose-600 text-white',
+    ring: 'ring-rose-400/30',
+  },
 };
 
 export function TablesView() {
@@ -11,62 +78,386 @@ export function TablesView() {
   const { mutate: createOrder } = useCreateOrder();
   const setActiveOrder = usePOSStore((s) => s.setActiveOrder);
   const setView = usePOSStore((s) => s.setView);
+  const employee = usePOSStore((s) => s.employee);
 
-  function openNewOrder() {
-    const tableInput = prompt('Table number (or leave blank for takeaway):');
-    const coversInput = prompt('Cover count:');
-    const covers = parseInt(coversInput ?? '1', 10);
+  // Floor navigation & filter state
+  const [activeSection, setActiveSection] = useState<SectionId>('all');
+  const [statusFilter, setStatusFilter] = useState<TableStatus | 'all'>('all');
+
+  // Manual status overrides for tables (e.g. Dirty, Reserved, Clean)
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, TableStatus>>(() => {
+    const saved = localStorage.getItem('culinaryos_table_status_overrides');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Modal State for Opening Order on Available / Dirty / Reserved Table
+  const [selectedTable, setSelectedTable] = useState<FloorTable | null>(null);
+  const [coverCount, setCoverCount] = useState<number>(2);
+  const [serverName, setServerName] = useState<string>(employee?.name || 'Server');
+
+  useEffect(() => {
+    localStorage.setItem('culinaryos_table_status_overrides', JSON.stringify(statusOverrides));
+  }, [statusOverrides]);
+
+  function getEffectiveStatus(table: FloorTable, activeOrder: any): TableStatus {
+    if (activeOrder) return 'occupied';
+    return statusOverrides[table.id] ?? table.defaultStatus;
+  }
+
+  function handleTableClick(table: FloorTable, activeOrder: any) {
+    const effStatus = getEffectiveStatus(table, activeOrder);
+    if (effStatus === 'occupied' && activeOrder) {
+      setActiveOrder(activeOrder.id);
+      setView('menu');
+    } else {
+      setSelectedTable(table);
+      setCoverCount(Math.min(2, table.capacity));
+      setServerName(employee?.name || 'Server');
+    }
+  }
+
+  function handleStartOrder() {
+    if (!selectedTable) return;
     createOrder(
-      { table_number: tableInput || undefined, cover_count: isNaN(covers) ? 1 : covers, server_name: 'Server' },
-      { onSuccess: (o: any) => { setActiveOrder(o.id); setView('menu'); } }
+      { table_number: selectedTable.number, cover_count: coverCount, server_name: serverName },
+      {
+        onSuccess: (o: any) => {
+          setActiveOrder(o.id);
+          setView('menu');
+          setSelectedTable(null);
+        },
+      }
     );
   }
 
+  function handleUpdateStatus(newStatus: TableStatus) {
+    if (!selectedTable) return;
+    setStatusOverrides((prev) => ({
+      ...prev,
+      [selectedTable.id]: newStatus,
+    }));
+    setSelectedTable(null);
+  }
+
+  // Filtered table list
+  const filteredTables = DEFAULT_FLOOR_TABLES.filter((t) => {
+    if (activeSection !== 'all' && t.sectionId !== activeSection) return false;
+    const activeOrder = orders.find(
+      (o: any) => String(o.table_number) === String(t.number) || String(o.table_number) === String(t.label)
+    );
+    const effStatus = getEffectiveStatus(t, activeOrder);
+    if (statusFilter !== 'all' && effStatus !== statusFilter) return false;
+    return true;
+  });
+
+  // Calculate Floor Statistics
+  const tableStats = DEFAULT_FLOOR_TABLES.map((t) => {
+    const activeOrder = orders.find(
+      (o: any) => String(o.table_number) === String(t.number) || String(o.table_number) === String(t.label)
+    );
+    return { table: t, status: getEffectiveStatus(t, activeOrder), order: activeOrder };
+  });
+
+  const occupiedCount = tableStats.filter((x) => x.status === 'occupied').length;
+  const availableCount = tableStats.filter((x) => x.status === 'available').length;
+  const reservedCount = tableStats.filter((x) => x.status === 'reserved').length;
+  const dirtyCount = tableStats.filter((x) => x.status === 'dirty').length;
+
+  const totalActiveRevenue = orders.reduce((sum: number, o: any) => sum + (o.total ?? 0), 0);
+
+  function getShapeBadge(shape: FloorTable['shape']) {
+    switch (shape) {
+      case 'round':
+        return 'rounded-full';
+      case 'booth':
+        return 'rounded-2xl border-dashed border-2';
+      case 'bar':
+        return 'rounded-lg';
+      case 'oval':
+        return 'rounded-3xl';
+      default:
+        return 'rounded-xl';
+    }
+  }
+
   return (
-    <div className="p-6 bg-[#f8f9fa] h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">Open Orders</h1>
-        <button onClick={openNewOrder}
-          className="bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-colors active:scale-95 shadow-sm">
-          + New Order
-        </button>
+    <div className="p-6 bg-[#f8f9fa] h-full overflow-y-auto flex flex-col gap-6 animate-fadeIn">
+      {/* Top Header & Floor Stats Summary */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white border border-[#e5e7eb] rounded-2xl p-5 shadow-sm">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black text-[#ff5f1f] uppercase tracking-widest bg-[#ff5f1f10] px-2 py-0.5 rounded">
+              Front of House
+            </span>
+            <h1 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">Dining Floor Plan</h1>
+          </div>
+          <p className="text-xs text-[#6b7280] mt-1 font-semibold">
+            Interactive visual floor map, seating capacity, active order management & dining status controls.
+          </p>
+        </div>
+
+        {/* Live Metrics Cards */}
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="bg-[#f8f9fa] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[90px]">
+            <span className="text-[9px] font-black text-[#6b7280] uppercase tracking-wider block">Occupied</span>
+            <span className="text-base font-black text-[#ff5f1f]">
+              {occupiedCount} <span className="text-[10px] text-[#9ca3af]">/ {DEFAULT_FLOOR_TABLES.length}</span>
+            </span>
+          </div>
+
+          <div className="bg-[#f8f9fa] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[90px]">
+            <span className="text-[9px] font-black text-[#6b7280] uppercase tracking-wider block">Available</span>
+            <span className="text-base font-black text-emerald-600">{availableCount}</span>
+          </div>
+
+          <div className="bg-[#f8f9fa] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[90px]">
+            <span className="text-[9px] font-black text-[#6b7280] uppercase tracking-wider block">Reserved</span>
+            <span className="text-base font-black text-indigo-600">{reservedCount}</span>
+          </div>
+
+          <div className="bg-[#f8f9fa] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[90px]">
+            <span className="text-[9px] font-black text-[#6b7280] uppercase tracking-wider block">Dirty</span>
+            <span className="text-base font-black text-rose-600">{dirtyCount}</span>
+          </div>
+
+          <div className="bg-[#ff5f1f0a] border border-[#ff5f1f30] px-4 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[120px]">
+            <span className="text-[9px] font-black text-[#ff5f1f] uppercase tracking-wider block">Open Revenue</span>
+            <span className="text-base font-black font-mono text-[#ff5f1f]">
+              ${(totalActiveRevenue / 100).toFixed(2)}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center mt-20">
-          <div className="w-6 h-6 border-2 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : error ? (
-        <div className="text-center text-red-500 mt-20 text-xs">Connection error: {error}</div>
-      ) : orders.length === 0 ? (
-        <div className="text-center text-[#9ca3af] mt-20 p-6 bg-white rounded-xl border border-[#e5e7eb] max-w-sm mx-auto shadow-sm">
-          <p className="text-sm font-bold uppercase tracking-wider">No active orders</p>
-          <p className="text-xs mt-1 text-[#9ca3af]">Open a new table order to begin.</p>
-        </div>
-      ) : (
-        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
-          {orders.map((order: any) => (
-            <button key={order.id} onClick={() => { setActiveOrder(order.id); setView('menu'); }}
-              className="bg-white rounded-xl p-4 text-left border-2 hover:border-[#ff5f1f] transition-all active:scale-95 flex flex-col justify-between h-28 shadow-sm"
-              style={{ borderColor: STATUS_COLOR[order.status] ?? '#e5e7eb' }}>
-              <div className="flex justify-between items-center mb-2 w-full">
-                <span className="text-[#1f2937] font-black text-lg">
-                  {order.table_number ? `T${order.table_number}` : 'T/A'}
-                </span>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider"
-                  style={{ color: STATUS_COLOR[order.status], backgroundColor: (STATUS_COLOR[order.status] ?? '#cbd5e1') + '22' }}>
-                  {order.status}
-                </span>
-              </div>
-              <div>
-                {order.server_name && <p className="text-[#6b7280] text-[10px]">Server: {order.server_name}</p>}
-                <p className="text-[#6b7280] text-[10px]">{order.items?.length ?? 0} items</p>
-              </div>
-              <p className="text-[#ff5f1f] font-extrabold font-mono text-sm mt-1">${((order.total ?? 0) / 100).toFixed(2)}</p>
+      {/* Filter Navigation & Legend Controls */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border border-[#e5e7eb] rounded-2xl p-3 shadow-sm">
+        {/* Section Tabs */}
+        <div className="flex bg-[#f3f4f6] rounded-xl p-1 gap-1 overflow-x-auto">
+          {[
+            { id: 'all', label: 'All Floor' },
+            { id: 'main', label: 'Main Dining' },
+            { id: 'patio', label: 'Patio & Garden' },
+            { id: 'bar', label: 'Bar & Lounge' },
+            { id: 'vip', label: 'Private VIP' },
+          ].map((sec) => (
+            <button
+              key={sec.id}
+              onClick={() => setActiveSection(sec.id as SectionId)}
+              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${
+                activeSection === sec.id
+                  ? 'bg-[#ff5f1f] text-white shadow-sm'
+                  : 'text-[#6b7280] hover:text-[#1f2937] hover:bg-white/50'
+              }`}
+            >
+              {sec.label}
             </button>
           ))}
+        </div>
+
+        {/* Status Filter / Legend Options */}
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          <span className="text-[10px] font-black text-[#9ca3af] uppercase tracking-wider px-1">Filter:</span>
+          {(['all', 'available', 'occupied', 'reserved', 'dirty'] as const).map((st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
+                statusFilter === st
+                  ? 'border-[#1f2937] bg-[#1f2937] text-white'
+                  : 'border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#cbd5e1]'
+              }`}
+            >
+              {st}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Dining Room Visual Floor Layout Canvas */}
+      {loading ? (
+        <div className="flex justify-center mt-20">
+          <div className="w-8 h-8 border-3 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="text-center text-red-500 mt-20 text-xs font-bold">Connection error: {error}</div>
+      ) : filteredTables.length === 0 ? (
+        <div className="text-center text-[#9ca3af] mt-16 p-8 bg-white rounded-2xl border border-[#e5e7eb] max-w-sm mx-auto shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-wider">No matching tables</p>
+          <p className="text-xs mt-1 text-[#9ca3af]">Adjust section or status filter criteria.</p>
+        </div>
+      ) : (
+        <div className="bg-[#f1f3f5] border-2 border-dashed border-[#cbd5e1] rounded-3xl p-6 shadow-inner relative min-h-[420px]">
+          {/* Visual Canvas Layout Grid */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {filteredTables.map((table) => {
+              const activeOrder = orders.find(
+                (o: any) => String(o.table_number) === String(table.number) || String(o.table_number) === String(table.label)
+              );
+              const effStatus = getEffectiveStatus(table, activeOrder);
+              const theme = STATUS_THEME[effStatus];
+              const shapeStyle = getShapeBadge(table.shape);
+              const itemCount = activeOrder?.items?.length ?? 0;
+              const orderTotal = activeOrder?.total ?? 0;
+
+              return (
+                <div
+                  key={table.id}
+                  onClick={() => handleTableClick(table, activeOrder)}
+                  className={`border-2 ${theme.border} ${theme.bg} ${shapeStyle} p-4 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[145px] group`}
+                >
+                  {/* Top Bar: Table Name, Shape Tag & Status Badge */}
+                  <div className="flex justify-between items-start gap-2 w-full">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`font-black text-lg ${theme.text}`}>{table.label}</span>
+                        <span className="text-[10px] text-[#6b7280] font-bold">({table.sectionName})</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5 text-[10px] font-bold text-[#6b7280]">
+                        <span>👥 {activeOrder?.cover_count ?? table.capacity}/{table.capacity} seats</span>
+                        <span className="capitalize">• {table.shape}</span>
+                      </div>
+                    </div>
+
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${theme.badge} shadow-xs tracking-wider`}>
+                      {effStatus}
+                    </span>
+                  </div>
+
+                  {/* Middle / Active Order Content */}
+                  {effStatus === 'occupied' && activeOrder ? (
+                    <div className="my-2 p-2 bg-white/80 backdrop-blur-xs rounded-xl border border-amber-200 space-y-1">
+                      <div className="flex justify-between items-center text-[11px] font-bold">
+                        <span className="text-[#1f2937] truncate">
+                          {activeOrder.server_name ? `Server: ${activeOrder.server_name}` : 'Active Ticket'}
+                        </span>
+                        <span className="text-[9px] font-black uppercase text-[#ff5f1f] bg-[#ff5f1f15] px-1.5 py-0.5 rounded">
+                          {activeOrder.status}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-[10px] text-[#6b7280] font-semibold">
+                        <span>{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
+                        <span className="font-mono text-[#ff5f1f] font-black text-xs">
+                          ${(orderTotal / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="my-2 py-2 text-[11px] font-semibold text-[#6b7280] italic">
+                      {effStatus === 'available' && 'Tap to seat guests & open order'}
+                      {effStatus === 'reserved' && 'Reserved for upcoming party'}
+                      {effStatus === 'dirty' && 'Table needs busing & cleaning'}
+                    </div>
+                  )}
+
+                  {/* Bottom Action Footer Indicator */}
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-[#6b7280] group-hover:text-[#ff5f1f]">
+                    <span>{effStatus === 'occupied' ? 'Open Order →' : 'Manage Table →'}</span>
+                    <span className="font-mono text-[9px] text-[#9ca3af]">ID #{table.number}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Table Order & Status Action Modal */}
+      {selectedTable && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6">
+            <div className="border-b border-[#e5e7eb] pb-3 flex justify-between items-start">
+              <div>
+                <span className="text-[10px] text-[#ff5f1f] font-black tracking-wider uppercase block">Table Management</span>
+                <h3 className="text-lg font-black text-[#1f2937] uppercase mt-0.5">
+                  {selectedTable.label} — {selectedTable.sectionName}
+                </h3>
+                <p className="text-xs text-[#6b7280] mt-0.5 font-bold">
+                  Capacity: {selectedTable.capacity} Seats • Shape: {selectedTable.shape}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedTable(null)}
+                className="text-xs font-black text-[#9ca3af] hover:text-[#1f2937] uppercase"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Start New Order Flow */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-black text-[#1f2937] uppercase tracking-wider">Seat Table & Start Order</h4>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-[#4b5563]">Covers / Guests</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCoverCount((c) => Math.max(1, c - 1))}
+                      className="w-8 h-8 rounded-lg bg-[#f3f4f6] text-[#1f2937] font-black text-sm hover:bg-[#e5e7eb]"
+                    >
+                      -
+                    </button>
+                    <span className="font-mono text-sm font-black w-6 text-center">{coverCount}</span>
+                    <button
+                      onClick={() => setCoverCount((c) => Math.min(selectedTable.capacity + 4, c + 1))}
+                      className="w-8 h-8 rounded-lg bg-[#f3f4f6] text-[#1f2937] font-black text-sm hover:bg-[#e5e7eb]"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-[#4b5563]">Assigned Server</span>
+                  <input
+                    type="text"
+                    value={serverName}
+                    onChange={(e) => setServerName(e.target.value)}
+                    className="w-48 bg-[#f9fafb] border border-[#cbd5e1] rounded-lg p-2 text-xs font-bold text-[#1f2937]"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartOrder}
+                className="w-full bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm active:scale-98"
+              >
+                Open Table Ticket →
+              </button>
+            </div>
+
+            {/* Manual Status Override Options */}
+            <div className="border-t border-[#e5e7eb] pt-4 space-y-2">
+              <span className="text-[10px] font-black text-[#6b7280] uppercase tracking-wider block">
+                Update Table Status
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => handleUpdateStatus('available')}
+                  className="bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 py-2 rounded-xl text-[10px] font-black uppercase transition-colors"
+                >
+                  Mark Available
+                </button>
+                <button
+                  onClick={() => handleUpdateStatus('reserved')}
+                  className="bg-indigo-50 text-indigo-700 border border-indigo-300 hover:bg-indigo-100 py-2 rounded-xl text-[10px] font-black uppercase transition-colors"
+                >
+                  Mark Reserved
+                </button>
+                <button
+                  onClick={() => handleUpdateStatus('dirty')}
+                  className="bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 py-2 rounded-xl text-[10px] font-black uppercase transition-colors"
+                >
+                  Mark Dirty
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+export default TablesView;

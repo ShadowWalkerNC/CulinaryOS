@@ -274,7 +274,8 @@ export function useAddLineItem() {
           unit_price: finalUnitPrice,
           line_total,
           station: item.station,
-          notes: item.notes
+          notes: item.notes,
+          seat_number: item.seat_number ?? 1
         })
         .select()
         .single();
@@ -357,3 +358,31 @@ export function useVoidOrder() {
     },
   });
 }
+
+export function useApplyDiscount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, discountPercent, discountFlat }: { orderId: string; discountPercent: number; discountFlat: number }) => {
+      if (!supabase) {
+        const orders = getMockOrders();
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          order.discount_percent = discountPercent;
+          order.discount_flat = discountFlat;
+          saveMockOrders(orders);
+        }
+        return;
+      }
+      const { error } = await supabase
+        .from('pos_orders')
+        .update({ discount_percent: discountPercent, discount_flat: discountFlat })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: ['order', orderId] });
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+

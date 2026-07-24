@@ -5,6 +5,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.0] — Phase 3: Monorepo Integration & Complete Ecosystem — 2026-07-24
+
+### Added
+- **CulinaryOps POS Terminal (`apps/pos`):**
+  - Square/Toast light-mode UI theme refactor.
+  - PIN lockscreen (`StaffView.tsx`) with employee shift tracking (`1234` Server / `5678` Manager).
+  - Interactive Toast-style Home Dashboard (`DashboardView.tsx`) with Quick Order, Table Service, Bar Tabs, and Recall history.
+  - Bar Tabs manager (`TabsView.tsx`) with Visa card pre-authorizations.
+  - Check Recall History (`RecallView.tsx`) with itemized ticket details, guest check reprints, and refund manager.
+  - Terminal Settings (`SettingsView.tsx`) for Stripe reader pairing and KDS item routing.
+  - Promo & Discount Engine (`OrderView.tsx`) supporting 10% Senior Discounts and $5.00 Off coupons.
+  - Global Menu Search Bar (`MenuView.tsx`) for multi-category searches.
+  - Seat Assignment Selector (`MenuView.tsx` & `OrderView.tsx`) tagging items to Seat 1-4.
+  - Split Checks Wizard (`CheckoutView.tsx`) supporting 2-way, 3-way, 4-way even splits and seat-by-seat checks.
+  - Stripe Terminal simulator overlay (Success, Decline, Timeout states) and virtual thermal receipt tape roll with browser print.
+  - Cash Drawer Audit & Declaration modal for bill counts ($1, $5, $10, $20) and discrepancy reconciliation.
+  - Business Sales Reports (`ReportsView.tsx`) showing PM Mix product sales and net revenue.
+
+- **KitchenKit KDS Terminal (`apps/kds`):**
+  - Station navigation tabs (Hot Grill, Cold Prep, Fryer, Bar, All Stations).
+  - 1-second continuous timer resolution with color-coded aging alert badges (Green <5m, Yellow 5-10m, Red >10m).
+  - Offline interactive demo ticket queue.
+
+- **Admin Back-Office (`apps/admin`):**
+  - Live Operations Dashboard, Menu Builder & Price Manager, Staff Roster & PIN Manager, Pantry Audits.
+
+- **Customer Online Ordering (`apps/web`):**
+  - Item Customizer modal, Cart drawer, Checkout page (Pickup vs. Delivery toggle, tip selector), and live order status tracker.
+
+- **Unified MCP Layer (`mcp/src/`):**
+  - `KitchenKit`, `CulinaryOps`, `Plated`, `Post-Pilot` stdio MCP servers connected directly to REST gateway endpoints.
+
+---
+
 ## [Unreleased] — Phase 2: POS Core
 
 ### Planned

@@ -5,6 +5,7 @@ import { BumpButton } from './BumpButton';
 interface Props {
   ticket:  KitchenTicket;
   onBump:  (ticketId: string) => Promise<void>;
+  onFire?: (ticketId: string) => Promise<void>;
 }
 
 /** Returns color + label based on elapsed seconds */
@@ -28,7 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  queued:  'var(--text-muted)',
+  queued:  'var(--amber)',
   cooking: 'var(--accent)',
   ready:   'var(--green)',
   bumped:  '#374151',
@@ -36,34 +37,48 @@ const STATUS_COLOR: Record<string, string> = {
 
 /**
  * Single kitchen ticket card.
- * Shows table, course badge, items, modifiers, elapsed timer, and bump button.
+ * Shows table, station, course badge, hold status, items, modifiers, elapsed timer, and fire/bump buttons.
  */
-export function TicketCard({ ticket, onBump }: Props) {
+export function TicketCard({ ticket, onBump, onFire }: Props) {
   const timer = timerColor(ticket.elapsedSeconds);
   const canBump = ticket.status === 'cooking' || ticket.status === 'ready';
+  const isHeld = ticket.courseHoldStatus === 'held';
 
   return (
     <article
       style={{
         background:    'var(--surface)',
         border:        `1px solid var(--border)`,
-        borderTop:     `3px solid ${timer.color}`,
+        borderTop:     `4px solid ${isHeld ? 'var(--amber)' : timer.color}`,
         borderRadius:  'var(--radius)',
         padding:       '16px',
         display:       'flex',
         flexDirection: 'column',
         gap:           '10px',
         boxShadow:     'var(--shadow)',
-        minWidth:      '220px',
-        maxWidth:      '300px',
+        minWidth:      '240px',
+        maxWidth:      '320px',
         flex:          '0 0 auto',
       }}
     >
       {/* Header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: '16px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {ticket.tableLabel}
+            {ticket.stationName && (
+              <span style={{
+                fontSize:      '10px',
+                padding:       '2px 6px',
+                borderRadius:  '4px',
+                background:    'var(--surface-2)',
+                border:        '1px solid var(--border)',
+                color:         'var(--text-muted)',
+                fontWeight:    600,
+              }}>
+                {ticket.stationName}
+              </span>
+            )}
           </div>
           {ticket.seatNumber != null && (
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -86,6 +101,34 @@ export function TicketCard({ ticket, onBump }: Props) {
           }}>
             Course {ticket.courseNumber}
           </span>
+          {/* Course Hold Status Indicator */}
+          {isHeld ? (
+            <span style={{
+              background:    'rgba(245, 158, 11, 0.15)',
+              border:        '1px solid var(--amber)',
+              borderRadius:  '4px',
+              padding:       '2px 6px',
+              fontSize:      '10px',
+              fontWeight:    700,
+              color:         'var(--amber)',
+              textTransform: 'uppercase',
+            }}>
+              HELD ⏸
+            </span>
+          ) : (
+            <span style={{
+              background:    'rgba(16, 185, 129, 0.15)',
+              border:        '1px solid var(--green)',
+              borderRadius:  '4px',
+              padding:       '2px 6px',
+              fontSize:      '10px',
+              fontWeight:    700,
+              color:         'var(--green)',
+              textTransform: 'uppercase',
+            }}>
+              FIRED 🔥
+            </span>
+          )}
           {/* Status badge */}
           <span style={{ fontSize: '10px', fontWeight: 600, color: STATUS_COLOR[ticket.status] ?? 'var(--text-muted)' }}>
             {STATUS_LABEL[ticket.status] ?? ticket.status.toUpperCase()}
@@ -128,20 +171,60 @@ export function TicketCard({ ticket, onBump }: Props) {
         ))}
       </ul>
 
-      {/* Timer */}
+      {/* Timer & Aging alert */}
       <div style={{
-        fontFamily:    'var(--font-mono)',
-        fontSize:      '22px',
-        fontWeight:    700,
-        color:         timer.color,
-        textAlign:     'right',
-        letterSpacing: '0.04em',
+        display:        'flex',
+        justifyContent: 'space-between',
+        alignItems:     'center',
+        marginTop:      'auto',
+        paddingTop:     '8px',
       }}>
-        {timer.label}
+        <span style={{
+          fontSize:      '10px',
+          fontWeight:    700,
+          padding:       '2px 6px',
+          borderRadius:  '4px',
+          background:    ticket.elapsedSeconds >= 600 ? 'rgba(239, 68, 68, 0.2)' : ticket.elapsedSeconds >= 300 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+          color:         timer.color,
+          textTransform: 'uppercase',
+        }}>
+          {ticket.elapsedSeconds >= 600 ? 'RED ALERT' : ticket.elapsedSeconds >= 300 ? 'AMBER ALERT' : 'NORMAL'}
+        </span>
+        <div style={{
+          fontFamily:    'var(--font-mono)',
+          fontSize:      '22px',
+          fontWeight:    700,
+          color:         timer.color,
+          letterSpacing: '0.04em',
+        }}>
+          {timer.label}
+        </div>
       </div>
 
-      {/* Bump */}
-      <BumpButton ticketId={ticket.id} disabled={!canBump} onBump={onBump} />
+      {/* Actions: Fire Course (if held) or Bump Button */}
+      {isHeld && onFire ? (
+        <button
+          onClick={() => onFire(ticket.id)}
+          style={{
+            background:    'var(--accent)',
+            color:         '#ffffff',
+            border:        'none',
+            borderRadius:  '6px',
+            padding:       '8px 12px',
+            fontSize:      '12px',
+            fontWeight:    700,
+            cursor:        'pointer',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            transition:    'all 0.15s ease',
+            marginTop:     '4px',
+          }}
+        >
+          🔥 Fire Course {ticket.courseNumber}
+        </button>
+      ) : (
+        <BumpButton ticketId={ticket.id} disabled={!canBump} onBump={onBump} />
+      )}
     </article>
   );
 }

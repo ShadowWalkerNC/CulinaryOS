@@ -3,7 +3,7 @@
 > **Web-based SaaS restaurant OS** — POS · KDS · Inventory · Reporting · Payments · Online Ordering  
 > TypeScript · React 18 · Hono · Supabase · Turborepo · pnpm · MIT License
 
-![Phase](https://img.shields.io/badge/phase-0%20Foundation%20%E2%80%94%20Migration-orange)
+![Phase](https://img.shields.io/badge/phase-v0.3.0%20%E2%80%94%20Monorepo%20Ecosystem%20Release-brightgreen)
 ![Stack](https://img.shields.io/badge/stack-TypeScript%20%2F%20React%20%2F%20Supabase-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)

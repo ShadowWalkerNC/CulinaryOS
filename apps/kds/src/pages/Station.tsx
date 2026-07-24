@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useRealtimeTickets, bumpDemoTicket } from '../hooks/useRealtimeTickets';
+import { useRealtimeTickets, bumpDemoTicket, fireDemoTicket } from '../hooks/useRealtimeTickets';
 import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
 import { CourseHoldBanner }       from '../components/CourseHoldBanner';
 import { TicketCard }             from '../components/TicketCard';
@@ -10,6 +10,7 @@ import type { AnalyticsSummary }  from '../types';
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 const STATIONS = [
+  { id: 'expo', label: 'Expo Pass' },
   { id: '1', label: 'Hot Grill' },
   { id: '2', label: 'Cold Prep' },
   { id: '3', label: 'Fryer' },
@@ -18,10 +19,10 @@ const STATIONS = [
 ];
 
 /**
- * Main KitchenKit KDS station view.
+ * Main KitchenKit KDS station view & Expediter (Expo) Pass View.
  */
 export function Station() {
-  const { stationId = '1' } = useParams<{ stationId: string }>();
+  const { stationId = 'expo' } = useParams<{ stationId: string }>();
   const navigate = useNavigate();
 
   const { tickets, loading, error, setTickets } = useRealtimeTickets(stationId);
@@ -48,7 +49,7 @@ export function Station() {
   // Bump a ticket via REST or local state fallback
   const handleBump = useCallback(async (ticketId: string) => {
     try {
-      await fetch(`${API}/v1/tickets/${ticketId}/bump`, {
+      await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ stationId }),
@@ -60,7 +61,37 @@ export function Station() {
     setTickets(prev => prev.filter(t => t.id !== ticketId));
   }, [stationId, setTickets]);
 
+  // Fire a held course ticket manually (Expediter control)
+  const handleFireCourse = useCallback(async (ticketId: string) => {
+    try {
+      await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch {
+      // Fallback local fire
+    }
+    fireDemoTicket(ticketId);
+    setTickets(prev => prev.map(t => t.id === ticketId ? {
+      ...t,
+      courseHoldStatus: 'fired',
+      status: 'cooking',
+      firedAt: new Date().toISOString(),
+    } : t));
+  }, [setTickets]);
+
   const activeStationLabel = STATIONS.find(s => s.id === stationId)?.label ?? `Station ${stationId}`;
+  const isExpoPass = stationId === 'expo';
+
+  // Compute station status counters for Expo Pass view
+  const stationCounts = {
+    hotGrill: tickets.filter(t => t.stationId === '1' && t.courseHoldStatus === 'fired').length,
+    coldPrep: tickets.filter(t => t.stationId === '2' && t.courseHoldStatus === 'fired').length,
+    fryer:    tickets.filter(t => t.stationId === '3' && t.courseHoldStatus === 'fired').length,
+    bar:      tickets.filter(t => t.stationId === '4' && t.courseHoldStatus === 'fired').length,
+    held:     tickets.filter(t => t.courseHoldStatus === 'held').length,
+    total:    tickets.length,
+  };
 
   return (
     <div style={{
@@ -85,7 +116,9 @@ export function Station() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}><path d="M6 18V6a6 6 0 0 1 12 0v12" /><path d="M12 10V6" /><path d="M18 14H6" /><rect width="18" height="4" x="3" y="18" rx="1" /></svg>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)' }}>KitchenKit — {activeStationLabel}</div>
+              <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)' }}>
+                KitchenKit — {activeStationLabel} {isExpoPass ? '(Head Chef)' : ''}
+              </div>
               <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>CulinaryOS KDS Terminal</div>
             </div>
           </div>
@@ -136,6 +169,40 @@ export function Station() {
         `}</style>
       </header>
 
+      {/* Expo Pass Real-Time Station Status Bar */}
+      {isExpoPass && (
+        <section style={{
+          background:    'var(--surface-2)',
+          borderBottom:  '1px solid var(--border)',
+          padding:       '8px 24px',
+          display:       'flex',
+          gap:           '16px',
+          alignItems:    'center',
+          fontSize:      '12px',
+        }}>
+          <span style={{ fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Real-Time Station Overview:
+          </span>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+              🔥 Hot Grill: <strong style={{ color: 'var(--accent)' }}>{stationCounts.hotGrill}</strong>
+            </span>
+            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+              🥗 Cold Prep: <strong style={{ color: 'var(--accent)' }}>{stationCounts.coldPrep}</strong>
+            </span>
+            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+              🍟 Fryer: <strong style={{ color: 'var(--accent)' }}>{stationCounts.fryer}</strong>
+            </span>
+            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+              🍸 Bar: <strong style={{ color: 'var(--accent)' }}>{stationCounts.bar}</strong>
+            </span>
+            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid var(--amber)', fontWeight: 700, color: 'var(--amber)' }}>
+              ⏸ Held Courses: <strong>{stationCounts.held}</strong>
+            </span>
+          </div>
+        </section>
+      )}
+
       {/* Ticket board */}
       <main style={{
         flex:       1,
@@ -163,7 +230,7 @@ export function Station() {
           </div>
         )}
         {tickets.map((t) => (
-          <TicketCard key={t.id} ticket={t} onBump={handleBump} />
+          <TicketCard key={t.id} ticket={t} onBump={handleBump} onFire={handleFireCourse} />
         ))}
       </main>
 

@@ -22,27 +22,10 @@ services:
       SERVICE_NAME: culinaryos
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
       retries: 3
-
-  # ---- KDS Web Client ----
-  kds-client:
-    build:
-      context: .
-      dockerfile: apps/kds/Dockerfile
-      args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
-        VITE_TENANT_ID: ${VITE_TENANT_ID}
-        VITE_KDS_URL: http://localhost:3000
-    ports:
-      - "5173:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
 
   # ---- POS Web Client ----
   pos-client:
@@ -53,9 +36,28 @@ services:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_TENANT_ID: ${VITE_TENANT_ID}
-        VITE_POS_URL: http://localhost:3000
+        VITE_POS_URL: ${VITE_POS_URL:-http://localhost:3000}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     ports:
       - "5172:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- KDS Web Client ----
+  kds-client:
+    build:
+      context: .
+      dockerfile: apps/kds/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_TENANT_ID: ${VITE_TENANT_ID}
+        VITE_KDS_URL: ${VITE_KDS_URL:-http://localhost:3000}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - "5173:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -70,8 +72,26 @@ services:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_TENANT_ID: ${VITE_TENANT_ID}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     ports:
       - "5174:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- Web Online Ordering ----
+  web-client:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_TENANT_ID: ${VITE_TENANT_ID}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - "5176:80"
     depends_on:
       backend:
         condition: service_healthy
