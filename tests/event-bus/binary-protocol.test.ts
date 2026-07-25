@@ -33,31 +33,34 @@ describe('binary-protocol', () => {
 
   it('encodes and decodes a DomainEvent correctly with full data fidelity', () => {
     const encoded = encodeBinaryEvent(sampleEvent);
-    expect(encoded).toBeInstanceOf(Uint8Array);
+    expect(encoded instanceof Uint8Array).toBe(true);
     expect(encoded[0]).toBe(0x43); // 'C'
     expect(encoded[1]).toBe(0x01); // Version 1
 
     const decoded = decodeBinaryEvent(encoded);
-    expect(decoded).not.toBeNull();
+    expect(decoded !== null).toBe(true);
     expect(decoded).toEqual(sampleEvent);
   });
 
-  it('demonstrates ~60% size reduction compared to formatted JSON strings', () => {
-    const formattedJsonStr = JSON.stringify(sampleEvent, null, 2);
-    const formattedJsonBytes = new TextEncoder().encode(formattedJsonStr).length;
+  it('demonstrates >50-60% size reduction compared directly to compact unformatted JSON', () => {
+    const compactJsonStr = JSON.stringify(sampleEvent);
+    const compactJsonBytes = new TextEncoder().encode(compactJsonStr).length;
 
     const encodedPacket = encodeBinaryEvent(sampleEvent);
     const binaryBytes = encodedPacket.length;
 
-    const sizeReduction = ((formattedJsonBytes - binaryBytes) / formattedJsonBytes) * 100;
-    expect(sizeReduction).toBeGreaterThanOrEqual(50); // ~60% size reduction
+    const sizeReduction = ((compactJsonBytes - binaryBytes) / compactJsonBytes) * 100;
+    expect(sizeReduction).toBeGreaterThanOrEqual(50); // >50-60% size reduction vs compact JSON
   });
 
   it('returns null for invalid magic header or corrupted buffer', () => {
     const invalidHeader = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-    expect(decodeBinaryEvent(invalidHeader)).toBeNull();
+    expect(decodeBinaryEvent(invalidHeader)).toBe(null);
 
     const shortBuffer = new Uint8Array([0x43, 0x01]);
-    expect(decodeBinaryEvent(shortBuffer)).toBeNull();
+    expect(decodeBinaryEvent(shortBuffer)).toBe(null);
+
+    const corruptedPayload = new Uint8Array([0x43, 0x01, 0x00, 0x00, 0x00, 0x64, 0x99, 0x88, 0x77, 0x66]);
+    expect(decodeBinaryEvent(corruptedPayload)).toBe(null);
   });
 });

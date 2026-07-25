@@ -1,8 +1,9 @@
 // ============================================================
-// Tests: RecipeOS Pantry — deduct logic
+// Tests: RecipeOS Pantry — deduct logic & REST API Purchase Orders
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
+import { pantryRoutes } from '../../apps/server/src/routes/pantry';
 
 // ---- Unit: deduct quantity math ----
 
@@ -67,4 +68,71 @@ describe('pantry_status view logic', () => {
   it('returns low_stock below threshold', ()=> expect(stockStatus(5, 8)).toBe('low_stock'));
   it('returns out_of_stock at zero', ()     => expect(stockStatus(0, 8)).toBe('out_of_stock'));
   it('returns out_of_stock below zero', ()  => expect(stockStatus(-1, 8)).toBe('out_of_stock'));
+});
+
+// ---- Integration: Purchase Orders REST API Routes ----
+
+describe('Pantry REST API /purchase-orders endpoints', () => {
+  const headers = { 'X-Tenant-Id': 'tenant-test-123', 'Content-Type': 'application/json' };
+
+  it('GET /purchase-orders returns list of purchase orders without 404', async () => {
+    const res = await pantryRoutes.request('/purchase-orders', { method: 'GET', headers });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(Array.isArray(json.data)).toBe(true);
+  });
+
+  it('POST /purchase-orders/auto-generate generates draft PO seamlessly', async () => {
+    const res = await pantryRoutes.request('/purchase-orders/auto-generate', { method: 'POST', headers });
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.data.status).toBe('draft');
+    expect(json.data.po_line_items.length).toBeGreaterThan(0);
+  });
+
+  it('POST /purchase-orders with { auto: true } generates auto PO', async () => {
+    const res = await pantryRoutes.request('/purchase-orders', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ auto: true }),
+    });
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.data.status).toBe('draft');
+  });
+
+  it('PATCH /purchase-orders/:id/approve updates status to approved', async () => {
+    const res = await pantryRoutes.request('/purchase-orders/po-1001/approve', {
+      method: 'PATCH',
+      headers,
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.data.status).toBe('approved');
+  });
+
+  it('PATCH /purchase-orders/:id/send updates status to sent', async () => {
+    const res = await pantryRoutes.request('/purchase-orders/po-1001/send', {
+      method: 'PATCH',
+      headers,
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.data.status).toBe('sent');
+  });
+
+  it('DELETE /purchase-orders/:id cancels purchase order', async () => {
+    const res = await pantryRoutes.request('/purchase-orders/po-1001', {
+      method: 'DELETE',
+      headers,
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+  });
 });

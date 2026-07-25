@@ -1,0 +1,203 @@
+/* ==========================================================
+   CulinaryOS — Unified Light-Mode Design System
+   Matches Square POS / Toast POS aesthetic
+   Brand: #ff5f1f (Culinary Orange) | Surface: #f8f9fa
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* — Core Surfaces — */
+  --cos-bg:            #f8f9fa;
+  --cos-surface:       #ffffff;
+  --cos-surface-2:     #f1f3f5;
+  --cos-surface-hover: #f8f9fa;
+
+  /* — Borders — */
+  --cos-border:        #e5e7eb;
+  --cos-border-strong: #d1d5db;
+
+  /* — Typography — */
+  --cos-text:          #1f2937;
+  --cos-text-muted:    #6b7280;
+  --cos-text-dim:      #9ca3af;
+
+  /* — Brand — */
+  --cos-brand:         #ff5f1f;
+  --cos-brand-soft:    rgba(255, 95, 31, 0.08);
+  --cos-brand-border:  rgba(255, 95, 31, 0.2);
+
+  /* — Status — */
+  --cos-green:         #16a34a;
+  --cos-green-soft:    rgba(22, 163, 74, 0.08);
+  --cos-amber:         #d97706;
+  --cos-amber-soft:    rgba(217, 119, 6, 0.08);
+  --cos-red:           #dc2626;
+  --cos-red-soft:      rgba(220, 38, 38, 0.08);
+  --cos-blue:          #2563eb;
+  --cos-blue-soft:     rgba(37, 99, 235, 0.08);
+
+  /* — Elevation — */
+  --cos-shadow-xs:     0 1px 2px rgba(0,0,0,0.05);
+  --cos-shadow-sm:     0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --cos-shadow-md:     0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --cos-shadow-lg:     0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
+
+  /* — Radius — */
+  --cos-radius-sm:     6px;
+  --cos-radius-md:     10px;
+  --cos-radius-lg:     14px;
+  --cos-radius-xl:     18px;
+  --cos-radius-full:   9999px;
+
+  /* — Typography — */
+  --cos-font-sans:     'Inter', system-ui, -apple-system, sans-serif;
+  --cos-font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* — Base — */
+html, body, #root {
+  min-height: 100dvh;
+  background: var(--cos-bg);
+  color: var(--cos-text);
+  font-family: var(--cos-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+/* — Links — */
+a { color: var(--cos-brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* — Images — */
+img { display: block; max-width: 100%; }
+
+/* — Buttons reset — */
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+/* — Scrollbars — */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--cos-surface-2); }
+::-webkit-scrollbar-thumb { background: var(--cos-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cos-text-muted); }
+
+/* — Utility classes shared across all CulinaryOS apps — */
+.cos-card {
+  background: var(--cos-surface);
+  border: 1px solid var(--cos-border);
+  border-radius: var(--cos-radius-lg);
+  box-shadow: var(--cos-shadow-sm);
+}
+
+.cos-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--cos-radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+.cos-btn-primary {
+  background: var(--cos-brand);
+  color: #fff;
+}
+.cos-btn-primary:hover {
+  background: #e55519;
+  box-shadow: 0 2px 8px rgba(255,95,31,0.3);
+}
+.cos-btn-secondary {
+  background: var(--cos-surface);
+  color: var(--cos-text);
+  border: 1px solid var(--cos-border);
+}
+.cos-btn-secondary:hover {
+  background: var(--cos-surface-2);
+}
+
+.cos-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--cos-radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.cos-badge-brand  { background: var(--cos-brand-soft); color: var(--cos-brand); border: 1px solid var(--cos-brand-border); }
+.cos-badge-green  { background: var(--cos-green-soft); color: var(--cos-green); }
+.cos-badge-amber  { background: var(--cos-amber-soft); color: var(--cos-amber); }
+.cos-badge-red    { background: var(--cos-red-soft);   color: var(--cos-red);   }
+
+/* — Section nav (used in Web & KDS tabs) — */
+.cos-section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--cos-surface);
+  border-bottom: 1px solid var(--cos-border);
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cos-section-nav::-webkit-scrollbar { display: none; }
+.cos-section-nav button {
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--cos-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cos-section-nav button.active,
+.cos-section-nav button:focus {
+  color: var(--cos-brand);
+  border-bottom-color: var(--cos-brand);
+}
+
+/* — Cart FAB — */
+.cos-cart-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--cos-brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  border-radius: var(--cos-radius-full);
+  box-shadow: 0 4px 20px rgba(255,95,31,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.cos-cart-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(255,95,31,0.5);
+}
+
+/* — Animations — */
+@keyframes fadeIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@keyframes pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.animate-fadeIn  { animation: fadeIn  0.2s ease both; }
+.animate-slideIn { animation: slideIn 0.2s ease both; }
+.animate-pulse   { animation: pulse   2s  ease-in-out infinite; }

@@ -48,12 +48,23 @@ Orchestrate the complete implementation and verification of CulinaryOS R1-R5 req
 | explorer_m1_1 | teamwork_preview_explorer | Explore R1 UI & Header | completed | 7fc31fb5-efde-4966-bdd3-2d3b36307e1a |
 | explorer_m2_1 | teamwork_preview_explorer | Explore R2 Binary & Offline Sync | completed | b45fea7a-bf27-4930-bdd5-7ce47205a24a |
 | explorer_m3_1 | teamwork_preview_explorer | Explore R3-R5 HTMX, KDS & MCP | completed | 04a199a0-b2ad-4651-b463-b700f11d5c73 |
-| worker_1 | teamwork_preview_worker | Implementation & Build/Test Verification | in-progress | 887a20c2-a8b2-452b-a57e-4a3afa8ada32 |
+| worker_1 | teamwork_preview_worker | Implementation & Build/Test Verification | completed | 887a20c2-a8b2-452b-a57e-4a3afa8ada32 |
+| reviewer_1 | teamwork_preview_reviewer | Review R1, R2, R3 | completed | cd102706-2b01-4719-822a-86dd9467be5c |
+| reviewer_2 | teamwork_preview_reviewer | Review R4 & R5 | completed | 8e33be56-38ea-4938-8f37-13342fd81c84 |
+| challenger_1 | teamwork_preview_challenger | Challenge R1 & R2 | completed | c69523cb-c962-41d8-90fe-14a6e1477dcf |
+| challenger_2 | teamwork_preview_challenger | Challenge R3, R4, R5 | completed | 0feddf78-554f-4d2f-91fe-5ac5ba6ecc7b |
+| auditor_1 | teamwork_preview_auditor | Forensic Integrity Audit | completed | 4ae10725-2d7f-48b9-ad7e-62d024d98ae0 |
+| explorer_r2_remediation | teamwork_preview_explorer | Remediation Design for R2 Binary Protocol | completed | b62e4535-d9e6-40fe-bdd8-0e6440dbf9de |
+| worker_2 | teamwork_preview_worker | Binary Protocol & Pantry PO Route Remediation | completed | b0d78409-da3a-444d-8671-75eea337a237 |
+| auditor_2 | teamwork_preview_auditor | Forensic Integrity Re-Audit | completed | 9ec7bc61-9e4a-49e6-8792-ac917b892ee4 |
+| explorer_r2_remediation_2 | teamwork_preview_explorer | Remediation Design for DEFLATE level & Test Runner | completed | c5d3b5b5-6bbd-4c57-986a-742ef4a62dbf |
+| worker_3 | teamwork_preview_worker | DEFLATE Level, Test Assertion & Runner Exit Code Remediation | completed | a1bb5540-780e-4309-a592-11e6c9a2ea77 |
+| auditor_3 | teamwork_preview_auditor | Final Verification Audit | completed | f61f6fc5-d8f5-4b33-a7ae-4121a9a5e078 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 4 / 16
-- Pending subagents: 887a20c2-a8b2-452b-a57e-4a3afa8ada32
+- Spawn count: 15 / 16
+- Pending subagents: none
 - Predecessor: none
 - Successor: not yet spawned
 
