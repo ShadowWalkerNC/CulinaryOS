@@ -18,7 +18,7 @@ mock.module('@supabase/supabase-js', () => ({
   }),
 }));
 
-import { handleIncomingEvent } from '../../backend/event-bus/broker';
+import { handleIncomingEvent } from '../../packages/event-bus/src/broker';
 
 const BASE_EVENT = {
   eventId:   'evt-001',

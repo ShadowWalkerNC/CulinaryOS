@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { CulinaryHeader } from '@culinaryos/ui';
 import { OrderStatusTracker } from '../components/OrderStatusTracker';
 
 export function OrderStatusPage() {
@@ -7,6 +8,7 @@ export function OrderStatusPage() {
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg-app)', color: 'var(--text)' }}>
+      <CulinaryHeader activeModule="web" tenantName="CulinaryOS Ordering" />
       <header
         style={{
           padding: '16px 24px',

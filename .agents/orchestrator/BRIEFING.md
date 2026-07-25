@@ -19,14 +19,14 @@ Orchestrate the development and verification of CulinaryOS ecosystem (Requiremen
 3. **On failure**: Retry -> Replace -> Skip -> Redistribute -> Redesign.
 4. **Succession**: At 16 subagent spawns or context overflow, write handoff.md, spawn successor.
 - **Work items**:
-  1. Milestone 1: Workspace Integrity & Infrastructure (Monorepo build, Docker Compose, Hono API Gateway, Shared packages) [pending]
-  2. Milestone 2: KDS & Recipe Blueprint Engine (apps/kds, KitchenKit integration, ratio-engine, prep-engine, recipe-mcp, prep-mcp) [pending]
-  3. Milestone 3: POS Operations & Terminals (apps/pos, PIN lock, table map, quick orders, seats, coupons, Split Check Wizard) [pending]
-  4. Milestone 4: Plated Inventory & Post-Pilot Marketing (apps/admin, inventory deduction on checkout, par warnings, Plated MCP, Post-Pilot MCP) [pending]
-  5. Milestone 5: Customer Online Ordering & Live Tracker (apps/web, modifier customizer, cart drawer, checkout, live status tracker) [pending]
-  6. Milestone 6: E2E Integration & Verification Hardening [pending]
-- **Current phase**: 1
-- **Current focus**: Milestone 1 - Investigation and Infrastructure Setup
+  1. Milestone 1: Workspace Integrity & Infrastructure (Monorepo build, Docker Compose, Hono API Gateway, Shared packages) [done]
+  2. Milestone 2: KDS & Recipe Blueprint Engine (apps/kds, KitchenKit integration, ratio-engine, prep-engine, recipe-mcp, prep-mcp) [done]
+  3. Milestone 3: POS Operations & Terminals (apps/pos, PIN lock, table map, quick orders, seats, coupons, Split Check Wizard) [done]
+  4. Milestone 4: Plated Inventory & Post-Pilot Marketing (apps/admin, inventory deduction on checkout, par warnings, Plated MCP, Post-Pilot MCP) [done]
+  5. Milestone 5: Customer Online Ordering & Live Tracker (apps/web, modifier customizer, cart drawer, checkout, live status tracker) [done]
+  6. Milestone 6: E2E Integration & Verification Hardening [done]
+- **Current phase**: Complete
+- **Current focus**: Project Verification & Sign-off
 
 ## 🔒 Key Constraints
 - Dispatch-only orchestrator: Never write/modify source code directly or run build/test commands directly.
@@ -59,20 +59,22 @@ Orchestrate the development and verification of CulinaryOS ecosystem (Requiremen
 | Challenger 1 | teamwork_preview_challenger | M1 Build & Typecheck Verification | completed | 3ec34bd0-ee34-41a9-8f3e-0df36678d57f |
 | Challenger 2 | teamwork_preview_challenger | M1 Docker & Environment Stress Test | completed (FAIL) | 4936c48a-5786-4173-b581-4931b5ed3fa8 |
 | Auditor 1 | teamwork_preview_auditor | M1 Forensic Integrity Audit | completed (CLEAN) | 3874bc1d-7d7a-4629-b4e9-fa8a2c4cb9e8 |
-| Worker 2 | teamwork_preview_worker | M1 Docker Fix & M2 KDS Expo Pass View | in-progress | a5157830-a45c-40cb-8dfa-9d12c33ee892 |
-| Worker 3 | teamwork_preview_worker | M3 POS Visual Table Map & Operations | in-progress | ea62085f-1ff3-4b45-a870-92c904f51c6d |
-| Worker 4 | teamwork_preview_worker | M4 Plated Inventory & Post-Pilot Marketing | in-progress | 62be735e-5147-4da3-a13f-0229fe20e8b2 |
-| Worker 5 | teamwork_preview_worker | M5 Web Online Checkout & Live Tracker | in-progress | fec0fbef-2584-4d6f-b94d-6ab286c8d36b |
+| Worker Full 1 | teamwork_preview_worker | CulinaryOS R1-R5 Ecosystem Implementation & Build Verification | completed | c040694d-74bd-4417-9bbe-7ab06047f574 |
+| Reviewer Full 1 | teamwork_preview_reviewer | CulinaryOS Architecture & Code Quality Review | completed (PASS) | c058804c-1833-48c3-b510-de83c82046e7 |
+| Reviewer Full 2 | teamwork_preview_reviewer | CulinaryOS Functional & Multi-App Operations Review | completed (PASS) | b6b55572-72fa-41a7-aa77-15ad452d7b2a |
+| Challenger Full 1 | teamwork_preview_challenger | Monorepo Build & POS/KDS Stress Verification | completed (PASS) | 2f2d1bfc-acf7-4aeb-9bff-05a812add141 |
+| Challenger Full 2 | teamwork_preview_challenger | Inventory, MCP & Web Ordering Verification | completed (PASS) | 5b31dce9-c126-4c85-bf54-f3880a924844 |
+| Auditor Full 1 | teamwork_preview_auditor | Forensic Integrity Audit | completed (CLEAN) | 7a7fc279-ff17-4508-9e58-cd922c5a0776 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 13 / 16
-- Pending subagents: a5157830-a45c-40cb-8dfa-9d12c33ee892, ea62085f-1ff3-4b45-a870-92c904f51c6d, 62be735e-5147-4da3-a13f-0229fe20e8b2, fec0fbef-2584-4d6f-b94d-6ab286c8d36b
-- Predecessor: none
+- Spawn count: 3 / 16
+- Pending subagents: none
+- Predecessor: c95643aa-c5cd-4868-acdc-fa99d3666ef3
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: pending
+- Heartbeat cron: d8eb0ef4-174b-4799-b698-ab32ba8bb556/task-21
 - Safety timer: none
 
 ## Artifact Index

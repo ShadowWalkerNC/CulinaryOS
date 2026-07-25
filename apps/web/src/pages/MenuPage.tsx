@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate }              from 'react-router-dom';
+import { CulinaryHeader }                      from '@culinaryos/ui';
 import { useMenu }                             from '../hooks/useMenu';
 import { MenuSection }                         from '../components/MenuSection';
 import { CartDrawer }                          from '../components/CartDrawer';
@@ -98,6 +99,7 @@ export function MenuPage() {
 
   return (
     <div style={{ minHeight: '100dvh', paddingBottom: cart.itemCount > 0 ? '100px' : '40px' }}>
+      <CulinaryHeader activeModule="web" tenantName={restaurant.name} />
 
       {/* Restaurant header */}
       <header style={{

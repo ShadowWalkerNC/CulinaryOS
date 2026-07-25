@@ -9,11 +9,14 @@
     "start-pos": "node dist/pos-server.js",
     "start-kds": "node dist/kds-server.js",
     "start-inventory": "node dist/inventory-server.js",
+    "start-recipe": "node dist/recipe-server.js",
+    "start-prep": "node dist/prep-server.js",
     "start-post-pilot": "node dist/post-pilot-server.js",
     "start-culinary": "node dist/culinary-os-server.js",
     "dev-culinary": "ts-node culinary-os-server.ts"
   },
   "dependencies": {
+    "@culinaryos/ratio-engine": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.1",
     "dotenv": "^16.4.5"
   },

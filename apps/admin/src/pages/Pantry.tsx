@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { CulinaryHeader } from '@culinaryos/ui';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
@@ -107,7 +108,9 @@ export function PantryPage() {
   const alerts = items.filter((i) => i.stock_status !== 'ok');
 
   return (
-    <div style={{ padding: '24px', fontFamily: "'Inter', sans-serif", color: '#e8eaf0', background: '#0f1117', minHeight: '100dvh' }}>
+    <div style={{ padding: '0 0 24px', fontFamily: "'Inter', sans-serif", color: '#1f2937', background: '#f8f9fa', minHeight: '100dvh' }}>
+      <CulinaryHeader activeModule="admin" tenantName="CulinaryOS Back-Office Admin" />
+      <div style={{ padding: '24px' }}>
       {/* Page header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
@@ -273,6 +276,7 @@ export function PantryPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -18,12 +18,12 @@
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | Workspace Integrity & Core Infra | Monorepo setup, pnpm build clean, docker-compose configuration, shared types & packages | None | IN_PROGRESS |
-| 2 | KitchenKit KDS & Recipe Blueprint Engine | apps/kds, KitchenKit integration, @culinaryos/ratio-engine, prep-engine, recipe-mcp, prep-mcp | M1 | PLANNED |
-| 3 | POS Operations & Terminals | apps/pos, PIN lock, table map, quick orders, seat assignments, coupons, Split Check Wizard | M1 | PLANNED |
-| 4 | Plated Inventory & Post-Pilot Marketing | apps/admin, automatic ingredient deduction on checkout, par warnings, Plated MCP server, Post-Pilot MCP server | M1, M2, M3 | PLANNED |
-| 5 | Online Ordering & Real-Time Tracker | apps/web, item modifiers, cart drawer, checkout (Pickup/Delivery, tips, submission), live status tracker | M1 | PLANNED |
-| 6 | E2E Integration & Verification Hardening | End-to-end flow from web/pos -> backend -> kds -> inventory -> marketing; adversarial tests & forensic audit | M1-M5 | PLANNED |
+| 1 | Workspace Integrity & Core Infra | Monorepo setup, pnpm build clean, docker-compose configuration, shared types & packages | None | DONE |
+| 2 | KitchenKit KDS & Recipe Blueprint Engine | apps/kds, KitchenKit integration, @culinaryos/ratio-engine, prep-engine, recipe-mcp, prep-mcp | M1 | DONE |
+| 3 | POS Operations & Terminals | apps/pos, PIN lock, table map, quick orders, seat assignments, coupons, Split Check Wizard | M1 | DONE |
+| 4 | Plated Inventory & Post-Pilot Marketing | apps/admin, automatic ingredient deduction on checkout, par warnings, Plated MCP server, Post-Pilot MCP server | M1, M2, M3 | DONE |
+| 5 | Online Ordering & Real-Time Tracker | apps/web, item modifiers, cart drawer, checkout (Pickup/Delivery, tips, submission), live status tracker | M1 | DONE |
+| 6 | E2E Integration & Verification Hardening | End-to-end flow from web/pos -> backend -> kds -> inventory -> marketing; adversarial tests & forensic audit | M1-M5 | DONE |
 
 ## Interface Contracts
 ### POS ↔ Backend / API Gateway

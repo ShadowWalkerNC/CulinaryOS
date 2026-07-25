@@ -34,8 +34,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Customer Online Ordering (`apps/web`):**
   - Item Customizer modal, Cart drawer, Checkout page (Pickup vs. Delivery toggle, tip selector), and live order status tracker.
 
-- **Unified MCP Layer (`mcp/src/`):**
-  - `KitchenKit`, `CulinaryOps`, `Plated`, `Post-Pilot` stdio MCP servers connected directly to REST gateway endpoints.
+- **Unified CulinaryOS UI/UX (`packages/ui`):**
+  - Standardized `CulinaryHeader` component across all 4 applications.
+  - Mounted `CulinaryHeader` on POS PIN Lockscreen (`StaffView.tsx`).
+  - Configured default port mappings: POS (`:5172`), KDS (`:5173`), Admin (`:5174`), Web (`:5176`).
+  - Linked `@culinaryos/ratio-engine` workspace package to `mcp/package.json` with compiled `.d.ts` path definitions in `mcp/tsconfig.json`.
 
 ---
 

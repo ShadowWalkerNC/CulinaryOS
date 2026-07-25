@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "bun test",
+    "test": "npx tsx -r ../../scripts/test-hook.cjs src/index.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

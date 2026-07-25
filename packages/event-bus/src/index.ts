@@ -4,6 +4,7 @@
 
 export { handleIncomingEvent }     from './broker';
 export type { EventHandler }       from './broker';
+export { encodeBinaryEvent, decodeBinaryEvent } from './binary-protocol';
 
 export {
   startRealtimeBridge,

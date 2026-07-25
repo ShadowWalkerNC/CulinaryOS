@@ -71,7 +71,7 @@ describe('handleTicketBumped', () => {
       }),
     });
 
-    const { handleTicketBumped } = await import('../../backend/event-bus/handlers/kds-ticket-bumped');
+    const { handleTicketBumped } = await import('../../packages/event-bus/src/handlers/kds-ticket-bumped');
     await handleTicketBumped(
       makeEvent('kds:ticket:bumped', { ticketId: 't1', orderId: 'ord-1', station: 'grill', bumpedAt: new Date().toISOString(), cookTimeSeconds: 300 }),
       sb
@@ -108,7 +108,7 @@ describe('handleTicketBumped', () => {
       }),
     });
 
-    const { handleTicketBumped } = await import('../../backend/event-bus/handlers/kds-ticket-bumped');
+    const { handleTicketBumped } = await import('../../packages/event-bus/src/handlers/kds-ticket-bumped');
     await handleTicketBumped(
       makeEvent('kds:ticket:bumped', { ticketId: 't1', orderId: 'ord-1', station: 'grill', bumpedAt: new Date().toISOString(), cookTimeSeconds: 180 }),
       sb
@@ -132,7 +132,7 @@ describe('handleTicketBumped', () => {
       }),
     });
 
-    const { handleTicketBumped } = await import('../../backend/event-bus/handlers/kds-ticket-bumped');
+    const { handleTicketBumped } = await import('../../packages/event-bus/src/handlers/kds-ticket-bumped');
     await handleTicketBumped(
       makeEvent('kds:ticket:bumped', { ticketId: 't1', orderId: 'ord-1', station: 'grill', bumpedAt: new Date().toISOString(), cookTimeSeconds: 0 }),
       sb
@@ -162,7 +162,7 @@ describe('handleOrderCancelled', () => {
       }),
     });
 
-    const { handleOrderCancelled } = await import('../../backend/event-bus/handlers/pos-order-cancelled');
+    const { handleOrderCancelled } = await import('../../packages/event-bus/src/handlers/pos-order-cancelled');
     await handleOrderCancelled(
       makeEvent('pos:order:cancelled', { orderId: 'ord-x', reason: 'Customer left' }),
       sb

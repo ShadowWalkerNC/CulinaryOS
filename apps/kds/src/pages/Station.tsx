@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { CulinaryHeader } from '@culinaryos/ui';
 import { useRealtimeTickets, bumpDemoTicket, fireDemoTicket } from '../hooks/useRealtimeTickets';
 import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
 import { CourseHoldBanner }       from '../components/CourseHoldBanner';
@@ -61,7 +62,7 @@ export function Station() {
     setTickets(prev => prev.filter(t => t.id !== ticketId));
   }, [stationId, setTickets]);
 
-  // Fire a held course ticket manually (Expediter control)
+  // Manual course fire handler
   const handleFireCourse = useCallback(async (ticketId: string) => {
     try {
       await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
@@ -100,6 +101,9 @@ export function Station() {
       display:       'flex',
       flexDirection: 'column',
     }}>
+      {/* Universal CulinaryOS Header */}
+      <CulinaryHeader activeModule="kds" tenantName={`KitchenKit — ${activeStationLabel}`} />
+
       {/* Course fired flash banner */}
       <CourseHoldBanner event={courseEvent} />
 

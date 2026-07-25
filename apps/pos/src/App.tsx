@@ -11,17 +11,29 @@ import { TabsView }      from './views/TabsView';
 import { ReportsView }   from './views/ReportsView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 
+import { CulinaryHeader } from '@culinaryos/ui';
+
 export function App() {
   const { view, setView, activeOrderId, setActiveOrder, employee, setEmployee } = usePOSStore();
 
   // 1. Force Lock Screen if no employee session is active
   if (!employee) {
-    return <StaffView />;
+    return (
+      <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn">
+        <CulinaryHeader activeModule="pos" tenantName="CulinaryOps POS Terminal" />
+        <div className="flex-1 overflow-hidden">
+          <StaffView />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn">
-      {/* Top Navigation Bar */}
+      {/* Universal CulinaryOS Header */}
+      <CulinaryHeader activeModule="pos" tenantName="CulinaryOps POS Terminal" />
+
+      {/* POS Sub Navigation Bar */}
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-[#e5e7eb] shrink-0">
         <div className="flex items-center gap-4">
           <button onClick={() => setView('dashboard')} className="flex items-center gap-2 hover:opacity-85 text-left">

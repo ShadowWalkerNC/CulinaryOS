@@ -1,0 +1,73 @@
+import React from 'react';
+
+export interface CulinaryHeaderProps {
+  activeModule: 'pos' | 'kds' | 'web' | 'admin';
+  tenantName?: string;
+  serverStatus?: 'connected' | 'offline';
+}
+
+export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
+  activeModule,
+  tenantName = 'Main Bistro',
+  serverStatus = 'connected'
+}) => {
+  const modules = [
+    { id: 'pos', label: 'POS Terminal', port: '5172', url: 'http://localhost:5172' },
+    { id: 'kds', label: 'KDS Kitchen', port: '5173', url: 'http://localhost:5173' },
+    { id: 'web', label: 'Web Store', port: '5176', url: 'http://localhost:5176' },
+    { id: 'admin', label: 'Back Office', port: '5174', url: 'http://localhost:5174' },
+  ] as const;
+
+  return (
+    <header className="bg-white border-b border-[#e5e7eb] px-5 py-3 flex items-center justify-between shadow-xs shrink-0 select-none">
+      {/* Brand Logo & Wordmark */}
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-[#ff5f1f] text-white rounded-xl flex items-center justify-center font-black text-lg shadow-sm">
+          🍳
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-black text-sm text-[#1f2937] uppercase tracking-wider">CulinaryOS</h1>
+            <span className="bg-[#ff5f1f15] text-[#ff5f1f] text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-[#ff5f1f30]">
+              Hub v0.3
+            </span>
+          </div>
+          <p className="text-[10px] text-[#6b7280] font-medium">{tenantName}</p>
+        </div>
+      </div>
+
+      {/* Cross-Application Module Navigation Tabs */}
+      <nav className="flex items-center gap-1.5 bg-[#f8f9fa] border border-[#e5e7eb] p-1 rounded-xl">
+        {modules.map((m) => {
+          const isActive = activeModule === m.id;
+          return (
+            <a
+              key={m.id}
+              href={m.url}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-white text-[#ff5f1f] shadow-xs border border-[#e5e7eb]'
+                  : 'text-[#6b7280] hover:text-[#1f2937] hover:bg-[#e5e7eb50]'
+              }`}
+            >
+              <span>{m.label}</span>
+              <span className={`text-[8px] px-1 py-0.5 rounded font-mono ${isActive ? 'bg-[#ff5f1f15] text-[#ff5f1f]' : 'bg-[#e5e7eb] text-[#6b7280]'}`}>
+                :{m.port}
+              </span>
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* System Status Indicators */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 bg-[#f8f9fa] border border-[#e5e7eb] px-3 py-1.5 rounded-xl text-[10px] text-[#6b7280]">
+          <span className={`w-2 h-2 rounded-full ${serverStatus === 'connected' ? 'bg-[#22c55e] animate-pulse' : 'bg-red-500'}`} />
+          <span className="font-semibold">{serverStatus === 'connected' ? 'LAN Connected' : 'Offline'}</span>
+          <span className="text-[#cbd5e1]">|</span>
+          <span className="font-mono text-[9px] font-bold text-[#ff5f1f]">MCP Ready</span>
+        </div>
+      </div>
+    </header>
+  );
+};

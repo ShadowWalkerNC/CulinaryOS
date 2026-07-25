@@ -196,7 +196,7 @@ pnpm lint
 │                                                                  │
 │  apps/pos       apps/kds      apps/admin      apps/web           │
 │  POS tablet     KDS display   Back office     Public store       │
-│  :5173          :5174         :5175           :5176              │
+│  :5172          :5173         :5174           :5176              │
 │       └─────────────┴──────────────┴──────────────┘             │
 │                             │                                    │
 │              apps/server   (Hono · Node 20 · :3000)             │
@@ -441,9 +441,9 @@ supabase db reset     # applies V1–V12 migrations + seed.sql
 pnpm dev              # all four apps + API in parallel
 
 # API    → http://localhost:3000/health
-# POS    → http://localhost:5173
-# KDS    → http://localhost:5174
-# Admin  → http://localhost:5175
+# POS    → http://localhost:5172
+# KDS    → http://localhost:5173
+# Admin  → http://localhost:5174
 # Web    → http://localhost:5176/menu/:slug
 ```
 

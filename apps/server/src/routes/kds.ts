@@ -149,4 +149,26 @@ kdsRoutes.patch('/tickets/:id/fire', async (c) => {
   return ok(c, { ticketId: id, status: 'fired', firedAt: now });
 });
 
+// GET /v1/kds/htmx-cards (Zero-JS HTMX Kiosk Endpoint)
+kdsRoutes.get('/htmx-cards', async (c) => {
+  const list = mockTickets;
+  const html = list.map(t => `
+    <div class="kds-card border border-gray-300 rounded-xl p-4 bg-white shadow-sm mb-3 font-mono">
+      <div class="flex justify-between font-bold border-b pb-2">
+        <span>TICKET #${t.id} (T-${t.table_number})</span>
+        <span class="text-green-600 uppercase">${t.status}</span>
+      </div>
+      <div class="py-2 space-y-1 text-xs">
+        ${t.items.map((i: any) => `<div>${i.quantity}x ${i.name} [${i.station}]</div>`).join('')}
+      </div>
+      <button hx-patch="/v1/kds/tickets/${t.id}/bump" hx-target="closest .kds-card" hx-swap="outerHTML"
+        class="w-full bg-green-500 text-white py-2 rounded font-bold text-xs uppercase mt-2">
+        BUMP TICKET
+      </button>
+    </div>
+  `).join('');
+
+  return c.html(html);
+});
+
 export default kdsRoutes;
