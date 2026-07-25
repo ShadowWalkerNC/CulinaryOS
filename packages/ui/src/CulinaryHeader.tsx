@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface CulinaryHeaderProps {
-  activeModule: 'pos' | 'kds' | 'web' | 'admin';
+  activeModule: 'pos' | 'kds' | 'web' | 'admin' | 'kitchenkit';
   tenantName?: string;
   serverStatus?: 'connected' | 'offline';
 }
@@ -16,6 +16,7 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
     { id: 'kds', label: 'KDS Kitchen', port: '5173', url: 'http://localhost:5173' },
     { id: 'web', label: 'Web Store', port: '5176', url: 'http://localhost:5176' },
     { id: 'admin', label: 'Back Office', port: '5174', url: 'http://localhost:5174' },
+    { id: 'kitchenkit', label: 'KitchenKit', port: '5175', url: 'http://localhost:5175' },
   ] as const;
 
   return (
