@@ -8,6 +8,27 @@ importers:
 
   .:
     devDependencies:
+      '@culinaryos/auth':
+        specifier: workspace:*
+        version: link:packages/auth
+      '@culinaryos/config':
+        specifier: workspace:*
+        version: link:packages/config
+      '@culinaryos/db':
+        specifier: workspace:*
+        version: link:packages/db
+      '@culinaryos/event-bus':
+        specifier: workspace:*
+        version: link:packages/event-bus
+      '@culinaryos/ratio-engine':
+        specifier: workspace:*
+        version: link:packages/ratio-engine
+      '@culinaryos/server':
+        specifier: workspace:*
+        version: link:apps/server
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:packages/shared
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
@@ -60,6 +81,9 @@ importers:
       '@culinaryos/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@culinaryos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -94,6 +118,9 @@ importers:
 
   apps/pos:
     dependencies:
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@culinaryos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -149,6 +176,21 @@ importers:
 
   apps/server:
     dependencies:
+      '@culinaryos/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@culinaryos/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@culinaryos/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@culinaryos/event-bus':
+        specifier: workspace:*
+        version: link:../../packages/event-bus
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@hono/node-server':
         specifier: ^1.12.0
         version: 1.19.14(hono@4.12.27)
@@ -189,6 +231,9 @@ importers:
       '@culinaryos/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@culinaryos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -248,6 +293,9 @@ importers:
 
   mcp:
     dependencies:
+      '@culinaryos/ratio-engine':
+        specifier: workspace:*
+        version: link:../packages/ratio-engine
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.1
         version: 1.29.0(zod@4.4.3)
@@ -348,6 +396,9 @@ importers:
 
   packages/event-bus:
     dependencies:
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@supabase/supabase-js':
         specifier: ^2.43.0
         version: 2.110.0
@@ -364,6 +415,31 @@ importers:
 
   packages/ratio-engine:
     devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
+  packages/shared:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.43.0
+        version: 2.110.0
+      react:
+        specifier: ^18.3.0
+        version: 18.3.1
+      uuid:
+        specifier: ^10.0.0
+        version: 10.0.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.31
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
       typescript:
         specifier: ^5.4.0
         version: 5.9.3

@@ -273,7 +273,7 @@ export function useRealtimeTickets(stationId: string) {
             const updated = rowToTicket(row);
             const exists  = prev.find((t) => t.id === row.id);
             if (exists) return prev.map((t) => (t.id === row.id ? updated : t));
-            return [...prev, updated].sort((a, b) => a.elapsedSeconds - b.elapsedSeconds);
+            return [...prev, updated].sort((a, b) => (a.elapsedSeconds ?? 0) - (b.elapsedSeconds ?? 0));
           });
         }
       )

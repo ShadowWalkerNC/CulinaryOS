@@ -20,7 +20,7 @@ import {
   getOfflineQueue,
   markDeltasSynced,
   flushOfflineQueue
-} from '../../packages/shared/src/offline-sync';
+} from '@culinaryos/shared';
 
 describe('offline-sync engine', () => {
   beforeEach(() => {

@@ -3,7 +3,7 @@
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
-import { pantryRoutes } from '../../apps/server/src/routes/pantry';
+import { pantryRoutes } from '@culinaryos/server/routes/pantry';
 
 // ---- Unit: deduct quantity math ----
 

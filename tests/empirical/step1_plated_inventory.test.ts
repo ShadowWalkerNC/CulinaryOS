@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { scaleBlueprint, RatioBlueprint } from '../../packages/ratio-engine/src/index';
+import { scaleBlueprint, RatioBlueprint } from '@culinaryos/ratio-engine';
 
 // -------------------------------------------------------------------
 // Step 1 Empirical Verification: Plated Inventory & Low-Stock Alerts

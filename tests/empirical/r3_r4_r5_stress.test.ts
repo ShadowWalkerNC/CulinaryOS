@@ -3,9 +3,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
-import { kdsRoutes } from '../../apps/server/src/routes/kds';
-import { pantryRoutes } from '../../apps/server/src/routes/pantry';
-import { initialHoldStatus } from '../../kds/server/lib/course-engine';
+import { kdsRoutes } from '@culinaryos/server/routes/kds';
+import { pantryRoutes } from '@culinaryos/server/routes/pantry';
+import { initialHoldStatus } from '@culinaryos/shared';
 
 // -------------------------------------------------------------------
 // Helper: Timer Color & Alert Label Mirror (matching TicketCard.tsx)

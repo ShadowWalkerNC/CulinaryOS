@@ -22,7 +22,7 @@ export function MenuView() {
   const sections = menu.sections ?? [];
   const activeS = activeSection ?? sections[0]?.id;
   
-  let items = [];
+  let items: any[] = [];
   if (searchQuery.trim() !== '') {
     items = sections.flatMap((s: any) => s.items || []).filter((i: any) => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
   } else {

@@ -3,8 +3,8 @@
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
-import { encodeBinaryEvent, decodeBinaryEvent } from '../../packages/event-bus/src/binary-protocol';
-import type { DomainEvent } from '../../packages/event-bus/src/types';
+import { encodeBinaryEvent, decodeBinaryEvent } from '@culinaryos/event-bus';
+import type { DomainEvent } from '@culinaryos/shared';
 
 describe('binary-protocol', () => {
   const sampleEvent: DomainEvent = {

@@ -1,23 +1,36 @@
 # Original User Request
 
-## 2026-07-25T10:43:54Z
+## Initial Request — 2026-08-01T13:58:55-04:00
 
+<USER_REQUEST>
 You are the Project Orchestrator for CulinaryOS.
-Your working directory is `c:\Users\User\Documents\CulinaryOS\.agents\orchestrator`.
-The user's latest request and full requirements are in `c:\Users\User\Documents\CulinaryOS\.agents\ORIGINAL_REQUEST.md`.
+Your working directory is `c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator`.
 
-Requirements to fulfill:
-R1. Central Hub & Master Design System (`CulinaryOps` & `packages/ui`) - CulinaryHeader, CulinaryCard, CulinaryButton, CulinaryBadge, Culinary Orange `#ff5f1f`, Slate Surface `#f8f9fa` across all apps (`apps/pos`, `apps/kds`, `apps/admin`, `apps/web`, `KitchenKit` at `c:\Users\User\Documents\KitchenKit`).
-R2. High-Speed Binary Event Protocol & Offline Delta Sync Engine (`packages/event-bus` & `packages/shared`) - Fast Binary Packet Encoding (`encodeBinaryEvent`/`decodeBinaryEvent`) reducing KDS/POS WebSocket event message size by ~60% for fast Wi-Fi transmission. Offline-First Transaction Delta Sync Engine (`enqueueOfflineDelta`/`flushOfflineQueue`) storing cryptographic UUIDv4 transaction deltas in LocalStorage/IndexedDB for 0ms offline checkout response latency and zero-collision reconnection replay.
-R3. HTMX Server-Driven HTML Streaming (`apps/server/src/routes/kds.ts`) - Zero-JS Kiosk Endpoint (`GET /v1/kds/htmx-cards`) streaming micro-HTML card fragments directly for low-power handheld ordering devices and kitchen displays.
-R4. KitchenKit KDS & Recipe Blueprint Integration (`apps/kds` & `KitchenKit`) - Multi-station kitchen ticket display system with real-time station tab filters (Hot Grill, Cold Prep, Fryer, Bar, All Stations, Expo Pass), 1-second timer counters, age alert indicators (Green/Yellow/Red), course hold/fire groupings, and an Expediter pass view. Powered by `@culinaryos/ratio-engine` and `prep-engine`. Exposes `recipe-mcp` and `prep-mcp`.
-R5. Plated Automatic Inventory Deduction Engine & Post-Pilot Loyalty (`mcp/src/`) - POS checkout orders trigger RecipeOS recipe ratio scaling, automatically decrementing raw ingredient stock in Plated and triggering low-stock par level alerts on Admin dashboard. Automated postcard coupon dispatches (`SAVE15`/`SAVE20`) on guest loyalty milestones. Standalone MCP tool servers (`Plated` and `Post-Pilot`).
+Your instructions:
+1. Read the user requirements in `c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md`.
+2. Initialize your workspace directory (`c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator`), create `BRIEFING.md`, `plan.md`, and `progress.md`.
+3. Decompose the requirements (R1: POS & KDS Real-Time Architecture & State Synchronization, R2: Monorepo Alignment & Package Contracts, R3: Multi-Tenant Security & Database Isolation, R4: Turborepo & Dev Environment Stability) into actionable milestones.
+4. Execute the project by spawning specialized subagents (explorers, workers/implementers, reviewers, challengers) to inspect, implement, verify, and test each component.
+5. Track progress in `progress.md` continuously.
+6. When all requirements and acceptance criteria are fully met and verified, send a message to Sentinel claiming completion, including a summary of all work done and test/verification results, so Sentinel can spawn the Victory Auditor.
 
-Acceptance Criteria:
-- CulinaryOS Hub (`CulinaryHeader`) is mounted at the root of every app (`POS`, `KDS`, `Web`, `Admin`), rendering active module highlights and port indicators.
-- Monorepo build passes cleanly via `npx pnpm@9 run build` with zero TypeScript errors across all 15 workspace packages (`FULL TURBO`).
-- Binary packet encoding unit tests pass cleanly with ~60% payload size reduction.
-- HTMX kiosk route returns HTML cards with 200 OK.
-- Offline sync queue enqueues and flushes transaction deltas reliably.
+Begin by reading `ORIGINAL_REQUEST.md` and creating your initialization files.
+</USER_REQUEST>
 
-Please create plan.md and progress.md, spawn required worker/reviewer/explorer subagents, verify all builds and tests, and send a message back to parent when victory is claimed.
+## Follow-up — 2026-08-01T18:07:41Z
+
+<USER_REQUEST>
+UPDATE ON SCOPE AND INTEGRATION TARGETS:
+
+The user has clarified that several adjacent repositories under `c:\Users\white\OneDrive\Documents\GitHub\` are to be integrated, connected, or ported as MCP extensions into CulinaryOS:
+1. CulinaryOps (`c:\Users\white\OneDrive\Documents\GitHub\CulinaryOps`)
+2. KitchenKit (`c:\Users\white\OneDrive\Documents\GitHub\KitchenKit`)
+3. Plated (`c:\Users\white\OneDrive\Documents\GitHub\Plated`)
+4. Post-Pilot (`c:\Users\white\OneDrive\Documents\GitHub\Post-Pilot`)
+(Note: RecipeOS is also present in the workspace directory).
+
+Please incorporate these external repository integrations into the CulinaryOS master plan:
+- Evaluate their architectures and existing schemas.
+- Plan their migration/porting or MCP tool bridge integration into `mcp/` and `extensions/` under CulinaryOS following the extension template (`extension_template/`).
+- Maintain clean package boundaries and multi-tenant security across all MCP integration points.
+</USER_REQUEST>

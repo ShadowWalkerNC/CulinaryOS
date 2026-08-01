@@ -17,14 +17,14 @@ if (typeof (globalThis as any).localStorage === 'undefined') {
   };
 }
 
-import { encodeBinaryEvent, decodeBinaryEvent } from '../../packages/event-bus/src/binary-protocol';
-import type { DomainEvent } from '../../packages/event-bus/src/types';
+import { encodeBinaryEvent, decodeBinaryEvent } from '@culinaryos/event-bus';
+import type { DomainEvent } from '@culinaryos/shared';
 import {
   enqueueOfflineDelta,
   getOfflineQueue,
   markDeltasSynced,
   flushOfflineQueue,
-} from '../../packages/shared/src/offline-sync';
+} from '@culinaryos/shared';
 
 const STORAGE_KEY = 'culinaryos_offline_transaction_queue';
 

@@ -40,7 +40,8 @@ const STATUS_COLOR: Record<string, string> = {
  * Shows table, station, course badge, hold status, items, modifiers, elapsed timer, and fire/bump buttons.
  */
 export function TicketCard({ ticket, onBump, onFire }: Props) {
-  const timer = timerColor(ticket.elapsedSeconds);
+  const elapsed = ticket.elapsedSeconds ?? 0;
+  const timer = timerColor(elapsed);
   const canBump = ticket.status === 'cooking' || ticket.status === 'ready';
   const isHeld = ticket.courseHoldStatus === 'held';
 
@@ -141,7 +142,7 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
 
       {/* Items */}
       <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {ticket.items.map((item) => (
+        {ticket.items.map((item: any) => (
           <li key={item.id}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
               <span style={{
@@ -184,11 +185,11 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
           fontWeight:    700,
           padding:       '2px 6px',
           borderRadius:  '4px',
-          background:    ticket.elapsedSeconds >= 600 ? 'rgba(239, 68, 68, 0.2)' : ticket.elapsedSeconds >= 300 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+          background:    elapsed >= 600 ? 'rgba(239, 68, 68, 0.2)' : elapsed >= 300 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
           color:         timer.color,
           textTransform: 'uppercase',
         }}>
-          {ticket.elapsedSeconds >= 600 ? 'RED ALERT' : ticket.elapsedSeconds >= 300 ? 'AMBER ALERT' : 'NORMAL'}
+          {elapsed >= 600 ? 'RED ALERT' : elapsed >= 300 ? 'AMBER ALERT' : 'NORMAL'}
         </span>
         <div style={{
           fontFamily:    'var(--font-mono)',

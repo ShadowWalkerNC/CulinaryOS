@@ -78,9 +78,9 @@ export function CheckoutDrawer({ cart, tenantSlug, onClose, onOrderSubmitted }: 
         name: name.trim(),
         phone: phone.trim(),
         email: email.trim(),
-        address: mode === 'delivery' ? address.trim() : undefined,
-        deliveryNotes: mode === 'delivery' && deliveryNotes.trim() ? deliveryNotes.trim() : undefined,
-        pickupTime: mode === 'pickup' ? pickupTime : undefined,
+        ...(mode === 'delivery' ? { address: address.trim() } : {}),
+        ...(mode === 'delivery' && deliveryNotes.trim() ? { deliveryNotes: deliveryNotes.trim() } : {}),
+        ...(mode === 'pickup' ? { pickupTime } : {}),
       };
 
       const estimatedTime = mode === 'delivery' ? '25-35 mins' : '15-20 mins';

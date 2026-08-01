@@ -3,7 +3,7 @@
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
-import { kdsRoutes } from '../../apps/server/src/routes/kds';
+import { kdsRoutes } from '@culinaryos/server/routes/kds';
 
 describe('GET /v1/kds/htmx-cards', () => {
   it('returns 422 if X-Tenant-Id header is missing', async () => {

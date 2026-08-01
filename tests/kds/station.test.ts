@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
-import { initialHoldStatus } from '../../kds/server/lib/course-engine';
+import { initialHoldStatus } from '@culinaryos/shared';
 
 // ─── Unit tests for initialHoldStatus ────────────────────────────────────────
 describe('initialHoldStatus', () => {

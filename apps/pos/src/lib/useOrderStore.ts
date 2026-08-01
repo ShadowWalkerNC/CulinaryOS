@@ -6,8 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabase';
 import { usePOSStore } from './store';
-import { useRealtimeOrders } from '../../../../shared/realtime';
-import type { Order } from '../../../../shared/types';
+import { useRealtimeOrders, type Order } from '@culinaryos/shared';
 import { getMockOrders } from './mockDb';
 
 const ACTIVE_STATUSES = ['open', 'sent', 'in-progress', 'ready'];

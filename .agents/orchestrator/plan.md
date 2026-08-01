@@ -1,44 +1,34 @@
-# Master Execution Plan — CulinaryOS
+# CulinaryOS Execution Plan
 
-## Executive Summary
-Orchestration plan to fulfill requirements R1-R5 and pass all acceptance criteria across CulinaryOS and KitchenKit.
+## Milestones Overview
 
-## Milestones & Iteration Strategy
+### Milestone 1: Monorepo Alignment & Package Contracts (R2)
+- Inspect monorepo workspace boundaries (`packages/`, `shared/`, `apps/`, `pos`, `kds`, `backend`, `web`, `mobile`, `android`).
+- Identify and eliminate circular dependencies and direct `src/` cross-package imports.
+- Standardize shared TypeScript interfaces across backend APIs, KDS, POS, web, and shared packages (`@culinaryos/shared`).
 
-### Milestone 1: Master Design System & Central Hub (R1)
-- Build `CulinaryHeader`, `CulinaryCard`, `CulinaryButton`, `CulinaryBadge` in `packages/ui`.
-- Apply Culinary Orange `#ff5f1f` and Slate Surface `#f8f9fa`.
-- Mount `CulinaryHeader` at root of `POS`, `KDS`, `Web`, `Admin`, and `KitchenKit`.
-- Render active module highlights and port indicators.
+### Milestone 2: Turborepo & Dev Environment Stability (R4)
+- Validate `turbo.json` pipelines (`build`, `test`, `lint`) and `pnpm-workspace.yaml`.
+- Ensure all workspace packages build cleanly with `pnpm build` and test cleanly with `pnpm test`.
+- Eliminate build and type-checking failures monorepo-wide.
 
-### Milestone 2: Binary Event Protocol & Offline Delta Sync Engine (R2)
-- Implement `encodeBinaryEvent` and `decodeBinaryEvent` in `packages/event-bus` / `packages/shared`.
-- Achieve ~60% size reduction over JSON strings.
-- Implement `enqueueOfflineDelta` and `flushOfflineQueue` using cryptographic UUIDv4 transaction deltas in LocalStorage/IndexedDB.
-- Write unit tests verifying payload reduction and reliable queue operations.
+### Milestone 3: Multi-Tenant Security & Database Isolation (R3)
+- Audit all PostgreSQL / Supabase tables in `supabase/` and backend / service queries.
+- Ensure Row Level Security (RLS) policies are active and enforced on every table.
+- Verify all database queries include strict tenant filtering (`tenant_id` context).
+- Ensure schema migrations are forward-compatible without data loss.
 
-### Milestone 3: HTMX Server-Driven HTML Streaming (R3)
-- Implement `GET /v1/kds/htmx-cards` in `apps/server/src/routes/kds.ts`.
-- Stream micro-HTML card fragments directly for low-power handhelds and displays.
-- Return 200 OK with `text/html`.
+### Milestone 4: POS & KDS Real-Time Architecture & State Synchronization (R1)
+- Re-architect WebSocket message contracts between POS (`pos/`, `pos-client/`) and KDS (`kds/`, `kds-client/`).
+- Implement/harden state management, connection loss handling, offline transaction queuing, and instant ticket updates without race conditions or memory leaks.
+- Ensure 0ms offline response and reconnection delta flush with zero unhandled promise rejections.
 
-### Milestone 4: KitchenKit KDS & Recipe Blueprint Integration (R4)
-- Build station filters (Hot Grill, Cold Prep, Fryer, Bar, All Stations, Expo Pass) in `apps/kds` and `KitchenKit`.
-- Add 1-second timer counters, Green/Yellow/Red age alert indicators, course hold/fire groupings, Expediter pass view.
-- Connect `@culinaryos/ratio-engine` and `prep-engine`. Expose `recipe-mcp` and `prep-mcp`.
+### Milestone 5: MCP Extension Platform & External Integrations
+- Evaluate external repository architectures: CulinaryOps, KitchenKit, Plated, Post-Pilot, RecipeOS.
+- Port/bridge these integrations into `mcp/` and `extensions/` under CulinaryOS following the extension template (`extension_template/`).
+- Maintain clean package boundaries and strict multi-tenant security across all MCP integration points.
 
-### Milestone 5: Plated Automatic Inventory Deduction & Post-Pilot Loyalty (R5)
-- Build `Plated` standalone MCP tool server for recipe ratio scaling ingredient stock deduction & par level alerts on Admin dashboard.
-- Build `Post-Pilot` standalone MCP tool server for automated postcard coupon dispatches (`SAVE15`/`SAVE20`) on guest loyalty milestones.
-
-### Milestone 6: Monorepo Build & E2E Test Verification
-- Run `npx pnpm@9 run build` across all workspace packages (`FULL TURBO`).
-- Verify all unit and integration tests pass cleanly.
-
-## Workflow & Safety Protocols
-1. Spawn Explorer subagents to investigate starting state of each package.
-2. Spawn Worker subagents to execute code changes.
-3. Spawn Reviewer & Challenger subagents to verify implementation.
-4. Spawn Forensic Auditor subagent for integrity validation.
-5. Heartbeat cron every 10 minutes to track progress.
-6. Self-succeed at 16 subagent spawns.
+### Milestone 6: Final E2E Verification & Forensic Integrity Audit
+- Run comprehensive monorepo build and test suites.
+- Perform adversarial challenge tests and forensic integrity verification.
+- Report full completion to Sentinel.

@@ -29,7 +29,7 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
     const [station, courseStr] = key.split('::');
     const courseNumber = parseInt(courseStr || '1', 10);
     const hasAllergy = groupItems.some((i) =>
-      i.modifiers.some((m) => /allerg/i.test(m))
+      i.modifiers.some((m: string) => /allerg/i.test(m))
     );
 
     const ticketId = uuidv4();

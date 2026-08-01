@@ -15,9 +15,16 @@
     "seed": "tsx scripts/seed.ts"
   },
   "devDependencies": {
+    "@culinaryos/auth": "workspace:*",
+    "@culinaryos/config": "workspace:*",
+    "@culinaryos/db": "workspace:*",
+    "@culinaryos/event-bus": "workspace:*",
+    "@culinaryos/ratio-engine": "workspace:*",
+    "@culinaryos/server": "workspace:*",
+    "@culinaryos/shared": "workspace:*",
+    "@types/node": "^20.0.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.4.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.4.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

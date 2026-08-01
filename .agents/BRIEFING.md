@@ -1,32 +1,30 @@
-# BRIEFING — 2026-07-25T11:24:00-04:00
+# BRIEFING — 2026-08-01T18:07:35Z
 
 ## Mission
-Orchestrate the CulinaryOS Master Ecosystem project completion and enforce mandatory Victory Audit before completion.
+Orchestrate the CulinaryOS core re-architecture: POS/KDS WebSocket contracts, offline transaction queue, multi-tenant security, monorepo alignment, Turborepo pipeline stability, and integration of external repositories (CulinaryOps, KitchenKit, Plated, Post-Pilot, RecipeOS) as MCP extensions.
 
 ## 🔒 My Identity
 - Archetype: sentinel
-- Working directory: c:\Users\User\Documents\CulinaryOS\.agents
-- Orchestrator: af4e08ac-1c55-45ed-9b6b-b7b9d6dcbb9a
-- Victory Auditor: 2f74781b-b6bb-4faf-aafe-dd93a79d8c23
+- Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents
+- Orchestrator: fc603708-66d3-4c61-8b87-ae99f4d5ad84
+- Victory Auditor: to be spawned on victory claim
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
 - Victory Audit is MANDATORY before reporting completion
 
 ## User Context
-- **Last user request**: Build CulinaryOS Master Ecosystem with updated requirements R1-R5 (Binary Packet Encoding, Offline Delta Sync Engine, HTMX Streaming, KitchenKit KDS, Plated Inventory, Post-Pilot Loyalty, 15 workspace packages).
+- **Last user request**: Full re-architecture and execution plan for CulinaryOS focusing on POS & KDS WebSocket contracts, offline transaction sync, monorepo workspace boundaries, multi-tenant RLS security, Turborepo build/test stability, and MCP extension integration of adjacent repos (CulinaryOps, KitchenKit, Plated, Post-Pilot, RecipeOS).
 - **Pending clarifications**: none
-- **Delivered results**: Complete CulinaryOS Master Ecosystem built, tested, and independently verified with VICTORY CONFIRMED.
+- **Delivered results**: none (in progress)
 
 ## Project Status
-- **Phase**: complete
+- **Phase**: in progress
 
 ## Victory Audit Status
-- **Triggered**: yes
-- **Verdict**: VICTORY CONFIRMED
+- **Triggered**: no
+- **Verdict**: pending
 - **Retry count**: 0
 
 ## Artifact Index
-- c:\Users\User\Documents\CulinaryOS\.agents\ORIGINAL_REQUEST.md — Verbatim user request record
-- c:\Users\User\Documents\CulinaryOS\.agents\teamwork_preview_worker_1\handoff.md — Primary Implementer Handoff Report
-- c:\Users\User\Documents\CulinaryOS\.agents\victory_auditor_2\handoff.md — Victory Audit Handoff Report (VICTORY CONFIRMED)
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md — Verbatim user request record

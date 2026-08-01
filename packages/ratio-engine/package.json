@@ -3,18 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "Ratio Blueprint Engine — recipe scaling by ratio relationships, not fixed quantities",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "main": "./src/index.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+    ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "npx tsx -r ../../scripts/test-hook.cjs src/index.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

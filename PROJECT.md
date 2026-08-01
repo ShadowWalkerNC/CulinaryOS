@@ -1,31 +1,39 @@
-# CulinaryOS — Project Specification & Architecture
+# Project: CulinaryOS
 
-## Architecture & Overview
-CulinaryOS is an AI-native restaurant operating system monorepo built with pnpm workspaces and Turborepo.
+## Architecture
+Monorepo using pnpm workspaces and Turborepo.
+Packages:
+- `backend/`: Core API server (Node.js/TypeScript)
+- `pos/` & `pos-client/`: Point of Sale server and terminal client
+- `kds/` & `kds-client/`: Kitchen Display System server and client
+- `web/`: Web dashboard / portal (React)
+- `admin-client/`: Admin panel client
+- `mobile/`: React Native + Expo app
+- `android/`: Kotlin / Jetpack Compose native app
+- `mcp/`: TypeScript MCP server — extension platform
+- `extensions/`: First-party extensions (`extension_template/` contract compliance)
+- `packages/`: Shared internal packages (`types`, `ui`, `event-bus`, `config`, `auth`, `shared`, etc.)
+- `supabase/`: Migrations and schema definitions
 
-## Code Layout
-- `packages/ui/` - Master Design System (`CulinaryHeader`, `CulinaryCard`, `CulinaryButton`, `CulinaryBadge`, Culinary Orange `#ff5f1f`, Slate Surface `#f8f9fa`).
-- `packages/event-bus/` & `packages/shared/` - Fast Binary Packet Encoding (`encodeBinaryEvent`/`decodeBinaryEvent`) & Offline-First Transaction Delta Sync Engine (`enqueueOfflineDelta`/`flushOfflineQueue`).
-- `apps/server/` - Express/Node API backend with HTMX Server-Driven HTML Streaming endpoint `GET /v1/kds/htmx-cards`.
-- `apps/pos/` - POS terminal web app with root `CulinaryHeader` and offline delta sync integration.
-- `apps/kds/` - Kitchen Display System with root `CulinaryHeader`, station filtering, timer counters, age alert indicators, course hold/fire, and Expediter pass.
-- `apps/admin/` - Restaurant admin portal with root `CulinaryHeader` and low-stock par level alerts.
-- `apps/web/` - Customer ordering web app with root `CulinaryHeader`.
-- `KitchenKit/` (at `c:\Users\User\Documents\KitchenKit`) - KitchenKit KDS integration & recipe blueprints powered by ratio-engine & prep-engine.
-- `mcp/` - Standalone MCP tool servers (`Plated` inventory deduction engine and `Post-Pilot` automated postcard coupon loyalty system).
-
-## Milestones & Status
-| # | Milestone Name | Scope | Status |
-|---|----------------|-------|--------|
-| 1 | M1: Design System & Central Hub | `packages/ui`, `apps/pos`, `apps/kds`, `apps/admin`, `apps/web`, `KitchenKit` | PLANNED |
-| 2 | M2: Binary Event Protocol & Offline Sync | `packages/event-bus`, `packages/shared` | PLANNED |
-| 3 | M3: HTMX KDS Streaming Endpoint | `apps/server/src/routes/kds.ts` | PLANNED |
-| 4 | M4: KitchenKit KDS & Recipe Integration | `apps/kds`, `KitchenKit`, ratio-engine, prep-engine, `recipe-mcp`, `prep-mcp` | PLANNED |
-| 5 | M5: Plated Inventory & Post-Pilot Loyalty | `mcp/src/` (Plated & Post-Pilot MCP servers) | PLANNED |
-| 6 | M6: Full Monorepo Build & E2E Verification | Workspace-wide build (`npx pnpm@9 run build`) and test execution | PLANNED |
+## Milestones
+| # | Name | Scope | Dependencies | Status |
+|---|------|-------|-------------|--------|
+| 1 | M1: Monorepo Alignment & Package Contracts | R2: Clean up monorepo workspace boundaries, eliminate direct src/ imports & circular dependencies, standardize TypeScript package interfaces | none | IN_PROGRESS (Conv ID: 42359612-1199-4830-abf4-1bb9114ef99f) |
+| 2 | M2: Turborepo & Dev Environment Stability | R4: Validate turbo.json & pnpm-workspace.yaml, resolve all build & lint issues across monorepo | M1 | PLANNED |
+| 3 | M3: Multi-Tenant Security & Database Isolation | R3: RLS on all Supabase tables, tenant context in all queries, zero-data-loss forward-compatible migrations | M2 | PLANNED |
+| 4 | M4: POS & KDS Real-Time Architecture & State Synchronization | R1: Re-architect POS/KDS WebSocket message contracts, offline queue, state management & instant ticket updates | M1, M2, M3 | PLANNED |
+| 5 | M5: MCP Extension Platform & External Integrations | Integrate/bridge CulinaryOps, KitchenKit, Plated, Post-Pilot, and RecipeOS into `mcp/` & `extensions/` per `extension_template/` contract | M1, M2, M3, M4 | PLANNED |
+| 6 | M6: E2E Integration & Verification | Final monorepo test suite, adversarial challenge, forensic integrity audit | M1..M5 | PLANNED |
 
 ## Interface Contracts
-- **Binary Event Protocol**: `encodeBinaryEvent(event: WebSocketEvent): Uint8Array` / `decodeBinaryEvent(buffer: Uint8Array): WebSocketEvent`.
-- **Offline Delta Sync**: `enqueueOfflineDelta(delta: TransactionDelta): Promise<void>` / `flushOfflineQueue(): Promise<SyncResult>`.
-- **HTMX KDS Cards**: `GET /v1/kds/htmx-cards` returns `text/html` fragment containing rendered micro-HTML ticket cards.
-- **MCP Servers**: Plated (`deduct_inventory`, `check_par_levels`) and Post-Pilot (`dispatch_coupon`, `check_loyalty_milestone`).
+- POS WebSocket Server ↔ Client: JSON & binary event schema, connection lifecycle, heartbeat, offline queue sync protocol
+- KDS WebSocket Server ↔ Client: Order ticket state transition schema, station filtering, ticket age events
+- Database Query Interface: All queries must include `tenant_id` context parameter and enforce Supabase RLS.
+- MCP Extension API: Exposes `Plated` (inventory), `Post-Pilot` (loyalty), `RecipeOS` (recipe scaling), and `KitchenKit` (prep engine) via `extension_template/` standard interfaces.
+
+## Code Layout
+- `packages/shared/`: canonical cross-package types (`types.ts`, `contracts.ts`, `events.ts`)
+- `packages/ui/`: shared UI primitives (`CulinaryHeader`, `CulinaryCard`, `CulinaryButton`, `CulinaryBadge`)
+- `packages/event-bus/`: binary encoding / decoding and event hub
+- `mcp/`: MCP servers (`inventory-server.ts`, `post-pilot-server.ts`, `recipe-server.ts`, `prep-server.ts`)
+- `extensions/`: First-party MCP extensions conforming to `extension_template/`

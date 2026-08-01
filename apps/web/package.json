@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@culinaryos/shared": "workspace:*",
     "@culinaryos/ui":     "workspace:*",
     "@culinaryos/config": "workspace:*",
     "react":              "^18.3.0",

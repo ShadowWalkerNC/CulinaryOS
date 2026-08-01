@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { scaleBlueprint } from '../../packages/ratio-engine/src/index';
+import { scaleBlueprint } from '@culinaryos/ratio-engine';
 
 // -------------------------------------------------------------------
 // Step 3 Empirical Verification: MCP Tool Servers Validation

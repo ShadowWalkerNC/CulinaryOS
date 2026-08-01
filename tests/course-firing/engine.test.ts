@@ -3,7 +3,7 @@
 // ============================================================
 
 import { describe, it, expect } from 'bun:test';
-import { initialHoldStatus } from '../../kds/server/lib/course-engine';
+import { initialHoldStatus } from '@culinaryos/shared';
 
 // ---- initialHoldStatus ----
 
