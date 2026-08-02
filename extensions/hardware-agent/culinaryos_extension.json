@@ -1,0 +1,24 @@
+{
+  "id": "com.culinaryos.ext.hardware-agent",
+  "name": "Hardware Agent Integration",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "Hardware Agent thermal printer & barcode scanner peripheral bridge",
+  "category": "hardware",
+  "entry_point": "index.js",
+  "permissions": [
+    "hardware.read",
+    "hardware.write"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

@@ -7,11 +7,14 @@ const BASE_URL = process.env.CULINARY_API_URL ?? 'http://localhost:8080';
 const API_KEY  = process.env.CULINARY_API_KEY ?? '';
 
 async function api(method: string, path: string, body?: unknown) {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const init: RequestInit = {
     method,
     headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+  if (body) {
+    init.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${BASE_URL}${path}`, init);
   if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`);
   return res.json();
 }

@@ -1,0 +1,25 @@
+{
+  "id": "com.culinaryos.ext.kitchenkit",
+  "name": "KitchenKit KDS Engine",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "KitchenKit prep engine & multi-station kitchen display pass",
+  "category": "kitchen",
+  "entry_point": "index.js",
+  "permissions": [
+    "kds.read",
+    "kds.write",
+    "prep.read"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

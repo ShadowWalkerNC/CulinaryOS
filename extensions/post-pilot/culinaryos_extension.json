@@ -1,0 +1,24 @@
+{
+  "id": "com.culinaryos.ext.post-pilot",
+  "name": "Post-Pilot Marketing",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "Post-Pilot customer loyalty & physical postcard coupon dispatch",
+  "category": "marketing",
+  "entry_point": "index.js",
+  "permissions": [
+    "customers.read",
+    "marketing.write"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

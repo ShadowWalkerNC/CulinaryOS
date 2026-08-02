@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "test": "node ./scripts/run-all-tests.cjs",
+    "test": "turbo run test",
+    "//#test": "node ./scripts/run-all-tests.cjs",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "supabase db push",

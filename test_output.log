@@ -1,0 +1,552 @@
+Found 23 test files to run.
+
+========================================
+ Running: packages\ratio-engine\src\index.test.ts
+========================================
+
+  scaleBlueprint
+
+  computeCost
+
+  fromTotalWeight
+    ✓ scales to 12 loaves preserving ratios
+    ✓ throws on zero yield
+    ✓ computes cost correctly
+    ✓ distributes total dough weight by ratio
+
+========================================
+ Running: tests\api\middleware.test.ts
+========================================
+
+  isValidEvent
+
+  response envelope shape
+    ✓ validates a correct envelope
+    ✓ rejects missing eventId
+    ✓ rejects numeric version as string
+    ✓ rejects null
+    ✓ rejects string
+    ✓ rejects undefined
+    ✓ rejects array
+    ✓ allows payload = false (falsy but defined)
+    ✓ ok response has expected shape
+    ✓ err response has expected shape
+
+========================================
+ Running: tests\api\orders.test.ts
+========================================
+
+  order total recalculation
+
+  payment amount calculation
+    ✓ calculates correct totals
+    ✓ excludes voided items from total
+    ✓ handles empty order
+    ✓ rounds tax on fractional cents correctly
+    ✓ all items voided → zero total
+    ✓ adds tip to order total
+    ✓ handles zero tip
+
+========================================
+ Running: tests\api\pantry.test.ts
+========================================
+FAILED: tests\api\pantry.test.ts
+========================================
+ Running: tests\api\tickets.test.ts
+========================================
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\api\pantry.test.ts"
+(node:33660) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/apps/server/src/middleware/auth.ts:6
+import type { Context, Next } from 'hono';
+            ^
+
+SyntaxError: Unexpected token '{'
+    at compileSourceTextModule (node:internal/modules/esm/utils:354:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:90:18)
+    at #translate (node:internal/modules/esm/loader:437:20)
+    at afterLoad (node:internal/modules/esm/loader:505:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:510:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:563:36)
+    at afterResolve (node:internal/modules/esm/loader:610:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:616:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:164:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:261:17)
+
+Node.js v26.4.0
+
+
+  groupByStationAndCourse
+
+  ticket timer
+
+  allergy detection
+    ✓ groups same station + course together
+    ✓ defaults course to 1 when not set
+    ✓ separates different courses at same station
+    ✓ handles single item order
+    ✓ returns empty map for empty order
+    ✓ ok under 10 minutes
+    ✓ warn at exactly 10 minutes
+    ✓ warn between 10-15 min
+    ✓ danger at 15 minutes
+    ✓ danger over 15 minutes
+    ✓ ok at zero
+    ✓ detects allergy modifier
+    ✓ case-insensitive match
+    ✓ no allergy when clean
+    ✓ false for empty modifiers
+
+========================================
+ Running: tests\course-firing\engine.test.ts
+========================================
+FAILED: tests\course-firing\engine.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\course-firing\engine.test.ts"
+(node:31128) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\offline-sync' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/shared/src/offline-sync'
+}
+
+Node.js v26.4.0
+
+========================================
+ Running: tests\empirical\r1_r2_stress.test.ts
+========================================
+FAILED: tests\empirical\r1_r2_stress.test.ts
+========================================
+ Running: tests\empirical\r3_r4_r5_stress.test.ts
+========================================
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\empirical\r1_r2_stress.test.ts"
+(node:32772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\broker' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/event-bus/src/broker'
+}
+
+Node.js v26.4.0
+
+FAILED: tests\empirical\r3_r4_r5_stress.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\empirical\r3_r4_r5_stress.test.ts"
+(node:30892) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/apps/server/src/middleware/auth.ts:6
+import type { Context, Next } from 'hono';
+            ^
+
+SyntaxError: Unexpected token '{'
+    at compileSourceTextModule (node:internal/modules/esm/utils:354:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:90:18)
+    at #translate (node:internal/modules/esm/loader:437:20)
+    at afterLoad (node:internal/modules/esm/loader:505:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:510:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:563:36)
+    at afterResolve (node:internal/modules/esm/loader:610:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:616:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:164:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:261:17)
+
+Node.js v26.4.0
+
+========================================
+ Running: tests\empirical\step1_plated_inventory.test.ts
+========================================
+FAILED: tests\empirical\step1_plated_inventory.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\empirical\step1_plated_inventory.test.ts"
+(node:15128) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/tests/empirical/step1_plated_inventory.test.ts:2
+import { scaleBlueprint, RatioBlueprint } from '@culinaryos/ratio-engine';
+                         ^^^^^^^^^^^^^^
+SyntaxError: The requested module '@culinaryos/ratio-engine' does not provide an export named 'RatioBlueprint'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:335:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:439:5)
+    at async node:internal/modules/esm/loader:646:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v26.4.0
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 94
+
+========================================
+ Running: tests\empirical\step2_post_pilot_marketing.test.ts
+========================================
+
+  Step 2: Post-Pilot Marketing MCP Server (send_marketing_postcard)
+    ✓ dispatches physical postcard coupon when customer reaches visit milestone
+    ✓ dispatches higher discount postcard coupon when customer reaches spend milestone
+    ✓ does not dispatch postcard when milestones are not reached
+    ✓ handles tool execution error cases gracefully
+
+========================================
+ Running: tests\empirical\step3_mcp_servers.test.ts
+========================================
+
+  Step 3: MCP Tool Servers Validation
+
+  recipe-mcp tools
+
+  prep-mcp tools
+
+  Plated inventory tools
+    ✓ list_recipes: returns all available recipe blueprints
+    ✓ scale_recipe: scales blueprint ingredients using ratio engine
+    ✓ get_ratio: returns baker percentage breakdown
+    ✓ generate_prep_list: aggregates prep items for target covers
+    ✓ build_shift_prep: builds shift prep execution sheet based on expected covers
+    ✓ get_mise_en_place: retrieves active station prep list
+    ✓ get_mise_en_place: falls back gracefully to default station when station invalid
+    ✓ get_inventory_levels: fetches current stock levels
+    ✓ log_audit_count: calculates variance and total monetary loss correctly
+
+========================================
+ Running: tests\empirical\step4_web_ordering.test.ts
+========================================
+
+  Step 4: Web Online Ordering Empirical Verification
+
+  Item Modifier Customizer Modal logic
+
+  Cart Drawer State Management
+
+  Checkout Drawer logic
+
+  Live Order Status Progress Tracker
+    ✓ calculates total item price including modifier price adjustments
+    ✓ adds items, updates quantities, and recalculates totals correctly
+    ✓ calculates pickup vs delivery fees and tip amounts correctly
+    ✓ handles custom tip amounts accurately
+    ✓ enforces required field validations before submission
+    ✓ maps status progression stages and progress bar percentage accurately
+    ✓ advances status stage sequentially in demo/live progression
+
+========================================
+ Running: tests\empirical\step5_docker_compose.test.ts
+========================================
+
+  Step 5: Docker Compose Infrastructure Validation
+    ✓ verifies docker-compose.yml file exists and is non-empty
+    ✓ validates required services are declared
+    ✓ validates exact port mappings according to spec
+    ✓ validates required environment variables & build args for multi-tenant isolation
+    ✓ validates backend service healthcheck configuration
+    ✓ validates multi-tenant isolation configuration across services
+
+========================================
+ Running: tests\event-bus\binary-protocol.test.ts
+========================================
+FAILED: tests\event-bus\binary-protocol.test.ts
+========================================
+ Running: tests\event-bus\broker.test.ts
+========================================
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\event-bus\binary-protocol.test.ts"
+(node:9424) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\broker' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/event-bus/src/broker'
+}
+
+Node.js v26.4.0
+
+FAILED: tests\event-bus\broker.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\event-bus\broker.test.ts"
+(node:13372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\broker' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\event-bus\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/event-bus/src/broker'
+}
+
+Node.js v26.4.0
+
+========================================
+ Running: tests\event-bus\handlers.test.ts
+========================================
+FAILED: tests\event-bus\handlers.test.ts
+
+  handleTicketBumped
+
+  handleOrderCancelled
+
+========================================
+ Running: tests\inventory\pantry.test.ts
+========================================
+
+  Stock status derivation
+
+  PO state machine transitions
+
+  PO total cost computation
+    ✓ out_of_stock when qty is 0
+    ✓ out_of_stock when qty is negative
+    ✓ low_stock when qty equals reorder_at
+    ✓ low_stock when qty is below reorder_at
+    ✓ ok when qty is above reorder_at
+    ✓ ok when reorder_at is 0
+    ✓ draft → approved is valid
+    ✓ draft → cancelled is valid
+    ✓ approved → sent is valid
+    ✓ approved → cancelled is valid
+    ✓ sent → received is valid
+    ✓ received → anything is invalid
+    ✓ cannot skip draft → sent
+    ✓ cannot go backwards
+    ✓ computes single line total
+    ✓ sums multiple lines
+    ✓ returns 0 for empty lines
+    ✓ handles zero unit cost lines
+
+========================================
+ Running: tests\kds\station.test.ts
+========================================
+FAILED: tests\kds\station.test.ts
+========================================
+ Running: tests\payments\stripe.test.ts
+========================================
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\kds\station.test.ts"
+(node:4248) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\offline-sync' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/shared/src/offline-sync'
+}
+
+Node.js v26.4.0
+
+
+  Charge amount and tip calculation
+
+  Payment status state machine
+
+  Order closure on payment capture
+
+  Refund amount validation
+    ✓ 20% tip on $50 order
+    ✓ 15% tip on $33.33 order
+    ✓ 0% tip is zero
+    ✓ charge includes tip
+    ✓ charge with no tip = order
+    ✓ tip rounds to nearest cent
+    ✓ pending → completed
+    ✓ pending → failed
+    ✓ completed → refunded
+    ✓ cannot refund a failed payment
+    ✓ refunded is terminal
+    ✓ cannot skip to refunded
+    ✓ open order can be paid
+    ✓ served order can be paid
+    ✓ paid order is not re-closeable
+    ✓ voided order is not closeable
+    ✓ full refund is valid
+    ✓ partial refund is valid
+    ✓ over-refund is invalid
+    ✓ zero refund is invalid
+
+========================================
+ Running: tests\reports\eod.test.ts
+========================================
+
+  EOD revenue calculations
+
+  Hourly breakdown grouping
+
+  Void breakdown by reason
+
+  Range report day grouping
+    ✓ gross revenue sums only closed orders
+    ✓ void total sums only voided orders
+    ✓ net revenue is gross minus void total
+    ✓ avg check rounds correctly
+    ✓ revenue per cover
+    ✓ avg check is 0 with no closed orders
+    ✓ revenue per cover is 0 with no covers
+    ✓ groups two orders in hour 12
+    ✓ sums revenue for hour 12
+    ✓ groups one order in hour 19
+    ✓ hour 0 is empty by default
+    ✓ groups customer_left correctly
+    ✓ groups null reason as unspecified
+    ✓ handles empty void list
+    ✓ groups two orders on June 24
+    ✓ groups one order on June 25
+    ✓ June 26 has no entry
+
+========================================
+ Running: tests\server\htmx-kds.test.ts
+========================================
+FAILED: tests\server\htmx-kds.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\server\htmx-kds.test.ts"
+(node:22708) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/apps/server/src/middleware/auth.ts:6
+import type { Context, Next } from 'hono';
+            ^
+
+SyntaxError: Unexpected token '{'
+    at compileSourceTextModule (node:internal/modules/esm/utils:354:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:90:18)
+    at #translate (node:internal/modules/esm/loader:437:20)
+    at afterLoad (node:internal/modules/esm/loader:505:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:510:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:563:36)
+    at afterResolve (node:internal/modules/esm/loader:610:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:616:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:164:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:261:17)
+
+Node.js v26.4.0
+
+========================================
+ Running: tests\shared\offline-sync.test.ts
+========================================
+FAILED: tests\shared\offline-sync.test.ts
+Command failed: node --import ./scripts/test-register.js -r ./scripts/test-hook.cjs "tests\shared\offline-sync.test.ts"
+(node:31648) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-register.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\offline-sync' imported from C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\packages\shared\src\index.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at resolve (file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/scripts/test-loader.js:35:10)
+    at nextResolve (node:internal/modules/esm/hooks:769:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:265:30)
+    at handleMessage (node:internal/modules/esm/worker:251:24)
+    at Immediate.checkForMessages (node:internal/modules/esm/worker:193:28)
+    at process.processImmediate (node:internal/timers:504:21) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/white/OneDrive/Documents/GitHub/CulinaryOS/packages/shared/src/offline-sync'
+}
+
+Node.js v26.4.0
+
+========================================
+ Running: tests\web\menu.test.ts
+========================================
+
+  Cart total calculation
+
+  Modifier price adjustment
+
+  Menu section visibility
+
+  Cart item ID uniqueness
+    ✓ single item total
+    ✓ multiple items
+    ✓ empty cart is 0
+    ✓ item count sums quantities
+    ✓ adds positive modifier
+    ✓ subtracts negative modifier
+    ✓ no modifiers returns base price
+    ✓ multiple modifiers stack
+    ✓ removes 86d items from section
+    ✓ hides section if all items unavailable
+    ✓ keeps sections with all available items
+    ✓ returns empty array for empty sections input
+    ✓ generates ids of correct length
+    ✓ two ids are not equal
+    ✓ 100 ids are all unique
+
+========================================
+ TEST SUMMARY: 12 passed, 11 failed.
+========================================
+
+
+PROCESS EXITED WITH CODE: 1

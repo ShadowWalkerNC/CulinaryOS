@@ -1,0 +1,24 @@
+{
+  "id": "com.culinaryos.ext.recipeos",
+  "name": "RecipeOS Bridge",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "RecipeOS recipe ratio scaling engine & baker percentage calculator",
+  "category": "recipes",
+  "entry_point": "index.js",
+  "permissions": [
+    "recipes.read",
+    "recipes.write"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

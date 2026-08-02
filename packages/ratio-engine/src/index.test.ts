@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'bun:test';
-import { scaleBlueprint, computeCost, fromTotalWeight } from './index';
+import { describe, it, expect } from '../../../scripts/bun-test-impl.js';
+import { scaleBlueprint, computeCost, fromTotalWeight } from './index.ts';
 
 const sourdough = {
   id: 'sourdough',

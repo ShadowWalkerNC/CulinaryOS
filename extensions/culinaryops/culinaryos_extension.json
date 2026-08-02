@@ -1,0 +1,25 @@
+{
+  "id": "com.culinaryos.ext.culinaryops",
+  "name": "CulinaryOps Central Dashboard",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "CulinaryOps central operations dashboard & UI primitive hub",
+  "category": "operations",
+  "entry_point": "index.js",
+  "permissions": [
+    "menu.read",
+    "orders.read",
+    "reports.read"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

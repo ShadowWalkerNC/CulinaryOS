@@ -1,0 +1,24 @@
+{
+  "id": "com.culinaryos.ext.plated",
+  "name": "Plated Inventory",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "Plated automatic recipe ingredient stock deduction & par level tracking",
+  "category": "inventory",
+  "entry_point": "index.js",
+  "permissions": [
+    "inventory.read",
+    "inventory.write"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

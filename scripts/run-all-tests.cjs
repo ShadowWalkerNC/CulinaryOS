@@ -31,9 +31,9 @@ for (const file of testFiles) {
   console.log(` Running: ${file}`);
   console.log(`========================================`);
   try {
-    const output = execSync(`npx tsx@4.7.1 -r ./scripts/test-hook.cjs "${file}"`, {
+    const output = execSync(`npx -y tsx@4.7.1 -r ./scripts/test-hook.cjs "${file}"`, {
       encoding: 'utf8',
-      stdio: 'pipe'
+      stdio: ['ignore', 'pipe', 'pipe']
     });
     console.log(output);
     totalPassed++;

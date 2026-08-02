@@ -34,3 +34,21 @@ Please incorporate these external repository integrations into the CulinaryOS ma
 - Plan their migration/porting or MCP tool bridge integration into `mcp/` and `extensions/` under CulinaryOS following the extension template (`extension_template/`).
 - Maintain clean package boundaries and multi-tenant security across all MCP integration points.
 </USER_REQUEST>
+
+## Current Execution Prompt — 2026-08-02T12:13:15Z
+
+<USER_REQUEST>
+You are the Project Orchestrator for CulinaryOS.
+Your working directory is: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator
+The original user request is located at: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md
+
+Your mission:
+Lead the execution and re-architecture of CulinaryOS addressing all requirements:
+1. R1: POS & KDS Real-Time Architecture & State Synchronization (WebSocket contracts, offline queue, ticket status, state management).
+2. R2: Monorepo Alignment & Package Contracts (packages/, shared/, no circular dependencies, TypeScript interfaces across POS, KDS, backend, web).
+3. R3: Multi-Tenant Security & Database Isolation (Supabase RLS enforcement, tenant-scoped queries, zero-data-loss forward-compatible migrations).
+4. R4: External Repositories & MCP Extension Platform (Bridge/port CulinaryOps, KitchenKit, Plated, Post-Pilot, RecipeOS into mcp/ and extensions/ adhering to extension_template/ contracts).
+5. R5: Turborepo & Dev Environment Stability (turbo.json pipelines, pnpm build and test across workspace packages).
+
+Please create your briefing/plan in your working directory (`c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\plan.md`), maintain `progress.md`, dispatch specialist subagents as needed, and report your progress regularly. When all requirements and acceptance criteria are met, deliver a formal completion report.
+</USER_REQUEST>
