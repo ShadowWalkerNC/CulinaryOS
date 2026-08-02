@@ -1,25 +1,25 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:           #0f1117;
-  --surface:      #1a1d27;
-  --surface-2:    #222536;
-  --border:       #2e3150;
-  --text:         #e8eaf0;
-  --text-muted:   #6b7299;
-  --accent:       #e11d48;
-  --accent-glow:  rgba(225, 29, 72, 0.25);
-  --green:        #22c55e;
-  --green-glow:   rgba(34, 197, 94, 0.20);
-  --amber:        #f59e0b;
-  --amber-glow:   rgba(245, 158, 11, 0.20);
-  --red:          #ef4444;
-  --red-glow:     rgba(239, 68, 68, 0.20);
+  --bg:           #f8f9fa;
+  --surface:      #ffffff;
+  --surface-2:    #f1f3f5;
+  --border:       #e5e7eb;
+  --text:         #1f2937;
+  --text-muted:   #6b7280;
+  --accent:       #ff5f1f;
+  --accent-glow:  rgba(255, 95, 31, 0.15);
+  --green:        #16a34a;
+  --green-glow:   rgba(22, 163, 74, 0.12);
+  --amber:        #d97706;
+  --amber-glow:   rgba(217, 119, 6, 0.12);
+  --red:          #dc2626;
+  --red-glow:     rgba(220, 38, 38, 0.12);
   --font-sans:    'Inter', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
   --radius:       10px;
   --radius-sm:    6px;
-  --shadow:       0 4px 24px rgba(0,0,0,0.5);
+  --shadow:       0 2px 8px rgba(0,0,0,0.06);
 }
 
 body {
