@@ -10,7 +10,7 @@
 
 import { Hono } from 'hono';
 import { requireTenant, ok, err, escapeHtml } from '../middleware/auth.js';
-import { KDS_ACTIVE_STATUSES, resolveDbStations } from '../lib/stations.js';
+import { KDS_ACTIVE_STATUSES, resolveDbStations } from '@culinaryos/shared';
 import type { Env } from '../types.js';
 
 export const kdsRoutes = new Hono<Env>();
@@ -173,48 +173,78 @@ kdsRoutes.get('/stations/:id/analytics', async (c) => {
   const supabase = c.get('supabase');
   const tenantId = c.get('tenantId');
   const stationId = c.req.param('id');
+  const periodMinutes = Number(c.req.query('periodMinutes') ?? 60);
 
   if (!supabase) {
+    const active = mockTickets.filter((t) => KDS_ACTIVE_STATUSES.includes(t.status));
     return ok(c, {
       stationId,
-      activeCount: mockTickets.filter((t) => KDS_ACTIVE_STATUSES.includes(t.status)).length,
+      periodMinutes,
+      avgTicketSeconds: 0,
+      bumpRate: 0,
+      queueDepth: active.length,
+      heldCount: mockTickets.filter((t) => t.course_hold_status === 'held').length,
+      activeCount: active.length,
       avgCookSeconds: null,
     });
   }
 
-  let q = supabase
+  const since = new Date(Date.now() - periodMinutes * 60_000).toISOString();
+
+  let activeQ = supabase
     .from('kitchen_tickets')
-    .select('id, status, cook_time_seconds')
-    .eq('tenant_id', tenantId)
-    .in('status', [...KDS_ACTIVE_STATUSES]);
+    .select('id, status, course_hold_status, cook_time_seconds, fired_at, bumped_at')
+    .eq('tenant_id', tenantId);
 
   if (stationId !== 'all' && stationId !== 'expo') {
-    q = q.in('station', resolveDbStations(stationId));
+    activeQ = activeQ.in('station', resolveDbStations(stationId));
   }
 
-  const { data, error } = await q;
+  const { data: tickets, error } = await activeQ;
   if (error) return err(c, 'DB_ERROR', error.message, 500);
 
-  const cookTimes = (data ?? [])
-    .map((t: any) => t.cook_time_seconds)
-    .filter((n: number | null) => typeof n === 'number') as number[];
-  const avg =
-    cookTimes.length > 0
-      ? Math.round(cookTimes.reduce((a, b) => a + b, 0) / cookTimes.length)
-      : null;
+  const rows = tickets ?? [];
+  const active = rows.filter((t: any) => KDS_ACTIVE_STATUSES.includes(t.status));
+  const heldCount = rows.filter((t: any) => t.course_hold_status === 'held').length;
+  const queueDepth = active.filter((t: any) => t.status === 'queued' || t.status === 'fired' || t.status === 'cooking').length;
+
+  const bumpedInPeriod = rows.filter(
+    (t: any) => t.status === 'bumped' && t.bumped_at && t.bumped_at >= since
+  );
+  const cookSamples = bumpedInPeriod
+    .map((t: any) => {
+      if (typeof t.cook_time_seconds === 'number') return t.cook_time_seconds;
+      if (t.fired_at && t.bumped_at) {
+        return Math.round((new Date(t.bumped_at).getTime() - new Date(t.fired_at).getTime()) / 1000);
+      }
+      return null;
+    })
+    .filter((n: number | null): n is number => typeof n === 'number');
+
+  const avgTicketSeconds =
+    cookSamples.length > 0
+      ? Math.round(cookSamples.reduce((a, b) => a + b, 0) / cookSamples.length)
+      : 0;
+  const bumpRate = periodMinutes > 0 ? (bumpedInPeriod.length / periodMinutes) * 60 : 0;
 
   return ok(c, {
     stationId,
-    activeCount: data?.length ?? 0,
-    avgCookSeconds: avg,
+    periodMinutes,
+    avgTicketSeconds,
+    bumpRate: Math.round(bumpRate * 10) / 10,
+    queueDepth,
+    heldCount,
+    activeCount: active.length,
+    avgCookSeconds: avgTicketSeconds || null,
   });
 });
 
-// GET /v1/kds/pending-push?since=<id>
+// GET /v1/kds/pending-push?since=<uuid-or-iso>
 kdsRoutes.get('/pending-push', async (c) => {
   const supabase = c.get('supabase');
   const tenantId = c.get('tenantId');
   const since = c.req.query('since');
+  const station = c.req.query('station');
 
   if (!supabase) return ok(c, []);
 
@@ -226,15 +256,44 @@ kdsRoutes.get('/pending-push', async (c) => {
     .order('created_at', { ascending: true })
     .limit(200);
 
-  if (since) q = q.gt('id', since);
+  if (since) {
+    // Accept ISO timestamp or uuid id
+    if (since.includes('-') && since.length > 20 && !since.includes('T')) {
+      q = q.gt('id', since);
+    } else {
+      q = q.gt('created_at', since);
+    }
+  }
+  if (station && station !== 'all' && station !== 'expo') {
+    q = q.in('station_id', resolveDbStations(station));
+  }
 
   const { data, error } = await q;
   if (error) {
-    // Table may not exist yet in older envs
     if (error.message.includes('pending_push')) return ok(c, []);
     return err(c, 'DB_ERROR', error.message, 500);
   }
   return ok(c, data ?? []);
+});
+
+// POST /v1/kds/pending-push/ack — mark delivered
+kdsRoutes.post('/pending-push/ack', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json<{ ids?: string[] }>().catch(() => ({ ids: [] as string[] }));
+  const ids = Array.isArray(body.ids) ? body.ids : [];
+
+  if (ids.length === 0) return ok(c, { acknowledged: 0 });
+  if (!supabase) return ok(c, { acknowledged: ids.length });
+
+  const { error } = await supabase
+    .from('pending_push')
+    .update({ delivered_at: new Date().toISOString() })
+    .eq('tenant_id', tenantId)
+    .in('id', ids);
+
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  return ok(c, { acknowledged: ids.length });
 });
 
 // GET /v1/kds/htmx-cards (Zero-JS HTMX Kiosk Endpoint)

@@ -18,6 +18,29 @@ import { Hono } from 'hono';
 import { requireTenant, ok, err } from '../middleware/auth.js';
 import type { Env } from '../types.js';
 
+function mapIngredient(i: any) {
+  const current = Number(i.current_qty ?? i.stock_quantity ?? 0);
+  const reorder = Number(i.reorder_at ?? i.par_level ?? 0);
+  let stock_status: 'ok' | 'low_stock' | 'out_of_stock' = 'ok';
+  if (current <= 0) stock_status = 'out_of_stock';
+  else if (current <= reorder) stock_status = 'low_stock';
+  return {
+    id: i.id,
+    name: i.name,
+    unit: i.unit,
+    current_qty: current,
+    reorder_at: reorder,
+    reorder_qty: Number(i.reorder_qty ?? 0),
+    cost_per_unit: Number(i.cost_per_unit ?? 0),
+    supplier: i.supplier ?? null,
+    stock_status: i.stock_status ?? stock_status,
+    // legacy aliases for older clients
+    stock_quantity: current,
+    par_level: reorder,
+  };
+}
+
+
 export const pantryRoutes = new Hono<Env>();
 
 pantryRoutes.use('*', requireTenant);
@@ -141,16 +164,17 @@ pantryRoutes.post('/purchase-orders/auto-generate', async (c) => {
 
   // Live DB auto PO generation
   const { data: items, error: itemsErr } = await supabase
-    .from('pantry_items')
+    .from('ingredients')
     .select('*')
     .eq('tenant_id', tenantId);
 
   if (itemsErr) return err(c, 'DB_ERROR', itemsErr.message, 500);
 
-  const lowStock = (items ?? []).filter((i: any) => (i.stock_quantity ?? 0) <= (i.par_level ?? 0));
+  const lowStock = (items ?? []).filter((i: any) => Number(i.current_qty ?? 0) <= Number(i.reorder_at ?? 0));
   const itemsToOrder = lowStock.length > 0 ? lowStock : (items ?? []);
 
-  const poNumber = `PO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+  const { data: poNumberData } = await supabase.rpc('next_po_number', { p_tenant_id: tenantId });
+  const poNumber = poNumberData ?? `PO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
   const { data: po, error: poErr } = await supabase
     .from('restock_purchase_orders')
     .insert({
@@ -170,7 +194,7 @@ pantryRoutes.post('/purchase-orders/auto-generate', async (c) => {
     ingredient_id: item.id,
     ingredient_name: item.name,
     unit: item.unit ?? 'pcs',
-    ordered_qty: Math.max(10, Math.ceil((item.par_level ?? 50) - (item.stock_quantity ?? 0))),
+    ordered_qty: Math.max(Number(item.reorder_qty ?? 10), Math.ceil(Number(item.reorder_at ?? 50) - Number(item.current_qty ?? 0))),
     unit_cost: item.cost_per_unit ?? 0,
   }));
 
@@ -201,16 +225,17 @@ pantryRoutes.post('/purchase-orders', async (c) => {
     }
 
     const { data: items, error: itemsErr } = await supabase
-      .from('pantry_items')
+      .from('ingredients')
       .select('*')
       .eq('tenant_id', tenantId);
 
     if (itemsErr) return err(c, 'DB_ERROR', itemsErr.message, 500);
 
-    const lowStock = (items ?? []).filter((i: any) => (i.stock_quantity ?? 0) <= (i.par_level ?? 0));
+    const lowStock = (items ?? []).filter((i: any) => Number(i.current_qty ?? 0) <= Number(i.reorder_at ?? 0));
     const itemsToOrder = lowStock.length > 0 ? lowStock : (items ?? []);
 
-    const poNumber = `PO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+    const { data: poNumberData } = await supabase.rpc('next_po_number', { p_tenant_id: tenantId });
+    const poNumber = poNumberData ?? `PO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
     const { data: po, error: poErr } = await supabase
       .from('restock_purchase_orders')
       .insert({
@@ -230,7 +255,7 @@ pantryRoutes.post('/purchase-orders', async (c) => {
       ingredient_id: item.id,
       ingredient_name: item.name,
       unit: item.unit ?? 'pcs',
-      ordered_qty: Math.max(10, Math.ceil((item.par_level ?? 50) - (item.stock_quantity ?? 0))),
+      ordered_qty: Math.max(Number(item.reorder_qty ?? 10), Math.ceil(Number(item.reorder_at ?? 50) - Number(item.current_qty ?? 0))),
       unit_cost: item.cost_per_unit ?? 0,
     }));
 
@@ -392,6 +417,79 @@ pantryRoutes.delete('/purchase-orders/:id', async (c) => {
   return ok(c, { success: true });
 });
 
+// PATCH /v1/pantry/purchase-orders/:id/receive
+pantryRoutes.patch('/purchase-orders/:id/receive', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
+
+  if (!supabase) {
+    const po = mockPurchaseOrders.find((p) => p.id === id);
+    if (!po) return err(c, 'NOT_FOUND', `PO ${id} not found`, 404);
+    po.status = 'received';
+    po.received_at = new Date().toISOString();
+    for (const line of po.po_line_items) {
+      line.received_qty = line.ordered_qty;
+      const item = mockPantry.find((i) => i.name === line.ingredient_name);
+      if (item) item.stock_quantity += line.ordered_qty;
+    }
+    return ok(c, po);
+  }
+
+  const { data: po, error: poErr } = await supabase
+    .from('restock_purchase_orders')
+    .select('*, po_line_items(*)')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+  if (poErr || !po) return err(c, 'NOT_FOUND', `PO ${id} not found`, 404);
+
+  const lines = po.po_line_items ?? [];
+  for (const line of lines) {
+    const qty = Number(body?.received?.[line.id] ?? line.ordered_qty ?? 0);
+    if (line.ingredient_id && qty > 0) {
+      const { data: ing } = await supabase
+        .from('ingredients')
+        .select('current_qty')
+        .eq('id', line.ingredient_id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (ing) {
+        await supabase
+          .from('ingredients')
+          .update({ current_qty: Number(ing.current_qty) + qty })
+          .eq('id', line.ingredient_id)
+          .eq('tenant_id', tenantId);
+        await supabase.from('pantry_ledger').insert({
+          tenant_id: tenantId,
+          ingredient_id: line.ingredient_id,
+          delta: qty,
+          reason: 'restock',
+          reference_id: po.po_number,
+        });
+      }
+      await supabase
+        .from('po_line_items')
+        .update({ received_qty: qty })
+        .eq('id', line.id);
+    }
+  }
+
+  const { data: updated, error: upErr } = await supabase
+    .from('restock_purchase_orders')
+    .update({ status: 'received', received_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select('*, po_line_items(*)')
+    .single();
+
+  if (upErr) return err(c, 'DB_ERROR', upErr.message, 500);
+  return ok(c, updated);
+});
+
+
+
 // ------------------------------------------------------------
 // General Pantry Items Endpoints
 // ------------------------------------------------------------
@@ -406,14 +504,111 @@ pantryRoutes.get('/', async (c) => {
   }
 
   const { data, error } = await supabase
-    .from('pantry_items')
+    .from('pantry_status')
     .select('*')
     .eq('tenant_id', tenantId)
     .order('name', { ascending: true });
 
-  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  if (error) {
+    // Fallback if view missing
+    const { data: items, error: e2 } = await supabase
+      .from('ingredients')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('name', { ascending: true });
+    if (e2) return err(c, 'DB_ERROR', e2.message, 500);
+    return ok(c, (items ?? []).map(mapIngredient));
+  }
   return ok(c, data);
 });
+
+// GET /v1/pantry/alerts — low / out of stock
+pantryRoutes.get('/alerts', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+
+  if (!supabase) {
+    const alerts = mockPantry
+      .map(mapIngredient)
+      .filter((i) => i.stock_status !== 'ok');
+    return ok(c, alerts);
+  }
+
+  const { data, error } = await supabase
+    .from('pantry_status')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .neq('stock_status', 'ok');
+
+  if (error) {
+    const { data: items, error: e2 } = await supabase
+      .from('ingredients')
+      .select('*')
+      .eq('tenant_id', tenantId);
+    if (e2) return err(c, 'DB_ERROR', e2.message, 500);
+    return ok(c, (items ?? []).map(mapIngredient).filter((i) => i.stock_status !== 'ok'));
+  }
+  return ok(c, data ?? []);
+});
+
+
+// PATCH /v1/pantry/:id/adjust — stock adjustment with ledger
+pantryRoutes.patch('/:id/adjust', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const delta = Number(body.delta ?? body.quantity ?? 0);
+  if (!delta) return err(c, 'VALIDATION_ERROR', 'delta is required', 422);
+
+  if (!supabase) {
+    const item = mockPantry.find((p) => p.id === id);
+    if (!item) return err(c, 'NOT_FOUND', `Pantry item ${id} not found`, 404);
+    item.stock_quantity = Math.max(0, item.stock_quantity + delta);
+    return ok(c, mapIngredient(item));
+  }
+
+  if (delta < 0) {
+    const { data: newQty, error } = await supabase.rpc('decrement_pantry_stock', {
+      item_id: id,
+      qty: Math.abs(delta),
+      p_tenant_id: tenantId,
+      p_reason: body.reason ?? 'adjustment',
+      p_reference_id: body.referenceId ?? null,
+    });
+    if (error) return err(c, 'DB_ERROR', error.message, 500);
+    return ok(c, { id, current_qty: newQty });
+  }
+
+  const { data: current, error: curErr } = await supabase
+    .from('ingredients')
+    .select('current_qty')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+  if (curErr || !current) return err(c, 'NOT_FOUND', `Pantry item ${id} not found`, 404);
+
+  const next = Number(current.current_qty) + delta;
+  const { data: row, error: upErr } = await supabase
+    .from('ingredients')
+    .update({ current_qty: next })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select()
+    .single();
+  if (upErr || !row) return err(c, 'DB_ERROR', upErr?.message ?? 'adjust failed', 500);
+
+  await supabase.from('pantry_ledger').insert({
+    tenant_id: tenantId,
+    ingredient_id: id,
+    delta,
+    reason: body.reason ?? 'restock',
+    reference_id: body.referenceId ?? null,
+  });
+
+  return ok(c, mapIngredient(row));
+});
+
 
 // GET /v1/pantry/:id
 pantryRoutes.get('/:id', async (c) => {
@@ -427,15 +622,15 @@ pantryRoutes.get('/:id', async (c) => {
     return ok(c, item);
   }
 
-  const { data, error } = await supabase
-    .from('pantry_items')
+  const { data: item, error } = await supabase
+    .from('ingredients')
     .select('*')
     .eq('id', id)
     .eq('tenant_id', tenantId)
     .single();
 
-  if (error || !data) return err(c, 'NOT_FOUND', `Pantry item ${id} not found`, 404);
-  return ok(c, data);
+  if (error || !item) return err(c, 'NOT_FOUND', `Pantry item ${id} not found`, 404);
+  return ok(c, mapIngredient(item));
 });
 
 // POST /v1/pantry
@@ -458,14 +653,16 @@ pantryRoutes.post('/', async (c) => {
   }
 
   const { data, error } = await supabase
-    .from('pantry_items')
+    .from('ingredients')
     .insert({
       tenant_id:      tenantId,
       name:           body.name,
-      stock_quantity: body.stockQuantity ?? 0,
-      par_level:      body.parLevel ?? 0,
+      current_qty:    body.stockQuantity ?? body.currentQty ?? 0,
+      reorder_at:     body.parLevel ?? body.reorderAt ?? 0,
+      reorder_qty:    body.reorderQty ?? body.parLevel ?? 0,
       unit:           body.unit ?? 'pcs',
       cost_per_unit:  body.costPerUnit ?? 0,
+      supplier:       body.supplier ?? null,
     })
     .select()
     .single();
@@ -493,13 +690,15 @@ pantryRoutes.patch('/:id', async (c) => {
   }
 
   const { data, error } = await supabase
-    .from('pantry_items')
+    .from('ingredients')
     .update({
       name:           body.name,
-      stock_quantity: body.stockQuantity,
-      par_level:      body.parLevel,
+      current_qty:    body.stockQuantity ?? body.currentQty,
+      reorder_at:     body.parLevel ?? body.reorderAt,
+      reorder_qty:    body.reorderQty,
       unit:           body.unit,
       cost_per_unit:  body.costPerUnit,
+      supplier:       body.supplier,
     })
     .eq('id', id)
     .eq('tenant_id', tenantId)
@@ -522,7 +721,7 @@ pantryRoutes.delete('/:id', async (c) => {
   }
 
   const { error } = await supabase
-    .from('pantry_items')
+    .from('ingredients')
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId);
@@ -547,40 +746,25 @@ pantryRoutes.post('/deduct', async (c) => {
     return ok(c, { success: true });
   }
 
-  // Verify item belongs to tenant before decrement
   const { data: item, error: itemErr } = await supabase
-    .from('pantry_items')
+    .from('ingredients')
     .select('id')
     .eq('id', body.itemId)
     .eq('tenant_id', tenantId)
     .maybeSingle();
 
-  if (itemErr || !item) {
-    // Also try ingredients table (RecipeOS pantry)
-    const { data: ingredient } = await supabase
-      .from('ingredients')
-      .select('id')
-      .eq('id', body.itemId)
-      .eq('tenant_id', tenantId)
-      .maybeSingle();
-    if (!ingredient) return err(c, 'NOT_FOUND', `Pantry item ${body.itemId} not found`, 404);
-  }
+  if (itemErr || !item) return err(c, 'NOT_FOUND', `Pantry item ${body.itemId} not found`, 404);
 
-  const { error } = await supabase.rpc('decrement_pantry_stock', {
+  const { data: newQty, error } = await supabase.rpc('decrement_pantry_stock', {
     item_id: body.itemId,
-    qty:     body.quantity,
+    qty:     body.quantity ?? 0,
     p_tenant_id: tenantId,
+    p_reason: body.reason ?? 'sale',
+    p_reference_id: body.referenceId ?? null,
   });
 
-  if (error) {
-    // Fallback if RPC signature has no tenant arg yet
-    const { error: err2 } = await supabase.rpc('decrement_pantry_stock', {
-      item_id: body.itemId,
-      qty:     body.quantity,
-    });
-    if (err2) return err(c, 'DB_ERROR', err2.message, 500);
-  }
-  return ok(c, { success: true });
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  return ok(c, { success: true, current_qty: newQty });
 });
 
 export default pantryRoutes;

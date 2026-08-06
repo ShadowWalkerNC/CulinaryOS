@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { CulinaryHeader } from '@culinaryos/ui';
+import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API = getApiBase();
 
 type StockStatus = 'ok' | 'low_stock' | 'out_of_stock';
 type POStatus    = 'draft' | 'approved' | 'sent' | 'received' | 'cancelled';
@@ -67,9 +68,10 @@ export function PantryPage() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    const headers = apiHeaders();
     const [itemsRes, posRes] = await Promise.all([
-      fetch(`${API}/v1/pantry`).then((r) => r.json()),
-      fetch(`${API}/v1/pantry/purchase-orders`).then((r) => r.json()),
+      fetch(`${API}/v1/pantry`, { headers }).then((r) => r.json()),
+      fetch(`${API}/v1/pantry/purchase-orders`, { headers }).then((r) => r.json()),
     ]);
     if (itemsRes.ok)  setItems(itemsRes.data  ?? []);
     if (posRes.ok)    setPOs(posRes.data    ?? []);
@@ -82,7 +84,7 @@ export function PantryPage() {
     setCreating(true);
     await fetch(`${API}/v1/pantry/purchase-orders`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: apiHeaders(),
       body:    JSON.stringify({ auto: true }),
     });
     await fetchAll();
@@ -91,17 +93,17 @@ export function PantryPage() {
   }
 
   async function approvePO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/approve`, { method: 'PATCH' });
+    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/approve`, { method: 'PATCH', headers: apiHeaders() });
     fetchAll();
   }
 
   async function sendPO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/send`, { method: 'PATCH' });
+    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/send`, { method: 'PATCH', headers: apiHeaders() });
     fetchAll();
   }
 
   async function cancelPO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}`, { method: 'DELETE' });
+    await fetch(`${API}/v1/pantry/purchase-orders/${poId}`, { method: 'DELETE', headers: apiHeaders() });
     fetchAll();
   }
 

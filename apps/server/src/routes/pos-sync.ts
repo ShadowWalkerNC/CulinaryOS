@@ -69,6 +69,7 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
             order_id: delta.order_id,
             amount,
             tip_amount: tip,
+            tip_cents: tip,
             method,
             status: 'completed',
             processed_at: delta.timestamp ?? new Date().toISOString(),
@@ -112,12 +113,59 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
           break;
         }
 
-        case 'create_order':
-        case 'add_line_item':
+        case 'create_order': {
+          const { error } = await supabase.from('pos_orders').upsert({
+            id: delta.order_id,
+            tenant_id: tenantId,
+            table_number: delta.payload?.tableNumber ?? delta.payload?.table_number ?? null,
+            cover_count: delta.payload?.coverCount ?? 1,
+            server_name: delta.payload?.serverName ?? 'POS',
+            status: delta.payload?.status ?? 'open',
+            subtotal: delta.payload?.subtotal ?? 0,
+            tax: delta.payload?.tax ?? 0,
+            total: delta.payload?.total ?? 0,
+            notes: delta.payload?.notes ?? null,
+          }, { onConflict: 'id' });
+          if (error) failures.push({ id: delta.id, error: error.message });
+          else confirmedIds.push(delta.id);
+          break;
+        }
+
+        case 'add_line_item': {
+          const line = delta.payload ?? {};
+          const { error } = await supabase.from('pos_order_line_items').insert({
+            id: line.id,
+            tenant_id: tenantId,
+            order_id: delta.order_id,
+            menu_item_id: line.menu_item_id ?? line.menuItemId ?? null,
+            name: line.name ?? 'Item',
+            quantity: line.quantity ?? 1,
+            unit_price: line.unit_price ?? line.unitPrice ?? 0,
+            line_total: line.line_total ?? line.lineTotal ?? 0,
+            station: line.station ?? 'hot',
+            course_number: line.course_number ?? line.courseNumber ?? 1,
+            notes: line.notes ?? null,
+          });
+          if (error && !String(error.message).includes('duplicate')) {
+            failures.push({ id: delta.id, error: error.message });
+          } else {
+            confirmedIds.push(delta.id);
+          }
+          break;
+        }
+
         case 'apply_discount': {
-          // Acknowledge structural deltas that were already applied locally;
-          // full replay of create/line-item is handled by order APIs when online.
-          confirmedIds.push(delta.id);
+          const { error } = await supabase
+            .from('pos_orders')
+            .update({
+              discount_percent: delta.payload?.discount_percent ?? delta.payload?.discountPercent ?? 0,
+              discount_flat: delta.payload?.discount_flat ?? delta.payload?.discountFlat ?? 0,
+              total: delta.payload?.total,
+            })
+            .eq('id', delta.order_id)
+            .eq('tenant_id', tenantId);
+          if (error) failures.push({ id: delta.id, error: error.message });
+          else confirmedIds.push(delta.id);
           break;
         }
 

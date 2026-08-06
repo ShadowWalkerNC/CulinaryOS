@@ -5,3 +5,4 @@ export * from './service-client';
 export * from './course-engine';
 export * from './mappers';
 export * from './stations';
+export * from './api-client';

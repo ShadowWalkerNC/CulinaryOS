@@ -3,6 +3,8 @@ import { useOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue } from '@culinaryos/shared';
+import { CheckoutDrawer } from '../components/CheckoutDrawer';
 
 const METHODS = ['card', 'cash', 'comp'] as const;
 
@@ -24,6 +26,7 @@ export function CheckoutView() {
   
   // Split Check Wizard Modal State
   const [showSplitModal, setShowSplitModal] = useState(false);
+  const [showCardCheckout, setShowCardCheckout] = useState(false);
   const [selectedSeatFilter, setSelectedSeatFilter] = useState<number | null>(null);
 
   const qc = useQueryClient();
@@ -62,42 +65,19 @@ export function CheckoutView() {
 
   async function finalizePayment() {
     setProcessing(true);
-    const { enqueueOfflineDelta, flushOfflineQueue } = await import('@culinaryos/shared');
     const tenantId = order.tenant_id ?? usePOSStore.getState().tenantId;
-    const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-    const deviceKey = import.meta.env.VITE_DEVICE_API_KEY ?? '';
+    const API = getApiBase();
+    const headers = apiHeaders(tenantId);
 
     const payload = {
       amount: total,
       method,
       tip_amount: tipAmount,
+      tip_cents: tipAmount,
       total,
     };
 
     try {
-      // Prefer server payment capture path — never mark paid from the browser alone
-      if (method === 'card' && navigator.onLine) {
-        const checkoutRes = await fetch(`${API}/v1/payments/checkout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-Id': tenantId,
-            ...(deviceKey ? { Authorization: `Bearer ${deviceKey}` } : {}),
-          },
-          body: JSON.stringify({ order_id: order.id, tip_cents: tipAmount }),
-        });
-        if (!checkoutRes.ok) {
-          // Fall through to cash-style offline queue for demo / misconfigured Stripe
-          throw new Error('checkout_unavailable');
-        }
-        const checkoutJson = await checkoutRes.json();
-        // In production, Stripe Elements would confirm client_secret here.
-        // For terminal/simulators, capture after successful authorization:
-        if (checkoutJson?.data?.payment_id && stripeSimState === 'authorizing') {
-          // Simulator path continues below after capture would succeed
-        }
-      }
-
       if (!navigator.onLine || !supabase) {
         enqueueOfflineDelta({
           tenant_id: tenantId,
@@ -119,7 +99,7 @@ export function CheckoutView() {
         return;
       }
 
-      // Online cash/comp: go through sync endpoint so server is source of truth
+      // Online cash/comp: server is source of truth via sync-deltas
       const delta = enqueueOfflineDelta({
         tenant_id: tenantId,
         order_id: order.id,
@@ -127,28 +107,19 @@ export function CheckoutView() {
         payload,
       });
 
-      const synced = await flushOfflineQueue(API, {
-        'X-Tenant-Id': tenantId,
-        ...(deviceKey ? { Authorization: `Bearer ${deviceKey}` } : {}),
-      });
-
-      if (synced === 0 && method !== 'card') {
-        // Direct server apply as fallback when sync endpoint rejects
-        await fetch(`${API}/v1/pos/sync-deltas`, {
+      const synced = await flushOfflineQueue(API, headers);
+      if (synced === 0) {
+        const res = await fetch(`${API}/v1/pos/sync-deltas`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-Id': tenantId,
-            ...(deviceKey ? { Authorization: `Bearer ${deviceKey}` } : {}),
-          },
+          headers,
           body: JSON.stringify({ deltas: [delta] }),
         });
+        if (!res.ok) throw new Error('Payment sync failed');
       }
 
       qc.invalidateQueries({ queryKey: ['orders'] });
       setPaid(true);
     } catch (err: any) {
-      // Offline enqueue on failure
       try {
         enqueueOfflineDelta({
           tenant_id: tenantId,
@@ -168,7 +139,8 @@ export function CheckoutView() {
 
   function startPaymentFlow() {
     if (method === 'card') {
-      setStripeSimState('waiting');
+      // Real Stripe Elements checkout (confirm → capture)
+      setShowCardCheckout(true);
     } else {
       finalizePayment();
     }
@@ -441,6 +413,20 @@ export function CheckoutView() {
           {processing ? 'Authorizing...' : `Finalize Charge $${(total/100).toFixed(2)}`}
         </button>
       </div>
+
+      {/* Stripe Elements card checkout */}
+      {showCardCheckout && (
+        <CheckoutDrawer
+          orderId={order.id}
+          totalCents={taxableSubtotal + tax}
+          onSuccess={() => {
+            setShowCardCheckout(false);
+            setPaid(true);
+            qc.invalidateQueries({ queryKey: ['orders'] });
+          }}
+          onClose={() => setShowCardCheckout(false)}
+        />
+      )}
 
       {/* Split Checks Wizard Modal */}
       {showSplitModal && (

@@ -12,7 +12,8 @@
     "./offline-sync": "./src/offline-sync.ts",
     "./course-engine": "./src/course-engine.ts",
     "./mappers": "./src/mappers.ts",
-    "./stations": "./src/stations.ts"
+    "./stations": "./src/stations.ts",
+    "./api-client": "./src/api-client.ts"
   },
   "scripts": {
     "build": "tsc",

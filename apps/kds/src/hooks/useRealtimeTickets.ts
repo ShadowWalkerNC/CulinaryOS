@@ -6,6 +6,8 @@ import {
   resolveDbStations,
   stationLabel,
   uiStationFromDb,
+  apiHeaders,
+  getApiBase,
 } from '@culinaryos/shared';
 
 let supabase: SupabaseClient | null = null;
@@ -279,7 +281,60 @@ export function useRealtimeTickets(stationId: string) {
       setLoading(false);
     }
 
+    let lastAckId: string | null = null;
+    const API = getApiBase();
+
+    async function catchUpPendingPush() {
+      if (!TENANT_ID) return;
+      try {
+        const qs = new URLSearchParams();
+        if (lastAckId) qs.set('since', lastAckId);
+        if (stationId !== 'all' && stationId !== 'expo') qs.set('station', stationId);
+        const res = await fetch(`${API}/v1/kds/pending-push?${qs}`, {
+          headers: apiHeaders(TENANT_ID),
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const rows = json.data ?? [];
+        if (!rows.length) return;
+        const ids: string[] = [];
+        for (const row of rows) {
+          ids.push(row.id);
+          lastAckId = row.id;
+          const ticket = row.payload?.ticketId
+            ? {
+                id: row.payload.ticketId,
+                order_id: row.payload.orderId,
+                station: row.payload.station ?? row.station_id,
+                status: row.payload.status ?? 'fired',
+                course_number: row.payload.courseNumber ?? 1,
+                course_hold_status: row.event_type?.includes('held') ? 'held' : 'fired',
+                created_at: row.created_at,
+                tenant_id: row.tenant_id,
+                ticket_items: [],
+              }
+            : null;
+          if (ticket && matchesStation(ticket.station, stationId)) {
+            setTickets((prev) => {
+              if (prev.some((t) => t.id === ticket.id)) return prev;
+              return [...prev, rowToTicket(ticket)];
+            });
+          }
+        }
+        if (ids.length) {
+          await fetch(`${API}/v1/kds/pending-push/ack`, {
+            method: 'POST',
+            headers: apiHeaders(TENANT_ID),
+            body: JSON.stringify({ ids }),
+          });
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+
     fetchInitial();
+    catchUpPendingPush();
 
     const channelName = TENANT_ID
       ? `kds:tickets:${TENANT_ID}:${stationId}`
@@ -332,6 +387,7 @@ export function useRealtimeTickets(stationId: string) {
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           fetchInitial();
+          catchUpPendingPush();
         }
       });
 

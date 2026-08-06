@@ -6,9 +6,11 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { apiHeaders, getApiBase } from '@culinaryos/shared';
+import { usePOSStore } from '../lib/store';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API = getApiBase();
 
 const STRIPE_APPEARANCE = {
   theme:     'night' as const,
@@ -31,9 +33,9 @@ interface CheckoutDrawerProps {
 }
 
 function PaymentForm({
-  orderId, totalCents, tipCents, onSuccess,
+  orderId, totalCents, tipCents, onSuccess, tenantId,
 }: {
-  orderId: string; totalCents: number; tipCents: number; onSuccess: () => void;
+  orderId: string; totalCents: number; tipCents: number; onSuccess: () => void; tenantId: string;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -58,15 +60,21 @@ function PaymentForm({
       return;
     }
 
+    if (!paymentIntent?.id) {
+      setError('PaymentIntent missing after confirmation');
+      setBusy(false);
+      return;
+    }
+
     const res = await fetch(`${API}/v1/payments/capture`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ payment_intent_id: paymentIntent?.id }),
+      headers: apiHeaders(tenantId),
+      body:    JSON.stringify({ payment_intent_id: paymentIntent.id }),
     });
 
     if (!res.ok) {
       const body = await res.json();
-      setError(body.error ?? 'Capture failed');
+      setError(body.error?.message ?? body.error ?? 'Capture failed');
       setBusy(false);
       return;
     }
@@ -114,6 +122,7 @@ function PaymentForm({
 }
 
 export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: CheckoutDrawerProps) {
+  const tenantId = usePOSStore((s) => s.tenantId);
   const [tipPct,       setTipPct]       = useState(20);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading,      setLoading]      = useState(true);
@@ -127,15 +136,15 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
       setLoading(true);
       const res = await fetch(`${API}/v1/payments/checkout`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(tenantId),
         body:    JSON.stringify({ order_id: orderId, tip_cents: tipCents }),
       });
       const body = await res.json();
-      if (!res.ok) { setInitError(body.error); setLoading(false); return; }
+      if (!res.ok) { setInitError(body.error?.message ?? body.error ?? 'Checkout failed'); setLoading(false); return; }
       setClientSecret(body.data.client_secret);
       setLoading(false);
     })();
-  }, [orderId, tipCents]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orderId, tipCents, tenantId]);
 
   return (
     <div
@@ -182,7 +191,7 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
         {initError && <div style={{ color: '#ef4444' }}>{initError}</div>}
         {!loading && clientSecret && (
           <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
-            <PaymentForm orderId={orderId} totalCents={totalCents} tipCents={tipCents} onSuccess={onSuccess} />
+            <PaymentForm orderId={orderId} totalCents={totalCents} tipCents={tipCents} tenantId={tenantId} onSuccess={onSuccess} />
           </Elements>
         )}
       </div>
