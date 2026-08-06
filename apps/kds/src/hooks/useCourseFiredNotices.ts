@@ -13,10 +13,10 @@ try {
   // Supabase not available
 }
 
+const TENANT_ID = import.meta.env.VITE_TENANT_ID as string | undefined;
+
 /**
- * Listens for INSERT events on course_fire_log.
- * Returns the latest CourseFireEvent; auto-clears after `ttlMs` (default 5s).
- * The KDS Station renders a CourseHoldBanner while this is non-null.
+ * Listens for INSERT events on course_fire_log (tenant-scoped).
  */
 export function useCourseFiredNotices(ttlMs = 5_000) {
   const [notice, setNotice] = useState<CourseFireEvent | null>(null);
@@ -26,13 +26,21 @@ export function useCourseFiredNotices(ttlMs = 5_000) {
 
     let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
+    const filter = TENANT_ID ? `tenant_id=eq.${TENANT_ID}` : undefined;
+
     const channel = supabase
-      .channel('course-fire-log-inserts')
+      .channel(TENANT_ID ? `course-fire-log:${TENANT_ID}` : 'course-fire-log-inserts')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'course_fire_log' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'course_fire_log',
+          ...(filter ? { filter } : {}),
+        },
         (payload) => {
           const row = payload.new as any;
+          if (TENANT_ID && row.tenant_id && row.tenant_id !== TENANT_ID) return;
           setNotice({
             orderId:        row.order_id,
             courseNumber:   row.course_number,
@@ -54,4 +62,3 @@ export function useCourseFiredNotices(ttlMs = 5_000) {
 
   return notice;
 }
-

@@ -534,7 +534,10 @@ pantryRoutes.delete('/:id', async (c) => {
 // POST /v1/pantry/deduct
 pantryRoutes.post('/deduct', async (c) => {
   const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
   const body     = await c.req.json();
+
+  if (!body.itemId) return err(c, 'VALIDATION_ERROR', 'itemId is required', 422);
 
   if (!supabase) {
     const item = mockPantry.find(p => p.id === body.itemId);
@@ -544,13 +547,39 @@ pantryRoutes.post('/deduct', async (c) => {
     return ok(c, { success: true });
   }
 
-  // Live DB decrement logic
+  // Verify item belongs to tenant before decrement
+  const { data: item, error: itemErr } = await supabase
+    .from('pantry_items')
+    .select('id')
+    .eq('id', body.itemId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (itemErr || !item) {
+    // Also try ingredients table (RecipeOS pantry)
+    const { data: ingredient } = await supabase
+      .from('ingredients')
+      .select('id')
+      .eq('id', body.itemId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!ingredient) return err(c, 'NOT_FOUND', `Pantry item ${body.itemId} not found`, 404);
+  }
+
   const { error } = await supabase.rpc('decrement_pantry_stock', {
     item_id: body.itemId,
     qty:     body.quantity,
+    p_tenant_id: tenantId,
   });
 
-  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  if (error) {
+    // Fallback if RPC signature has no tenant arg yet
+    const { error: err2 } = await supabase.rpc('decrement_pantry_stock', {
+      item_id: body.itemId,
+      qty:     body.quantity,
+    });
+    if (err2) return err(c, 'DB_ERROR', err2.message, 500);
+  }
   return ok(c, { success: true });
 });
 

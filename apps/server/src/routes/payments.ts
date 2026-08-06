@@ -9,17 +9,12 @@
 import { Hono }         from 'hono';
 import type { Context } from 'hono';
 import Stripe           from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { requireTenant, ok, err } from '../middleware/auth.js';
 import type { Env } from '../types.js';
 
 export const paymentsRoutes = new Hono<Env>();
 
-function db() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+paymentsRoutes.use('*', requireTenant);
 
 function stripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-04-10' });
@@ -31,15 +26,15 @@ function stripe() {
 // ============================================================
 paymentsRoutes.post('/checkout', async (c: Context) => {
   const tenantId = c.get('tenantId') as string;
+  const supabase = c.get('supabase');
   const body     = await c.req.json<{
     order_id:       string;
     tip_cents?:     number;
     receipt_email?: string;
   }>();
 
-  if (!body.order_id) return c.json({ ok: false, error: 'order_id is required' }, 400);
-
-  const supabase = db();
+  if (!body.order_id) return err(c, 'VALIDATION_ERROR', 'order_id is required', 400);
+  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
 
   const { data: order, error: orderErr } = await supabase
     .from('pos_orders')
@@ -48,14 +43,14 @@ paymentsRoutes.post('/checkout', async (c: Context) => {
     .eq('tenant_id', tenantId)
     .single();
 
-  if (orderErr || !order) return c.json({ ok: false, error: 'Order not found' }, 404);
-  if (order.status === 'paid')   return c.json({ ok: false, error: 'Order already paid' }, 409);
-  if (order.status === 'voided') return c.json({ ok: false, error: 'Order is voided' },    409);
+  if (orderErr || !order) return err(c, 'NOT_FOUND', 'Order not found', 404);
+  if (order.status === 'paid')   return err(c, 'CONFLICT', 'Order already paid', 409);
+  if (order.status === 'voided') return err(c, 'CONFLICT', 'Order is voided', 409);
 
   const tipCents    = body.tip_cents ?? 0;
   const chargeCents = order.total + tipCents;
 
-  if (chargeCents <= 0) return c.json({ ok: false, error: 'Charge amount must be > 0' }, 400);
+  if (chargeCents <= 0) return err(c, 'VALIDATION_ERROR', 'Charge amount must be > 0', 400);
 
   const intent = await stripe().paymentIntents.create({
     amount:   chargeCents,
@@ -64,6 +59,7 @@ paymentsRoutes.post('/checkout', async (c: Context) => {
     metadata: { tenant_id: tenantId, order_id: body.order_id },
   });
 
+  // Do not persist client_secret long-term — return once to client
   const { data: payment, error: payErr } = await supabase
     .from('payments')
     .insert({
@@ -74,44 +70,45 @@ paymentsRoutes.post('/checkout', async (c: Context) => {
       status:                   'pending',
       tip_cents:                tipCents,
       stripe_payment_intent_id: intent.id,
-      stripe_client_secret:     intent.client_secret,
+      stripe_client_secret:     null,
       receipt_email:            body.receipt_email ?? null,
     })
     .select()
     .single();
 
-  if (payErr) return c.json({ ok: false, error: payErr.message }, 500);
+  if (payErr) return err(c, 'DB_ERROR', payErr.message, 500);
 
-  return c.json({
-    ok: true,
-    data: {
-      payment_id:    payment.id,
-      client_secret: intent.client_secret,
-      amount_cents:  chargeCents,
-      tip_cents:     tipCents,
-    },
+  return ok(c, {
+    payment_id:    payment.id,
+    client_secret: intent.client_secret,
+    amount_cents:  chargeCents,
+    tip_cents:     tipCents,
   }, 201);
 });
 
 // ============================================================
 // POST /v1/payments/capture
 // Body: { payment_intent_id }
-// Never trusts the client — re-fetches from Stripe.
 // ============================================================
 paymentsRoutes.post('/capture', async (c: Context) => {
   const tenantId = c.get('tenantId') as string;
+  const supabase = c.get('supabase');
   const body     = await c.req.json<{ payment_intent_id: string }>();
 
   if (!body.payment_intent_id) {
-    return c.json({ ok: false, error: 'payment_intent_id is required' }, 400);
+    return err(c, 'VALIDATION_ERROR', 'payment_intent_id is required', 400);
   }
+  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
 
   const intent = await stripe().paymentIntents.retrieve(body.payment_intent_id);
   if (intent.status !== 'succeeded') {
-    return c.json({ ok: false, error: `PaymentIntent is ${intent.status}, not succeeded` }, 402);
+    return err(c, 'PAYMENT_REQUIRED', `PaymentIntent is ${intent.status}, not succeeded`, 402);
   }
 
-  const supabase = db();
+  // Bind Stripe metadata tenant to verified request tenant
+  if (intent.metadata?.tenant_id && intent.metadata.tenant_id !== tenantId) {
+    return err(c, 'FORBIDDEN', 'PaymentIntent tenant mismatch', 403);
+  }
 
   const { data: payment, error: fetchErr } = await supabase
     .from('payments')
@@ -120,8 +117,8 @@ paymentsRoutes.post('/capture', async (c: Context) => {
     .eq('tenant_id', tenantId)
     .single();
 
-  if (fetchErr || !payment) return c.json({ ok: false, error: 'Payment record not found' }, 404);
-  if (payment.status === 'completed') return c.json({ ok: true, data: payment }); // idempotent
+  if (fetchErr || !payment) return err(c, 'NOT_FOUND', 'Payment record not found', 404);
+  if (payment.status === 'completed') return ok(c, payment);
 
   const { data: updatedPayment } = await supabase
     .from('payments')
@@ -132,6 +129,7 @@ paymentsRoutes.post('/capture', async (c: Context) => {
       reference_id:         body.payment_intent_id,
     })
     .eq('id', payment.id)
+    .eq('tenant_id', tenantId)
     .select()
     .single();
 
@@ -141,7 +139,6 @@ paymentsRoutes.post('/capture', async (c: Context) => {
     .eq('id', payment.order_id)
     .eq('tenant_id', tenantId);
 
-  // Non-blocking receipt
   if (payment.receipt_email) {
     supabase.functions.invoke('send-receipt', {
       body: {
@@ -152,23 +149,25 @@ paymentsRoutes.post('/capture', async (c: Context) => {
         receipt_email: payment.receipt_email,
         tenant_id:     tenantId,
       },
-    }).catch((err: Error) => console.warn('[payments/capture] Receipt send failed:', err.message));
+      headers: {
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.INTERNAL_API_KEY ?? ''}`,
+      },
+    }).catch((e: Error) => console.warn('[payments/capture] Receipt send failed:', e.message));
   }
 
-  return c.json({ ok: true, data: updatedPayment });
+  return ok(c, updatedPayment);
 });
 
 // ============================================================
 // POST /v1/payments/refund
-// Body: { payment_id, amount_cents? }
 // ============================================================
 paymentsRoutes.post('/refund', async (c: Context) => {
   const tenantId = c.get('tenantId') as string;
+  const supabase = c.get('supabase');
   const body     = await c.req.json<{ payment_id: string; amount_cents?: number }>();
 
-  if (!body.payment_id) return c.json({ ok: false, error: 'payment_id is required' }, 400);
-
-  const supabase = db();
+  if (!body.payment_id) return err(c, 'VALIDATION_ERROR', 'payment_id is required', 400);
+  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
 
   const { data: payment, error } = await supabase
     .from('payments')
@@ -177,9 +176,9 @@ paymentsRoutes.post('/refund', async (c: Context) => {
     .eq('tenant_id', tenantId)
     .single();
 
-  if (error || !payment) return c.json({ ok: false, error: 'Payment not found' }, 404);
+  if (error || !payment) return err(c, 'NOT_FOUND', 'Payment not found', 404);
   if (payment.status !== 'completed') {
-    return c.json({ ok: false, error: 'Only completed payments can be refunded' }, 409);
+    return err(c, 'CONFLICT', 'Only completed payments can be refunded', 409);
   }
 
   const refundAmount = body.amount_cents ?? payment.amount;
@@ -191,9 +190,10 @@ paymentsRoutes.post('/refund', async (c: Context) => {
   await supabase
     .from('payments')
     .update({ status: 'refunded', reference_id: refund.id })
-    .eq('id', payment.id);
+    .eq('id', payment.id)
+    .eq('tenant_id', tenantId);
 
-  return c.json({ ok: true, data: { refund_id: refund.id, amount_cents: refundAmount } });
+  return ok(c, { refund_id: refund.id, amount_cents: refundAmount });
 });
 
 // ============================================================
@@ -201,17 +201,20 @@ paymentsRoutes.post('/refund', async (c: Context) => {
 // ============================================================
 paymentsRoutes.get('/:orderId', async (c: Context) => {
   const tenantId = c.get('tenantId') as string;
+  const supabase = c.get('supabase');
   const orderId  = c.req.param('orderId');
 
-  const { data, error } = await db()
+  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
+
+  const { data, error } = await supabase
     .from('payments')
     .select('id, amount, tip_cents, method, status, processed_at, reference_id, receipt_email')
     .eq('order_id', orderId)
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false });
 
-  if (error) return c.json({ ok: false, error: error.message }, 500);
-  return c.json({ ok: true, data });
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  return ok(c, data);
 });
 
 export default paymentsRoutes;

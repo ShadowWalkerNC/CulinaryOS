@@ -26,16 +26,16 @@ export async function saveOrder(order: OnlineOrder): Promise<OnlineOrder> {
   orders[order.id] = order;
   saveStoredOrders(orders);
 
-  // 2. Sync to backend API if available
+  // 2. Sync via public online-orders endpoint (resolves slug → tenant UUID server-side)
   try {
-    const res = await fetch(`${API}/v1/orders`, {
+    const res = await fetch(`${API}/v1/online-orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Tenant-Id': order.tenantSlug || 'demo',
       },
       body: JSON.stringify({
         id: order.id,
+        tenantSlug: order.tenantSlug,
         takeaway: order.mode === 'pickup',
         delivery: order.mode === 'delivery',
         customer: order.customer,

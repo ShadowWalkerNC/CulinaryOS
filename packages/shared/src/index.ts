@@ -4,3 +4,4 @@ export * from './realtime';
 export * from './service-client';
 export * from './course-engine';
 export * from './mappers';
+export * from './stations';

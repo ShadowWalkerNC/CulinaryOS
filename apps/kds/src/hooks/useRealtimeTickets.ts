@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { KitchenTicket, TicketStatus } from '../types';
+import {
+  KDS_ACTIVE_STATUSES,
+  resolveDbStations,
+  stationLabel,
+  uiStationFromDb,
+} from '@culinaryos/shared';
 
 let supabase: SupabaseClient | null = null;
 try {
@@ -12,6 +18,8 @@ try {
 } catch {
   // Supabase not available — app will render in demo/offline mode
 }
+
+const TENANT_ID = import.meta.env.VITE_TENANT_ID as string | undefined;
 
 /** Derives elapsed seconds from a ticket's firedAt or createdAt */
 function elapsed(ticket: { firedAt?: string; createdAt: string }): number {
@@ -28,6 +36,7 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    station: 'grill',
     stationId: '1',
     stationName: 'Hot Grill',
     items: [
@@ -46,6 +55,7 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 2,
     courseHoldStatus: 'held',
     status: 'queued',
+    station: 'grill',
     stationId: '1',
     stationName: 'Hot Grill',
     items: [
@@ -62,6 +72,7 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    station: 'cold',
     stationId: '2',
     stationName: 'Cold Prep',
     items: [
@@ -79,6 +90,7 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 1,
     courseHoldStatus: 'fired',
     status: 'cooking',
+    station: 'fry',
     stationId: '3',
     stationName: 'Fryer',
     items: [
@@ -95,7 +107,8 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     tableLabel: 'Bar-Sarah',
     courseNumber: 1,
     courseHoldStatus: 'fired',
-    status: 'ready',
+    status: 'cooking',
+    station: 'bar',
     stationId: '4',
     stationName: 'Bar',
     items: [
@@ -114,6 +127,7 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
     courseNumber: 2,
     courseHoldStatus: 'held',
     status: 'queued',
+    station: 'grill',
     stationId: '1',
     stationName: 'Hot Grill',
     items: [
@@ -144,36 +158,48 @@ export function fireDemoTicket(ticketId: string) {
   });
 }
 
-const STATION_MAP: Record<string, string> = {
-  '1': 'Hot Grill',
-  '2': 'Cold Prep',
-  '3': 'Fryer',
-  '4': 'Bar',
-};
+function matchesStation(ticketStation: string | undefined, stationId: string): boolean {
+  if (stationId === 'all' || stationId === 'expo') return true;
+  const allowed = resolveDbStations(stationId);
+  if (!ticketStation) return false;
+  if (allowed.includes(ticketStation)) return true;
+  // Also allow UI id comparison for demo tickets
+  return uiStationFromDb(ticketStation) === stationId || ticketStation === stationId;
+}
 
 /** Snake_case DB row → camelCase KitchenTicket */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToTicket(row: any): KitchenTicket {
-  const stationIdStr = row.station_id ? String(row.station_id) : undefined;
+  const dbStation = row.station as string | undefined;
+  const stationIdStr = row.station_id
+    ? String(row.station_id)
+    : uiStationFromDb(dbStation);
+  const itemsSource = Array.isArray(row.ticket_items)
+    ? row.ticket_items
+    : Array.isArray(row.items)
+      ? row.items
+      : [];
+
   return {
     id:               row.id,
+    tenantId:         row.tenant_id,
     orderId:          row.order_id,
-    tableLabel:       row.table_label ?? row.order_id.slice(0, 6).toUpperCase(),
+    tableLabel:       row.table_label ?? row.table_number ?? row.order_id?.slice?.(0, 6)?.toUpperCase(),
+    tableNumber:      row.table_number,
     seatNumber:       row.seat_number ?? undefined,
     courseNumber:     row.course_number,
     courseHoldStatus: row.course_hold_status,
     status:           row.status,
+    station:          dbStation,
     stationId:        stationIdStr,
-    stationName:      row.station_name ?? (stationIdStr ? STATION_MAP[stationIdStr] : undefined),
-    items:            Array.isArray(row.ticket_items)
-                        ? row.ticket_items.map((i: any) => ({
+    stationName:      row.station_name ?? stationLabel(stationIdStr ?? dbStation),
+    items:            itemsSource.map((i: any) => ({
                             id:        i.id,
                             name:      i.menu_item_name ?? i.name ?? '?',
                             quantity:  i.quantity,
                             modifiers: i.modifiers ?? [],
                             notes:     i.notes ?? undefined,
-                          }))
-                        : [],
+                          })),
     createdAt:        row.created_at,
     firedAt:          row.fired_at ?? undefined,
     bumpedAt:         row.bumped_at ?? undefined,
@@ -190,7 +216,6 @@ export function useRealtimeTickets(stationId: string) {
   const [error,   setError]     = useState<string | null>(null);
   const timerRef                = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Refresh elapsed every second so timers update continuously
   const tick = useCallback(() => {
     setTickets((prev) =>
       prev.map((t) => ({ ...t, elapsedSeconds: elapsed(t) }))
@@ -199,7 +224,7 @@ export function useRealtimeTickets(stationId: string) {
 
   useEffect(() => {
     let mounted = true;
-    const ACTIVE: TicketStatus[] = ['queued', 'cooking', 'ready'];
+    const ACTIVE: TicketStatus[] = [...KDS_ACTIVE_STATUSES];
 
     if (!supabase) {
       setLoading(false);
@@ -207,14 +232,13 @@ export function useRealtimeTickets(stationId: string) {
 
       let filtered: KitchenTicket[] = [];
       if (stationId === 'expo') {
-        // Expo pass shows all active tickets across all stations (held and fired)
         filtered = globalDemoTickets;
       } else if (stationId === 'all') {
-        // All stations shows all fired active tickets
         filtered = globalDemoTickets.filter(t => t.courseHoldStatus === 'fired');
       } else {
-        // Specific station shows fired tickets for that station
-        filtered = globalDemoTickets.filter(t => t.stationId === stationId && t.courseHoldStatus === 'fired');
+        filtered = globalDemoTickets.filter(
+          t => matchesStation(t.station ?? t.stationId, stationId) && t.courseHoldStatus === 'fired'
+        );
       }
 
       setTickets(filtered.map(t => ({ ...t, elapsedSeconds: elapsed(t) })));
@@ -234,12 +258,17 @@ export function useRealtimeTickets(stationId: string) {
         .in('status', ACTIVE)
         .order('created_at', { ascending: true });
 
+      if (TENANT_ID) {
+        query = query.eq('tenant_id', TENANT_ID);
+      }
+
       if (stationId === 'expo') {
-        // Expo pass: no course_hold_status filter, all stations
+        // Expo pass: all stations
       } else if (stationId === 'all') {
         query = query.eq('course_hold_status', 'fired');
       } else {
-        query = query.eq('course_hold_status', 'fired').eq('station_id', stationId);
+        const stations = resolveDbStations(stationId);
+        query = query.eq('course_hold_status', 'fired').in('station', stations);
       }
 
       const { data, error: fetchErr } = await query;
@@ -252,16 +281,33 @@ export function useRealtimeTickets(stationId: string) {
 
     fetchInitial();
 
+    const channelName = TENANT_ID
+      ? `kds:tickets:${TENANT_ID}:${stationId}`
+      : `kds-station-${stationId}`;
+
+    const filter = TENANT_ID ? `tenant_id=eq.${TENANT_ID}` : undefined;
+
     const channel = supabase!
-      .channel(`kds-station-${stationId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'kitchen_tickets' },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kitchen_tickets',
+          ...(filter ? { filter } : {}),
+        },
         (payload) => {
           if (!mounted) return;
           const row = payload.new as any;
-          if (!row?.id) return;
-          if (stationId !== 'all' && stationId !== 'expo' && row.station_id !== stationId) return;
+          if (!row?.id) {
+            if (payload.eventType === 'DELETE' && (payload.old as any)?.id) {
+              setTickets((prev) => prev.filter((t) => t.id !== (payload.old as any).id));
+            }
+            return;
+          }
+          if (TENANT_ID && row.tenant_id && row.tenant_id !== TENANT_ID) return;
+          if (!matchesStation(row.station, stationId) && stationId !== 'all' && stationId !== 'expo') return;
 
           setTickets((prev) => {
             if (['voided', 'bumped'].includes(row.status)) {
@@ -270,14 +316,24 @@ export function useRealtimeTickets(stationId: string) {
             if (stationId !== 'expo' && row.course_hold_status === 'held') {
               return prev.filter((t) => t.id !== row.id);
             }
+            // Realtime payloads lack joined ticket_items — preserve existing items
             const updated = rowToTicket(row);
             const exists  = prev.find((t) => t.id === row.id);
-            if (exists) return prev.map((t) => (t.id === row.id ? updated : t));
+            if (exists) {
+              if (!updated.items.length && exists.items.length) {
+                updated.items = exists.items;
+              }
+              return prev.map((t) => (t.id === row.id ? updated : t));
+            }
             return [...prev, updated].sort((a, b) => (a.elapsedSeconds ?? 0) - (b.elapsedSeconds ?? 0));
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          fetchInitial();
+        }
+      });
 
     timerRef.current = setInterval(tick, 1000);
 

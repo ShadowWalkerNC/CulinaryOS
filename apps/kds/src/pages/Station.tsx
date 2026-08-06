@@ -9,6 +9,8 @@ import { AnalyticsBar }           from '../components/AnalyticsBar';
 import type { AnalyticsSummary }  from '../types';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const TENANT_ID = import.meta.env.VITE_TENANT_ID ?? '';
+const DEVICE_KEY = import.meta.env.VITE_DEVICE_API_KEY ?? import.meta.env.VITE_INTERNAL_API_KEY ?? '';
 
 const STATIONS = [
   { id: 'expo', label: 'Expo Pass' },
@@ -18,6 +20,13 @@ const STATIONS = [
   { id: '4', label: 'Bar' },
   { id: 'all', label: 'All Stations' },
 ];
+
+function apiHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (TENANT_ID) headers['X-Tenant-Id'] = TENANT_ID;
+  if (DEVICE_KEY) headers['Authorization'] = `Bearer ${DEVICE_KEY}`;
+  return headers;
+}
 
 /**
  * Main KitchenKit KDS station view & Expediter (Expo) Pass View.
@@ -35,7 +44,10 @@ export function Station() {
     let mounted = true;
     async function fetchAnalytics() {
       try {
-        const res  = await fetch(`${API}/v1/kds/stations/${stationId}/analytics`);
+        const res  = await fetch(`${API}/v1/kds/stations/${stationId}/analytics`, {
+          headers: apiHeaders(),
+        });
+        if (!res.ok) return;
         const json = await res.json();
         if (mounted && json.data) setAnalytics(json.data);
       } catch {
@@ -47,38 +59,52 @@ export function Station() {
     return () => { mounted = false; clearInterval(interval); };
   }, [stationId]);
 
-  // Bump a ticket via REST or local state fallback
+  // Bump a ticket via REST — only mutate local state on success
   const handleBump = useCallback(async (ticketId: string) => {
     try {
-      await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
+      const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
         method:  'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         body:    JSON.stringify({ stationId }),
       });
+      if (!res.ok) throw new Error(`Bump failed (${res.status})`);
+      bumpDemoTicket(ticketId);
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
     } catch {
-      // Fallback local bump
+      // Demo / offline fallback only when API unreachable
+      if (!import.meta.env.VITE_SUPABASE_URL || String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) {
+        bumpDemoTicket(ticketId);
+        setTickets(prev => prev.filter(t => t.id !== ticketId));
+      }
     }
-    bumpDemoTicket(ticketId);
-    setTickets(prev => prev.filter(t => t.id !== ticketId));
   }, [stationId, setTickets]);
 
-  // Manual course fire handler
+  // Manual course fire handler — only mutate local state on success
   const handleFireCourse = useCallback(async (ticketId: string) => {
     try {
-      await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
+      const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
         method:  'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
       });
+      if (!res.ok) throw new Error(`Fire failed (${res.status})`);
+      fireDemoTicket(ticketId);
+      setTickets(prev => prev.map(t => t.id === ticketId ? {
+        ...t,
+        courseHoldStatus: 'fired',
+        status: 'cooking',
+        firedAt: new Date().toISOString(),
+      } : t));
     } catch {
-      // Fallback local fire
+      if (!import.meta.env.VITE_SUPABASE_URL || String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) {
+        fireDemoTicket(ticketId);
+        setTickets(prev => prev.map(t => t.id === ticketId ? {
+          ...t,
+          courseHoldStatus: 'fired',
+          status: 'cooking',
+          firedAt: new Date().toISOString(),
+        } : t));
+      }
     }
-    fireDemoTicket(ticketId);
-    setTickets(prev => prev.map(t => t.id === ticketId ? {
-      ...t,
-      courseHoldStatus: 'fired',
-      status: 'cooking',
-      firedAt: new Date().toISOString(),
-    } : t));
   }, [setTickets]);
 
   const activeStationLabel = STATIONS.find(s => s.id === stationId)?.label ?? `Station ${stationId}`;

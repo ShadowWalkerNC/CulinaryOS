@@ -4,22 +4,25 @@
 // GET  /v1/kds/tickets/:id      — get single ticket
 // PATCH /v1/kds/tickets/:id/bump — bump a ticket
 // PATCH /v1/kds/tickets/:id/fire — fire a held course
+// GET  /v1/kds/stations/:id/analytics — station counters
+// GET  /v1/kds/pending-push     — reconnect catch-up
 // ============================================================
 
 import { Hono } from 'hono';
-import { requireTenant, ok, err } from '../middleware/auth.js';
+import { requireTenant, ok, err, escapeHtml } from '../middleware/auth.js';
+import { KDS_ACTIVE_STATUSES, resolveDbStations } from '../lib/stations.js';
 import type { Env } from '../types.js';
 
 export const kdsRoutes = new Hono<Env>();
 
 kdsRoutes.use('*', requireTenant);
 
-// Local KDS Mock State
 let mockTickets: any[] = [
   {
     id: "t-101",
     order_id: "o-201",
     table_number: "4",
+    station: "grill",
     status: "fired",
     course_number: 1,
     course_hold_status: "fired",
@@ -31,18 +34,21 @@ let mockTickets: any[] = [
   }
 ];
 
-// GET /v1/kds/tickets?station=hot&status=fired
+// GET /v1/kds/tickets?station=grill|1&status=fired
 kdsRoutes.get('/tickets', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
   const station   = c.req.query('station');
-  const status    = c.req.query('status') ?? 'fired';
+  const status    = c.req.query('status');
 
   if (!supabase) {
     let list = mockTickets;
     if (status) list = list.filter((t: any) => t.status === status);
-    if (station) {
-      list = list.filter((t: any) => t.items.some((i: any) => i.station === station));
+    else list = list.filter((t: any) => KDS_ACTIVE_STATUSES.includes(t.status));
+    if (station && station !== 'all' && station !== 'expo') {
+      const allowed = resolveDbStations(station);
+      list = list.filter((t: any) => allowed.includes(t.station) ||
+        t.items?.some((i: any) => allowed.includes(i.station)));
     }
     return ok(c, list);
   }
@@ -51,10 +57,17 @@ kdsRoutes.get('/tickets', async (c) => {
     .from('kitchen_tickets')
     .select('*, ticket_items(*)')
     .eq('tenant_id', tenantId)
-    .eq('status', status)
     .order('fired_at', { ascending: true });
 
-  if (station) q = q.eq('station', station);
+  if (status) {
+    q = q.eq('status', status);
+  } else {
+    q = q.in('status', [...KDS_ACTIVE_STATUSES]);
+  }
+
+  if (station && station !== 'all' && station !== 'expo') {
+    q = q.in('station', resolveDbStations(station));
+  }
 
   const { data, error } = await q;
   if (error) return err(c, 'DB_ERROR', error.message, 500);
@@ -108,10 +121,13 @@ kdsRoutes.patch('/tickets/:id/bump', async (c) => {
   if (ticketErr || !ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
 
   const now = new Date().toISOString();
-  await supabase
+  const { error: updateErr } = await supabase
     .from('kitchen_tickets')
     .update({ status: 'bumped', bumped_at: now })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
+
+  if (updateErr) return err(c, 'DB_ERROR', updateErr.message, 500);
 
   return ok(c, { ticketId: id, status: 'bumped', bumpedAt: now });
 });
@@ -141,12 +157,84 @@ kdsRoutes.patch('/tickets/:id/fire', async (c) => {
   if (ticketErr || !ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
 
   const now = new Date().toISOString();
-  await supabase
+  const { error: updateErr } = await supabase
     .from('kitchen_tickets')
     .update({ course_hold_status: 'fired', status: 'fired', fired_at: now })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
+
+  if (updateErr) return err(c, 'DB_ERROR', updateErr.message, 500);
 
   return ok(c, { ticketId: id, status: 'fired', firedAt: now });
+});
+
+// GET /v1/kds/stations/:id/analytics
+kdsRoutes.get('/stations/:id/analytics', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const stationId = c.req.param('id');
+
+  if (!supabase) {
+    return ok(c, {
+      stationId,
+      activeCount: mockTickets.filter((t) => KDS_ACTIVE_STATUSES.includes(t.status)).length,
+      avgCookSeconds: null,
+    });
+  }
+
+  let q = supabase
+    .from('kitchen_tickets')
+    .select('id, status, cook_time_seconds')
+    .eq('tenant_id', tenantId)
+    .in('status', [...KDS_ACTIVE_STATUSES]);
+
+  if (stationId !== 'all' && stationId !== 'expo') {
+    q = q.in('station', resolveDbStations(stationId));
+  }
+
+  const { data, error } = await q;
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+
+  const cookTimes = (data ?? [])
+    .map((t: any) => t.cook_time_seconds)
+    .filter((n: number | null) => typeof n === 'number') as number[];
+  const avg =
+    cookTimes.length > 0
+      ? Math.round(cookTimes.reduce((a, b) => a + b, 0) / cookTimes.length)
+      : null;
+
+  return ok(c, {
+    stationId,
+    activeCount: data?.length ?? 0,
+    avgCookSeconds: avg,
+  });
+});
+
+// GET /v1/kds/pending-push?since=<id>
+kdsRoutes.get('/pending-push', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const since = c.req.query('since');
+
+  if (!supabase) return ok(c, []);
+
+  let q = supabase
+    .from('pending_push')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .is('delivered_at', null)
+    .order('created_at', { ascending: true })
+    .limit(200);
+
+  if (since) q = q.gt('id', since);
+
+  const { data, error } = await q;
+  if (error) {
+    // Table may not exist yet in older envs
+    if (error.message.includes('pending_push')) return ok(c, []);
+    return err(c, 'DB_ERROR', error.message, 500);
+  }
+  return ok(c, data ?? []);
 });
 
 // GET /v1/kds/htmx-cards (Zero-JS HTMX Kiosk Endpoint)
@@ -155,13 +243,13 @@ kdsRoutes.get('/htmx-cards', async (c) => {
   const html = list.map(t => `
     <div class="kds-card border border-gray-300 rounded-xl p-4 bg-white shadow-sm mb-3 font-mono">
       <div class="flex justify-between font-bold border-b pb-2">
-        <span>TICKET #${t.id} (T-${t.table_number})</span>
-        <span class="text-green-600 uppercase">${t.status}</span>
+        <span>TICKET #${escapeHtml(t.id)} (T-${escapeHtml(t.table_number)})</span>
+        <span class="text-green-600 uppercase">${escapeHtml(t.status)}</span>
       </div>
       <div class="py-2 space-y-1 text-xs">
-        ${t.items.map((i: any) => `<div>${i.quantity}x ${i.name} [${i.station}]</div>`).join('')}
+        ${t.items.map((i: any) => `<div>${escapeHtml(i.quantity)}x ${escapeHtml(i.name)} [${escapeHtml(i.station)}]</div>`).join('')}
       </div>
-      <button hx-patch="/v1/kds/tickets/${t.id}/bump" hx-target="closest .kds-card" hx-swap="outerHTML"
+      <button hx-patch="/v1/kds/tickets/${escapeHtml(t.id)}/bump" hx-target="closest .kds-card" hx-swap="outerHTML"
         class="w-full bg-green-500 text-white py-2 rounded font-bold text-xs uppercase mt-2">
         BUMP TICKET
       </button>

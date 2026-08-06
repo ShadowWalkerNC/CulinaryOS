@@ -18,6 +18,7 @@ export type TicketStatus =
   | 'queued'
   | 'fired'
   | 'cooking'
+  /** @deprecated Not in DB check constraint — map UI "ready" to cooking/bumped */
   | 'ready'
   | 'bumped'
   | 'recalled'

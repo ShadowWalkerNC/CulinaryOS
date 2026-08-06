@@ -141,7 +141,8 @@ ordersRoutes.post('/:id/items', async (c) => {
   await supabase
     .from('pos_orders')
     .update({ subtotal, tax, total })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
 
   return ok(c, data, 201);
 });
@@ -226,7 +227,7 @@ ordersRoutes.patch('/:id/send', async (c) => {
   if (!['open'].includes(order.status))
     return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
 
-  await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id);
+  await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id).eq('tenant_id', tenantId);
 
   await fetch(`${CULINARYOS_URL}/internal/events`, {
     method: 'POST',
@@ -404,11 +405,22 @@ ordersRoutes.patch('/:id/items/:itemId/void', async (c) => {
     return ok(c, item);
   }
 
+  // Verify parent order belongs to tenant before voiding line item
+  const { data: parent, error: parentErr } = await supabase
+    .from('pos_orders')
+    .select('id')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (parentErr || !parent) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+
   const { data, error } = await supabase
     .from('pos_order_line_items')
     .update({ is_voided: true, void_reason: body.reason ?? null })
     .eq('id', itemId)
     .eq('order_id', id)
+    .eq('tenant_id', tenantId)
     .select()
     .single();
 

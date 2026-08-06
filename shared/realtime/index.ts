@@ -1,14 +1,11 @@
 // ============================================================
-// CulinaryOS — Shared Realtime Hooks
-// Import in any React client to replace polling with push.
-// Requires VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY in env.
+// CulinaryOS — Shared Realtime Hooks (root shared/)
+// Keep in sync with packages/shared/src/realtime
 // ============================================================
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import type { KitchenTicket, Order } from '../types';
-
-// ---- KDS: ticket updates ----
 
 export function useRealtimeTickets(
   supabase: SupabaseClient,
@@ -18,6 +15,12 @@ export function useRealtimeTickets(
   onDelete: (id: string) => void
 ): void {
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const onInsertRef = useRef(onInsert);
+  const onUpdateRef = useRef(onUpdate);
+  const onDeleteRef = useRef(onDelete);
+  onInsertRef.current = onInsert;
+  onUpdateRef.current = onUpdate;
+  onDeleteRef.current = onDelete;
 
   useEffect(() => {
     if (!supabase || !tenantId) return;
@@ -27,49 +30,38 @@ export function useRealtimeTickets(
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'kitchen_tickets',
           filter: `tenant_id=eq.${tenantId}`,
         },
-        (payload) => onInsert(payload.new as KitchenTicket)
+        (payload: { eventType: string; new: any; old: any }) => {
+          if (payload.eventType === 'DELETE') {
+            onDeleteRef.current((payload.old as any).id);
+            return;
+          }
+          const row = payload.new as KitchenTicket;
+          if (payload.eventType === 'INSERT') onInsertRef.current(row);
+          else onUpdateRef.current(row);
+        }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'kitchen_tickets',
-          filter: `tenant_id=eq.${tenantId}`,
-        },
-        (payload) => onUpdate(payload.new as KitchenTicket)
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'kitchen_tickets',
-          filter: `tenant_id=eq.${tenantId}`,
-        },
-        (payload) => onDelete((payload.old as any).id)
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] KDS tickets subscribed for tenant ${tenantId}`);
+      .subscribe((status: string) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(`[Realtime] KDS channel ${status}`);
         }
       });
+
+    const bridge = supabase.channel(`kds:${tenantId}`).subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      supabase.removeChannel(bridge);
     };
-  }, [tenantId]);
+  }, [supabase, tenantId]);
 }
-
-// ---- POS: order updates ----
 
 export function useRealtimeOrders(
   supabase: SupabaseClient,
@@ -78,6 +70,10 @@ export function useRealtimeOrders(
   onUpdate: (order: Order) => void
 ): void {
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const onInsertRef = useRef(onInsert);
+  const onUpdateRef = useRef(onUpdate);
+  onInsertRef.current = onInsert;
+  onUpdateRef.current = onUpdate;
 
   useEffect(() => {
     if (!supabase || !tenantId) return;
@@ -92,7 +88,7 @@ export function useRealtimeOrders(
           table: 'pos_orders',
           filter: `tenant_id=eq.${tenantId}`,
         },
-        (payload) => onInsert(payload.new as Order)
+        (payload: { new: any }) => onInsertRef.current(payload.new as Order)
       )
       .on(
         'postgres_changes',
@@ -102,42 +98,40 @@ export function useRealtimeOrders(
           table: 'pos_orders',
           filter: `tenant_id=eq.${tenantId}`,
         },
-        (payload) => onUpdate(payload.new as Order)
+        (payload: { new: any }) => onUpdateRef.current(payload.new as Order)
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] POS orders subscribed for tenant ${tenantId}`);
-        }
-      });
+      .subscribe();
+
+    const bridge = supabase.channel(`pos:${tenantId}`).subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      supabase.removeChannel(bridge);
     };
-  }, [tenantId]);
+  }, [supabase, tenantId]);
 }
-
-// ---- Connection status hook ----
 
 export function useRealtimeStatus(
   supabase: SupabaseClient,
   tenantId: string
 ): { connected: boolean } {
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const connectedRef = useRef(false);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
     const channel = supabase
       .channel(`presence:${tenantId}`)
-      .subscribe((status) => {
-        connectedRef.current = status === 'SUBSCRIBED';
+      .subscribe((status: string) => {
+        setConnected(status === 'SUBSCRIBED');
       });
-    channelRef.current = channel;
-    return () => { supabase.removeChannel(channel); };
-  }, [tenantId]);
+    return () => {
+      supabase.removeChannel(channel);
+      setConnected(false);
+    };
+  }, [supabase, tenantId]);
 
-  return { connected: connectedRef.current };
+  return { connected };
 }

@@ -5,6 +5,7 @@
 // ============================================================
 
 import type { KitchenTicket, Order, TicketStatus, OrderStatus, KitchenStation, CourseHoldStatus } from './types';
+import { uiStationFromDb } from './stations';
 
 function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -41,39 +42,61 @@ export function camelToSnakeKeys<T = any>(obj: any): T {
 export function mapTicketRowToKitchenTicket(row: any): KitchenTicket {
   if (!row) return row;
   const mapped = snakeToCamelKeys(row);
-  return {
+  const station = mapped.station ?? mapped.stationId ?? mapped.station_id;
+  const itemSource =
+    Array.isArray(mapped.ticketItems) ? mapped.ticketItems
+    : Array.isArray(mapped.ticket_items) ? mapped.ticket_items
+    : Array.isArray(mapped.items) ? mapped.items
+    : [];
+
+  // Map DB station (grill/cold/…) to UI tab id when present
+  let stationId = mapped.stationId ?? mapped.station_id;
+  if (!stationId && typeof station === 'string') {
+    stationId = uiStationFromDb(station);
+  }
+
+  const ticket: KitchenTicket = {
     id: mapped.id,
-    tenantId: mapped.tenantId ?? mapped.tenant_id,
     orderId: mapped.orderId ?? mapped.order_id ?? '',
-    orderNumber: mapped.orderNumber ?? mapped.order_number,
-    station: mapped.station ?? mapped.station_id,
-    stationId: mapped.stationId ?? mapped.station_id,
-    stationName: mapped.stationName ?? mapped.station_name,
     status: (mapped.status ?? 'queued') as TicketStatus,
-    items: Array.isArray(mapped.items) ? mapped.items.map((item: any) => ({
+    items: itemSource.map((item: any) => ({
       lineItemId: item.lineItemId ?? item.line_item_id,
       id: item.id ?? item.line_item_id,
-      name: item.name ?? '',
+      name: item.name ?? item.menuItemName ?? item.menu_item_name ?? '',
       quantity: item.quantity ?? 1,
       modifiers: item.modifiers ?? [],
       notes: item.notes,
       station: item.station,
-    })) : [],
-    tableNumber: mapped.tableNumber ?? mapped.table_number,
-    tableLabel: mapped.tableLabel ?? mapped.table_label ?? mapped.tableNumber,
-    seatNumber: mapped.seatNumber ?? mapped.seat_number,
-    coverCount: mapped.coverCount ?? mapped.cover_count,
+    })),
     courseNumber: mapped.courseNumber ?? mapped.course_number ?? 1,
-    courseHoldStatus: (mapped.courseHoldStatus ?? mapped.course_hold_status) as CourseHoldStatus,
-    priority: mapped.priority ?? 'normal',
-    notes: mapped.notes,
-    firedAt: mapped.firedAt ?? mapped.fired_at,
-    bumpedAt: mapped.bumpedAt ?? mapped.bumped_at,
-    cookTimeSeconds: mapped.cookTimeSeconds ?? mapped.cook_time_seconds,
-    elapsedSeconds: mapped.elapsedSeconds ?? mapped.elapsed_seconds ?? 0,
     createdAt: mapped.createdAt ?? mapped.created_at ?? new Date().toISOString(),
-    updatedAt: mapped.updatedAt ?? mapped.updated_at,
   };
+
+  if (mapped.tenantId ?? mapped.tenant_id) ticket.tenantId = mapped.tenantId ?? mapped.tenant_id;
+  if (mapped.orderNumber ?? mapped.order_number) ticket.orderNumber = mapped.orderNumber ?? mapped.order_number;
+  if (station) ticket.station = station as KitchenStation;
+  if (stationId) ticket.stationId = String(stationId);
+  if (mapped.stationName ?? mapped.station_name) ticket.stationName = mapped.stationName ?? mapped.station_name;
+  if (mapped.tableNumber ?? mapped.table_number) ticket.tableNumber = mapped.tableNumber ?? mapped.table_number;
+  if (mapped.tableLabel ?? mapped.table_label ?? mapped.tableNumber) {
+    ticket.tableLabel = mapped.tableLabel ?? mapped.table_label ?? mapped.tableNumber;
+  }
+  if (mapped.seatNumber ?? mapped.seat_number) ticket.seatNumber = mapped.seatNumber ?? mapped.seat_number;
+  if (mapped.coverCount ?? mapped.cover_count) ticket.coverCount = mapped.coverCount ?? mapped.cover_count;
+  if (mapped.courseHoldStatus ?? mapped.course_hold_status) {
+    ticket.courseHoldStatus = (mapped.courseHoldStatus ?? mapped.course_hold_status) as CourseHoldStatus;
+  }
+  ticket.priority = mapped.priority ?? 'normal';
+  if (mapped.notes) ticket.notes = mapped.notes;
+  if (mapped.firedAt ?? mapped.fired_at) ticket.firedAt = mapped.firedAt ?? mapped.fired_at;
+  if (mapped.bumpedAt ?? mapped.bumped_at) ticket.bumpedAt = mapped.bumpedAt ?? mapped.bumped_at;
+  if (mapped.cookTimeSeconds ?? mapped.cook_time_seconds) {
+    ticket.cookTimeSeconds = mapped.cookTimeSeconds ?? mapped.cook_time_seconds;
+  }
+  ticket.elapsedSeconds = mapped.elapsedSeconds ?? mapped.elapsed_seconds ?? 0;
+  if (mapped.updatedAt ?? mapped.updated_at) ticket.updatedAt = mapped.updatedAt ?? mapped.updated_at;
+
+  return ticket;
 }
 
 export function mapKitchenTicketToRow(ticket: Partial<KitchenTicket>): Record<string, any> {
