@@ -3,6 +3,8 @@ import { useOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue } from '@culinaryos/shared';
+import { CheckoutDrawer } from '../components/CheckoutDrawer';
 
 const METHODS = ['card', 'cash', 'comp'] as const;
 
@@ -24,6 +26,7 @@ export function CheckoutView() {
   
   // Split Check Wizard Modal State
   const [showSplitModal, setShowSplitModal] = useState(false);
+  const [showCardCheckout, setShowCardCheckout] = useState(false);
   const [selectedSeatFilter, setSelectedSeatFilter] = useState<number | null>(null);
 
   const qc = useQueryClient();
@@ -62,29 +65,72 @@ export function CheckoutView() {
 
   async function finalizePayment() {
     setProcessing(true);
+    const tenantId = order.tenant_id ?? usePOSStore.getState().tenantId;
+    const API = getApiBase();
+    const headers = apiHeaders(tenantId);
+
+    const payload = {
+      amount: total,
+      method,
+      tip_amount: tipAmount,
+      tip_cents: tipAmount,
+      total,
+    };
+
     try {
-      if (supabase) {
-        await supabase.from('payments').insert({
-          tenant_id: order.tenant_id, order_id: order.id,
-          amount: total, method, tip_amount: tipAmount,
-          status: 'completed', processed_at: new Date().toISOString(),
+      if (!navigator.onLine || !supabase) {
+        enqueueOfflineDelta({
+          tenant_id: tenantId,
+          order_id: order.id,
+          action: 'finalize_payment',
+          payload: { ...payload, allow_offline_card: method === 'card' },
         });
-        await supabase.from('pos_orders').update({ status: 'paid', paid_at: new Date().toISOString(), total }).eq('id', order.id);
-      } else {
         const mockDb = await import('../lib/mockDb');
         const orders = mockDb.getMockOrders();
-        const mockOrder = orders.find(o => o.id === order.id);
+        const mockOrder = orders.find((o: any) => o.id === order.id);
         if (mockOrder) {
           mockOrder.status = 'paid';
           mockOrder.paid_at = new Date().toISOString();
           mockOrder.total = total;
           mockDb.saveMockOrders(orders);
         }
+        qc.invalidateQueries({ queryKey: ['orders'] });
+        setPaid(true);
+        return;
       }
+
+      // Online cash/comp: server is source of truth via sync-deltas
+      const delta = enqueueOfflineDelta({
+        tenant_id: tenantId,
+        order_id: order.id,
+        action: 'finalize_payment',
+        payload,
+      });
+
+      const synced = await flushOfflineQueue(API, headers);
+      if (synced === 0) {
+        const res = await fetch(`${API}/v1/pos/sync-deltas`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ deltas: [delta] }),
+        });
+        if (!res.ok) throw new Error('Payment sync failed');
+      }
+
       qc.invalidateQueries({ queryKey: ['orders'] });
       setPaid(true);
     } catch (err: any) {
-      alert('Payment failed: ' + err.message);
+      try {
+        enqueueOfflineDelta({
+          tenant_id: tenantId,
+          order_id: order.id,
+          action: 'finalize_payment',
+          payload: { ...payload, allow_offline_card: true },
+        });
+        setPaid(true);
+      } catch {
+        alert('Payment failed: ' + (err?.message ?? err));
+      }
     } finally {
       setProcessing(false);
       setStripeSimState('idle');
@@ -93,7 +139,8 @@ export function CheckoutView() {
 
   function startPaymentFlow() {
     if (method === 'card') {
-      setStripeSimState('waiting');
+      // Real Stripe Elements checkout (confirm → capture)
+      setShowCardCheckout(true);
     } else {
       finalizePayment();
     }
@@ -366,6 +413,20 @@ export function CheckoutView() {
           {processing ? 'Authorizing...' : `Finalize Charge $${(total/100).toFixed(2)}`}
         </button>
       </div>
+
+      {/* Stripe Elements card checkout */}
+      {showCardCheckout && (
+        <CheckoutDrawer
+          orderId={order.id}
+          totalCents={taxableSubtotal + tax}
+          onSuccess={() => {
+            setShowCardCheckout(false);
+            setPaid(true);
+            qc.invalidateQueries({ queryKey: ['orders'] });
+          }}
+          onClose={() => setShowCardCheckout(false)}
+        />
+      )}
 
       {/* Split Checks Wizard Modal */}
       {showSplitModal && (

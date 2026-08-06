@@ -18,6 +18,7 @@ if (typeof (globalThis as any).localStorage === 'undefined') {
 import {
   enqueueOfflineDelta,
   getOfflineQueue,
+  getPendingOfflineQueue,
   markDeltasSynced,
   flushOfflineQueue
 } from '@culinaryos/shared';
@@ -45,7 +46,7 @@ describe('offline-sync engine', () => {
     expect(queue[0].id).toBe(result.id);
   });
 
-  it('marks synced deltas and clears them from queue', () => {
+  it('marks synced deltas without deleting them from the queue', () => {
     const d1 = enqueueOfflineDelta({
       tenant_id: 'tenant-001',
       order_id: 'ord-1001',
@@ -60,16 +61,41 @@ describe('offline-sync engine', () => {
       payload: { total: 75.00 },
     });
 
-    expect(getOfflineQueue().length).toBe(2);
+    expect(getPendingOfflineQueue().length).toBe(2);
 
     markDeltasSynced([d1.id]);
 
-    const remaining = getOfflineQueue();
-    expect(remaining.length).toBe(1);
-    expect(remaining[0].id).toBe(d2.id);
+    expect(getOfflineQueue().length).toBe(2);
+    expect(getPendingOfflineQueue().length).toBe(1);
+    expect(getPendingOfflineQueue()[0].id).toBe(d2.id);
   });
 
-  it('flushes offline queue via API sync endpoint', async () => {
+  it('flushes offline queue only for confirmed IDs from the API', async () => {
+    const d1 = enqueueOfflineDelta({
+      tenant_id: 'tenant-001',
+      order_id: 'ord-1001',
+      action: 'finalize_payment' as const,
+      payload: { amount: 50.00 },
+    });
+
+    const originalFetch = globalThis.fetch;
+    (globalThis as any).fetch = mock(async () => ({
+      ok: true,
+      json: async () => ({ ok: true, data: { confirmedIds: [d1.id], applied: 1 } }),
+    }));
+
+    try {
+      const syncedCount = await flushOfflineQueue('http://localhost:3000');
+      expect(syncedCount).toBe(1);
+      expect(getPendingOfflineQueue().length).toBe(0);
+      expect(getOfflineQueue().length).toBe(1);
+      expect(getOfflineQueue()[0].synced).toBe(true);
+    } finally {
+      (globalThis as any).fetch = originalFetch;
+    }
+  });
+
+  it('does not clear queue on bare HTTP 200 without confirmedIds', async () => {
     enqueueOfflineDelta({
       tenant_id: 'tenant-001',
       order_id: 'ord-1001',
@@ -85,8 +111,8 @@ describe('offline-sync engine', () => {
 
     try {
       const syncedCount = await flushOfflineQueue('http://localhost:3000');
-      expect(syncedCount).toBe(1);
-      expect(getOfflineQueue().length).toBe(0);
+      expect(syncedCount).toBe(0);
+      expect(getPendingOfflineQueue().length).toBe(1);
     } finally {
       (globalThis as any).fetch = originalFetch;
     }

@@ -1,21 +1,6 @@
 // ============================================================
 // CulinaryOS — API Server (apps/server)
 // Hono on Node 20 (or Bun). Entry point.
-//
-// Routes mounted:
-//   GET  /health
-//   POST /internal/events        — event bus ingress
-//   GET  /internal/events        — event log (last 100)
-//   *    /v1/kds/*               — kitchen display routes
-//   *    /v1/pantry/*            — pantry / inventory routes
-//   *    /v1/reports/*           — analytics + reporting
-//
-// Coming in upcoming commits:
-//   /v1/payments/*               — Commit 10
-//   /v1/menu/*                   — Commit 11
-//   /v1/online-orders/*          — Commit 12
-//   /v1/pos/orders/*             — Phase 3
-//   /v1/tenants/register         — Commit 13
 // ============================================================
 
 import { serve }               from '@hono/node-server';
@@ -35,6 +20,8 @@ import { ordersRoutes }        from './routes/orders';
 import { tabsRoutes }          from './routes/tabs';
 import { menuRoutes }          from './routes/menu';
 import { paymentsRoutes }      from './routes/payments';
+import { posSyncRoutes }       from './routes/pos-sync';
+import { onlineOrdersRoutes }  from './routes/online-orders';
 import type { Env }            from './types';
 
 const app = new Hono<Env>();
@@ -42,8 +29,22 @@ const app = new Hono<Env>();
 // ---- Global middleware ----
 
 app.use('*', logger());
+
+const corsAllowlist = (process.env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use('*', cors({
-  origin: (origin) => origin,
+  origin: (origin) => {
+    if (!origin) return corsAllowlist[0] ?? 'http://localhost:5173';
+    if (corsAllowlist.length === 0) {
+      // Dev default: localhost only
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+      return '';
+    }
+    return corsAllowlist.includes(origin) ? origin : '';
+  },
   allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id', 'X-Caller-Service', 'X-Request-Id'],
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
@@ -66,8 +67,19 @@ app.get('/internal/events', async (c) => {
   const supabase = c.get('supabase');
   const tenantId = c.req.header('X-Tenant-Id');
 
-  let q = supabase.from('domain_events').select('*').order('created_at', { ascending: false }).limit(100);
-  if (tenantId) q = q.eq('tenant_id', tenantId);
+  if (!tenantId) {
+    return c.json({
+      ok: false,
+      error: { code: 'VALIDATION_ERROR', message: 'X-Tenant-Id required — refuse unscoped event listing' },
+    }, 422);
+  }
+
+  const q = supabase
+    .from('domain_events')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(100);
 
   const { data, error } = await q;
   if (error) return c.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: error.message } }, 500);
@@ -81,6 +93,8 @@ app.route('/v1/orders',   ordersRoutes);
 app.route('/v1/tabs',     tabsRoutes);
 app.route('/v1/menu',     menuRoutes);
 app.route('/v1/payments', paymentsRoutes);
+app.route('/v1/pos',      posSyncRoutes);
+app.route('/v1/online-orders', onlineOrdersRoutes);
 
 // ---- Health ----
 
@@ -100,5 +114,3 @@ startRealtimeBridge();
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`[culinaryos-api] listening on :${PORT}`);
 });
-
-export default app;

@@ -12,30 +12,78 @@ serve(async (req) => {
   const segments = url.pathname.split('/').filter(Boolean);
   const promptName = segments[segments.length - 1];
 
-  // Auth
+  // Auth — require and VERIFY JWT
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
   const jwt = authHeader.replace('Bearer ', '');
 
-  // Lookup versioned prompt template
+  const supabaseUser = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: `Bearer ${jwt}` } } },
+  );
+
+  const { data: userData, error: userErr } = await supabaseUser.auth.getUser(jwt);
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const template = PROMPT_LIBRARY[promptName];
   if (!template) {
     return new Response(JSON.stringify({ error: 'Unknown prompt' }), {
       status: 404,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
   const inputs = await req.json();
 
-  // Build prompts from template
+  // Resolve company/tenant from membership — never trust client-only scope
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
+
+  const claimedTenant =
+    (typeof inputs.company_id === 'string' && inputs.company_id) ||
+    (typeof inputs.tenant_id === 'string' && inputs.tenant_id) ||
+    null;
+
+  let companyId: string | null = claimedTenant;
+  if (claimedTenant) {
+    const { data: membership } = await admin
+      .from('tenant_users')
+      .select('tenant_id')
+      .eq('user_id', userData.user.id)
+      .eq('tenant_id', claimedTenant)
+      .maybeSingle();
+    if (!membership) {
+      return new Response(JSON.stringify({ error: 'Forbidden for tenant' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  } else {
+    const { data: membership } = await admin
+      .from('tenant_users')
+      .select('tenant_id')
+      .eq('user_id', userData.user.id)
+      .limit(1)
+      .maybeSingle();
+    companyId = membership?.tenant_id ?? null;
+  }
+
   const systemPrompt = template.buildSystemPrompt(inputs);
   const userMessage = template.buildUserMessage(inputs);
 
-  // Call Anthropic claude-sonnet-4-6
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
@@ -46,14 +94,11 @@ serve(async (req) => {
   const output =
     message.content[0].type === 'text' ? message.content[0].text : '';
 
-  // Audit log — append only
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-  await supabase.from('ai_prompt_log').insert({
+  await admin.from('ai_prompt_log').insert({
     prompt_name: promptName,
     prompt_version: template.version,
+    company_id: companyId,
+    user_id: userData.user.id,
     inputs,
     raw_output: output,
     review_status: 'pending',

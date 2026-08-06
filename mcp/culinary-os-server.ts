@@ -6,10 +6,14 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 const BASE_URL = process.env.CULINARY_API_URL ?? 'http://localhost:8080';
 const API_KEY  = process.env.CULINARY_API_KEY ?? '';
 
-async function api(method: string, path: string, body?: unknown) {
+async function api(method: string, path: string, body?: unknown, tenantId?: string) {
   const init: RequestInit = {
     method,
-    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+      ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
+    },
   };
   if (body) {
     init.body = JSON.stringify(body);
@@ -86,46 +90,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case 'get_recipe': {
-        const data = await api('GET', `/api/tenants/${a.tenant_id}/recipes?q=${encodeURIComponent(a.query)}`);
+        const data = await api('GET', `/api/tenants/${a.tenant_id}/recipes?q=${encodeURIComponent(a.query)}`, undefined, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'scale_recipe': {
-        const data = await api('POST', `/api/tenants/${a.tenant_id}/recipes/${a.recipe_id}/scale`, { servings: a.servings });
+        const data = await api('POST', `/api/tenants/${a.tenant_id}/recipes/${a.recipe_id}/scale`, { servings: a.servings }, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'get_inventory': {
         const qs = a.low_stock_only ? '?filter=low' : '';
-        const data = await api('GET', `/api/tenants/${a.tenant_id}/inventory${qs}`);
+        const data = await api('GET', `/api/tenants/${a.tenant_id}/inventory${qs}`, undefined, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'update_inventory': {
-        await api('PATCH', `/api/tenants/${a.tenant_id}/inventory/${a.item_id}`, { quantity: a.quantity });
+        await api('PATCH', `/api/tenants/${a.tenant_id}/inventory/${a.item_id}`, { quantity: a.quantity }, a.tenant_id);
         return { content: [{ type: 'text', text: `Stock updated: item ${a.item_id} → ${a.quantity}` }] };
       }
       case 'get_open_orders': {
         const status = a.status ?? 'open';
-        const data = await api('GET', `/api/tenants/${a.tenant_id}/orders?status=${status}`);
+        const data = await api('GET', `/v1/orders?status=${status}`, undefined, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'fire_order': {
-        await api('POST', `/api/tenants/${a.tenant_id}/orders/${a.order_id}/fire`, {});
+        await api('PATCH', `/v1/orders/${a.order_id}/send`, {}, a.tenant_id);
         return { content: [{ type: 'text', text: `Order ${a.order_id} fired to kitchen` }] };
       }
       case 'create_menu': {
-        const data = await api('POST', `/api/tenants/${a.tenant_id}/menus`, { name: a.name });
+        const data = await api('POST', `/api/tenants/${a.tenant_id}/menus`, { name: a.name }, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'get_sales_report': {
         const date = a.date ?? new Date().toISOString().slice(0, 10);
-        const data = await api('GET', `/api/tenants/${a.tenant_id}/reports/sales?date=${date}`);
+        const data = await api('GET', `/v1/reports/sales?date=${date}`, undefined, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'get_nutritional_info': {
-        const data = await api('GET', `/api/tenants/${a.tenant_id}/recipes/${a.recipe_id}/nutrition`);
+        const data = await api('GET', `/api/tenants/${a.tenant_id}/recipes/${a.recipe_id}/nutrition`, undefined, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       case 'log_prep': {
-        const data = await api('POST', `/api/tenants/${a.tenant_id}/prep-log`, { recipeId: a.recipe_id, quantity: a.quantity, notes: a.notes });
+        const data = await api('POST', `/api/tenants/${a.tenant_id}/prep-log`, { recipeId: a.recipe_id, quantity: a.quantity, notes: a.notes }, a.tenant_id);
         return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
       }
       default:

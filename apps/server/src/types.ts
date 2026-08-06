@@ -6,5 +6,8 @@ export interface Env {
     tenantId: string;
     callerService: string;
     requestId: string;
+    userId?: string;
+    authRole?: string;
+    authMode?: 'jwt' | 'api_key' | 'relaxed';
   };
 }
