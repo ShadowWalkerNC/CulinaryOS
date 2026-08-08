@@ -11,28 +11,16 @@
 import { Hono } from 'hono';
 import { requireTenant, ok, err, escapeHtml } from '../middleware/auth.js';
 import { KDS_ACTIVE_STATUSES, resolveDbStations } from '@culinaryos/shared';
+import {
+  bumpMockTicket,
+  fireMockTicket,
+  getMockTickets,
+} from '../lib/mock-kitchen.js';
 import type { Env } from '../types.js';
 
 export const kdsRoutes = new Hono<Env>();
 
 kdsRoutes.use('*', requireTenant);
-
-let mockTickets: any[] = [
-  {
-    id: "t-101",
-    order_id: "o-201",
-    table_number: "4",
-    station: "grill",
-    status: "fired",
-    course_number: 1,
-    course_hold_status: "fired",
-    fired_at: new Date().toISOString(),
-    items: [
-      { id: "i-1", name: "Truffle Hummus & Pita", quantity: 1, station: "cold" },
-      { id: "i-2", name: "Crispy Calamari", quantity: 1, station: "fry" }
-    ]
-  }
-];
 
 // GET /v1/kds/tickets?station=grill|1&status=fired
 kdsRoutes.get('/tickets', async (c) => {
@@ -42,13 +30,13 @@ kdsRoutes.get('/tickets', async (c) => {
   const status    = c.req.query('status');
 
   if (!supabase) {
-    let list = mockTickets;
-    if (status) list = list.filter((t: any) => t.status === status);
-    else list = list.filter((t: any) => KDS_ACTIVE_STATUSES.includes(t.status));
+    let list = getMockTickets().filter((t) => t.tenant_id === tenantId || !t.tenant_id);
+    if (status) list = list.filter((t) => t.status === status);
+    else list = list.filter((t) => (KDS_ACTIVE_STATUSES as readonly string[]).includes(t.status));
     if (station && station !== 'all' && station !== 'expo') {
       const allowed = resolveDbStations(station);
-      list = list.filter((t: any) => allowed.includes(t.station) ||
-        t.items?.some((i: any) => allowed.includes(i.station)));
+      list = list.filter((t) => allowed.includes(t.station) ||
+        t.items?.some((i) => i.station != null && allowed.includes(i.station)));
     }
     return ok(c, list);
   }
@@ -81,7 +69,7 @@ kdsRoutes.get('/tickets/:id', async (c) => {
   const { id }    = c.req.param();
 
   if (!supabase) {
-    const ticket = mockTickets.find(t => t.id === id);
+    const ticket = getMockTickets().find(t => t.id === id);
     if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
     return ok(c, ticket);
   }
@@ -104,10 +92,8 @@ kdsRoutes.patch('/tickets/:id/bump', async (c) => {
   const { id }    = c.req.param();
 
   if (!supabase) {
-    const ticket = mockTickets.find(t => t.id === id);
+    const ticket = bumpMockTicket(id);
     if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
-    ticket.status = 'bumped';
-    ticket.bumped_at = new Date().toISOString();
     return ok(c, { ticketId: id, status: 'bumped' });
   }
 
@@ -139,11 +125,8 @@ kdsRoutes.patch('/tickets/:id/fire', async (c) => {
   const { id }    = c.req.param();
 
   if (!supabase) {
-    const ticket = mockTickets.find(t => t.id === id);
+    const ticket = fireMockTicket(id);
     if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
-    ticket.course_hold_status = 'fired';
-    ticket.status = 'fired';
-    ticket.fired_at = new Date().toISOString();
     return ok(c, { ticketId: id, status: 'fired' });
   }
 
@@ -176,14 +159,15 @@ kdsRoutes.get('/stations/:id/analytics', async (c) => {
   const periodMinutes = Number(c.req.query('periodMinutes') ?? 60);
 
   if (!supabase) {
-    const active = mockTickets.filter((t) => KDS_ACTIVE_STATUSES.includes(t.status));
+    const all = getMockTickets();
+    const active = all.filter((t) => (KDS_ACTIVE_STATUSES as readonly string[]).includes(t.status));
     return ok(c, {
       stationId,
       periodMinutes,
       avgTicketSeconds: 0,
       bumpRate: 0,
       queueDepth: active.length,
-      heldCount: mockTickets.filter((t) => t.course_hold_status === 'held').length,
+      heldCount: all.filter((t) => t.course_hold_status === 'held').length,
       activeCount: active.length,
       avgCookSeconds: null,
     });
@@ -298,7 +282,7 @@ kdsRoutes.post('/pending-push/ack', async (c) => {
 
 // GET /v1/kds/htmx-cards (Zero-JS HTMX Kiosk Endpoint)
 kdsRoutes.get('/htmx-cards', async (c) => {
-  const list = mockTickets;
+  const list = getMockTickets();
   const html = list.map(t => `
     <div class="kds-card border border-gray-300 rounded-xl p-4 bg-white shadow-sm mb-3 font-mono">
       <div class="flex justify-between font-bold border-b pb-2">

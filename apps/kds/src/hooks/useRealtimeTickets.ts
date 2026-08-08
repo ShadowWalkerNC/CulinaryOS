@@ -229,25 +229,64 @@ export function useRealtimeTickets(stationId: string) {
     const ACTIVE: TicketStatus[] = [...KDS_ACTIVE_STATUSES];
 
     if (!supabase) {
-      setLoading(false);
-      setError(null);
+      // Demo / offline: poll API mock kitchen store so POS fires appear on KDS
+      const API = getApiBase();
 
-      let filtered: KitchenTicket[] = [];
-      if (stationId === 'expo') {
-        filtered = globalDemoTickets;
-      } else if (stationId === 'all') {
-        filtered = globalDemoTickets.filter(t => t.courseHoldStatus === 'fired');
-      } else {
-        filtered = globalDemoTickets.filter(
-          t => matchesStation(t.station ?? t.stationId, stationId) && t.courseHoldStatus === 'fired'
-        );
-      }
+      const applyDemoFallback = () => {
+        let filtered: KitchenTicket[] = [];
+        if (stationId === 'expo') {
+          filtered = globalDemoTickets;
+        } else if (stationId === 'all') {
+          filtered = globalDemoTickets.filter(t => t.courseHoldStatus === 'fired');
+        } else {
+          filtered = globalDemoTickets.filter(
+            t => matchesStation(t.station ?? t.stationId, stationId) && t.courseHoldStatus === 'fired'
+          );
+        }
+        if (mounted) {
+          setTickets(filtered.map(t => ({ ...t, elapsedSeconds: elapsed(t) })));
+        }
+      };
 
-      setTickets(filtered.map(t => ({ ...t, elapsedSeconds: elapsed(t) })));
+      const pollApi = async () => {
+        try {
+          const qs = new URLSearchParams();
+          if (stationId !== 'all' && stationId !== 'expo') qs.set('station', stationId);
+          const res = await fetch(`${API}/v1/kds/tickets?${qs}`, {
+            headers: apiHeaders(TENANT_ID),
+          });
+          if (!res.ok) {
+            applyDemoFallback();
+            return;
+          }
+          const json = await res.json();
+          let rows: any[] = json.data ?? [];
+          if (stationId === 'all') {
+            rows = rows.filter((r) => r.course_hold_status === 'fired');
+          } else if (stationId !== 'expo') {
+            rows = rows.filter(
+              (r) =>
+                matchesStation(r.station, stationId) && r.course_hold_status === 'fired'
+            );
+          }
+          if (!mounted) return;
+          setTickets(rows.map(rowToTicket));
+          setError(null);
+        } catch {
+          applyDemoFallback();
+          if (mounted) setError(null);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      };
 
+      setLoading(true);
+      pollApi();
+      const pollRef = setInterval(pollApi, 2000);
       timerRef.current = setInterval(tick, 1000);
       return () => {
         mounted = false;
+        clearInterval(pollRef);
         if (timerRef.current) clearInterval(timerRef.current);
       };
     }

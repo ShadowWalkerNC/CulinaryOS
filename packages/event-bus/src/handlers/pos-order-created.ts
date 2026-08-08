@@ -38,7 +38,7 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
     const [station, courseStr] = key.split('::');
     const courseNumber = parseInt(courseStr || '1', 10);
     const hasAllergy = groupItems.some((i) =>
-      i.modifiers.some((m: string) => /allerg/i.test(m))
+      (i.modifiers ?? []).some((m: string) => /allerg/i.test(m))
     );
 
     const isFirstCourse = courseNumber <= 1;
@@ -63,11 +63,11 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
 
     const ticketItems = groupItems.map((item, idx) => ({
       ticket_id:    ticketId,
-      line_item_id: item.lineItemId,
+      line_item_id: item.lineItemId || uuidv4(),
       name:         item.name,
       quantity:     item.quantity,
-      modifiers:    item.modifiers,
-      notes:        null,
+      modifiers:    item.modifiers ?? [],
+      notes:        item.notes ?? null,
       sort_order:   idx,
     }));
 

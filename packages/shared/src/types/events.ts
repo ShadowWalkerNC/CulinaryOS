@@ -63,6 +63,7 @@ export interface OrderItem {
   station: KitchenStation;   // where it routes in KDS
   courseNumber?: number;     // 1 = apps, 2 = mains, etc.
   recipeId?: string;         // links back to RecipeOS
+  notes?: string | null;
 }
 
 export type KitchenStation =

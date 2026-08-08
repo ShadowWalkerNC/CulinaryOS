@@ -1,179 +1,35 @@
 # ============================================================
-# CulinaryOS — Render Blueprint
-# One-click deploy: connect repo on render.com → "New Blueprint"
-# Render reads this file and provisions all services automatically.
-#
-# After deploy, set these secrets in Render dashboard:
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_TENANT_ID
-#
-# Note: *_HOST fromService vars give bare hostnames (no https://).
-# Services prepend https:// in code via the CULINARYOS_HOST pattern.
+# CulinaryOS — Render Blueprint (apps/* monorepo)
+# After deploy, set secrets in the Render dashboard:
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY,
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_TENANT_ID,
+#   INTERNAL_API_KEY / DEVICE_API_KEY, STRIPE_* as needed
 # ============================================================
 
 services:
-
-  # ----------------------------------------------------------
-  # Backend — main Hono API (Bun/Docker)
-  # ----------------------------------------------------------
   - type: web
-    name: culinaryos-backend
+    name: culinaryos-api
     runtime: docker
-    dockerfilePath: backend/Dockerfile
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 3000
       - key: SERVICE_NAME
         value: culinaryos
+      - key: CULINARYOS_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
       - key: INTERNAL_API_KEY
+        generateValue: true
+      - key: DEVICE_API_KEY
         generateValue: true
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-
-  # ----------------------------------------------------------
-  # KDS API (Bun/Docker)
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-kds-api
-    runtime: docker
-    dockerfilePath: kds/Dockerfile
-    healthCheckPath: /health
-    envVars:
-      - key: PORT
-        value: 3002
-      - key: SERVICE_NAME
-        value: kds
-      - key: CULINARYOS_HOST
-        fromService:
-          name: culinaryos-backend
-          type: web
-          property: host
-      - key: INTERNAL_API_KEY
-        fromService:
-          name: culinaryos-backend
-          type: web
-          envVarKey: INTERNAL_API_KEY
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-
-  # ----------------------------------------------------------
-  # POS API (Bun/Docker)
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-pos-api
-    runtime: docker
-    dockerfilePath: pos/Dockerfile
-    healthCheckPath: /health
-    envVars:
-      - key: PORT
-        value: 3003
-      - key: SERVICE_NAME
-        value: pos
-      - key: CULINARYOS_HOST
-        fromService:
-          name: culinaryos-backend
-          type: web
-          property: host
-      - key: INTERNAL_API_KEY
-        fromService:
-          name: culinaryos-backend
-          type: web
-          envVarKey: INTERNAL_API_KEY
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-
-  # ----------------------------------------------------------
-  # RecipeOS API (Bun/Docker)
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-recipeos
-    runtime: docker
-    dockerfilePath: recipeos/Dockerfile
-    healthCheckPath: /health
-    envVars:
-      - key: PORT
-        value: 3001
-      - key: SERVICE_NAME
-        value: recipeos
-      - key: CULINARYOS_HOST
-        fromService:
-          name: culinaryos-backend
-          type: web
-          property: host
-      - key: INTERNAL_API_KEY
-        fromService:
-          name: culinaryos-backend
-          type: web
-          envVarKey: INTERNAL_API_KEY
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-
-  # ----------------------------------------------------------
-  # KDS Web Client — Vite Static Site
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-kds-client
-    runtime: static
-    rootDir: kds-client
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        sync: false
-      - key: VITE_KDS_HOST
-        fromService:
-          name: culinaryos-kds-api
-          type: web
-          property: host
-
-  # ----------------------------------------------------------
-  # POS Web Client — Vite Static Site
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-pos-client
-    runtime: static
-    rootDir: pos-client
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        sync: false
-      - key: VITE_POS_HOST
-        fromService:
-          name: culinaryos-pos-api
-          type: web
-          property: host
-
-  # ----------------------------------------------------------
-  # Admin Dashboard — Vite Static Site
-  # ----------------------------------------------------------
-  - type: web
-    name: culinaryos-admin
-    runtime: static
-    rootDir: admin-client
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
+      - key: SUPABASE_ANON_KEY
         sync: false
