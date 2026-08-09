@@ -12,7 +12,7 @@ export const CulinaryBadge: React.FC<CulinaryBadgeProps> = ({
   className = '',
 }) => {
   const variants = {
-    brand: 'bg-[#ff5f1f15] text-[#ff5f1f] border-[#ff5f1f30]',
+    brand: 'bg-[#0f172a0d] text-[#0f172a] border-[#0f172a26]',
     success: 'bg-[#22c55e15] text-[#22c55e] border-[#22c55e30]',
     warning: 'bg-[#f59e0b15] text-[#f59e0b] border-[#f59e0b30]',
     danger: 'bg-red-50 text-red-500 border-red-200',

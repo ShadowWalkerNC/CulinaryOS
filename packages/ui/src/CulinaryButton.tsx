@@ -15,7 +15,7 @@ export const CulinaryButton: React.FC<CulinaryButtonProps> = ({
   const baseStyle = 'font-black uppercase tracking-wider transition-all rounded-xl border flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50 select-none';
   
   const variants = {
-    primary: 'bg-[#ff5f1f] hover:bg-[#e04f1a] text-white border-[#ff5f1f] shadow-xs',
+    primary: 'bg-[#0f172a] hover:bg-[#1e293b] text-white border-[#0f172a] shadow-xs',
     secondary: 'bg-[#1f2937] hover:bg-[#111827] text-white border-[#1f2937] shadow-xs',
     outline: 'bg-white hover:bg-[#f8f9fa] text-[#1f2937] border-[#e5e7eb]',
     danger: 'bg-red-500 hover:bg-red-600 text-white border-red-500 shadow-xs',
