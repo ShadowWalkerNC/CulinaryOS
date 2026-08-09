@@ -16,7 +16,7 @@ export function MenuView() {
   const [quantity, setQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
 
-  if (isLoading) return <div className="flex justify-center mt-20"><div className="w-6 h-6 border-2 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" /></div>;
+  if (isLoading) return <div className="flex justify-center mt-20"><div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin" /></div>;
   if (!menu) return <div className="text-center text-[#88888b] mt-20 p-6">No active menu found.</div>;
 
   const sections = menu.sections ?? [];
@@ -123,7 +123,7 @@ export function MenuView() {
         {sections.map((s: any) => (
           <button key={s.id} onClick={() => setActiveSection(s.id)}
             className={`text-left px-3 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-colors ${
-              s.id === activeS ? 'bg-[#ff5f1f] text-white' : 'text-[#4b5563] hover:text-[#1f2937] hover:bg-[#f3f4f6]'
+              s.id === activeS ? 'bg-[#0f172a] text-white' : 'text-[#4b5563] hover:text-[#1f2937] hover:bg-[#f3f4f6]'
             }`}>
             {s.name}
           </button>
@@ -140,7 +140,7 @@ export function MenuView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search menu items (e.g. Pizza, Salad, Beer)..."
-              className="w-full bg-white border border-[#e5e7eb] focus:border-[#ff5f1f] outline-none rounded-xl p-3 text-xs text-[#1f2937] shadow-sm font-semibold"
+              className="w-full bg-white border border-[#e5e7eb] focus:border-[#0f172a] outline-none rounded-xl p-3 text-xs text-[#1f2937] shadow-sm font-semibold"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function MenuView() {
             {[1, 2, 3, 4].map(sNum => (
               <button key={sNum} onClick={() => setActiveSeat(sNum)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-colors ${
-                  activeSeat === sNum ? 'bg-[#ff5f1f] text-white' : 'text-[#4b5563] hover:bg-[#f3f4f6]'
+                  activeSeat === sNum ? 'bg-[#0f172a] text-white' : 'text-[#4b5563] hover:bg-[#f3f4f6]'
                 }`}>
                 {sNum}
               </button>
@@ -165,17 +165,17 @@ export function MenuView() {
             .map((item: any) => (
               <button key={item.id} onClick={() => openModifierModal(item)}
                 disabled={item.status === 'unavailable'}
-                className={`bg-white rounded-xl p-4 text-left border border-[#e5e7eb] hover:border-[#ff5f1f] transition-all flex flex-col justify-between h-32 active:scale-95 shadow-sm ${
+                className={`bg-white rounded-xl p-4 text-left border border-[#e5e7eb] hover:border-[#0f172a] transition-all flex flex-col justify-between h-32 active:scale-95 shadow-sm ${
                   item.status === 'unavailable' ? 'opacity-40' : ''
                 }`}>
                 <div>
                   <div className="flex justify-between items-start">
                     <p className="text-[#1f2937] font-bold text-xs leading-snug line-clamp-2">{item.name}</p>
-                    <span className="text-[9px] font-black bg-[#ff5f1f15] text-[#ff5f1f] px-1.5 py-0.5 rounded">S{activeSeat}</span>
+                    <span className="text-[9px] font-black bg-[#0f172a15] text-[#0f172a] px-1.5 py-0.5 rounded">S{activeSeat}</span>
                   </div>
                   {item.description && <p className="text-[#6b7280] text-[10px] mt-1 leading-normal line-clamp-2">{item.description}</p>}
                 </div>
-                <p className="text-[#ff5f1f] font-extrabold font-mono text-sm">${(item.price / 100).toFixed(2)}</p>
+                <p className="text-[#0f172a] font-extrabold font-mono text-sm">${(item.price / 100).toFixed(2)}</p>
               </button>
             ))}
         </div>
@@ -190,7 +190,7 @@ export function MenuView() {
                 <h3 className="text-base font-black text-[#1f2937] uppercase">{modifyingItem.name}</h3>
                 <p className="text-xs text-[#6b7280]">Select options for Seat {activeSeat}</p>
               </div>
-              <span className="font-mono font-bold text-[#ff5f1f]">${(modifyingItem.price / 100).toFixed(2)}</span>
+              <span className="font-mono font-bold text-[#0f172a]">${(modifyingItem.price / 100).toFixed(2)}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 space-y-4">
@@ -206,7 +206,7 @@ export function MenuView() {
                       return (
                         <button key={m.id} onClick={() => handleSelectModifier(g, m)}
                           className={`p-2.5 rounded-xl border text-left text-xs transition-colors flex justify-between items-center ${
-                            isSelected ? 'border-[#ff5f1f] bg-[#ff5f1f0a] font-bold text-[#ff5f1f]' : 'border-[#e5e7eb] text-[#4b5563]'
+                            isSelected ? 'border-[#0f172a] bg-[#0f172a0a] font-bold text-[#0f172a]' : 'border-[#e5e7eb] text-[#4b5563]'
                           }`}>
                           <span>{m.name}</span>
                           {m.price_adjustment > 0 && <span className="font-mono text-[10px]">+{m.price_adjustment / 100}</span>}
@@ -224,7 +224,7 @@ export function MenuView() {
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
                   placeholder="e.g. Allergy, Extra Sauce, Dressing on side"
-                  className="w-full border border-[#cbd5e1] rounded-xl p-2.5 text-xs outline-none focus:border-[#ff5f1f]"
+                  className="w-full border border-[#cbd5e1] rounded-xl p-2.5 text-xs outline-none focus:border-[#0f172a]"
                 />
               </div>
             </div>
@@ -235,7 +235,7 @@ export function MenuView() {
                 Cancel
               </button>
               <button onClick={submitModifiers}
-                className="flex-1 bg-[#ff5f1f] text-white font-black py-3 rounded-xl text-xs uppercase">
+                className="flex-1 bg-[#0f172a] text-white font-black py-3 rounded-xl text-xs uppercase">
                 Add to Ticket (Seat {activeSeat})
               </button>
             </div>

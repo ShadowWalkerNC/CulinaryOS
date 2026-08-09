@@ -1,30 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ==========================================================
+   KDS — Dark "low-light kitchen" theme (CulinaryOS Core / Stitch)
+   Deep navy base with slate surfaces for reduced eye strain.
+   ========================================================== */
 :root {
-  --bg:           #f8f9fa;
-  --surface:      #ffffff;
-  --surface-2:    #f1f3f5;
-  --border:       #e5e7eb;
-  --text:         #1f2937;
-  --text-muted:   #6b7280;
-  --accent:       #ff5f1f;
-  --accent-glow:  rgba(255, 95, 31, 0.15);
-  --green:        #16a34a;
-  --green-glow:   rgba(22, 163, 74, 0.12);
-  --amber:        #d97706;
-  --amber-glow:   rgba(217, 119, 6, 0.12);
-  --red:          #dc2626;
-  --red-glow:     rgba(220, 38, 38, 0.12);
+  --bg:           #0b1220;
+  --surface:      #131c2e;
+  --surface-2:    #1e2a42;
+  --border:       #2a3852;
+  --text:         #e8eeff;
+  --text-muted:   #93a2c0;
+  --accent:       #93b4ff;
+  --accent-strong:#3b6df6;
+  --accent-glow:  rgba(147, 180, 255, 0.18);
+  --green:        #34d399;
+  --green-glow:   rgba(52, 211, 153, 0.16);
+  --amber:        #fbbf24;
+  --amber-glow:   rgba(251, 191, 36, 0.16);
+  --red:          #f87171;
+  --red-glow:     rgba(248, 113, 113, 0.18);
   --font-sans:    'Inter', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
-  --radius:       10px;
-  --radius-sm:    6px;
-  --shadow:       0 2px 8px rgba(0,0,0,0.06);
+  --radius:       8px;
+  --radius-sm:    4px;
+  --shadow:       0 4px 16px rgba(0,0,0,0.35);
 }
 
-body {
+html, body, #root {
   background: var(--bg);
   color: var(--text);
+  color-scheme: dark;
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
@@ -32,6 +42,18 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}

@@ -200,13 +200,13 @@ export function CheckoutView() {
                     value={contactInput}
                     onChange={(e) => setContactInput(e.target.value)}
                     placeholder={receiptChoice === 'email' ? 'customer@example.com' : '(555) 000-0000'}
-                    className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
+                    className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
                   />
                   <div className="flex gap-2">
                     <button onClick={() => setReceiptChoice(null)}
                       className="bg-[#f3f4f6] text-[#6b7280] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
                     <button onClick={() => setReceiptSent(true)}
-                      className="flex-1 bg-[#ff5f1f] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
+                      className="flex-1 bg-[#0f172a] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
                   </div>
                 </div>
               ) : (
@@ -223,7 +223,7 @@ export function CheckoutView() {
               Print Guest Receipt
             </button>
             <button onClick={handleCloseCheckout}
-              className="flex-1 bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">
+              className="flex-1 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">
               Done
             </button>
           </div>
@@ -288,13 +288,13 @@ export function CheckoutView() {
                 {selectedSeatFilter ? `Seat ${selectedSeatFilter} Summary` : 'Ticket Summary'}
               </h2>
               {selectedSeatFilter != null && (
-                <button onClick={() => setSelectedSeatFilter(null)} className="text-[9px] font-black text-[#ff5f1f] uppercase underline">
+                <button onClick={() => setSelectedSeatFilter(null)} className="text-[9px] font-black text-[#0f172a] uppercase underline">
                   Show All Seats
                 </button>
               )}
             </div>
             <button onClick={() => setShowSplitModal(true)}
-              className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#ff5f1f] border border-[#e5e7eb] px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors shadow-sm">
+              className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0f172a] border border-[#e5e7eb] px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors shadow-sm">
               Split Check Wizard
             </button>
           </div>
@@ -324,7 +324,7 @@ export function CheckoutView() {
             <div className="flex justify-between text-[#6b7280]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>
           )}
           <div className="flex justify-between text-[#1f2937] font-black text-sm border-t border-[#e5e7eb] pt-2 uppercase">
-            <span>Total Bill</span><span className="font-mono text-[#ff5f1f]">${(total/100).toFixed(2)}</span>
+            <span>Total Bill</span><span className="font-mono text-[#0f172a]">${(total/100).toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -339,7 +339,7 @@ export function CheckoutView() {
               {METHODS.map((m) => (
                 <button key={m} onClick={() => setMethod(m)}
                   className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
-                    method === m ? 'bg-[#ff5f1f] border-[#ff5f1f] text-white' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
+                    method === m ? 'bg-[#0f172a] border-[#0f172a] text-white' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
                   }`}>{m}</button>
               ))}
             </div>
@@ -353,7 +353,7 @@ export function CheckoutView() {
                 <button key={pct} onClick={() => setTipPercent(pct)}
                   className={`py-2 rounded text-[10px] font-bold transition-all border ${
                     tipPercent === pct
-                      ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-black'
+                      ? 'bg-[#0f172a10] border-[#0f172a] text-[#0f172a] font-black'
                       : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
                   }`}>
                   {pct === 0 ? 'No Tip' : `${pct}%`}
@@ -362,7 +362,7 @@ export function CheckoutView() {
               <button onClick={() => setTipPercent('custom')}
                 className={`py-2 rounded text-[10px] font-bold transition-all border ${
                   tipPercent === 'custom'
-                    ? 'bg-[#ff5f1f10] border-[#ff5f1f] text-[#ff5f1f] font-black'
+                    ? 'bg-[#0f172a10] border-[#0f172a] text-[#0f172a] font-black'
                     : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
                 }`}>
                 Custom
@@ -375,7 +375,7 @@ export function CheckoutView() {
                   value={customTip}
                   onChange={(e) => setCustomTip(e.target.value)}
                   placeholder="Enter tip ($)"
-                  className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-[#1f2937] font-mono"
+                  className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2 text-xs text-[#1f2937] font-mono"
                 />
               </div>
             )}
@@ -390,7 +390,7 @@ export function CheckoutView() {
                   const val = Math.ceil(amt);
                   return (
                     <button key={idx} onClick={() => setCashTendered(val.toString())}
-                      className="bg-white border border-[#e5e7eb] hover:border-[#ff5f1f] text-[#1f2937] font-bold py-2 rounded text-[10px]">
+                      className="bg-white border border-[#e5e7eb] hover:border-[#0f172a] text-[#1f2937] font-bold py-2 rounded text-[10px]">
                       {idx === 0 ? 'Exact' : `$${val}`}
                     </button>
                   );
@@ -401,7 +401,7 @@ export function CheckoutView() {
                 value={cashTendered}
                 onChange={(e) => setCashTendered(e.target.value)}
                 placeholder="Or input cash amount ($)"
-                className="w-full bg-white border border-[#cbd5e1] focus:border-[#ff5f1f] outline-none rounded-lg p-2 text-xs text-[#1f2937] mt-3 font-mono"
+                className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2 text-xs text-[#1f2937] mt-3 font-mono"
               />
             </div>
           )}
@@ -433,7 +433,7 @@ export function CheckoutView() {
         <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
           <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
             <div className="border-b border-[#e5e7eb] pb-3">
-              <span className="text-[10px] text-[#ff5f1f] font-black tracking-wider uppercase block">Checkout Wizard</span>
+              <span className="text-[10px] text-[#0f172a] font-black tracking-wider uppercase block">Checkout Wizard</span>
               <h3 className="text-base font-black text-[#1f2937] uppercase mt-0.5">Split Check Options</h3>
               <p className="text-xs text-[#6b7280] mt-1">Split check evenly or pay individual seat checks.</p>
             </div>
@@ -446,7 +446,7 @@ export function CheckoutView() {
                   {[2, 3, 4].map(num => (
                     <div key={num} className="bg-[#f8f9fa] border border-[#e5e7eb] p-3 rounded-xl">
                       <span className="text-[10px] text-[#6b7280] font-bold block">{num}-Way Split</span>
-                      <span className="font-mono text-xs font-black text-[#ff5f1f] mt-1 block">
+                      <span className="font-mono text-xs font-black text-[#0f172a] mt-1 block">
                         ${((total / num) / 100).toFixed(2)} / ea
                       </span>
                     </div>
@@ -465,9 +465,9 @@ export function CheckoutView() {
                     return (
                       <button key={seatNum}
                         onClick={() => { setSelectedSeatFilter(seatNum); setShowSplitModal(false); }}
-                        className="w-full bg-white border border-[#e5e7eb] hover:border-[#ff5f1f] p-3 rounded-xl flex justify-between items-center text-xs transition-colors">
+                        className="w-full bg-white border border-[#e5e7eb] hover:border-[#0f172a] p-3 rounded-xl flex justify-between items-center text-xs transition-colors">
                         <span className="font-black text-[#1f2937]">Seat {seatNum} Check</span>
-                        <span className="font-mono font-bold text-[#ff5f1f]">${(seatTotal / 100).toFixed(2)} →</span>
+                        <span className="font-mono font-bold text-[#0f172a]">${(seatTotal / 100).toFixed(2)} →</span>
                       </button>
                     );
                   })}
@@ -490,12 +490,12 @@ export function CheckoutView() {
         <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
           <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6 text-center">
             <div className="space-y-2">
-              <span className="text-[9px] text-[#ff5f1f] font-black tracking-wider uppercase block">Stripe Terminal Simulator</span>
+              <span className="text-[9px] text-[#0f172a] font-black tracking-wider uppercase block">Stripe Terminal Simulator</span>
               {stripeSimState === 'waiting' && (
                 <>
                   <h3 className="text-base font-black text-[#1f2937] uppercase">Tap, Insert, or Swipe</h3>
                   <p className="text-xs text-[#6b7280] px-4 leading-relaxed">Please present customer card to the terminal reader.</p>
-                  <div className="w-12 h-12 border-4 border-t-transparent border-[#ff5f1f] rounded-full animate-spin mx-auto mt-4" />
+                  <div className="w-12 h-12 border-4 border-t-transparent border-[#0f172a] rounded-full animate-spin mx-auto mt-4" />
                 </>
               )}
               {stripeSimState === 'authorizing' && (

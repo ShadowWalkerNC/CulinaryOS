@@ -36,7 +36,7 @@ export function SettingsView() {
               <button key={r} onClick={() => setPairedReader(r)}
                 className={`w-full text-left p-3.5 rounded-xl border flex justify-between items-center transition-colors ${
                   pairedReader === r
-                    ? 'border-[#ff5f1f] bg-[#ff5f1f0a] text-[#ff5f1f] font-bold'
+                    ? 'border-[#0f172a] bg-[#0f172a0a] text-[#0f172a] font-bold'
                     : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:border-[#cbd5e1]'
                 }`}>
                 <span className="text-xs font-semibold">{r}</span>
@@ -57,7 +57,7 @@ export function SettingsView() {
             <div className="space-y-2">
               <label className="text-[10px] text-[#6b7280] font-black uppercase tracking-wider block">Starters & Cold Items</label>
               <select value={routingCold} onChange={(e) => setRoutingCold(e.target.value)}
-                className="w-full bg-white border border-[#cbd5e1] rounded-xl p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#ff5f1f]">
+                className="w-full bg-white border border-[#cbd5e1] rounded-xl p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#0f172a]">
                 <option value="cold-prep">Cold Prep Station (KDS 01)</option>
                 <option value="fryer">Fryer Station (KDS 02)</option>
                 <option value="main-pass">Main Pass (KDS 03)</option>
@@ -67,7 +67,7 @@ export function SettingsView() {
             <div className="space-y-2">
               <label className="text-[10px] text-[#6b7280] font-black uppercase tracking-wider block">Mains & Hot Grill Items</label>
               <select value={routingHot} onChange={(e) => setRoutingHot(e.target.value)}
-                className="w-full bg-white border border-[#cbd5e1] rounded-xl p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#ff5f1f]">
+                className="w-full bg-white border border-[#cbd5e1] rounded-xl p-2.5 text-xs text-[#1f2937] outline-none focus:border-[#0f172a]">
                 <option value="hot-grill">Grill Station (KDS 04)</option>
                 <option value="pizza-oven">Pizza Oven (KDS 05)</option>
                 <option value="main-pass">Main Pass (KDS 03)</option>

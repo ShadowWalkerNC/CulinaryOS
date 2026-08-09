@@ -62,7 +62,7 @@ export function ReportsView() {
               <div className="flex justify-between text-[#6b7280]"><span>Discounts</span><span className="font-mono font-semibold text-[#1f2937]">${(discounts / 100).toFixed(2)}</span></div>
               <div className="flex justify-between text-[#6b7280]"><span>Tax Collected (10%)</span><span className="font-mono font-semibold text-[#1f2937]">${(tax / 100).toFixed(2)}</span></div>
               <div className="flex justify-between border-t border-[#e5e7eb] pt-3 text-sm text-[#1f2937] font-black uppercase">
-                <span>Net Revenue</span><span className="font-mono text-[#ff5f1f]">${(totalRevenue / 100).toFixed(2)}</span>
+                <span>Net Revenue</span><span className="font-mono text-[#0f172a]">${(totalRevenue / 100).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function ReportsView() {
                     <tr key={idx} className="text-[#1f2937] font-medium">
                       <td className="py-3 font-semibold">{item.name}</td>
                       <td className="py-3 text-center font-mono">{item.qty}</td>
-                      <td className="py-3 text-right font-mono font-bold text-[#ff5f1f]">${(item.sales / 100).toFixed(2)}</td>
+                      <td className="py-3 text-right font-mono font-bold text-[#0f172a]">${(item.sales / 100).toFixed(2)}</td>
                     </tr>
                   ))
                 )}
