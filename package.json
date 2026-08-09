@@ -23,7 +23,10 @@
     "@culinaryos/ratio-engine": "workspace:*",
     "@culinaryos/server": "workspace:*",
     "@culinaryos/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.43.0",
     "@types/node": "^20.0.0",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.7.1",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
   },
