@@ -1,0 +1,25 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  // Preflight is disabled so Tailwind's global reset does not affect the
+  // KDS's existing inline-styled components. Only utility classes (used by the
+  // shared CulinaryHeader) are emitted.
+  corePlugins: { preflight: false },
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: '#0f172a',
+        brandHover: '#1e293b',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+}

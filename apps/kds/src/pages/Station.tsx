@@ -160,9 +160,9 @@ export function Station() {
                 key={s.id}
                 onClick={() => navigate(`/station/${s.id}`)}
                 style={{
-                  background:    s.id === stationId ? 'var(--accent)' : 'var(--surface-2)',
+                  background:    s.id === stationId ? 'var(--accent-strong)' : 'var(--surface-2)',
                   color:         s.id === stationId ? '#ffffff' : 'var(--text-muted)',
-                  border:        '1px solid var(--border)',
+                  border:        s.id === stationId ? '1px solid var(--accent-strong)' : '1px solid var(--border)',
                   borderRadius:  '6px',
                   padding:       '5px 12px',
                   fontSize:      '11px',
@@ -214,20 +214,20 @@ export function Station() {
             Real-Time Station Overview:
           </span>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
-              🔥 Hot Grill: <strong style={{ color: 'var(--accent)' }}>{stationCounts.hotGrill}</strong>
-            </span>
-            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
-              🥗 Cold Prep: <strong style={{ color: 'var(--accent)' }}>{stationCounts.coldPrep}</strong>
-            </span>
-            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
-              🍟 Fryer: <strong style={{ color: 'var(--accent)' }}>{stationCounts.fryer}</strong>
-            </span>
-            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
-              🍸 Bar: <strong style={{ color: 'var(--accent)' }}>{stationCounts.bar}</strong>
-            </span>
-            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid var(--amber)', fontWeight: 700, color: 'var(--amber)' }}>
-              ⏸ Held Courses: <strong>{stationCounts.held}</strong>
+            {[
+              { icon: 'outdoor_grill', label: 'Hot Grill', value: stationCounts.hotGrill },
+              { icon: 'eco',           label: 'Cold Prep', value: stationCounts.coldPrep },
+              { icon: 'lunch_dining',  label: 'Fryer',     value: stationCounts.fryer },
+              { icon: 'local_bar',     label: 'Bar',       value: stationCounts.bar },
+            ].map((st) => (
+              <span key={st.label} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 9px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '15px', color: 'var(--text-muted)' }}>{st.icon}</span>
+                {st.label}: <strong style={{ color: 'var(--accent)' }}>{st.value}</strong>
+              </span>
+            ))}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 9px', borderRadius: '4px', background: 'var(--amber-glow)', border: '1px solid var(--amber)', fontWeight: 700, color: 'var(--amber)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>pause_circle</span>
+              Held Courses: <strong>{stationCounts.held}</strong>
             </span>
           </div>
         </section>

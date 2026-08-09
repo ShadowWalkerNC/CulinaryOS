@@ -105,7 +105,7 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
           {/* Course Hold Status Indicator */}
           {isHeld ? (
             <span style={{
-              background:    'rgba(245, 158, 11, 0.15)',
+              background:    'var(--amber-glow)',
               border:        '1px solid var(--amber)',
               borderRadius:  '4px',
               padding:       '2px 6px',
@@ -113,12 +113,16 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
               fontWeight:    700,
               color:         'var(--amber)',
               textTransform: 'uppercase',
+              display:       'inline-flex',
+              alignItems:    'center',
+              gap:           '3px',
             }}>
-              HELD ⏸
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>pause_circle</span>
+              HELD
             </span>
           ) : (
             <span style={{
-              background:    'rgba(16, 185, 129, 0.15)',
+              background:    'var(--green-glow)',
               border:        '1px solid var(--green)',
               borderRadius:  '4px',
               padding:       '2px 6px',
@@ -126,8 +130,12 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
               fontWeight:    700,
               color:         'var(--green)',
               textTransform: 'uppercase',
+              display:       'inline-flex',
+              alignItems:    'center',
+              gap:           '3px',
             }}>
-              FIRED 🔥
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>local_fire_department</span>
+              FIRED
             </span>
           )}
           {/* Status badge */}
@@ -207,11 +215,11 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
         <button
           onClick={() => onFire(ticket.id)}
           style={{
-            background:    'var(--accent)',
+            background:    'var(--accent-strong)',
             color:         '#ffffff',
             border:        'none',
             borderRadius:  '6px',
-            padding:       '8px 12px',
+            padding:       '9px 12px',
             fontSize:      '12px',
             fontWeight:    700,
             cursor:        'pointer',
@@ -219,9 +227,14 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
             letterSpacing: '0.05em',
             transition:    'all 0.15s ease',
             marginTop:     '4px',
+            display:       'flex',
+            alignItems:    'center',
+            justifyContent:'center',
+            gap:           '6px',
           }}
         >
-          🔥 Fire Course {ticket.courseNumber}
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>local_fire_department</span>
+          Fire Course {ticket.courseNumber}
         </button>
       ) : (
         <BumpButton ticketId={ticket.id} disabled={!canBump} onBump={onBump} />
