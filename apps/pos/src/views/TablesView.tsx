@@ -52,10 +52,10 @@ const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: stri
   },
   occupied: {
     bg: 'bg-amber-50/90 hover:bg-amber-100',
-    border: 'border-[#ff5f1f]',
+    border: 'border-[#0f172a]',
     text: 'text-amber-950',
-    badge: 'bg-[#ff5f1f] text-white',
-    ring: 'ring-[#ff5f1f]/40',
+    badge: 'bg-[#0f172a] text-white',
+    ring: 'ring-[#0f172a]/40',
   },
   reserved: {
     bg: 'bg-indigo-50/80 hover:bg-indigo-100/90',
@@ -186,7 +186,7 @@ export function TablesView() {
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white border border-[#e5e7eb] rounded-2xl p-5 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-[#ff5f1f] uppercase tracking-widest bg-[#ff5f1f10] px-2 py-0.5 rounded">
+            <span className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest bg-[#0f172a10] px-2 py-0.5 rounded">
               Front of House
             </span>
             <h1 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">Dining Floor Plan</h1>
@@ -200,7 +200,7 @@ export function TablesView() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <div className="bg-[#f8f9fa] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[90px]">
             <span className="text-[9px] font-black text-[#6b7280] uppercase tracking-wider block">Occupied</span>
-            <span className="text-base font-black text-[#ff5f1f]">
+            <span className="text-base font-black text-[#0f172a]">
               {occupiedCount} <span className="text-[10px] text-[#9ca3af]">/ {DEFAULT_FLOOR_TABLES.length}</span>
             </span>
           </div>
@@ -220,9 +220,9 @@ export function TablesView() {
             <span className="text-base font-black text-rose-600">{dirtyCount}</span>
           </div>
 
-          <div className="bg-[#ff5f1f0a] border border-[#ff5f1f30] px-4 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[120px]">
-            <span className="text-[9px] font-black text-[#ff5f1f] uppercase tracking-wider block">Open Revenue</span>
-            <span className="text-base font-black font-mono text-[#ff5f1f]">
+          <div className="bg-[#0f172a0a] border border-[#0f172a30] px-4 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[120px]">
+            <span className="text-[9px] font-black text-[#0f172a] uppercase tracking-wider block">Open Revenue</span>
+            <span className="text-base font-black font-mono text-[#0f172a]">
               ${(totalActiveRevenue / 100).toFixed(2)}
             </span>
           </div>
@@ -245,7 +245,7 @@ export function TablesView() {
               onClick={() => setActiveSection(sec.id as SectionId)}
               className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${
                 activeSection === sec.id
-                  ? 'bg-[#ff5f1f] text-white shadow-sm'
+                  ? 'bg-[#0f172a] text-white shadow-sm'
                   : 'text-[#6b7280] hover:text-[#1f2937] hover:bg-white/50'
               }`}
             >
@@ -276,7 +276,7 @@ export function TablesView() {
       {/* Main Dining Room Visual Floor Layout Canvas */}
       {loading ? (
         <div className="flex justify-center mt-20">
-          <div className="w-8 h-8 border-3 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-[#0f172a] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : error ? (
         <div className="text-center text-red-500 mt-20 text-xs font-bold">Connection error: {error}</div>
@@ -330,14 +330,14 @@ export function TablesView() {
                         <span className="text-[#1f2937] truncate">
                           {activeOrder.server_name ? `Server: ${activeOrder.server_name}` : 'Active Ticket'}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-[#ff5f1f] bg-[#ff5f1f15] px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] font-black uppercase text-[#0f172a] bg-[#0f172a15] px-1.5 py-0.5 rounded">
                           {activeOrder.status}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-[10px] text-[#6b7280] font-semibold">
                         <span>{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
-                        <span className="font-mono text-[#ff5f1f] font-black text-xs">
+                        <span className="font-mono text-[#0f172a] font-black text-xs">
                           ${(orderTotal / 100).toFixed(2)}
                         </span>
                       </div>
@@ -351,7 +351,7 @@ export function TablesView() {
                   )}
 
                   {/* Bottom Action Footer Indicator */}
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-[#6b7280] group-hover:text-[#ff5f1f]">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-[#6b7280] group-hover:text-[#0f172a]">
                     <span>{effStatus === 'occupied' ? 'Open Order →' : 'Manage Table →'}</span>
                     <span className="font-mono text-[9px] text-[#9ca3af]">ID #{table.number}</span>
                   </div>
@@ -368,7 +368,7 @@ export function TablesView() {
           <div className="bg-white border border-[#e5e7eb] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6">
             <div className="border-b border-[#e5e7eb] pb-3 flex justify-between items-start">
               <div>
-                <span className="text-[10px] text-[#ff5f1f] font-black tracking-wider uppercase block">Table Management</span>
+                <span className="text-[10px] text-[#0f172a] font-black tracking-wider uppercase block">Table Management</span>
                 <h3 className="text-lg font-black text-[#1f2937] uppercase mt-0.5">
                   {selectedTable.label} — {selectedTable.sectionName}
                 </h3>
@@ -421,7 +421,7 @@ export function TablesView() {
 
               <button
                 onClick={handleStartOrder}
-                className="w-full bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm active:scale-98"
+                className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm active:scale-98"
               >
                 Open Table Ticket →
               </button>

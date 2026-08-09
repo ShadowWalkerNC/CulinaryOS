@@ -15,7 +15,7 @@ export function OrderView() {
 
   if (isLoading || !order) return (
     <div className="flex justify-center items-center h-full">
-      <div className="w-6 h-6 border-2 border-[#ff5f1f] border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -51,7 +51,7 @@ export function OrderView() {
           </h2>
           {order.server_name && <p className="text-[10px] text-[#6b7280] mt-0.5">Server: {order.server_name}</p>}
         </div>
-        <button onClick={() => setActiveOrder(null)} className="text-[10px] font-black text-[#ff5f1f] hover:underline uppercase">
+        <button onClick={() => setActiveOrder(null)} className="text-[10px] font-black text-[#0f172a] hover:underline uppercase">
           Close
         </button>
       </div>
@@ -68,7 +68,7 @@ export function OrderView() {
             <div key={item.id} className="border-b border-[#f3f4f6] pb-2 flex justify-between items-start text-xs">
               <div>
                 <p className="text-[#1f2937] font-bold flex items-center gap-1">
-                  {item.quantity > 1 && <span className="text-[#ff5f1f]">{item.quantity}x</span>}
+                  {item.quantity > 1 && <span className="text-[#0f172a]">{item.quantity}x</span>}
                   <span>{item.name}</span>
                   <span className="text-[9px] font-extrabold bg-[#f3f4f6] text-[#6b7280] px-1 py-0.2 rounded ml-1">S{item.seat_number ?? 1}</span>
                 </p>
@@ -97,7 +97,7 @@ export function OrderView() {
             <span>Tax (10%)</span><span className="font-mono">${(tax / 100).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-xs text-[#1f2937] font-black pt-1.5 border-t border-[#e5e7eb] uppercase">
-            <span>Total</span><span className="font-mono text-[#ff5f1f]">${(total / 100).toFixed(2)}</span>
+            <span>Total</span><span className="font-mono text-[#0f172a]">${(total / 100).toFixed(2)}</span>
           </div>
         </div>
 
@@ -106,33 +106,38 @@ export function OrderView() {
             <button
               onClick={() => fireOrder(order.id)}
               disabled={firing || !order.items?.length}
-              className="col-span-3 bg-[#ff5f1f] hover:bg-[#e04f1a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors disabled:opacity-40"
+              className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
+              <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
               {firing ? 'Sending...' : 'SEND TO KITCHEN'}
             </button>
           )}
 
           {['sent','in-progress','ready'].includes(order.status) && (
-            <button onClick={() => setView('checkout')} className="col-span-3 bg-[#22c55e] hover:bg-[#16a34a] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors">
+            <button onClick={() => setView('checkout')} className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px]">payments</span>
               PROCEED TO PAY
             </button>
           )}
 
           <button
             onClick={() => { if (confirm('Void this order?')) voidOrder({ orderId: order.id }); }}
-            className="bg-[#f3f4f6] text-red-600 hover:bg-red-50 rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]"
+            className="bg-white text-[#ba1a1a] hover:bg-[#fff0ef] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#f3d0cd] flex flex-col items-center justify-center gap-0.5"
           >
+            <span className="material-symbols-outlined text-[16px]">delete</span>
             Void
           </button>
 
           <button
             onClick={() => setShowDiscountModal(true)}
-            className="bg-[#f3f4f6] text-[#ff5f1f] hover:bg-[#ff5f1f0a] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]"
+            className="bg-white text-[#0f172a] hover:bg-[#eff4ff] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5"
           >
+            <span className="material-symbols-outlined text-[16px]">sell</span>
             Promo
           </button>
 
-          <button onClick={() => setView('menu')} className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb]">
+          <button onClick={() => setView('menu')} className="bg-white text-[#0b1c30] hover:bg-[#eff4ff] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5">
+            <span className="material-symbols-outlined text-[16px]">restaurant_menu</span>
             Menu
           </button>
         </div>
@@ -144,7 +149,7 @@ export function OrderView() {
           <div className="bg-white border border-[#e5e7eb] rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
             <div className="border-b border-[#e5e7eb] pb-2 flex justify-between items-center">
               <div>
-                <span className="text-[9px] font-black text-[#ff5f1f] uppercase tracking-wider block">Ticket Savings</span>
+                <span className="text-[9px] font-black text-[#0f172a] uppercase tracking-wider block">Ticket Savings</span>
                 <h3 className="text-sm font-black text-[#1f2937] uppercase">Coupon Discounts</h3>
               </div>
               <button onClick={() => setShowDiscountModal(false)} className="text-xs font-bold text-[#9ca3af]">✕</button>
@@ -155,34 +160,34 @@ export function OrderView() {
               <div className="grid grid-cols-1 gap-1.5">
                 <button
                   onClick={() => handleSetDiscount(10, 0)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#ff5f1f0d] border border-[#e5e7eb] hover:border-[#ff5f1f] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">10% Senior / Military Off</span>
-                  <span className="text-[10px] font-black text-[#ff5f1f]">10% OFF</span>
+                  <span className="text-[10px] font-black text-[#0f172a]">10% OFF</span>
                 </button>
 
                 <button
                   onClick={() => handleSetDiscount(0, 500)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#ff5f1f0d] border border-[#e5e7eb] hover:border-[#ff5f1f] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">$5.00 Off Coupon</span>
-                  <span className="text-[10px] font-black text-[#ff5f1f]">-$5.00</span>
+                  <span className="text-[10px] font-black text-[#0f172a]">-$5.00</span>
                 </button>
 
                 <button
                   onClick={() => handleSetDiscount(15, 0)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#ff5f1f0d] border border-[#e5e7eb] hover:border-[#ff5f1f] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">15% VIP Patron Discount</span>
-                  <span className="text-[10px] font-black text-[#ff5f1f]">15% OFF</span>
+                  <span className="text-[10px] font-black text-[#0f172a]">15% OFF</span>
                 </button>
 
                 <button
                   onClick={() => handleSetDiscount(20, 0)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#ff5f1f0d] border border-[#e5e7eb] hover:border-[#ff5f1f] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">20% Happy Hour Special</span>
-                  <span className="text-[10px] font-black text-[#ff5f1f]">20% OFF</span>
+                  <span className="text-[10px] font-black text-[#0f172a]">20% OFF</span>
                 </button>
               </div>
             </div>

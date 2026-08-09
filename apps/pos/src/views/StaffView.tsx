@@ -61,7 +61,7 @@ export function StaffView() {
     <div className="flex flex-col items-center justify-center h-full bg-[#f8f9fa] animate-fadeIn p-6">
       <div className="bg-white border border-[#e5e7eb] rounded-2xl p-8 max-w-sm w-full shadow-lg text-center space-y-6">
         <div>
-          <span className="font-black text-sm tracking-tight text-[#ff5f1f] uppercase block">CulinaryOS POS Terminal</span>
+          <span className="font-black text-sm tracking-tight text-[#0f172a] uppercase block">CulinaryOS POS Terminal</span>
           <h2 className="text-xl font-black text-[#1f2937] mt-1.5">Enter Employee PIN</h2>
           <p className="text-[10px] text-[#6b7280] mt-1 font-bold">Try PIN: 1234 (Server) or 5678 (Manager)</p>
         </div>
@@ -72,7 +72,7 @@ export function StaffView() {
             <div
               key={idx}
               className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
-                pin.length > idx ? 'bg-[#ff5f1f] border-[#ff5f1f] scale-110' : 'border-[#cbd5e1]'
+                pin.length > idx ? 'bg-[#0f172a] border-[#0f172a] scale-110' : 'border-[#cbd5e1]'
               }`}
             />
           ))}
@@ -104,7 +104,7 @@ export function StaffView() {
           <button
             onClick={() => handleLogin()}
             disabled={pin.length < 4}
-            className="bg-[#ff5f1f] hover:bg-[#e04f1a] disabled:opacity-40 text-white text-xs font-black rounded-xl uppercase tracking-wider transition-colors shadow-sm active:scale-95"
+            className="bg-[#0f172a] hover:bg-[#1e293b] disabled:opacity-40 text-white text-xs font-black rounded-xl uppercase tracking-wider transition-colors shadow-sm active:scale-95"
           >
             OK
           </button>

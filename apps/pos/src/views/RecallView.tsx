@@ -35,7 +35,7 @@ export function RecallView() {
         <div className="p-4 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9fa] shrink-0">
           <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">Closed Checks</h2>
           <button onClick={() => setView('dashboard')}
-            className="text-[10px] font-black text-[#ff5f1f] hover:underline uppercase">
+            className="text-[10px] font-black text-[#0f172a] hover:underline uppercase">
             Home
           </button>
         </div>
@@ -50,7 +50,7 @@ export function RecallView() {
               <button key={o.id} onClick={() => setSelectedOrderId(o.id)}
                 className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between h-20 shadow-sm ${
                   selectedOrderId === o.id
-                    ? 'border-[#ff5f1f] bg-[#ff5f1f0a]'
+                    ? 'border-[#0f172a] bg-[#0f172a0a]'
                     : 'border-[#e5e7eb] bg-white hover:border-[#cbd5e1]'
                 }`}>
                 <div className="flex justify-between items-center w-full">

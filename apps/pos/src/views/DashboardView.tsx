@@ -40,7 +40,7 @@ export function DashboardView() {
           <div className="border-b border-[#e5e7eb] pb-4">
             <span className="text-[10px] text-[#6b7280] font-black uppercase tracking-wider block">Logged In Staff</span>
             <h2 className="text-base font-black text-[#1f2937] mt-1">{employee?.name}</h2>
-            <p className="text-xs text-[#ff5f1f] font-bold mt-0.5">{employee?.role}</p>
+            <p className="text-xs text-[#0f172a] font-bold mt-0.5">{employee?.role}</p>
           </div>
 
           <div className="space-y-2">
@@ -72,57 +72,57 @@ export function DashboardView() {
         <div className="grid grid-cols-2 gap-4 flex-1">
           {/* Quick Order */}
           <button onClick={startQuickOrder}
-            className="bg-white hover:border-[#ff5f1f] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
             <div className="space-y-2">
-              <span className="text-xs font-black text-[#ff5f1f] uppercase tracking-wider">Quick Service</span>
+              <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Quick Service</span>
               <h3 className="text-lg font-black text-[#1f2937]">Quick Order</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Start an instant counter ticket or takeaway check without table assignments.</p>
             </div>
-            <span className="text-xs font-extrabold text-[#ff5f1f] uppercase tracking-wider mt-4">Start Quick Order →</span>
+            <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Start Quick Order →</span>
           </button>
 
           {/* Table Service */}
           <button onClick={() => setView('tables')}
-            className="bg-white hover:border-[#ff5f1f] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
             <div className="space-y-2">
-              <span className="text-xs font-black text-[#ff5f1f] uppercase tracking-wider">FOH / Dining</span>
+              <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">FOH / Dining</span>
               <h3 className="text-lg font-black text-[#1f2937]">Table Service</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Manage restaurant dining tables, active covers, and courses via dining floor grid map.</p>
             </div>
-            <span className="text-xs font-extrabold text-[#ff5f1f] uppercase tracking-wider mt-4">Open Floor Map →</span>
+            <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Open Floor Map →</span>
           </button>
 
           {/* Bar Tabs */}
           <button onClick={() => setView('tabs')}
-            className="bg-white hover:border-[#ff5f1f] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
             <div className="space-y-2">
-              <span className="text-xs font-black text-[#ff5f1f] uppercase tracking-wider">Pub / Lounge</span>
+              <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Pub / Lounge</span>
               <h3 className="text-lg font-black text-[#1f2937]">Bar Tabs</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">List active bar cards, pre-authorize checkout limits, and manage bar tabs.</p>
             </div>
-            <span className="text-xs font-extrabold text-[#ff5f1f] uppercase tracking-wider mt-4">Manage Tabs →</span>
+            <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Manage Tabs →</span>
           </button>
 
           {/* Recall Checks */}
           <button onClick={() => setView('recall')}
-            className="bg-white hover:border-[#ff5f1f] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
             <div className="space-y-2">
-              <span className="text-xs font-black text-[#ff5f1f] uppercase tracking-wider">Audit / History</span>
+              <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Audit / History</span>
               <h3 className="text-lg font-black text-[#1f2937]">Recall Checks</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Retrieve previously completed checks, handle partial refunds, or reprint guest receipts.</p>
             </div>
-            <span className="text-xs font-extrabold text-[#ff5f1f] uppercase tracking-wider mt-4">Search History →</span>
+            <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Search History →</span>
           </button>
         </div>
 
         {/* Bottom Panel */}
         <div className="mt-4 flex gap-4">
           <button onClick={() => setView('settings')}
-            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#ff5f1f] text-center transition-colors shadow-sm">
+            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#0f172a] text-center transition-colors shadow-sm">
             Device Setup (Stripe / Printers)
           </button>
           <button onClick={() => setView('reports')}
-            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#ff5f1f] text-center transition-colors shadow-sm">
+            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#0f172a] text-center transition-colors shadow-sm">
             Business Reports (Shift PM Mix)
           </button>
         </div>
@@ -133,7 +133,7 @@ export function DashboardView() {
         <div className="absolute inset-0 bg-[#00000040] backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
           <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6">
             <div>
-              <span className="text-[10px] text-[#ff5f1f] font-black tracking-wider uppercase block">Auditing & Declaration</span>
+              <span className="text-[10px] text-[#0f172a] font-black tracking-wider uppercase block">Auditing & Declaration</span>
               <h3 className="text-base font-black text-[#1f2937] mt-0.5 uppercase">Declare Cash Drawer</h3>
               <p className="text-[10px] text-[#6b7280] mt-1">Input counts of physical bills inside the terminal register.</p>
             </div>
@@ -174,7 +174,7 @@ export function DashboardView() {
               </div>
               <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
                 <span className="font-black text-[#1f2937] uppercase">Drawer Discrepancy</span>
-                <span className={`font-mono font-extrabold ${discrepancy === 0 ? 'text-[#22c55e]' : discrepancy > 0 ? 'text-[#ff5f1f]' : 'text-red-500'}`}>
+                <span className={`font-mono font-extrabold ${discrepancy === 0 ? 'text-[#22c55e]' : discrepancy > 0 ? 'text-[#0f172a]' : 'text-red-500'}`}>
                   {discrepancy === 0 ? 'Balanced' : `${discrepancy > 0 ? 'Over' : 'Short'} $${Math.abs(discrepancy).toFixed(2)}`}
                 </span>
               </div>
@@ -185,7 +185,7 @@ export function DashboardView() {
               <button onClick={() => setShowDeclare(false)}
                 className="flex-1 bg-[#f3f4f6] text-[#6b7280] rounded-xl py-2.5 text-xs font-black uppercase">Cancel</button>
               <button onClick={handleSaveDeclaration}
-                className="flex-1 bg-[#ff5f1f] text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-wider shadow-sm">Save Audit</button>
+                className="flex-1 bg-[#0f172a] text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-wider shadow-sm">Save Audit</button>
             </div>
           </div>
         </div>

@@ -37,7 +37,7 @@ export function App() {
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-[#e5e7eb] shrink-0">
         <div className="flex items-center gap-4">
           <button onClick={() => setView('dashboard')} className="flex items-center gap-2 hover:opacity-85 text-left">
-            <span className="font-black text-sm tracking-tight text-[#1f2937] uppercase">SquareOS Terminal</span>
+            <span className="font-black text-sm tracking-tight text-[#0b1c30] uppercase">CulinaryOS Terminal</span>
           </button>
           <span className="text-[#6b7280] text-[10px] font-bold px-2 py-0.5 bg-[#f3f4f6] rounded uppercase">
             Server: {employee.name} ({employee.role})
@@ -48,13 +48,13 @@ export function App() {
         <div className="flex gap-1.5">
           <button onClick={() => setView('dashboard')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              view === 'dashboard' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
+              view === 'dashboard' ? 'bg-[#0f172a] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
             }`}>
             HOME
           </button>
           <button onClick={() => { setView('tables'); setActiveOrder(null); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              view === 'tables' && !activeOrderId ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
+              view === 'tables' && !activeOrderId ? 'bg-[#0f172a] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
             }`}>
             FLOOR MAP
           </button>
@@ -62,13 +62,13 @@ export function App() {
             <>
               <button onClick={() => setView('menu')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  view === 'menu' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
+                  view === 'menu' ? 'bg-[#0f172a] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
                 }`}>
                 TICKET MENU
               </button>
               <button onClick={() => setView('checkout')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  view === 'checkout' ? 'bg-[#ff5f1f] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
+                  view === 'checkout' ? 'bg-[#0f172a] text-white font-black' : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb]'
                 }`}>
                 PAY
               </button>
