@@ -11,20 +11,89 @@
 // ============================================================
 
 import { Hono } from 'hono';
+import { handleIncomingEvent } from '@culinaryos/event-bus';
 import { requireTenant, ok, err } from '../middleware/auth.js';
+import { createMockTicketsFromOrder } from '../lib/mock-kitchen.js';
 import type { Env } from '../types.js';
 
 export const ordersRoutes = new Hono<Env>();
 
 ordersRoutes.use('*', requireTenant);
 
-// Resolve backend base URL from CULINARYOS_HOST (bare hostname, no scheme)
-const CULINARYOS_URL = process.env.CULINARYOS_HOST
-  ? `https://${process.env.CULINARYOS_HOST}`
-  : 'http://localhost:3000';
+/** Prefer CULINARYOS_URL; accept bare host in CULINARYOS_HOST. */
+function resolveCulinaryOsUrl(): string {
+  if (process.env.CULINARYOS_URL) return process.env.CULINARYOS_URL.replace(/\/$/, '');
+  const host = process.env.CULINARYOS_HOST;
+  if (!host) return 'http://localhost:3000';
+  if (host.startsWith('http://') || host.startsWith('https://')) return host.replace(/\/$/, '');
+  return `https://${host}`;
+}
 
 // Local Mock Database for Offline/Demo Mode
 let mockOrders: any[] = [];
+
+function mapLineItemsToEventPayload(items: any[]) {
+  return (items ?? []).map((li: any) => {
+    const rawMods = li.modifiers ?? [];
+    const modifiers = Array.isArray(rawMods)
+      ? rawMods.map((m: any) => (typeof m === 'string' ? m : m?.name ?? String(m)))
+      : [];
+    return {
+      lineItemId: li.id ?? li.lineItemId ?? crypto.randomUUID(),
+      menuItemId: li.menu_item_id ?? li.menuItemId,
+      name: li.name,
+      quantity: li.quantity,
+      station: li.station ?? 'hot',
+      courseNumber: li.course_number ?? li.courseNumber ?? 1,
+      modifiers,
+      notes: li.notes ?? null,
+      recipeId: li.recipe_id ?? li.recipeId,
+    };
+  });
+}
+
+async function emitOrderCreated(opts: {
+  tenantId: string;
+  orderId: string;
+  tableNumber?: string | null;
+  serverName?: string | null;
+  createdAt?: string;
+  items: ReturnType<typeof mapLineItemsToEventPayload>;
+}) {
+  const event = {
+    eventId: crypto.randomUUID(),
+    eventType: 'pos:order:created' as const,
+    tenantId: opts.tenantId,
+    source: 'pos',
+    timestamp: new Date().toISOString(),
+    version: 1,
+    payload: {
+      orderId: opts.orderId,
+      tableNumber: opts.tableNumber ?? undefined,
+      serverName: opts.serverName ?? undefined,
+      createdAt: opts.createdAt ?? new Date().toISOString(),
+      items: opts.items,
+    },
+  };
+
+  // In-process first (reliable; no self-HTTP / API-key race)
+  const result = await handleIncomingEvent(event);
+  if (!result.ok) {
+    // Fallback HTTP for split-process deploys
+    const base = resolveCulinaryOsUrl();
+    await fetch(`${base}/internal/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
+        'X-Tenant-Id': opts.tenantId,
+        'X-Caller-Service': 'pos',
+      },
+      body: JSON.stringify(event),
+    }).catch(() => null);
+  }
+  return result;
+}
 
 // POST /v1/orders
 ordersRoutes.post('/', async (c) => {
@@ -198,22 +267,62 @@ ordersRoutes.get('/:id', async (c) => {
 });
 
 // PATCH /v1/orders/:id/send
+// Body (optional, demo/offline): { order: { tableNumber, serverName, items, createdAt } }
+// When Supabase is offline, client may supply the order snapshot so KDS mock store updates.
 ordersRoutes.patch('/:id/send', async (c) => {
   const supabase  = c.get('supabase');
   const tenantId  = c.get('tenantId');
   const { id }    = c.req.param();
+  const body      = await c.req.json().catch(() => ({} as any));
 
   if (!supabase) {
-    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    let order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+
+    // Accept client-provided snapshot when order lives only in the POS browser mock DB
+    if (!order && body?.order?.items) {
+      order = {
+        id,
+        tenant_id: tenantId,
+        table_number: body.order.tableNumber ?? null,
+        server_name: body.order.serverName ?? null,
+        status: 'open',
+        created_at: body.order.createdAt ?? new Date().toISOString(),
+        items: (body.order.items as any[]).map((li: any) => ({
+          id: li.lineItemId ?? li.id ?? crypto.randomUUID(),
+          menu_item_id: li.menuItemId,
+          name: li.name,
+          quantity: li.quantity,
+          station: li.station ?? 'hot',
+          course_number: li.courseNumber ?? 1,
+          modifiers: li.modifiers ?? [],
+          notes: li.notes ?? null,
+          recipe_id: li.recipeId,
+        })),
+      };
+      mockOrders.push(order);
+    }
+
     if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
-    if (order.status !== 'open') return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
+    if (order.status === 'sent') {
+      return ok(c, { orderId: id, status: 'sent', ticketCount: 0, alreadySent: true });
+    }
+    if (order.status !== 'open') {
+      return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
+    }
 
     order.status = 'sent';
     order.fired_at = new Date().toISOString();
 
-    // Trigger local offline event message/broadcast print mock
-    console.log(`[Offline Event Bus] order:created emitted for order ${id}`);
-    return ok(c, { orderId: id, status: 'sent' });
+    const items = mapLineItemsToEventPayload(order.items ?? []);
+    const tickets = createMockTicketsFromOrder({
+      tenantId,
+      orderId: id,
+      tableNumber: order.table_number,
+      items,
+    });
+
+    console.log(`[mock event-bus] pos:order:created → ${tickets.length} kitchen ticket(s) for ${id}`);
+    return ok(c, { orderId: id, status: 'sent', ticketCount: tickets.length });
   }
 
   const { data: order, error: orderErr } = await supabase
@@ -227,39 +336,21 @@ ordersRoutes.patch('/:id/send', async (c) => {
   if (!['open'].includes(order.status))
     return err(c, 'CONFLICT', `Order is already ${order.status}`, 409);
 
-  await supabase.from('pos_orders').update({ status: 'sent' }).eq('id', id).eq('tenant_id', tenantId);
+  await supabase
+    .from('pos_orders')
+    .update({ status: 'sent', fired_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
 
-  await fetch(`${CULINARYOS_URL}/internal/events`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
-      'X-Tenant-Id': tenantId,
-      'X-Caller-Service': 'pos',
-    },
-    body: JSON.stringify({
-      eventId:   crypto.randomUUID(),
-      eventType: 'pos:order:created',
-      tenantId,
-      source:    'pos',
-      timestamp: new Date().toISOString(),
-      version:   1,
-      payload: {
-        orderId:     id,
-        tableNumber: order.table_number,
-        serverName:  order.server_name,
-        items:       (order.items ?? []).map((li: any) => ({
-          menuItemId:   li.menu_item_id,
-          name:         li.name,
-          quantity:     li.quantity,
-          station:      li.station ?? 'hot',
-          courseNumber: li.course_number ?? 1,
-          modifiers:    li.modifiers ?? [],
-          notes:        li.notes ?? null,
-        })),
-      },
-    }),
-  }).catch(() => null);
+  const items = mapLineItemsToEventPayload(order.items ?? []);
+  await emitOrderCreated({
+    tenantId,
+    orderId: id,
+    tableNumber: order.table_number,
+    serverName: order.server_name,
+    createdAt: order.created_at,
+    items,
+  });
 
   return ok(c, { orderId: id, status: 'sent' });
 });
@@ -321,29 +412,20 @@ ordersRoutes.post('/:id/fire-course', async (c) => {
     ticket_ids:    heldIds,
   });
 
-  await fetch(`${CULINARYOS_URL}/internal/events`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY ?? ''}`,
-      'X-Tenant-Id': tenantId,
-      'X-Caller-Service': 'pos',
+  await handleIncomingEvent({
+    eventId:   crypto.randomUUID(),
+    eventType: 'kds:course:fired',
+    tenantId,
+    source:    'pos',
+    timestamp: now,
+    version:   1,
+    payload: {
+      orderId:        id,
+      courseNumber,
+      firedTicketIds: heldIds,
+      firedBy:        body.serverName ?? 'server',
     },
-    body: JSON.stringify({
-      eventId:   crypto.randomUUID(),
-      eventType: 'kds:course:fired',
-      tenantId,
-      source:    'pos',
-      timestamp: now,
-      version:   1,
-      payload: {
-        orderId:        id,
-        courseNumber,
-        firedTicketIds: heldIds,
-        firedBy:        body.serverName ?? 'server',
-      },
-    }),
-  }).catch(() => null);
+  });
 
   return ok(c, {
     orderId:     id,

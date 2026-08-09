@@ -2,52 +2,60 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**', 'fix/**']
+    branches: [main, 'feat/**', 'fix/**', 'cursor/**', 'chore/**']
   pull_request:
     branches: [main]
 
 jobs:
-  # ---- Type check all TypeScript ----
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with: { bun-version: latest }
-      - name: Install backend deps
-        run: cd backend && bun install
-      - name: Typecheck backend
-        run: cd backend && bun tsc --noEmit
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm exec turbo run typecheck --filter=@culinaryos/server --filter=@culinaryos/shared --filter=@culinaryos/event-bus
 
-  # ---- Unit + integration tests ----
   test:
     name: Tests
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL:             ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      INTERNAL_API_KEY:         test-key-ci
+      INTERNAL_API_KEY: test-key-ci
+      DEVICE_API_KEY: test-device-ci
+      AUTH_RELAXED: 'true'
+      CULINARYOS_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: latest }
-      - name: Install deps
-        run: cd backend && bun install
-      - name: Run tests
-        run: bun test tests/
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Run server integration tests
+        run: bun test tests/server/
 
-  # ---- Docker build smoke test ----
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build -f backend/Dockerfile -t culinaryos-backend:ci .
-      - name: Build kds image
-        run: docker build -f kds/Dockerfile -t culinaryos-kds:ci .
-      - name: Build pos image
-        run: docker build -f pos/Dockerfile -t culinaryos-pos:ci .
-      - name: Build recipeos image
-        run: docker build -f recipeos/Dockerfile -t culinaryos-recipeos:ci .
+      - name: Build API image
+        run: docker build -f apps/server/Dockerfile -t culinaryos-api:ci .
+      - name: Build POS image
+        run: docker build -f apps/pos/Dockerfile -t culinaryos-pos:ci .
+      - name: Build KDS image
+        run: docker build -f apps/kds/Dockerfile -t culinaryos-kds:ci .

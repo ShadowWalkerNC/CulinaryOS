@@ -1,13 +1,3 @@
-FROM oven/bun:1.1 AS base
-WORKDIR /app
-
-COPY shared/ ./shared/
-COPY backend/middleware/ ./backend/middleware/
-
-COPY recipeos/package.json ./recipeos/
-RUN cd recipeos && bun install --frozen-lockfile
-
-COPY recipeos/ ./recipeos/
-
-EXPOSE 3001
-CMD ["bun", "run", "recipeos/server/index.ts"]
+# Deprecated — RecipeOS pantry lives on apps/server (/v1/pantry)
+FROM alpine:3.20
+RUN echo "DEPRECATED: pantry is served by apps/server" && exit 1

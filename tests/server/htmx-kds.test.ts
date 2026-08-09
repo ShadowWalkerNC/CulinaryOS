@@ -16,7 +16,7 @@ describe('GET /v1/kds/htmx-cards', () => {
   it('returns 200 OK with micro-HTML card fragments when X-Tenant-Id is present', async () => {
     const res = await kdsRoutes.request('/htmx-cards', {
       headers: {
-        'X-Tenant-Id': 'tenant-bistro-001',
+        'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
       },
     });
 

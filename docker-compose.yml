@@ -1,8 +1,16 @@
 # ============================================================
 # CulinaryOS — Unified Monorepo docker-compose
 # Usage:
-#   cp .env.example .env   # fill in Supabase credentials
-#   docker compose up
+#   cp .env.example .env
+#   # Option A (full shared state): configure real Supabase_* vars
+#   #   or run `supabase start` locally and point .env at it
+#   # Option B (demo): leave placeholder Supabase URLs — API uses
+#   #   in-memory mock kitchen store; POS fire → KDS poll works
+#   docker compose up --build
+#
+# Note: Postgres is NOT bundled here. Shared multi-client state
+# requires Supabase (cloud or `supabase start`). Without it, the
+# API mock store still bridges POS → KDS for a single-tenant demo.
 # ============================================================
 
 version: '3.9'

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiHeaders, getApiBase } from '@culinaryos/shared';
 import { supabase } from './supabase';
 import { usePOSStore } from './store';
 import { getMockOrders, saveMockOrders } from './mockDb';
@@ -307,23 +308,60 @@ export function useAddLineItem() {
 
 export function useFireOrder() {
   const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
     mutationFn: async (orderId: string) => {
+      const API = getApiBase();
+
+      // Always fire through the API so kitchen tickets are created via the event bus
+      // (or the shared mock kitchen store when Supabase is offline).
       if (!supabase) {
         const orders = getMockOrders();
         const order = orders.find(o => o.id === orderId);
-        if (order) {
-          order.status = 'sent';
-          order.fired_at = new Date().toISOString();
-          saveMockOrders(orders);
+        if (!order) throw new Error('Order not found');
+
+        const res = await fetch(`${API}/v1/orders/${orderId}/send`, {
+          method: 'PATCH',
+          headers: apiHeaders(tenantId),
+          body: JSON.stringify({
+            order: {
+              tableNumber: order.table_number,
+              serverName: order.server_name,
+              createdAt: order.created_at,
+              items: (order.items ?? []).map((li: any) => ({
+                lineItemId: li.id,
+                menuItemId: li.menu_item_id,
+                name: li.name,
+                quantity: li.quantity,
+                station: li.station ?? 'hot',
+                courseNumber: li.course_number ?? 1,
+                modifiers: (li.modifiers ?? []).map((m: any) =>
+                  typeof m === 'string' ? m : m?.name ?? String(m)
+                ),
+                notes: li.notes ?? null,
+              })),
+            },
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error?.message ?? `Fire failed (${res.status})`);
         }
+
+        order.status = 'sent';
+        order.fired_at = new Date().toISOString();
+        saveMockOrders(orders);
         return;
       }
-      const { error } = await supabase
-        .from('pos_orders')
-        .update({ status: 'sent', fired_at: new Date().toISOString() })
-        .eq('id', orderId);
-      if (error) throw error;
+
+      const res = await fetch(`${API}/v1/orders/${orderId}/send`, {
+        method: 'PATCH',
+        headers: apiHeaders(tenantId),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error?.message ?? `Fire failed (${res.status})`);
+      }
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['order', id] });

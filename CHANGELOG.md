@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **POS → KDS integration spine:** `useFireOrder` now calls `PATCH /v1/orders/:id/send` instead of mutating `pos_orders` directly, so kitchen tickets are created.
+- **Demo mode bridge:** Shared in-memory mock kitchen store + KDS API polling so POS fires appear on KDS without Supabase.
+- **Event payload:** `pos:order:created` includes `lineItemId` / `createdAt`; order send uses in-process event broker.
+- **Pantry deduct:** `pos:menu:item-sold` targets unified `CULINARYOS_URL/v1/pantry/deduct` (RecipeOS process removed).
+- **CI / Docker / Render:** Workflows and deploy configs retargeted to `apps/*` (legacy root Dockerfiles deprecated).
+
+### Added
+- `apps/server/src/lib/mock-kitchen.ts`, `docs/integration-spine.md`, `supabase/config.toml`, `supabase/seeds/base_tenant.sql`, `scripts/seed.ts`, POS→KDS fire tests.
+
+---
+
 ## [0.3.0] — Phase 3: Monorepo Integration & Complete Ecosystem — 2026-07-24
 
 ### Added
