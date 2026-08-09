@@ -180,4 +180,40 @@ Known issues noted: yes
 
 ---
 
+## Cursor Cloud specific instructions
+
+Durable notes for running/developing this repo in the Cloud Agent VM (dependencies are already installed by the startup update script). Standard commands live in root `package.json` and `docker-compose.yml`; this section only records non-obvious caveats.
+
+### Running services for development
+
+- Use the Turborepo/pnpm dev commands directly, NOT `docker compose up`. The compose file builds production nginx images of the frontends (ports 5172/5173/5174/5176) and does not provision a local Postgres/Supabase — it expects external Supabase env vars. For iterative development use Vite dev servers instead.
+- Core end-to-end loop = 3 services: `apps/server` (API, `:3000`), `apps/pos` (`:5172`), `apps/kds` (`:5173`). `apps/admin` (`:5174`) and `apps/web` (`:5176`) are optional. Run one service at a time in its own long-lived shell/tmux window:
+  - `pnpm --filter @culinaryos/server dev` (Hono API via `tsx watch`)
+  - `pnpm --filter @culinaryos/app-pos dev`
+  - `pnpm --filter @culinaryos/app-kds dev`
+  - `pnpm dev` (root) runs `turbo run dev` for everything in parallel, but interleaved logs make single-service debugging harder.
+
+### Degraded / offline demo mode (no external services)
+
+- The apps are designed to boot with NO Supabase/Postgres/Stripe. `cp .env.example .env` is enough. When `SUPABASE_URL`/`VITE_SUPABASE_URL` is missing or still contains `your-project`, the Supabase client is `null` and:
+  - The server logs `[Realtime] Skip starting realtime bridge (Supabase offline)` and auth auto-relaxes (no bearer token needed; send `X-Tenant-Id: 00000000-0000-0000-0000-000000000001`).
+  - POS serves a hardcoded `MOCK_MENU` and a localStorage-backed order store (`apps/pos/src/lib/mockDb.ts`). KDS shows built-in demo tickets with live aging timers and supports BUMP/FIRE locally.
+- Caveat: POS and KDS are separate origins (`:5172` vs `:5173`), so in offline mode they do NOT share order state — a POS "Send to Kitchen" will not appear on the KDS board without a real Supabase backend. For a true cross-app POS→KDS flow, provision Supabase (`SUPABASE_URL`/`ANON_KEY`/`SERVICE_ROLE_KEY` + `VITE_` equivalents), run `supabase db reset` + migrations, then run the apps.
+- POS demo login: PIN `1234` (Server) or `5678` (Manager).
+
+### Lint / test / typecheck caveats
+
+- `pnpm run typecheck` works and is the reliable static check (18 tasks pass).
+- `pnpm run lint` is currently non-functional: only `apps/kds` and `mobile` define a `lint` script and neither declares `eslint` as a dependency (eslint is absent from the lockfile and there are no eslint configs). Expect `eslint: not found` until this is fixed.
+- `pnpm run test` (i.e. `turbo run test`) fails immediately with a Turborepo "recursive_turbo_invocations" error because the root `//#test` task loops. Run the suite directly instead: `node ./scripts/run-all-tests.cjs`. Tests use a custom `bun:test` → tsx shim (`scripts/test-hook.cjs` + `scripts/bun-test-impl.js`); no Bun runtime is required. On Linux this yields ~21/25 test files passing; the remaining failures (`tests/api/pantry.test.ts` purchase-order endpoints returning 422, `tests/server/htmx-kds.test.ts`, and the two `tests/empirical/*_stress.test.ts`) are pre-existing app/test issues, not environment problems.
+- The root `pnpm seed` script points at a nonexistent `scripts/seed.ts` and will fail; there is no working seed script in the current tree.
+
+### Connecting to a real Supabase project (live mode)
+
+- A real Supabase project named "CulinaryOS" (ref `npwybcqqgonhohkdxwyg`) exists and has been provisioned with the core migrations (V1–V6, V11) and seeded with a demo tenant (`00000000-0000-0000-0000-000000000001`, "The Golden Fork") plus an active "Dinner Menu". `.env` holds the real `SUPABASE_URL` + `SUPABASE_ANON_KEY`.
+- The backend only creates its Supabase client when BOTH `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set and the URL isn't the `your-project` placeholder (`apps/server/src/middleware/supabase.ts`). The service-role key is a secret the Supabase integration/MCP cannot expose — it must be copied from the dashboard (Project Settings → API) into `SUPABASE_SERVICE_ROLE_KEY` to enable the live backend path. Until then keep `AUTH_RELAXED=true` (setting a real `SUPABASE_URL` with a placeholder service-role key would otherwise flip `isAuthRelaxed()` off and make the API require real JWTs).
+- The Vite frontends are intentionally left in offline/demo mode. Pointing them at the real project currently breaks them for two independent reasons: (1) a pre-existing RLS recursion — `public.my_tenant_id()` (defined in `V1__tenants.sql`) is plain `security invoker`, and the `tenant_users` policy in `V4__rls_policies.sql` calls it, so any anon RLS evaluation recurses (`stack depth limit exceeded`); the standard fix is to make `my_tenant_id()` `SECURITY DEFINER`. (2) The apps authenticate via a client-side demo PIN, never a Supabase Auth session, so `auth.uid()` is null and all tenant-scoped writes (`pos_orders`, `kitchen_tickets`) are RLS-blocked. A full live POS→KDS flow therefore needs the service-role backend path (or real Supabase Auth sessions), not just the anon keys.
+
+---
+
 *Version: 1.0 | Extends: ShadowWalkerNC/.github/AGENTS.md | Project: CulinaryOS*
