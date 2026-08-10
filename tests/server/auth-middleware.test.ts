@@ -2,7 +2,7 @@
 // Unit Tests: requireTenant auth middleware
 // ============================================================
 
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
 function makeCtx(headers: Record<string, string | undefined>) {
   const store: Record<string, any> = {};
@@ -23,13 +23,32 @@ function makeCtx(headers: Record<string, string | undefined>) {
   };
 }
 
+const ENV_KEYS = [
+  'AUTH_RELAXED',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'INTERNAL_API_KEY',
+  'DEVICE_API_KEY',
+] as const;
+
 describe('requireTenant middleware', () => {
+  const saved: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>> = {};
+
   beforeEach(() => {
+    for (const key of ENV_KEYS) saved[key] = process.env[key];
     process.env.AUTH_RELAXED = 'true';
     process.env.SUPABASE_URL = 'https://your-project.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = '';
     process.env.INTERNAL_API_KEY = 'test-internal-key';
     process.env.DEVICE_API_KEY = 'test-device-key';
+  });
+
+  afterEach(() => {
+    for (const key of ENV_KEYS) {
+      const value = saved[key];
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   });
 
   it('rejects missing X-Tenant-Id', async () => {

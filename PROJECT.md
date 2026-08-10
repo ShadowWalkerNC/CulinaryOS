@@ -20,8 +20,8 @@ Monorepo using pnpm workspaces and Turborepo.
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | M1: Monorepo Alignment & Package Contracts | Clean workspace boundaries; docs/CI match `apps/*` | none | IN_PROGRESS |
-| 2 | M2: Turborepo & Dev Environment Stability | turbo/pnpm green; compose + supabase local demo path | M1 | IN_PROGRESS |
+| 1 | M1: Monorepo Alignment & Package Contracts | Clean workspace boundaries; docs/CI match `apps/*` | none | IN_PROGRESS — CI typecheck/build/tests wired; CONTRIBUTING aligned |
+| 2 | M2: Turborepo & Dev Environment Stability | turbo/pnpm green; compose + supabase local demo path | M1 | IN_PROGRESS — `pnpm local:supabase` helper + seed; compose still uses external Supabase |
 | 3 | M3: Multi-Tenant Security & Database Isolation | RLS + real Supabase Auth (not PIN / relaxed demo) | M2 | PLANNED |
 | 4 | M4: POS & KDS Real-Time Architecture | Harden Realtime + offline outbox; full course fire | M1–M3 | IN_PROGRESS |
 | 5 | M5: MCP Extension Platform & Integrations | Runnable extensions + RecipeOS/pantry bridge | M1–M4 | PLANNED |

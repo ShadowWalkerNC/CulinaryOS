@@ -154,7 +154,7 @@ Next phase:         Multi-tenant production hardening + extension marketplace
 ## Known Issues / Watch List
 
 - **POS → KDS spine:** Clients must fire via `PATCH /v1/orders/:id/send`. Direct `pos_orders` status updates skip kitchen ticket creation.
-- **Local data plane:** `docker-compose` does not bundle Postgres — use Supabase cloud or `supabase start`. Demo mode uses the API mock kitchen store.
+- **Local data plane:** `docker-compose` does not bundle Postgres — use Supabase cloud or `pnpm local:supabase`. Demo mode uses the API mock kitchen store.
 - **POS terminal offline mode:** Offline queue must replay through the send/event path after reconnect.
 - **Extension API stability:** `extension_template/` is a public contract — breaking changes need major version bump.
 - **Pantry deduct:** `pos:menu:item-sold` calls `/v1/pantry/deduct` on the unified API (not a separate RecipeOS process).
@@ -205,8 +205,8 @@ Durable notes for running/developing this repo in the Cloud Agent VM (dependenci
 
 - `pnpm run typecheck` works and is the reliable static check (18 tasks pass).
 - `pnpm run lint` is currently non-functional: only `apps/kds` and `mobile` define a `lint` script and neither declares `eslint` as a dependency (eslint is absent from the lockfile and there are no eslint configs). Expect `eslint: not found` until this is fixed.
-- `pnpm run test` (i.e. `turbo run test`) fails immediately with a Turborepo "recursive_turbo_invocations" error because the root `//#test` task loops. Run the suite directly instead: `node ./scripts/run-all-tests.cjs`. Tests use a custom `bun:test` → tsx shim (`scripts/test-hook.cjs` + `scripts/bun-test-impl.js`); no Bun runtime is required. On Linux this yields ~21/25 test files passing; the remaining failures (`tests/api/pantry.test.ts` purchase-order endpoints returning 422, `tests/server/htmx-kds.test.ts`, and the two `tests/empirical/*_stress.test.ts`) are pre-existing app/test issues, not environment problems.
-- The root `pnpm seed` script points at a nonexistent `scripts/seed.ts` and will fail; there is no working seed script in the current tree.
+- `pnpm run test` (i.e. `turbo run test`) fails immediately with a Turborepo "recursive_turbo_invocations" error because the root `//#test` task loops. Prefer CI's gate: `bun test tests/server/` (requires Bun). Broader suite: `node ./scripts/run-all-tests.cjs` (tsx shim; no Bun required). Some legacy files under `tests/api/*` / `tests/empirical/*` may still be red.
+- `pnpm seed` is wired (`scripts/seed.ts`) — needs `DATABASE_URL` and/or `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`. For a one-shot local stack: `pnpm local:supabase`.
 
 ### Connecting to a real Supabase project (live mode)
 
