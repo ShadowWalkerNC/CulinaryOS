@@ -1,19 +1,40 @@
 {
   "id": "com.culinaryos.ext.culinaryops",
-  "name": "CulinaryOps Central Dashboard",
-  "version": "1.0.0",
+  "name": "CulinaryOps",
+  "version": "0.3.0",
   "min_platform_version": "1.0.0",
   "author": {
     "name": "CulinaryOS Team",
     "email": "dev@culinaryos.com",
-    "url": "https://culinaryos.com"
+    "url": "https://github.com/ShadowWalkerNC/CulinaryOps"
   },
-  "description": "CulinaryOps central operations dashboard & UI primitive hub",
+  "description": "Restaurant operations satellite — labor scheduling, food-cost tracking, vendor POs, and waste logging. MCP server: culinaryops-mcp.",
   "category": "operations",
   "entry_point": "index.js",
+  "repository": "https://github.com/ShadowWalkerNC/CulinaryOps",
+  "mcp": {
+    "server_name": "culinaryops-mcp",
+    "transport": "stdio",
+    "hub_entry": "mcp/src/culinaryops-server.ts",
+    "satellite_entry": "https://github.com/ShadowWalkerNC/CulinaryOps/tree/main/mcp/culinaryops-mcp",
+    "tools": [
+      "get_labor_summary",
+      "get_food_cost",
+      "log_waste",
+      "get_waste_summary",
+      "list_vendors",
+      "create_purchase_order"
+    ]
+  },
   "permissions": [
-    "menu.read",
-    "orders.read",
+    "labor.read",
+    "labor.write",
+    "food_cost.read",
+    "food_cost.write",
+    "vendors.read",
+    "vendors.write",
+    "waste.read",
+    "waste.write",
     "reports.read"
   ],
   "hooks": [],
