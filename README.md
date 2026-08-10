@@ -1,35 +1,67 @@
 # CulinaryOS
 
-> **AI‑native, self‑hostable restaurant operating system** — POS · Kitchen Display · Online Ordering · Inventory · MCP extension layer.
-> TypeScript · React 18 · Vite · **Hono** (Node 20) · Supabase · Turborepo · pnpm · MIT.
+> **The AI‑native operating system for restaurants.** One open‑source, self‑hostable platform that runs the whole floor — point of sale, kitchen display, online ordering, and inventory — and exposes every operation as a tool your AI agents can actually use.
 
 ![Stack](https://img.shields.io/badge/stack-TypeScript%20%C2%B7%20React%2018%20%C2%B7%20Hono%20%C2%B7%20Supabase-informational)
 ![Monorepo](https://img.shields.io/badge/monorepo-pnpm%20%C2%B7%20Turborepo-blue)
+![AI](https://img.shields.io/badge/AI-MCP%20native-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)
 
-CulinaryOS is a web‑first restaurant platform: React apps run on any tablet, kitchen display, or browser — no native install. It runs fully in an **offline/demo mode** out of the box, and connects to **Supabase** for a real multi‑tenant backend.
-
----
-
-## Screenshots
-
-| POS — PIN login | POS — live order ticket | KDS — kitchen board |
+| POS — sign in | POS — live ticket | KDS — kitchen board |
 |---|---|---|
 | ![POS login](docs/screenshots/pos-login.webp) | ![POS order](docs/screenshots/pos-order.webp) | ![KDS board](docs/screenshots/kds-board.webp) |
 
-The UI uses the **CulinaryOS Core** design system — a deep‑navy/slate "corporate modern" theme (Inter + JetBrains Mono, Material Symbols), with a dark "low‑light kitchen" variant for the KDS.
+---
+
+## The pitch
+
+Restaurant software is a racket: closed, per‑terminal licensing; hardware lock‑in; data you can't get at; and "AI features" that are a chatbot bolted onto a database. Meanwhile the actual work — costing a recipe, scaling a batch, firing a course, chasing food cost and labor — still happens in spreadsheets and heads.
+
+**CulinaryOS is the opposite of that:**
+
+- **Open‑source & self‑hostable.** Own your data and your stack. Run it on a tablet, a kitchen display, a laptop, or your own cloud. MIT‑licensed.
+- **Web‑first, zero install.** POS, KDS, admin, and the customer storefront are all React apps in the browser — no app‑store gatekeeping, no native builds.
+- **Works before you configure anything.** Clone, `pnpm dev`, and it runs in a fully interactive **demo mode** with a seeded menu and live kitchen board — no database, no keys. Add Supabase when you're ready for real data.
+- **Genuinely AI‑native.** Every operation is exposed over the **Model Context Protocol (MCP)**, so Claude, Cursor, or your own agent can take orders, fire courses, check stock, and pull reports — through the same guarded API your staff use, never raw database access.
+- **A costing engine, not a price field.** The **Ratio Blueprint Engine** stores recipes as *relationships* (baker's percentages), so scaling a batch, projecting food cost, and swapping sub‑recipes are exact math — not guesses.
+- **An ecosystem, not a monolith.** CulinaryOS is a hub. Focused satellite products (KitchenKit, CulinaryOps, Post‑Pilot) plug in as MCP bridges, so the platform grows without turning into one giant blob.
+
+**Who it's for:** independent restaurants, ghost kitchens, caterers, and multi‑location groups that want to own their operations software — and builders who want a real, hackable restaurant platform to extend.
 
 ---
 
-## The differentiator: the Ratio Blueprint Engine
+## How it works
 
-Traditional POS software stores menu items as fixed weights (e.g. `500g flour`). CulinaryOS stores **mathematical ratio relationships** via the zero‑dependency `@culinaryos/ratio-engine` package:
+### 1. One monorepo, five surfaces, one gateway
 
-- Baker's percentages (`flour: 100%`, `water: 75%`, `salt: 2%`).
-- Dynamic batch scaling by expected cover counts.
-- Food‑cost projection and sub‑recipe substitution.
-- Exposed to AI agents via MCP (`mcp/src/recipe-server.ts`).
+```
+                   Guests            Servers          Line cooks         Managers
+                     │                  │                  │                 │
+              apps/web (:5176)   apps/pos (:5172)   apps/kds (:5173)  apps/admin (:5174)
+              online ordering    POS terminal       kitchen display   back office
+                     └──────────────────┴───────┬──────────┴─────────────────┘
+                                                 │  HTTP + Supabase Realtime
+                                     apps/server (:3000) — Hono API gateway
+                                                 │
+                          Supabase (Postgres · Auth · Realtime · Row‑Level Security)
+```
+
+All four frontends talk to a single **Hono API gateway** (`apps/server`, Node 20). State lives in **Supabase** — Postgres with Row‑Level Security so every row is scoped to a tenant. Realtime is how the kitchen sees new tickets the instant they're fired.
+
+### 2. The core loop: order → fire → cook → pay
+
+1. A server builds a check on the **POS**; items, modifiers, seats, and course numbers are attached.
+2. Hitting **Send to Kitchen** calls the gateway, which emits a `pos:order:created` domain event.
+3. The **event bus** (`@culinaryos/event-bus`) turns that event into `kitchen_tickets`, routed by station and course.
+4. The **KDS** receives the ticket over Supabase Realtime, ages it with color‑coded timers, and lets the line **bump** it when it's up.
+5. Payment runs through Stripe **PaymentIntents** (no raw card data on the server); every mutation is written to an append‑only `domain_events` audit log.
+
+Offline‑by‑design: if the network drops, the POS keeps taking orders in a local queue and syncs on reconnect.
+
+### 3. The differentiator: the Ratio Blueprint Engine
+
+Traditional POS software stores `500g flour`. CulinaryOS stores `flour: 100%` and understands the *relationship* — so it can scale, cost, and substitute with real math. It's a zero‑dependency package (`@culinaryos/ratio-engine`).
 
 ```typescript
 import { scaleBlueprint, computeCost } from '@culinaryos/ratio-engine';
@@ -44,184 +76,112 @@ const sourdough = {
   ],
 };
 
-const scaled = scaleBlueprint(sourdough, 12);   // 12 loaves — ratios preserved
+const scaled = scaleBlueprint(sourdough, 12);   // 12 loaves — ratios preserved, exactly
 ```
 
----
+### 4. AI‑native, via MCP
 
-## Repository layout
+CulinaryOS exposes its operations as **MCP servers** (`mcp/`). Any MCP‑compatible agent — Claude Desktop, Cursor, your own — connects and drives the platform through the **same guarded API and tenant auth** as human staff. Agents never touch the database directly; inputs are validated before any call.
 
 ```
-CulinaryOS/                        # pnpm workspaces + Turborepo
-├── apps/
-│   ├── server/    # Hono API gateway + event bus (:3000)
-│   ├── pos/       # Point‑of‑Sale terminal — "CulinaryOps" (:5172)
-│   ├── kds/       # Kitchen Display System — "KitchenKit" view (:5173)
-│   ├── admin/     # Back‑office (pantry / purchase orders) (:5174)
-│   └── web/       # Customer online‑ordering storefront (:5176)
-├── packages/
-│   ├── ratio-engine/  # Baker's‑percentage recipe engine (the differentiator)
-│   ├── ui/            # @culinaryos/ui — shared design system
-│   ├── db/            # Supabase client + generated types
-│   ├── auth/          # session + API‑key helpers
-│   ├── event-bus/     # domain event broker + Supabase realtime bridge
-│   ├── shared/        # cross‑package types + API client
-│   └── config/        # env + constants
-├── mcp/               # Model Context Protocol servers (AI agent layer)
-├── supabase/          # migrations (V1–V13 + feature migrations) + seeds
-├── cli/               # operator CLI
-├── mobile/            # React Native / Expo companion (scaffold)
-├── docker-compose.yml # local containerized stack
-└── turbo.json
+AI agent  →  mcp/*-server.ts  →  validation  →  apps/server (Hono API)  →  Supabase
+             (stdio / SSE)                        Bearer token · X‑Tenant‑Id
 ```
+
+The core hub server `culinaryos-mcp` covers recipes, inventory, orders, and reports (`get_recipe`, `scale_recipe`, `get_inventory`, `fire_order`, `get_sales_report`, …).
+
+### 5. A hub with satellites
+
+CulinaryOS is the **hub**. Focused, standalone products bridge in as their own MCP servers — kept segregated so each can ship on its own cadence, while the hub gains their power:
+
+| Satellite | What it adds | Bridges in as |
+|---|---|---|
+| **[KitchenKit](https://github.com/ShadowWalkerNC/KitchenKit)** | Recipe manager + shift‑prep planner (Ratio Blueprint, mise‑en‑place) | `recipe` / `prep` MCP servers |
+| **[CulinaryOps](https://github.com/ShadowWalkerNC/CulinaryOps)** | Labor scheduling, food‑cost %, vendor POs, waste logging | `culinaryops-mcp` (`get_labor_summary`, `get_food_cost`, `log_waste`, `get_waste_summary`, `list_vendors`, `create_purchase_order`) |
+| **Post‑Pilot** | Social/marketing automation, loyalty | `post-pilot` MCP server |
+
+Each satellite ships a drop‑in bridge (manifest + mirrored MCP server) that registers it with the hub — the same pattern for all of them — so `culinaryos-mcp` (core) and, say, `culinaryops-mcp` (operations) stay cleanly distinct.
 
 ---
 
 ## Quickstart
 
-**Prerequisites:** Node.js `>=20`, pnpm `>=9` (`corepack enable` or `npm i -g pnpm`).
+**Prerequisites:** Node.js `>=20`, pnpm `>=9` (`corepack enable`).
 
 ```bash
 git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
 cd CulinaryOS
 pnpm install
-cp .env.example .env      # runs in offline/demo mode as‑is; fill in Supabase for a live backend
-pnpm dev                  # starts all apps + API in watch mode (Turborepo)
+cp .env.example .env      # runs in demo mode as‑is; add Supabase for real data
+pnpm dev                  # all apps + API in watch mode (Turborepo)
 ```
 
-### Local endpoints
-
-| Service | Workspace | Command | URL |
-|---|---|---|---|
-| Core API | `apps/server` | `pnpm --filter @culinaryos/server dev` | http://localhost:3000/health |
-| POS terminal | `apps/pos` | `pnpm --filter @culinaryos/app-pos dev` | http://localhost:5172 |
-| KDS | `apps/kds` | `pnpm --filter @culinaryos/app-kds dev` | http://localhost:5173 |
-| Admin | `apps/admin` | `pnpm --filter @culinaryos/admin dev` | http://localhost:5174 |
-| Web store | `apps/web` | `pnpm --filter @culinaryos/app-web dev` | http://localhost:5176 |
-
-> **Demo mode:** with placeholder Supabase values in `.env`, the apps serve mock data (POS uses a built‑in menu + `localStorage` orders; KDS shows demo tickets). This is great for UI work but POS and KDS don't share state without a real backend. POS login PINs: `1234` (server), `5678` (manager).
-
----
-
-## Backend (Supabase)
-
-For a real, persisted multi‑tenant backend, set these in `.env`:
-
-| Variable | Purpose |
-|---|---|
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | project URL + public key (client reads) |
-| `SUPABASE_SERVICE_ROLE_KEY` | server‑side key — **required** for the API's live DB path (bypasses RLS) |
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | client copies |
-| `DATABASE_URL` | direct Postgres connection (used by migrations + SQL seed) |
-| `STRIPE_SECRET_KEY`, `VITE_STRIPE_PUBLISHABLE_KEY` | payments (optional) |
-| `INTERNAL_API_KEY`, `DEVICE_API_KEY` | service‑to‑service + terminal auth |
-
-```bash
-pnpm db:migrate     # supabase db push — applies migrations
-pnpm seed           # seed the demo tenant + menu (see scripts/seed.ts)
-```
-
-The schema lives in `supabase/migrations/` (V1–V13 plus dated feature migrations): tenants + RLS, KDS tickets, POS/menus/orders/payments, event‑bus audit log, realtime, pantry/purchase‑orders, course firing, Stripe columns, public‑menu read policies, and beta/extension tables.
-
----
-
-## Build, test, lint
-
-```bash
-pnpm typecheck                     # tsc --noEmit across all packages (green)
-pnpm build                         # Turborepo production build (green)
-node ./scripts/run-all-tests.cjs   # run the test suite (see note below)
-```
-
-> **Testing note:** run tests with `node ./scripts/run-all-tests.cjs`, **not** `pnpm test` — the turbo `test` task currently recurses into the root `//#test` task. The suite uses a custom `bun:test`→`tsx` shim (no Bun runtime needed). A few suites are currently red (non‑UUID tenant headers in fixtures + one offline‑sync mock shape) and are being fixed.
->
-> **Lint note:** `pnpm lint` is not yet functional (ESLint isn't wired into the workspace).
-
----
-
-## API (`apps/server`)
-
-Hono on Node 20. All routes are mounted in `apps/server/src/index.ts`; tenant‑scoped routes require an `X-Tenant-Id` (UUID) plus a bearer token, or run relaxed in demo mode (`AUTH_RELAXED`).
-
-| Mount | Auth | Notes |
+| Service | Workspace | URL |
 |---|---|---|
-| `GET /health` | none | liveness + version |
-| `POST/GET /internal/events` | `INTERNAL_API_KEY` | domain event ingest |
-| `/v1/orders`, `/v1/tabs`, `/v1/pos` | tenant | POS order lifecycle + offline sync |
-| `/v1/kds` | tenant | tickets, bump, fire, analytics, pending‑push |
-| `/v1/pantry` | tenant | inventory + full purchase‑order workflow |
-| `/v1/reports` | tenant | EOD + range revenue |
-| `/v1/menu` | public | active menu by tenant slug |
-| `/v1/payments` | tenant | Stripe checkout / capture / refund |
-| `/v1/online-orders` | public (slug) | guest ordering |
+| Core API (Hono) | `apps/server` | http://localhost:3000/health |
+| POS terminal | `apps/pos` | http://localhost:5172 |
+| KDS | `apps/kds` | http://localhost:5173 |
+| Admin | `apps/admin` | http://localhost:5174 |
+| Web store | `apps/web` | http://localhost:5176 |
 
-Firing an order emits `pos:order:created`, which the event bus (`@culinaryos/event-bus`) turns into `kitchen_tickets` for the KDS.
+> **Demo mode:** with placeholder Supabase values, the apps serve mock data — the POS ships a built‑in menu + `localStorage` orders, the KDS shows live demo tickets. Great for a tour; POS/KDS don't share state until a real backend is connected. POS PINs: `1234` (server), `5678` (manager).
 
----
+### Go live with Supabase
 
-## MCP (AI agent layer)
-
-CulinaryOS exposes its operations as [Model Context Protocol](https://modelcontextprotocol.io) servers so any MCP‑compatible agent (Claude Desktop, Cursor, …) can drive it. Servers live in `mcp/` and compile to `mcp/dist/`:
-
-| Server | File | Role |
-|---|---|---|
-| Unified | `mcp/culinary-os-server.ts` | calls the live API (`CULINARY_API_URL`) — recipes, inventory, orders |
-| POS | `mcp/src/pos-server.ts` | create/void/fire orders |
-| KDS | `mcp/src/kds-server.ts` | fetch/bump tickets |
-| Inventory | `mcp/src/inventory-server.ts` | pantry levels + POs |
-| Recipe | `mcp/src/recipe-server.ts` | ratio scaling (RecipeOS/KitchenKit bridge) |
-| Prep | `mcp/src/prep-server.ts` | mise‑en‑place / prep lists (KitchenKit bridge) |
-| Post‑Pilot | `mcp/src/post-pilot-server.ts` | marketing / loyalty bridge |
+Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (+ `VITE_` copies) and `DATABASE_URL`, then:
 
 ```bash
-pnpm --filter culinaryos-mcp-servers build
-node mcp/dist/culinary-os-server.js      # unified server
-node mcp/dist/src/pos-server.js          # domain servers live under dist/src/
+pnpm db:migrate     # apply migrations (V1–V13 + feature migrations)
+pnpm seed           # seed the demo tenant + active menu
 ```
 
-The unified server reads `CULINARY_API_URL` + `CULINARY_API_KEY`. See `mcp/README.md` for a Claude Desktop config example.
-
-### Ecosystem
-
-CulinaryOS is the hub of a small family of standalone, MCP‑bridged repositories:
-
-- **[KitchenKit](https://github.com/ShadowWalkerNC/KitchenKit)** — standalone recipe manager + shift‑prep planner (merges the archived *RecipeOS* + *PrepFlow*). Bridges into CulinaryOS via the recipe + prep MCP servers.
-- **[Post‑Pilot](https://github.com/ShadowWalkerNC/Post-Pilot)** — social/marketing automation; bridges via the post‑pilot MCP server.
-
-> "CulinaryOps" and "KitchenKit view" are the branded **POS and KDS surfaces inside this repo** — not separate repositories.
+Optional: `STRIPE_SECRET_KEY` / `VITE_STRIPE_PUBLISHABLE_KEY` for payments; `INTERNAL_API_KEY` / `DEVICE_API_KEY` for service + terminal auth.
 
 ---
 
-## Deployment
+## Under the hood
 
-- **Docker (self‑host):** `docker compose up --build` builds the API (`apps/server`) plus the four frontends (served via nginx). Supabase credentials are supplied via `.env` (`env_file`); no database is bundled.
-- **Render:** `render.yaml` provisions the Hono API as a Docker web service; the Vite frontends build from the monorepo as static sites.
-- **Vercel:** `vercel.json` deploys the `apps/web` storefront as a static SPA. The API is hosted separately (Render/Docker), not as a Vercel function.
+**Repo layout**
+
+```
+apps/       server (Hono API) · pos · kds · admin · web
+packages/   ratio-engine · ui · db · auth · event-bus · shared · config
+mcp/        MCP servers — culinary-os-server.ts (core) + src/{pos,kds,inventory,recipe,prep,post-pilot,culinaryops}
+extensions/ first-party + satellite bridge manifests (kitchenkit, culinaryops, post-pilot, …)
+supabase/   migrations (V1–V13 + feature) + seeds
+cli/        operator CLI    ·    mobile/  React Native / Expo (scaffold)
+```
+
+**API (all mounted in `apps/server/src/index.ts`)** — tenant‑scoped routes need `X-Tenant-Id` (UUID) + bearer, or run relaxed in demo mode:
+
+`/health` · `/v1/orders` · `/v1/tabs` · `/v1/pos` (offline sync) · `/v1/kds` · `/v1/pantry` (+ purchase‑order workflow) · `/v1/reports` · `/v1/menu` (public) · `/v1/payments` (Stripe) · `/v1/online-orders`.
+
+**Build / test**
+
+```bash
+pnpm typecheck                     # tsc across all packages
+pnpm build                         # Turborepo production build
+node ./scripts/run-all-tests.cjs   # test suite (use this, not `pnpm test`)
+```
+
+**Deploy**
+
+- **Docker:** `docker compose up --build` — API + all four frontends (nginx), Supabase supplied via `.env`.
+- **Render:** `render.yaml` — Hono API as a Docker service; frontends as static sites.
+- **Vercel:** `vercel.json` — the `apps/web` storefront as a static SPA (API hosted separately).
 
 ---
 
 ## Status
 
-**Working today:** unified Hono API with all routes mounted · Supabase schema + RLS + realtime migrations · offline/demo mode across POS/KDS/Web · navy design system on POS + KDS · Ratio Blueprint Engine · pantry/purchase‑order workflow · MCP servers (compile + run) · green typecheck & build.
+**Working today:** the full POS → KDS → order loop, demo mode across all apps, the Ratio Blueprint Engine, pantry/purchase‑order workflow, the Hono API with every route mounted, Supabase schema + RLS + realtime migrations, the MCP hub + satellite bridges (KitchenKit, CulinaryOps, Post‑Pilot), and a navy "CulinaryOS Core" design system (with a dark low‑light kitchen theme for the KDS).
 
-**In progress / roadmap:** real Supabase Auth + `tenant_users` provisioning (so clients hold a session instead of demo/PIN) · routing all POS mutations through the server so POS→KDS persists live · Stripe webhooks + web‑checkout payments · admin breadth (menu editor, staff, reports) · rolling the navy design system to web/admin/mobile · fixing the red test suites + wiring ESLint · finishing the mobile app.
-
----
-
-## Ground rules
-
-1. Every table carries `tenant_id` + RLS — multi‑tenant isolation is non‑negotiable.
-2. Every mutation is auditable via the `domain_events` log.
-3. Stock changes write ledger deltas — never overwrite a running total.
-4. No raw card data on the server — Stripe PaymentIntents only.
-5. AI is additive — the platform must work with the Anthropic layer absent.
-6. MCP tools validate inputs and go through the API, never straight to the DB.
-7. The Ratio Blueprint Engine stays dependency‑free.
+**On the roadmap:** first‑class Supabase Auth + tenant provisioning (replacing demo/PIN sign‑in), routing all POS mutations through the server for live POS→KDS persistence, Stripe webhooks + web checkout, a fuller admin (menu editor, staff, reports), and finishing the mobile app.
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Before opening a PR: `pnpm typecheck`, `pnpm build`, and `node ./scripts/run-all-tests.cjs`.
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Before a PR: `pnpm typecheck`, `pnpm build`, and `node ./scripts/run-all-tests.cjs`.
 
-*MIT License · © 2026 ShadowWalkerNC*
+*MIT License · © 2026 ShadowWalkerNC — CulinaryOS is the hub of a small, friendly constellation of restaurant software.*
