@@ -6,6 +6,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
+<p align="center">
+  <img src="docs/screenshots/pos-order.webp" alt="CulinaryOS POS — order entry" width="48%" />
+  <img src="docs/screenshots/kds-board.webp" alt="CulinaryOS KDS — kitchen board" width="48%" />
+</p>
+
+<p align="center"><em>POS order entry · Kitchen display — same navy/slate system, one fire spine</em></p>
+
 > Not a cheaper Toast clone. A **protocol restaurant**: kitchen state is a versioned contract that operators *and* AI agents can drive — with sovereign data and a closed economic loop (recipe → fire → waste/cost).
 
 ---
@@ -112,8 +119,8 @@ Contract doc: [`docs/integration-spine.md`](docs/integration-spine.md).
 | MCP ops on live API | Shipped (`/v1/ops`, culinaryops-mcp prefers live) |
 | Plate economics on fire | Shipped (best-effort) |
 | Stripe webhook | `/v1/webhooks/stripe` |
-| Thin admin menu/staff | Shipped |
-| Multi-tenant hardening | Ongoing |
+| Thin admin menu/staff | Shipped (manager/owner RBAC fail-closed) |
+| Multi-tenant hardening | Cross-tenant JWT membership enforced + tested |
 
 Milestones: [`PROJECT.md`](PROJECT.md). Agent rules: [`AGENTS.md`](AGENTS.md).
 

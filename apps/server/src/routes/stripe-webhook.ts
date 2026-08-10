@@ -44,7 +44,7 @@ stripeWebhook.post('/', async (c) => {
     const supabase = adminSupabase();
 
     if (supabase && tenantId && orderId) {
-      await supabase
+      const { data: paymentRows, error: payErr } = await supabase
         .from('payments')
         .update({
           status: 'completed',
@@ -53,13 +53,17 @@ stripeWebhook.post('/', async (c) => {
           reference_id: intent.id,
         })
         .eq('stripe_payment_intent_id', intent.id)
-        .eq('tenant_id', tenantId);
+        .eq('tenant_id', tenantId)
+        .select('id');
 
-      await supabase
-        .from('pos_orders')
-        .update({ status: 'paid', paid_at: new Date().toISOString() })
-        .eq('id', orderId)
-        .eq('tenant_id', tenantId);
+      // Only mark the order paid when a matching tenant-scoped payment row updated
+      if (!payErr && paymentRows && paymentRows.length > 0) {
+        await supabase
+          .from('pos_orders')
+          .update({ status: 'paid', paid_at: new Date().toISOString() })
+          .eq('id', orderId)
+          .eq('tenant_id', tenantId);
+      }
     }
   }
 

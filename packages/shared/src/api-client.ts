@@ -1,5 +1,7 @@
 // Shared browser API helpers for POS / Admin / KDS terminals
 
+import { isPlaceholderSecret } from './secrets';
+
 function readEnv(key: string): string | undefined {
   try {
     // Vite / browser
@@ -31,7 +33,8 @@ export function getTenantId(fallback?: string): string {
 }
 
 export function getDeviceApiKey(): string {
-  return readEnv('VITE_DEVICE_API_KEY') ?? readEnv('VITE_INTERNAL_API_KEY') ?? '';
+  const key = readEnv('VITE_DEVICE_API_KEY') ?? readEnv('VITE_INTERNAL_API_KEY') ?? '';
+  return isPlaceholderSecret(key) ? '' : key;
 }
 
 /** Prefer user session accessToken from PIN login; fall back to device key. */
@@ -41,7 +44,9 @@ export function getAccessToken(): string {
       const raw = localStorage.getItem(SESSION_KEY);
       if (raw) {
         const session = JSON.parse(raw) as { accessToken?: string; tenantId?: string };
-        if (session.accessToken) return session.accessToken;
+        if (session.accessToken && !isPlaceholderSecret(session.accessToken)) {
+          return session.accessToken;
+        }
       }
     }
   } catch {
@@ -50,7 +55,7 @@ export function getAccessToken(): string {
   return getDeviceApiKey();
 }
 
-/** Always send tenant; send Authorization when a user/device token is available. */
+/** Always send tenant; send Authorization when a real user/device token is available. */
 export function apiHeaders(
   tenantId?: string,
   extra: Record<string, string> = {}
@@ -71,7 +76,10 @@ export function apiHeaders(
     ...extra,
   };
   const token = getAccessToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  // Skip placeholders so AUTH_RELAXED demo doesn't force the JWT path with junk tokens
+  if (token && !isPlaceholderSecret(token)) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   return headers;
 }
 

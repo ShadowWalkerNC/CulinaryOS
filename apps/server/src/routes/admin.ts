@@ -7,19 +7,14 @@ import type { Env } from '../types.js';
 import { requireTenant, ok, err } from '../middleware/auth.js';
 import { hashPin } from '../lib/pin.js';
 import { isLiveSupabaseConfigured } from '../lib/secrets.js';
+import { managerGate } from '../lib/rbac.js';
 
 export const adminRoutes = new Hono<Env>();
 adminRoutes.use('*', requireTenant);
 
 function requireManager(c: any): Response | null {
-  const mode = c.get('authMode');
-  const role = c.get('authRole');
-  if (mode === 'api_key' || mode === 'relaxed') return null;
-  if (role && ['owner', 'manager'].includes(role)) return null;
-  if (!role && mode === 'jwt') {
-    return err(c, 'FORBIDDEN', 'Manager or owner role required', 403);
-  }
-  return null;
+  if (managerGate(c.get('authMode'), c.get('authRole')) === 'ok') return null;
+  return err(c, 'FORBIDDEN', 'Manager or owner role required', 403);
 }
 
 // ---- Menu ----
