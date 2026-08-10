@@ -12,6 +12,8 @@
     "start-recipe": "node dist/recipe-server.js",
     "start-prep": "node dist/prep-server.js",
     "start-post-pilot": "node dist/post-pilot-server.js",
+    "start-culinaryops": "node dist/src/culinaryops-server.js",
+    "dev-culinaryops": "node --import tsx src/culinaryops-server.ts",
     "start-culinary": "node dist/culinary-os-server.js",
     "dev-culinary": "ts-node culinary-os-server.ts"
   },

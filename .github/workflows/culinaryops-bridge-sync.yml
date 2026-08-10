@@ -1,0 +1,29 @@
+name: CulinaryOps bridge sync
+
+# Fails if the applied CulinaryOps hub bridge drifts from the satellite's
+# canonical source (ShadowWalkerNC/CulinaryOps → bridges/culinaryos/).
+on:
+  push:
+    branches: [main, 'cursor/**', 'feat/**', 'fix/**']
+    paths:
+      - 'mcp/src/culinaryops-server.ts'
+      - 'extensions/culinaryops/culinaryos_extension.json'
+      - 'scripts/check-culinaryops-bridge.mjs'
+      - '.github/workflows/culinaryops-bridge-sync.yml'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 12 * * 1' # weekly drift check (Mondays)
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Verify bridge in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check CulinaryOps bridge sync
+        run: node scripts/check-culinaryops-bridge.mjs

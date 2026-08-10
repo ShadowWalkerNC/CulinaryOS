@@ -33,3 +33,65 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
+
+  # ---- Frontends (Vite static sites, built from the monorepo) ----
+  # Set VITE_API_URL to the deployed API URL (e.g. https://culinaryos-api.onrender.com).
+  - type: web
+    name: culinaryos-pos
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-pos build
+    staticPublishPath: apps/pos/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        sync: false
+      - key: VITE_API_URL
+        sync: false
+
+  - type: web
+    name: culinaryos-kds
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kds build
+    staticPublishPath: apps/kds/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        sync: false
+      - key: VITE_API_URL
+        sync: false
+
+  - type: web
+    name: culinaryos-admin
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/admin build
+    staticPublishPath: apps/admin/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        sync: false
+      - key: VITE_API_URL
+        sync: false
+
+  - type: web
+    name: culinaryos-web
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-web build
+    staticPublishPath: apps/web/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        sync: false
+      - key: VITE_API_URL
+        sync: false

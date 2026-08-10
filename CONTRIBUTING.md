@@ -1,7 +1,8 @@
 # Contributing to CulinaryOS
 
-> Read `docs/build-order.md` before writing any code.
-> Read `docs/sync-protocol.md` before touching anything in the local queue or sync engine.
+> Read `PROJECT.md` and `docs/integration-spine.md` before changing POS ↔ KDS ↔ pantry flows.
+> Read `docs/sync-protocol.md` before touching offline queues or outbox code.
+> Tenant isolation is non-negotiable — every query must be scoped by `tenant_id` / RLS.
 
 ---
 
@@ -9,22 +10,27 @@
 
 ```
 CulinaryOS/
-├── backend/          ← Ktor server (Kotlin)
-├── shared/           ← KMP shared business logic + SQLDelight schemas
-├── pos-client/       ← Compose Multiplatform POS terminal app
-├── kds-client/       ← Compose Multiplatform KDS display app
-├── admin-client/     ← Compose Multiplatform admin panel
-└── web/
-    ├── ordering/     ← React/Next.js customer ordering frontend
-    └── dashboard/    ← React/Next.js manager reporting dashboard
+├── apps/
+│   ├── server/       ← Unified Hono API (Node 20)
+│   ├── pos/          ← Vite + React POS terminal
+│   ├── kds/          ← Vite + React Kitchen Display
+│   ├── admin/        ← Vite + React admin
+│   └── web/          ← Vite + React online ordering
+├── packages/         ← Shared contracts (shared, auth, db, event-bus, ui, …)
+├── mcp/              ← Domain MCP servers
+├── extensions/       ← Extension manifests + public contract
+├── supabase/         ← Migrations, RLS, seeds (config.toml for local CLI)
+├── mobile/           ← Expo companion (early stub)
+├── cli/              ← Operator CLI
+└── tests/            ← Integration tests (Bun + tsx runners)
 ```
 
 ---
 
 ## Tenant Isolation — Non-Negotiable
 
-Every database query MUST be scoped by `restaurantId`.
-This is enforced at the Ktor plugin layer, but every developer must still be aware of it.
+Every database query MUST be scoped by `tenant_id`.
+RLS enforces this in Supabase; the Hono `requireTenant` middleware injects tenant context on every authenticated route.
 A PR that introduces an unscoped query will be rejected.
 
 ---
@@ -32,11 +38,12 @@ A PR that introduces an unscoped query will be rejected.
 ## Branch Strategy
 
 ```
-main          ← always deployable; protected branch
-feature/*     ← new features (e.g. feature/pos-offline-queue)
-fix/*         ← bug fixes
-chore/*       ← tooling, deps, CI changes
-docs/*        ← documentation only
+main              ← always deployable; protected branch
+feature/*         ← new features
+fix/*             ← bug fixes
+chore/*           ← tooling, deps, CI changes
+cursor/*          ← cloud-agent branches
+docs/*            ← documentation only
 ```
 
 - Never commit directly to `main`
@@ -53,13 +60,13 @@ Use conventional commits:
 <type>(<scope>): <short description>
 
 Types:  feat | fix | chore | docs | test | refactor | perf
-Scope:  backend | shared | pos | kds | admin | web | ci | deps
+Scope:  server | pos | kds | admin | web | shared | ci | supabase | mcp
 
 Examples:
-  feat(pos): add offline event queue with SQLDelight
-  fix(backend): scope all order queries by restaurantId
-  docs(sync): add conflict resolution rules
-  test(backend): add cross-tenant isolation integration test
+  feat(pos): fire orders through PATCH /v1/orders/:id/send
+  fix(ci): let pnpm/action-setup read packageManager pin
+  docs(contributing): align with apps/* monorepo
+  test(server): cover POS → KDS mock fire path
 ```
 
 ---
@@ -67,32 +74,55 @@ Examples:
 ## Running Locally
 
 ### Prerequisites
-- JDK 17+
-- Docker + Docker Compose
-- Android Studio (for mobile clients) or IntelliJ IDEA
-- Node.js 20+ (for web clients)
+- Node.js 20+
+- pnpm 9 (`packageManager` in root `package.json`)
+- Docker (for `docker compose` and/or local Supabase)
+- Supabase CLI (optional — for the shared local data plane)
 
-### Start the backend
+### Quick demo (mock kitchen, no DB)
 
 ```bash
 cp .env.example .env
-# Edit .env with your values
-docker compose up
+# leave placeholder SUPABASE_* values; AUTH_RELAXED=true is fine
+pnpm install
+pnpm --filter @culinaryos/server dev   # API on :3000
+# in other terminals:
+pnpm --filter @culinaryos/app-pos dev
+pnpm --filter @culinaryos/app-kds dev
 ```
 
-Backend will be running at `http://localhost:8080`
-Health check: `curl http://localhost:8080/health`
-
-### Run all tests
+Or build everything and run via Compose:
 
 ```bash
-./gradlew test
+docker compose up --build
 ```
 
-### Build everything
+- API: http://localhost:3000 (`/health`)
+- POS: http://localhost:5172
+- KDS: http://localhost:5173
+- Admin: http://localhost:5174
+- Web: http://localhost:5176
+
+With placeholder Supabase credentials the API uses the in-memory mock kitchen store so POS → KDS still works for a single-tenant demo.
+
+### Shared local data plane (Supabase CLI)
 
 ```bash
-./gradlew build
+# requires Docker + supabase CLI
+pnpm local:supabase   # supabase start → print keys → apply migrations hint → seed
+```
+
+Then put the printed URL/keys into `.env` (`SUPABASE_*`, `DATABASE_URL`, `VITE_*`) and restart the API / frontends. See `docs/integration-spine.md`.
+
+### Tests / typecheck / build
+
+```bash
+pnpm typecheck
+pnpm build
+# server integration (CI gate):
+bun test tests/server/
+# broader suite (some legacy files may still be red):
+node ./scripts/run-all-tests.cjs
 ```
 
 ---
@@ -101,22 +131,21 @@ Health check: `curl http://localhost:8080/health`
 
 Before opening a PR, confirm:
 
-- [ ] `./gradlew build` passes locally with zero warnings
-- [ ] `./gradlew test` passes — all tests green
-- [ ] New feature has unit tests in `:shared` or integration tests in `:backend`
-- [ ] No unscoped database queries (missing `restaurantId` filter)
+- [ ] `pnpm typecheck` and `pnpm build` pass locally
+- [ ] `bun test tests/server/` passes
+- [ ] No unscoped database queries (missing `tenant_id` / RLS)
 - [ ] No secrets, API keys, or credentials in the diff
 - [ ] Commit messages follow conventional commit format
-- [ ] If touching sync/offline code — `docs/sync-protocol.md` is still accurate
-- [ ] If adding a new API endpoint — OpenAPI spec in `docs/api/` is updated
+- [ ] If touching POS/KDS/fire path — `docs/integration-spine.md` is still accurate
+- [ ] If touching offline/sync — `docs/sync-protocol.md` is still accurate
+- [ ] If adding an API route — document it (README / OpenAPI under `docs/api/`)
 
 ---
 
-## Phase Gate Rule
+## Milestone Gate
 
-A phase is not complete until:
-1. All checklist items in `docs/build-order.md` for that phase are checked
-2. The phase **Exit Gate** test passes
-3. CI is green on `main`
+Work tracks `PROJECT.md` milestones (M1–M6). A milestone is not complete until:
 
-Do not start the next phase until the current phase exit gate is verified.
+1. Its scope checklist is done
+2. CI is green on `main`
+3. A short demo (screen recording or smoke script) proves the happy path

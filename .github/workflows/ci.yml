@@ -6,23 +6,33 @@ on:
   pull_request:
     branches: [main]
 
+# package.json "packageManager" pins pnpm — do not also pass version: to
+# pnpm/action-setup (that conflict fails the job with ERR_PNPM_BAD_PM_VERSION).
+
 jobs:
-  typecheck:
-    name: Type Check
+  build:
+    name: Typecheck & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-      - name: Install
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
       - name: Typecheck
-        run: pnpm exec turbo run typecheck --filter=@culinaryos/server --filter=@culinaryos/shared --filter=@culinaryos/event-bus
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
 
   test:
     name: Tests
@@ -34,19 +44,32 @@ jobs:
       CULINARYOS_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with: { bun-version: latest }
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-      - name: Install
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Bun (server integration runner)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Run server integration tests
         run: bun test tests/server/
+
+      # Broader suite (ratio-engine + tests/**) — surfaces results without
+      # blocking until remaining pre-existing failures are cleared.
+      - name: Run full test suite (non-blocking)
+        continue-on-error: true
+        run: node ./scripts/run-all-tests.cjs
 
   docker-build:
     name: Docker Build

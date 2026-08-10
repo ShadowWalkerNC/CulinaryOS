@@ -2,10 +2,18 @@
 // Integration Tests: HTMX Kiosk HTML Streaming Route
 // ============================================================
 
-import { describe, it, expect } from 'bun:test';
+import { beforeAll, describe, expect, it } from 'bun:test';
 import { kdsRoutes } from '@culinaryos/server/routes/kds';
 
 describe('GET /v1/kds/htmx-cards', () => {
+  beforeAll(() => {
+    process.env.AUTH_RELAXED = 'true';
+    process.env.SUPABASE_URL =
+      process.env.SUPABASE_URL ?? 'https://your-project.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'your-service-role-key';
+  });
+
   it('returns 422 if X-Tenant-Id header is missing', async () => {
     const res = await kdsRoutes.request('/htmx-cards');
     expect(res.status).toBe(422);

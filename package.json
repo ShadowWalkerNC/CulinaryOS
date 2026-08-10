@@ -13,7 +13,8 @@
     "db:migrate": "supabase db push",
     "db:types": "supabase gen types typescript --local > packages/db/src/types.ts",
     "db:reset": "supabase db reset",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "local:supabase": "bash ./scripts/local-supabase.sh"
   },
   "devDependencies": {
     "@culinaryos/auth": "workspace:*",
@@ -23,7 +24,12 @@
     "@culinaryos/ratio-engine": "workspace:*",
     "@culinaryos/server": "workspace:*",
     "@culinaryos/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.43.0",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.5",
+    "tsx": "^4.7.1",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
   },
