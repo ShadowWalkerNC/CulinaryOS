@@ -227,7 +227,7 @@ Compose builds the API and nginx-served frontends. Bring your own Postgres/Supab
 
 ### 3. Manage the restaurant (Admin)
 
-1. Start `pnpm --filter @culinaryos/app-admin dev`.
+1. Start `pnpm --filter @culinaryos/admin dev`.
 2. Use the admin shell for tenant-level operations as features land (menu, staff, reporting).
 
 ### 4. Take online orders (Web)
@@ -358,7 +358,7 @@ CulinaryOS/
 | `pnpm --filter @culinaryos/server dev` | API on `:3000` |
 | `pnpm --filter @culinaryos/app-pos dev` | POS on `:5172` |
 | `pnpm --filter @culinaryos/app-kds dev` | KDS on `:5173` |
-| `pnpm --filter @culinaryos/app-admin dev` | Admin |
+| `pnpm --filter @culinaryos/admin dev` | Admin |
 | `pnpm --filter @culinaryos/app-web dev` | Web ordering |
 | `pnpm seed` | Seed demo tenant (needs service role) |
 | `pnpm build` | Turborepo build |
