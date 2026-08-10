@@ -16,6 +16,7 @@ function readEnv(key: string): string | undefined {
 }
 
 const API = readEnv('VITE_API_URL') ?? 'http://localhost:3000';
+const SESSION_KEY = 'culinaryos_session';
 
 export function getApiBase(): string {
   return API;
@@ -33,18 +34,44 @@ export function getDeviceApiKey(): string {
   return readEnv('VITE_DEVICE_API_KEY') ?? readEnv('VITE_INTERNAL_API_KEY') ?? '';
 }
 
-/** Always send tenant; send Authorization when a device/user token is available. */
+/** Prefer user session accessToken from PIN login; fall back to device key. */
+export function getAccessToken(): string {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const session = JSON.parse(raw) as { accessToken?: string; tenantId?: string };
+        if (session.accessToken) return session.accessToken;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return getDeviceApiKey();
+}
+
+/** Always send tenant; send Authorization when a user/device token is available. */
 export function apiHeaders(
   tenantId?: string,
   extra: Record<string, string> = {}
 ): Record<string, string> {
+  let sessionTenant: string | undefined;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) sessionTenant = (JSON.parse(raw) as { tenantId?: string }).tenantId;
+    }
+  } catch {
+    // ignore
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Tenant-Id': tenantId || getTenantId(),
+    'X-Tenant-Id': tenantId || sessionTenant || getTenantId(),
     ...extra,
   };
-  const key = getDeviceApiKey();
-  if (key) headers.Authorization = `Bearer ${key}`;
+  const token = getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
   return headers;
 }
 

@@ -9,6 +9,7 @@
 
 import type { EventHandler } from '../broker';
 import type { OrderCreatedPayload, OrderItem, DomainEvent } from '../types';
+import { handleMenuItemSold } from './pos-menu-item-sold';
 import { v4 as uuidv4 } from 'uuid';
 
 type SupabaseClient = any;
@@ -94,6 +95,81 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
     .update({ status: 'sent', fired_at: new Date().toISOString() })
     .eq('id', orderId)
     .eq('tenant_id', tenantId);
+
+  // Closed-loop economics: pantry deduct + plate_economics snapshot (best-effort)
+  const soldAt = new Date().toISOString();
+  for (const item of items) {
+    if (item.menuItemId || item.recipeId) {
+      try {
+        const soldPayload: {
+          menuItemId: string;
+          quantity: number;
+          soldAt: string;
+          recipeId?: string;
+        } = {
+          menuItemId: item.menuItemId ?? item.recipeId ?? '',
+          quantity: item.quantity,
+          soldAt,
+        };
+        if (item.recipeId) soldPayload.recipeId = item.recipeId;
+        await handleMenuItemSold(
+          {
+            eventId: uuidv4(),
+            eventType: 'pos:menu:item-sold',
+            tenantId,
+            source: 'pos',
+            timestamp: soldAt,
+            version: 1,
+            payload: soldPayload,
+          },
+          supabase
+        );
+      } catch (e: any) {
+        console.warn(`[pos:order:created] economics emit failed: ${e?.message ?? e}`);
+      }
+    }
+
+    let theoretical: number | null = null;
+    let salePrice: number | null = null;
+    if (item.menuItemId) {
+      const { data: mi } = await supabase
+        .from('menu_items')
+        .select('price')
+        .eq('id', item.menuItemId)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      salePrice = mi?.price ?? null;
+
+      const { data: link } = await supabase
+        .from('menu_item_recipes')
+        .select('recipe_id')
+        .eq('tenant_id', tenantId)
+        .eq('menu_item_id', item.menuItemId)
+        .maybeSingle();
+      const recipeId = link?.recipe_id ?? item.recipeId;
+      if (recipeId) {
+        const { data: ris } = await supabase
+          .from('recipe_ingredients')
+          .select('quantity, ingredients(cost_per_unit)')
+          .eq('recipe_id', recipeId);
+        let cost = 0;
+        for (const ri of ris ?? []) {
+          cost += Number(ri.quantity) * Number((ri as any).ingredients?.cost_per_unit ?? 0);
+        }
+        theoretical = Math.round(cost * 100) * item.quantity;
+      }
+    }
+
+    await supabase.from('plate_economics').insert({
+      tenant_id: tenantId,
+      order_id: orderId,
+      menu_item_id: item.menuItemId ?? null,
+      item_name: item.name,
+      quantity: item.quantity,
+      sale_price_cents: salePrice != null ? salePrice * item.quantity : null,
+      theoretical_cost_cents: theoretical,
+    }).then(() => {}).catch(() => {});
+  }
 
   console.log(`[pos:order:created] Created ${groups.size} ticket(s) for order ${orderId}`);
 };

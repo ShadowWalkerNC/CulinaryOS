@@ -109,7 +109,92 @@ async function seedViaServiceRole(url: string, key: string) {
     { id: '00000000-0000-0000-0000-0000000000e7', modifier_group_id: '00000000-0000-0000-0000-0000000000d3', name: 'Medium', price_adjustment: 0, is_default: false },
     { id: '00000000-0000-0000-0000-0000000000e8', modifier_group_id: '00000000-0000-0000-0000-0000000000d3', name: 'Well Done', price_adjustment: 0, is_default: false },
   ]);
+  await seedDemoStaff(db, TENANT_ID);
   console.log('[seed] Done (Supabase service-role). Note: this path seeds tenant + menu; run the SQL path with DATABASE_URL for pantry/recipe demo data too.');
+}
+
+/** Create Auth users + tenant_users + staff_pins for demo PINs 1234 / 5678. */
+async function seedDemoStaff(
+  db: import('@supabase/supabase-js').SupabaseClient,
+  tenantId: string
+) {
+  // Dynamic import of pin hasher (mirrors apps/server/src/lib/pin.ts)
+  const { randomBytes, scryptSync } = await import('node:crypto');
+  const hashPin = (pin: string) => {
+    const salt = randomBytes(16).toString('hex');
+    const hash = scryptSync(pin, salt, 32).toString('hex');
+    return `${salt}:${hash}`;
+  };
+
+  const staff = [
+    {
+      email: 'server@demo.culinaryos.local',
+      pin: '1234',
+      displayName: 'John Doe',
+      role: 'server',
+    },
+    {
+      email: 'manager@demo.culinaryos.local',
+      pin: '5678',
+      displayName: 'Jane Smith',
+      role: 'manager',
+    },
+  ];
+
+  console.log('[seed] Ensuring demo Auth users + staff_pins …');
+  for (const s of staff) {
+    let userId: string | undefined;
+
+    const listed = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const existing = listed.data?.users?.find(
+      (u) => u.email?.toLowerCase() === s.email.toLowerCase()
+    );
+
+    if (existing) {
+      userId = existing.id;
+      await db.auth.admin.updateUserById(userId, {
+        password: s.pin,
+        email_confirm: true,
+        user_metadata: { display_name: s.displayName, tenant_id: tenantId },
+      });
+    } else {
+      const { data, error } = await db.auth.admin.createUser({
+        email: s.email,
+        password: s.pin,
+        email_confirm: true,
+        user_metadata: { display_name: s.displayName, tenant_id: tenantId },
+      });
+      if (error || !data.user) {
+        console.warn(`[seed] Auth user ${s.email}: ${error?.message ?? 'failed'}`);
+        continue;
+      }
+      userId = data.user.id;
+    }
+
+    const { error: tuErr } = await db.from('tenant_users').upsert(
+      { tenant_id: tenantId, user_id: userId, role: s.role },
+      { onConflict: 'tenant_id,user_id' }
+    );
+    if (tuErr) console.warn(`[seed] tenant_users ${s.email}: ${tuErr.message}`);
+
+    const { error: pinErr } = await db.from('staff_pins').upsert(
+      {
+        tenant_id: tenantId,
+        user_id: userId,
+        pin_hash: hashPin(s.pin),
+        display_name: s.displayName,
+        active: true,
+      },
+      { onConflict: 'tenant_id,user_id' }
+    );
+    if (pinErr) {
+      console.warn(
+        `[seed] staff_pins ${s.email}: ${pinErr.message} (apply V14 migration if missing)`
+      );
+    } else {
+      console.log(`[seed]   • staff ${s.displayName} PIN ${s.pin} (${s.role})`);
+    }
+  }
 }
 
 async function main() {
@@ -121,6 +206,17 @@ async function main() {
 
   if (databaseUrl) {
     await seedViaPostgres(databaseUrl);
+    // Also seed Auth staff when service role is available
+    const supabaseReady =
+      supabaseUrl && !supabaseUrl.includes('your-project') &&
+      serviceRoleKey && !serviceRoleKey.includes('your-service-role');
+    if (supabaseReady) {
+      const mod = await import('@supabase/supabase-js');
+      const db = mod.createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      await seedDemoStaff(db, TENANT_ID);
+    }
     return;
   }
 

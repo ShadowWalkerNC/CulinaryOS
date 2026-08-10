@@ -22,7 +22,8 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/pos/package.json ./apps/pos/
 
-RUN pnpm install --frozen-lockfile --filter @culinaryos/app-pos
+# Include workspace deps (...); auth/shared export TypeScript source for Vite/tsc
+RUN pnpm install --frozen-lockfile --filter @culinaryos/app-pos...
 
 COPY apps/pos/ ./apps/pos/
 RUN pnpm --filter @culinaryos/app-pos run build

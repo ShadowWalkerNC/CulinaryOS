@@ -18,12 +18,23 @@ export type EventHandler<T> = (
   supabase: any
 ) => Promise<void>;
 
+function isLiveSupabaseConfigured(): boolean {
+  const url = process.env.SUPABASE_URL ?? '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  if (!url || !key) return false;
+  const bad = (v: string) =>
+    /your-project|your-service-role|placeholder|change-me/i.test(v);
+  return !bad(url) && !bad(key);
+}
+
 let supabase: SupabaseClient | null = null;
 try {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (url && key && !url.includes('your-project')) {
-    supabase = createClient(url, key);
+  if (isLiveSupabaseConfigured()) {
+    supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
   }
 } catch {
   // Supabase not available

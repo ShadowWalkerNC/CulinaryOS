@@ -199,7 +199,9 @@ Durable notes for running/developing this repo in the Cloud Agent VM (dependenci
   - The server logs `[Realtime] Skip starting realtime bridge (Supabase offline)` and auth auto-relaxes (no bearer token needed; send `X-Tenant-Id: 00000000-0000-0000-0000-000000000001`).
   - POS serves a hardcoded `MOCK_MENU` and a localStorage-backed order store (`apps/pos/src/lib/mockDb.ts`). KDS shows built-in demo tickets with live aging timers and supports BUMP/FIRE locally.
 - Caveat: POS and KDS are separate origins (`:5172` vs `:5173`), so in offline mode they do NOT share order state — a POS "Send to Kitchen" will not appear on the KDS board without a real Supabase backend. For a true cross-app POS→KDS flow, provision Supabase (`SUPABASE_URL`/`ANON_KEY`/`SERVICE_ROLE_KEY` + `VITE_` equivalents), run `supabase db reset` + migrations, then run the apps.
-- POS demo login: PIN `1234` (Server) or `5678` (Manager).
+- POS login goes through `POST /v1/auth/pin-login` (demo PINs `1234` / `5678` when service role is unset). Live mode uses `staff_pins` + Supabase Auth (V14); run `pnpm seed` after setting `SUPABASE_SERVICE_ROLE_KEY`.
+- Placeholder service-role values are treated as unset (`apps/server/src/lib/secrets.ts`) so mock kitchen stays available.
+- CulinaryOps satellite file `mcp/src/culinaryops-server.ts` must stay drift-synced; for live `/v1/ops` tools use `pnpm --filter culinaryos-mcp-servers run start-culinaryops-live`.
 
 ### Lint / test / typecheck caveats
 
@@ -210,9 +212,10 @@ Durable notes for running/developing this repo in the Cloud Agent VM (dependenci
 
 ### Connecting to a real Supabase project (live mode)
 
-- A real Supabase project named "CulinaryOS" (ref `npwybcqqgonhohkdxwyg`) exists and has been provisioned with the core migrations (V1–V6, V11) and seeded with a demo tenant (`00000000-0000-0000-0000-000000000001`, "The Golden Fork") plus an active "Dinner Menu". `.env` holds the real `SUPABASE_URL` + `SUPABASE_ANON_KEY`.
-- The backend only creates its Supabase client when BOTH `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set and the URL isn't the `your-project` placeholder (`apps/server/src/middleware/supabase.ts`). The service-role key is a secret the Supabase integration/MCP cannot expose — it must be copied from the dashboard (Project Settings → API) into `SUPABASE_SERVICE_ROLE_KEY` to enable the live backend path. Until then keep `AUTH_RELAXED=true` (setting a real `SUPABASE_URL` with a placeholder service-role key would otherwise flip `isAuthRelaxed()` off and make the API require real JWTs).
-- The Vite frontends are intentionally left in offline/demo mode. Pointing them at the real project currently breaks them for two independent reasons: (1) a pre-existing RLS recursion — `public.my_tenant_id()` (defined in `V1__tenants.sql`) is plain `security invoker`, and the `tenant_users` policy in `V4__rls_policies.sql` calls it, so any anon RLS evaluation recurses (`stack depth limit exceeded`); the standard fix is to make `my_tenant_id()` `SECURITY DEFINER`. (2) The apps authenticate via a client-side demo PIN, never a Supabase Auth session, so `auth.uid()` is null and all tenant-scoped writes (`pos_orders`, `kitchen_tickets`) are RLS-blocked. A full live POS→KDS flow therefore needs the service-role backend path (or real Supabase Auth sessions), not just the anon keys.
+- A real Supabase project named "CulinaryOS" (ref `npwybcqqgonhohkdxwyg`) exists and has been provisioned with the core migrations (V1–V6, V11, **V14**) and seeded with a demo tenant (`00000000-0000-0000-0000-000000000001`, "The Golden Fork") plus an active "Dinner Menu". `.env` holds the real `SUPABASE_URL` + `SUPABASE_ANON_KEY`.
+- The backend only creates its Supabase client when BOTH `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set and neither is a placeholder (`apps/server/src/lib/secrets.ts`). Without a real service-role key, **stay in demo mode**: `AUTH_RELAXED=true`, mock kitchen, PIN login returns a device-key session. That is enough for agent cloud work (PIN → fire → mock KDS tickets → `/v1/ops/waste`).
+- Live shared POS↔KDS + Auth `staff_pins` seeding (`pnpm seed`) requires `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (Project Settings → API). Do not block setup on that secret; develop against the mock path until it is provided.
+- V14 makes `my_tenant_id()` / `my_role()` `SECURITY DEFINER` and adds `staff_pins`, `waste_events`, `plate_economics`.
 
 ---
 

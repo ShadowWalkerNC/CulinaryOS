@@ -6,13 +6,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Context, Next } from 'hono';
 import type { Env } from '../types.js';
+import { isLiveSupabaseConfigured } from '../lib/secrets.js';
 
 let supabaseClient: SupabaseClient | null = null;
 try {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (url && key && !url.includes('your-project')) {
-    supabaseClient = createClient(url, key);
+  if (isLiveSupabaseConfigured()) {
+    supabaseClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
   }
 } catch {
   // Supabase not configured
