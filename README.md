@@ -61,7 +61,7 @@ CulinaryOS/
 
 CulinaryOS acts as the central hub bridging 5 specialized food service repositories via `mcp/` and `extensions/`:
 
-1. **CulinaryOps** → POS terminal engine, check recall, split checks, cash drawer audit.
+1. **CulinaryOps** → Labor scheduling, food-cost %, vendor POs, waste logging (`culinaryops-mcp`). ([repo](https://github.com/ShadowWalkerNC/CulinaryOps))
 2. **KitchenKit** → KDS station pass, ticket aging alerts, course hold/fire rules.
 3. **Plated** → Pantry stock management, purchase order state machine, auto-POs.
 4. **Post-Pilot** → Customer loyalty, $5 coupons, 10% senior discounts, promo engine.
