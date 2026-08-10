@@ -1,5 +1,7 @@
 # Contributing to CulinaryOS
 
+**CulinaryOS is free and open source (MIT).** Anyone can use, modify, and run this restaurant POS platform without license fees. Contributions that make it clearer, safer, and more useful for operators are welcome — including docs aimed at people evaluating CulinaryOS as a free Toast/Square alternative.
+
 > Read `PROJECT.md` and `docs/integration-spine.md` before changing POS ↔ KDS ↔ pantry flows.
 > Read `docs/sync-protocol.md` before touching offline queues or outbox code.
 > Tenant isolation is non-negotiable — every query must be scoped by `tenant_id` / RLS.
