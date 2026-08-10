@@ -20,7 +20,7 @@ Restaurant software is a racket: closed, per‑terminal licensing; hardware lock
 
 **CulinaryOS is the opposite of that:**
 
-- **Open‑source & self‑hostable.** Own your data and your stack. Run it on a tablet, a kitchen display, a laptop, or your own cloud. MIT‑licensed.
+- **Free & open‑source, forever.** MIT‑licensed and free to all — no per‑terminal fees, no license keys, no seats, no lock‑in. Own your data and your stack; run it on a tablet, a kitchen display, a laptop, or your own cloud, and fork it if you want.
 - **Web‑first, zero install.** POS, KDS, admin, and the customer storefront are all React apps in the browser — no app‑store gatekeeping, no native builds.
 - **Works before you configure anything.** Clone, `pnpm dev`, and it runs in a fully interactive **demo mode** with a seeded menu and live kitchen board — no database, no keys. Add Supabase when you're ready for real data.
 - **Genuinely AI‑native.** Every operation is exposed over the **Model Context Protocol (MCP)**, so Claude, Cursor, or your own agent can take orders, fire courses, check stock, and pull reports — through the same guarded API your staff use, never raw database access.
@@ -182,6 +182,10 @@ node ./scripts/run-all-tests.cjs   # test suite (use this, not `pnpm test`)
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Before a PR: `pnpm typecheck`, `pnpm build`, and `node ./scripts/run-all-tests.cjs`.
+Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). Before a PR: `pnpm typecheck`, `pnpm build`, and `node ./scripts/run-all-tests.cjs`.
 
-*MIT License · © 2026 ShadowWalkerNC — CulinaryOS is the hub of a small, friendly constellation of restaurant software.*
+## License
+
+**CulinaryOS is free and open‑source software, released under the [MIT License](./LICENSE).** Free to all: use it, self‑host it, modify it, and redistribute it — commercially or not — with no fees and no lock‑in. Attribution is appreciated, not required.
+
+*© 2026 ShadowWalkerNC — CulinaryOS is the hub of a small, friendly constellation of restaurant software.*
