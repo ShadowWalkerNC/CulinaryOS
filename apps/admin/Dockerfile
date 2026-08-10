@@ -20,7 +20,8 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/admin/package.json ./apps/admin/
 
-RUN pnpm install --frozen-lockfile --filter @culinaryos/admin
+RUN pnpm install --frozen-lockfile --filter @culinaryos/admin...
+RUN pnpm --filter @culinaryos/shared --filter @culinaryos/ui run build
 
 COPY apps/admin/ ./apps/admin/
 RUN pnpm --filter @culinaryos/admin run build
