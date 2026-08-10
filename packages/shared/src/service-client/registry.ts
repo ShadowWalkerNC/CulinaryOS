@@ -7,10 +7,11 @@ import type { ServiceName } from '../types/service';
 import type { ServiceRegistry } from './index';
 
 const SERVICE_URL_MAP: Record<ServiceName, string> = {
-  culinaryos: (typeof process !== 'undefined' && process.env?.CULINARYOS_URL) || 'http://localhost:3000',
-  recipeos:   (typeof process !== 'undefined' && process.env?.RECIPEOS_URL)   || 'http://localhost:3001',
-  kds:        (typeof process !== 'undefined' && process.env?.KDS_URL)        || 'http://localhost:3002',
-  pos:        (typeof process !== 'undefined' && process.env?.POS_URL)        || 'http://localhost:3003',
+  culinaryos:  (typeof process !== 'undefined' && process.env?.CULINARYOS_URL)  || 'http://localhost:3000',
+  recipeos:    (typeof process !== 'undefined' && process.env?.RECIPEOS_URL)    || 'http://localhost:3001',
+  kds:         (typeof process !== 'undefined' && process.env?.KDS_URL)         || 'http://localhost:3002',
+  pos:         (typeof process !== 'undefined' && process.env?.POS_URL)         || 'http://localhost:3003',
+  culinaryops: (typeof process !== 'undefined' && process.env?.CULINARYOPS_URL) || 'http://localhost:3004',
 };
 
 export class EnvServiceRegistry implements ServiceRegistry {

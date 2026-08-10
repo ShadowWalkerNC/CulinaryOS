@@ -1,0 +1,27 @@
+{
+  "id": "com.culinaryos.ext.culinaryops-ops",
+  "name": "CulinaryOps Operations",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "CulinaryOps operations satellite — labor summaries, food-cost analysis, vendor management, and waste logging. Bridges into CulinaryOS via culinaryops-mcp. (Distinct from the first-party CulinaryOps Central Dashboard.)",
+  "category": "operations",
+  "entry_point": "index.js",
+  "permissions": [
+    "labor.read",
+    "waste.write",
+    "vendor.read",
+    "inventory.write",
+    "reports.read"
+  ],
+  "hooks": [],
+  "settings_schema": [],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

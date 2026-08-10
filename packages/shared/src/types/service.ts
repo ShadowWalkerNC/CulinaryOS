@@ -5,7 +5,7 @@
 
 // ---- IDENTITY ----
 
-export type ServiceName = 'recipeos' | 'kds' | 'pos' | 'culinaryos';
+export type ServiceName = 'recipeos' | 'kds' | 'pos' | 'culinaryos' | 'culinaryops';
 
 export interface TenantContext {
   tenantId: string;
