@@ -212,9 +212,10 @@ Durable notes for running/developing this repo in the Cloud Agent VM (dependenci
 
 ### Connecting to a real Supabase project (live mode)
 
-- A real Supabase project named "CulinaryOS" (ref `npwybcqqgonhohkdxwyg`) exists and has been provisioned with the core migrations (V1–V6, V11) and seeded with a demo tenant (`00000000-0000-0000-0000-000000000001`, "The Golden Fork") plus an active "Dinner Menu". `.env` holds the real `SUPABASE_URL` + `SUPABASE_ANON_KEY`.
-- The backend only creates its Supabase client when BOTH `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set and the URL isn't the `your-project` placeholder (`apps/server/src/middleware/supabase.ts`). The service-role key is a secret the Supabase integration/MCP cannot expose — it must be copied from the dashboard (Project Settings → API) into `SUPABASE_SERVICE_ROLE_KEY` to enable the live backend path. Until then keep `AUTH_RELAXED=true` (setting a real `SUPABASE_URL` with a placeholder service-role key would otherwise flip `isAuthRelaxed()` off and make the API require real JWTs).
-- V14 makes `my_tenant_id()` / `my_role()` `SECURITY DEFINER` and adds `staff_pins`, `waste_events`, `plate_economics`. Live POS→KDS still needs `SUPABASE_SERVICE_ROLE_KEY` on the server (API uses service role after `requireTenant`). POS PIN login now obtains a JWT (or device-key demo session) via `/v1/auth/pin-login`.
+- A real Supabase project named "CulinaryOS" (ref `npwybcqqgonhohkdxwyg`) exists and has been provisioned with the core migrations (V1–V6, V11, **V14**) and seeded with a demo tenant (`00000000-0000-0000-0000-000000000001`, "The Golden Fork") plus an active "Dinner Menu". `.env` holds the real `SUPABASE_URL` + `SUPABASE_ANON_KEY`.
+- The backend only creates its Supabase client when BOTH `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set and neither is a placeholder (`apps/server/src/lib/secrets.ts`). Without a real service-role key, **stay in demo mode**: `AUTH_RELAXED=true`, mock kitchen, PIN login returns a device-key session. That is enough for agent cloud work (PIN → fire → mock KDS tickets → `/v1/ops/waste`).
+- Live shared POS↔KDS + Auth `staff_pins` seeding (`pnpm seed`) requires `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (Project Settings → API). Do not block setup on that secret; develop against the mock path until it is provided.
+- V14 makes `my_tenant_id()` / `my_role()` `SECURITY DEFINER` and adds `staff_pins`, `waste_events`, `plate_economics`.
 
 ---
 
