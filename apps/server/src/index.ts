@@ -22,6 +22,10 @@ import { menuRoutes }          from './routes/menu';
 import { paymentsRoutes }      from './routes/payments';
 import { posSyncRoutes }       from './routes/pos-sync';
 import { onlineOrdersRoutes }  from './routes/online-orders';
+import { authRoutes }          from './routes/auth';
+import { opsRoutes }           from './routes/ops';
+import { adminRoutes }         from './routes/admin';
+import { stripeWebhook }       from './routes/stripe-webhook';
 import type { Env }            from './types';
 
 const app = new Hono<Env>();
@@ -86,6 +90,9 @@ app.get('/internal/events', async (c) => {
   return c.json({ ok: true, data });
 });
 
+app.route('/v1/auth',     authRoutes);
+app.route('/v1/ops',      opsRoutes);
+app.route('/v1/admin',    adminRoutes);
 app.route('/v1/kds',      kdsRoutes);
 app.route('/v1/pantry',   pantryRoutes);
 app.route('/v1/reports',  reportsRoutes);
@@ -95,6 +102,9 @@ app.route('/v1/menu',     menuRoutes);
 app.route('/v1/payments', paymentsRoutes);
 app.route('/v1/pos',      posSyncRoutes);
 app.route('/v1/online-orders', onlineOrdersRoutes);
+
+// Stripe webhook — no tenant middleware (signature-verified)
+app.route('/v1/webhooks/stripe', stripeWebhook);
 
 // ---- Health ----
 

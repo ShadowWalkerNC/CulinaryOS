@@ -4,6 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { culinaryOsApiHeaders, culinaryOsBaseUrl } from "./api-headers.js";
 
 const server = new Server(
   {
@@ -71,16 +72,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         items: { productName: string; quantity: number; price: number; station?: string; menuItemId?: string }[];
       };
       
-      const API_URL = process.env.CULINARYOS_URL || "http://localhost:3000";
-      const TENANT_ID = process.env.VITE_TENANT_ID || "00000000-0000-0000-0000-000000000001";
+      const API_URL = culinaryOsBaseUrl();
+      const headers = culinaryOsApiHeaders();
 
       // 1. Create order on the API gateway
       const orderRes = await fetch(`${API_URL}/v1/orders`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Tenant-Id": TENANT_ID
-        },
+        headers,
         body: JSON.stringify({
           tableNumber: tableNumber === "Takeout" ? undefined : tableNumber,
           takeaway: tableNumber === "Takeout",
@@ -101,10 +99,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       for (const item of items) {
         const itemRes = await fetch(`${API_URL}/v1/orders/${order.id}/items`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Tenant-Id": TENANT_ID
-          },
+          headers,
           body: JSON.stringify({
             menuItemId: item.menuItemId || "mock-item-id",
             name: item.productName,
@@ -123,9 +118,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // 3. Fire the order to the kitchen
       const sendRes = await fetch(`${API_URL}/v1/orders/${order.id}/send`, {
         method: "PATCH",
-        headers: {
-          "X-Tenant-Id": TENANT_ID
-        }
+        headers,
       });
 
       if (!sendRes.ok) {

@@ -14,6 +14,8 @@
     "start-post-pilot": "node dist/post-pilot-server.js",
     "start-culinaryops": "node dist/src/culinaryops-server.js",
     "dev-culinaryops": "node --import tsx src/culinaryops-server.ts",
+    "start-culinaryops-live": "node --import tsx src/culinaryops-hub-live.ts",
+    "dev-culinaryops-live": "node --import tsx src/culinaryops-hub-live.ts",
     "start-culinary": "node dist/culinary-os-server.js",
     "dev-culinary": "ts-node culinary-os-server.ts"
   },

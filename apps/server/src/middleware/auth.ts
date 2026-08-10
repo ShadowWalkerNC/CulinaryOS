@@ -6,13 +6,12 @@
 import type { Context, Next } from 'hono';
 import type { Env } from '../types.js';
 import { adminSupabase } from './supabase.js';
+import { isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
 
 function isAuthRelaxed(): boolean {
   if (process.env.AUTH_RELAXED === 'true') return true;
-  // Demo / local without Supabase configured — keep header-only tenant mode
-  const url = process.env.SUPABASE_URL ?? '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-  return !url || !key || url.includes('your-project');
+  // Demo / local without live Supabase — keep header-only tenant mode
+  return !isLiveSupabaseConfigured();
 }
 
 function extractBearer(c: Context<Env>): string | null {
@@ -24,8 +23,8 @@ function extractBearer(c: Context<Env>): string | null {
 function isServiceOrDeviceKey(token: string): boolean {
   const internal = process.env.INTERNAL_API_KEY;
   const device = process.env.DEVICE_API_KEY;
-  if (internal && token === internal) return true;
-  if (device && token === device) return true;
+  if (internal && !isPlaceholderSecret(internal) && token === internal) return true;
+  if (device && !isPlaceholderSecret(device) && token === device) return true;
   return false;
 }
 

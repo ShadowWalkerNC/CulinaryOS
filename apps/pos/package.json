@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@culinaryos/shared": "workspace:*",
+    "@culinaryos/auth": "workspace:*",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "@culinaryos/ui": "workspace:*",

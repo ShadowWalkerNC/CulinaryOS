@@ -145,6 +145,9 @@ importers:
 
   apps/pos:
     dependencies:
+      '@culinaryos/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@culinaryos/shared':
         specifier: workspace:*
         version: link:../../packages/shared

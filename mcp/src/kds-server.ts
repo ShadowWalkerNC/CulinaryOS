@@ -4,6 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { culinaryOsApiHeaders, culinaryOsBaseUrl } from "./api-headers.js";
 
 const server = new Server(
   {
@@ -48,16 +49,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
-  const API_URL = process.env.CULINARYOS_URL || "http://localhost:3000";
-  const TENANT_ID = process.env.VITE_TENANT_ID || "00000000-0000-0000-0000-000000000001";
+  const API_URL = culinaryOsBaseUrl();
+  const headers = culinaryOsApiHeaders();
 
   try {
     if (name === "fetch_kds_tickets") {
-      const res = await fetch(`${API_URL}/v1/kds/tickets`, {
-        headers: {
-          "X-Tenant-Id": TENANT_ID
-        }
-      });
+      const res = await fetch(`${API_URL}/v1/kds/tickets`, { headers });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch tickets from API: ${await res.text()}`);
@@ -77,9 +74,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       
       const res = await fetch(`${API_URL}/v1/kds/tickets/${ticketId}/bump`, {
         method: "PATCH",
-        headers: {
-          "X-Tenant-Id": TENANT_ID
-        }
+        headers,
       });
 
       if (!res.ok) {
