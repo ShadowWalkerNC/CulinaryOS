@@ -22,7 +22,7 @@ Monorepo using pnpm workspaces and Turborepo.
 |---|------|-------|-------------|--------|
 | 1 | M1: Monorepo Alignment & Package Contracts | Clean workspace boundaries; docs/CI match `apps/*` | none | IN_PROGRESS — CI typecheck/build/tests wired; CONTRIBUTING aligned |
 | 2 | M2: Turborepo & Dev Environment Stability | turbo/pnpm green; compose + supabase local demo path | M1 | IN_PROGRESS — `pnpm local:supabase` helper + seed; compose still uses external Supabase |
-| 3 | M3: Multi-Tenant Security & Database Isolation | RLS + PIN→Supabase Auth (`/v1/auth/pin-login`, `staff_pins`, V14) | M2 | IN_PROGRESS — demo + live paths; needs service-role in deploy |
+| 3 | M3: Multi-Tenant Security & Database Isolation | RLS + PIN→Supabase Auth (`/v1/auth/pin-login`, `staff_pins`, V14); manager RBAC fail-closed; adversarial membership tests | M2 | IN_PROGRESS — demo + live paths; deploy needs service-role |
 | 4 | M4: POS & KDS Real-Time Architecture | Harden Realtime + offline outbox; full course fire | M1–M3 | IN_PROGRESS — fire spine + mock kitchen; live when service role set |
 | 5 | M5: MCP Extension Platform & Integrations | Runnable extensions + ops/RecipeOS bridge | M1–M4 | IN_PROGRESS — culinaryops-mcp prefers `/v1/ops` live |
 | 6 | M6: E2E Integration & Verification | Full suite + adversarial audit | M1–M5 | PLANNED |

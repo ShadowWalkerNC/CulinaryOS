@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CulinaryHeader } from '@culinaryos/ui';
+import { apiHeaders, getApiBase, getTenantId } from '@culinaryos/shared';
 import { useRealtimeTickets, bumpDemoTicket, fireDemoTicket } from '../hooks/useRealtimeTickets';
 import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
 import { CourseHoldBanner }       from '../components/CourseHoldBanner';
@@ -8,9 +9,8 @@ import { TicketCard }             from '../components/TicketCard';
 import { AnalyticsBar }           from '../components/AnalyticsBar';
 import type { AnalyticsSummary }  from '../types';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-const TENANT_ID = import.meta.env.VITE_TENANT_ID ?? '';
-const DEVICE_KEY = import.meta.env.VITE_DEVICE_API_KEY ?? import.meta.env.VITE_INTERNAL_API_KEY ?? '';
+const API = getApiBase();
+const TENANT_ID = getTenantId();
 
 const STATIONS = [
   { id: 'expo', label: 'Expo Pass' },
@@ -20,13 +20,6 @@ const STATIONS = [
   { id: '4', label: 'Bar' },
   { id: 'all', label: 'All Stations' },
 ];
-
-function apiHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (TENANT_ID) headers['X-Tenant-Id'] = TENANT_ID;
-  if (DEVICE_KEY) headers['Authorization'] = `Bearer ${DEVICE_KEY}`;
-  return headers;
-}
 
 /**
  * Main KitchenKit KDS station view & Expediter (Expo) Pass View.
@@ -45,7 +38,7 @@ export function Station() {
     async function fetchAnalytics() {
       try {
         const res  = await fetch(`${API}/v1/kds/stations/${stationId}/analytics`, {
-          headers: apiHeaders(),
+          headers: apiHeaders(TENANT_ID),
         });
         if (!res.ok) return;
         const json = await res.json();
@@ -64,7 +57,7 @@ export function Station() {
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
         method:  'PATCH',
-        headers: apiHeaders(),
+        headers: apiHeaders(TENANT_ID),
         body:    JSON.stringify({ stationId }),
       });
       if (!res.ok) throw new Error(`Bump failed (${res.status})`);
@@ -84,7 +77,7 @@ export function Station() {
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
         method:  'PATCH',
-        headers: apiHeaders(),
+        headers: apiHeaders(TENANT_ID),
       });
       if (!res.ok) throw new Error(`Fire failed (${res.status})`);
       fireDemoTicket(ticketId);
