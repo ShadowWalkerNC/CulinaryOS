@@ -69,12 +69,12 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| E2E | E2E Testing Track | Requirement-driven 4-tier opaque-box test suite publishing TEST_READY.md | none | IN_PROGRESS |
-| M1 | Ratio Engine & DB Types | Consolidate mathematical models into @culinaryos/ratio-engine & sync @culinaryos/db types | none | IN_PROGRESS |
-| M2 | Closed-Loop Event Spine & Ops | Closed-loop recipe pantry deduction (live + demo), ops endpoints, loyalty & par alerts | M1 | PLANNED |
-| M3 | UI Design Tokens & Admin Portal | Configure Tailwind in admin, mount CulinaryHeader on all pages, standardize tokens | none | PLANNED |
-| M4 | MCP Servers, Licensing & Build | Unify MCP tool suite with ratio engine, standardize MIT licenses, clean build pipelines | M1, M2 | PLANNED |
-| M5 | Final Milestone: E2E Pass & Hardening | Phase 1: 100% Pass of Tiers 1-4 E2E tests. Phase 2: Adversarial coverage hardening (Tier 5) | E2E, M1, M2, M3, M4 | PLANNED |
+| E2E | E2E Testing Track | Requirement-driven 4-tier opaque-box test suite publishing TEST_READY.md | none | COMPLETE |
+| M1 | Ratio Engine & DB Types | Consolidate mathematical models into @culinaryos/ratio-engine & sync @culinaryos/db types | none | COMPLETE |
+| M2 | Closed-Loop Event Spine & Ops | Closed-loop recipe pantry deduction (live + demo), ops endpoints, loyalty & par alerts | M1 | COMPLETE |
+| M3 | UI Design Tokens & Admin Portal | Configure Tailwind in admin, mount CulinaryHeader on all pages, standardize tokens | none | COMPLETE |
+| M4 | MCP Servers, Licensing & Build | Unify MCP tool suite with ratio engine, standardize MIT licenses, clean build pipelines | M1, M2 | COMPLETE |
+| M5 | Final Milestone: E2E Pass & Hardening | Phase 1: 100% Pass of Tiers 1-4 E2E tests. Phase 2: Adversarial coverage hardening (Tier 5) | E2E, M1, M2, M3, M4 | COMPLETE |
 
 ---
 
