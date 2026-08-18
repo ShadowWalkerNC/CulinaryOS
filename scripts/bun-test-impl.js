@@ -8,12 +8,23 @@ let failCount = 0;
 const testQueue = [];
 let isRunning = false;
 
+const afterEachFns = [];
+const afterAllFns = [];
+
 export function beforeAll(fn) {
   beforeAllFns.push(fn);
 }
 
+export function afterAll(fn) {
+  afterAllFns.push(fn);
+}
+
 export function beforeEach(fn) {
   beforeEachFns.push(fn);
+}
+
+export function afterEach(fn) {
+  afterEachFns.push(fn);
 }
 
 export function describe(name, fn) {
@@ -24,6 +35,16 @@ export function describe(name, fn) {
 async function processQueue() {
   if (isRunning) return;
   isRunning = true;
+  while (beforeAllFns.length > 0) {
+    const fn = beforeAllFns.shift();
+    try {
+      await fn();
+    } catch (err) {
+      failCount++;
+      process.exitCode = 1;
+      console.error(`    ❌ beforeAll failed: ${err.message}`);
+    }
+  }
   while (testQueue.length > 0) {
     const task = testQueue.shift();
     for (const b of task.beforeEachFns) {
@@ -43,13 +64,21 @@ async function processQueue() {
       failCount++;
       process.exitCode = 1;
       console.error(`    ❌ ${task.name}: ${err.message}`);
+    } finally {
+      for (const a of task.afterEachFns || []) {
+        try {
+          await a();
+        } catch (err) {
+          console.warn(`    ⚠️ afterEach warning: ${err.message}`);
+        }
+      }
     }
   }
   isRunning = false;
 }
 
 export function it(name, fn) {
-  testQueue.push({ name, fn, beforeEachFns: [...beforeEachFns] });
+  testQueue.push({ name, fn, beforeEachFns: [...beforeEachFns], afterEachFns: [...afterEachFns] });
   return processQueue();
 }
 

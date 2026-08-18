@@ -91,7 +91,7 @@ describe('R3: HTMX Endpoint GET /v1/kds/htmx-cards Edge Cases', () => {
 
   it('returns 200 OK with text/html content type when X-Tenant-Id is present', async () => {
     const res = await kdsRoutes.request('/htmx-cards', {
-      headers: { 'X-Tenant-Id': 'tenant-bistro-test' }
+      headers: { 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001' }
     });
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
@@ -101,7 +101,7 @@ describe('R3: HTMX Endpoint GET /v1/kds/htmx-cards Edge Cases', () => {
 
   it('verifies HTML output structure contains hx-patch bump attributes', async () => {
     const res = await kdsRoutes.request('/htmx-cards', {
-      headers: { 'X-Tenant-Id': 'tenant-bistro-test' }
+      headers: { 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001' }
     });
     const html = await res.text();
     expect(html).toContain('hx-patch="/v1/kds/tickets/');
@@ -200,7 +200,7 @@ describe('R5: Plated Inventory Deduction & Post-Pilot Loyalty Boundaries', () =>
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Tenant-Id': 'tenant-bistro-test',
+        'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
       },
       body: JSON.stringify({ itemId: 'i1', quantity: 2.5 }),
     });
@@ -214,7 +214,7 @@ describe('R5: Plated Inventory Deduction & Post-Pilot Loyalty Boundaries', () =>
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Tenant-Id': 'tenant-bistro-test',
+        'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
       },
       body: JSON.stringify({ itemId: 'i1', quantity: 0 }),
     });
@@ -228,7 +228,7 @@ describe('R5: Plated Inventory Deduction & Post-Pilot Loyalty Boundaries', () =>
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Tenant-Id': 'tenant-bistro-test',
+        'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
       },
       body: JSON.stringify({ itemId: 'i1', quantity: -5.0 }),
     });

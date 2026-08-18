@@ -73,7 +73,7 @@ describe('pantry_status view logic', () => {
 // ---- Integration: Purchase Orders REST API Routes ----
 
 describe('Pantry REST API /purchase-orders endpoints', () => {
-  const headers = { 'X-Tenant-Id': 'tenant-test-123', 'Content-Type': 'application/json' };
+  const headers = { 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001', 'Content-Type': 'application/json' };
 
   it('GET /purchase-orders returns list of purchase orders without 404', async () => {
     const res = await pantryRoutes.request('/purchase-orders', { method: 'GET', headers });

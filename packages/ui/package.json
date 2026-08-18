@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./culinary-theme.css": "./src/culinary-theme.css"
+    "./culinary-theme.css": "./src/culinary-theme.css",
+    "./preset": "./tailwind.preset.js"
   },
   "scripts": {
     "build": "tsc",

@@ -2,8 +2,10 @@
 // Unit Tests: managerGate RBAC + adversarial tenant membership
 // ============================================================
 
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { managerGate } from '../../apps/server/src/lib/rbac.ts';
+import { requireTenant } from '../../apps/server/src/middleware/auth.ts';
+import { setAdminSupabaseForTesting } from '../../apps/server/src/middleware/supabase.ts';
 
 describe('managerGate', () => {
   it('allows api_key and relaxed without a role', () => {
@@ -67,40 +69,38 @@ describe('requireTenant adversarial membership', () => {
     process.env.INTERNAL_API_KEY = 'test-internal-key';
     process.env.DEVICE_API_KEY = 'test-device-key';
 
-    mock.module('../../apps/server/src/middleware/supabase.ts', () => ({
-      adminSupabase: () => ({
-        auth: {
-          getUser: async (token: string) => {
-            if (token === 'jwt-user-a') {
-              return { data: { user: { id: USER_A } }, error: null };
-            }
-            return { data: { user: null }, error: { message: 'invalid' } };
+    setAdminSupabaseForTesting({
+      auth: {
+        getUser: async (token: string) => {
+          if (token === 'jwt-user-a') {
+            return { data: { user: { id: USER_A } }, error: null };
+          }
+          return { data: { user: null }, error: { message: 'invalid' } };
+        },
+      },
+      from: (_table: string) => {
+        const state: { userId?: string; tenantId?: string } = {};
+        const chain: any = {
+          select: () => chain,
+          eq: (col: string, val: string) => {
+            if (col === 'user_id') state.userId = val;
+            if (col === 'tenant_id') state.tenantId = val;
+            return chain;
           },
-        },
-        from: (_table: string) => {
-          const state: { userId?: string; tenantId?: string } = {};
-          const chain: any = {
-            select: () => chain,
-            eq: (col: string, val: string) => {
-              if (col === 'user_id') state.userId = val;
-              if (col === 'tenant_id') state.tenantId = val;
-              return chain;
-            },
-            maybeSingle: async () => {
-              if (state.userId === USER_A && state.tenantId === TENANT_A) {
-                return { data: { role: 'server' }, error: null };
-              }
-              return { data: null, error: null };
-            },
-          };
-          return chain;
-        },
-      }),
-    }));
+          maybeSingle: async () => {
+            if (state.userId === USER_A && state.tenantId === TENANT_A) {
+              return { data: { role: 'server' }, error: null };
+            }
+            return { data: null, error: null };
+          },
+        };
+        return chain;
+      },
+    });
   });
 
   afterEach(() => {
-    mock.restore();
+    setAdminSupabaseForTesting(null);
     for (const key of ENV_KEYS) {
       const value = saved[key];
       if (value === undefined) delete process.env[key];
@@ -109,8 +109,6 @@ describe('requireTenant adversarial membership', () => {
   });
 
   it('rejects JWT member of tenant A when X-Tenant-Id is tenant B', async () => {
-    // Fresh import after mock.module
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
     const c = makeCtx({
       'X-Tenant-Id': TENANT_B,
       Authorization: 'Bearer jwt-user-a',
@@ -121,7 +119,6 @@ describe('requireTenant adversarial membership', () => {
   });
 
   it('allows JWT member when X-Tenant-Id matches membership', async () => {
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
     const c = makeCtx({
       'X-Tenant-Id': TENANT_A,
       Authorization: 'Bearer jwt-user-a',

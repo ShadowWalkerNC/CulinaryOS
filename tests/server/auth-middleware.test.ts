@@ -52,21 +52,21 @@ describe('requireTenant middleware', () => {
   });
 
   it('rejects missing X-Tenant-Id', async () => {
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
+    const { requireTenant } = await import('@culinaryos/server/middleware/auth');
     const c = makeCtx({});
     const res: any = await requireTenant(c as any, async () => {});
     expect(res?.status ?? c._result().status).toBe(422);
   });
 
   it('rejects slug-like tenant ids', async () => {
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
+    const { requireTenant } = await import('@culinaryos/server/middleware/auth');
     const c = makeCtx({ 'X-Tenant-Id': 'demo-bistro' });
     const res: any = await requireTenant(c as any, async () => {});
     expect(res?.status ?? c._result().status).toBe(422);
   });
 
   it('allows UUID tenant in relaxed mode without bearer', async () => {
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
+    const { requireTenant } = await import('@culinaryos/server/middleware/auth');
     const c = makeCtx({ 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001' });
     let nextCalled = false;
     await requireTenant(c as any, async () => { nextCalled = true; });
@@ -79,7 +79,7 @@ describe('requireTenant middleware', () => {
     process.env.AUTH_RELAXED = 'false';
     process.env.SUPABASE_URL = 'https://real.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
-    const { requireTenant } = await import('../../apps/server/src/middleware/auth.ts');
+    const { requireTenant } = await import('@culinaryos/server/middleware/auth');
     const c = makeCtx({
       'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
       Authorization: 'Bearer test-device-key',

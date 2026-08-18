@@ -3,9 +3,9 @@
 // ============================================================
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { ordersRoutes } from '../../apps/server/src/routes/orders.ts';
-import { kdsRoutes } from '../../apps/server/src/routes/kds.ts';
-import { resetMockTickets } from '../../apps/server/src/lib/mock-kitchen.ts';
+import { ordersRoutes } from '@culinaryos/server/routes/orders';
+import { kdsRoutes } from '@culinaryos/server/routes/kds';
+import { resetMockTickets } from '@culinaryos/server/lib/mock-kitchen';
 
 const TENANT = '00000000-0000-0000-0000-000000000001';
 

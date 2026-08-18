@@ -11,8 +11,8 @@ const TENANT = '00000000-0000-0000-0000-000000000001';
 describe('POST /v1/auth/pin-login', () => {
   beforeAll(() => {
     process.env.AUTH_RELAXED = 'true';
-    process.env.DEVICE_API_KEY = 'test-device-key-phase0';
-    process.env.INTERNAL_API_KEY = 'test-internal-key-phase0';
+    process.env.DEVICE_API_KEY = 'valid-device-key-test';
+    process.env.INTERNAL_API_KEY = 'valid-internal-key-test';
     process.env.SUPABASE_URL = 'https://your-project.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'your-service-role-key';
   });
@@ -28,7 +28,7 @@ describe('POST /v1/auth/pin-login', () => {
     expect(body.ok).toBe(true);
     expect(body.data.mode).toBe('demo');
     expect(body.data.role).toBe('server');
-    expect(body.data.accessToken).toBe('test-device-key-phase0');
+    expect(body.data.accessToken).toBe('valid-device-key-test');
   });
 
   it('invalid PIN rejected', async () => {
@@ -44,7 +44,7 @@ describe('POST /v1/auth/pin-login', () => {
 describe('POST /v1/ops/waste (demo)', () => {
   beforeAll(() => {
     process.env.AUTH_RELAXED = 'true';
-    process.env.DEVICE_API_KEY = 'test-device-key-phase0';
+    process.env.DEVICE_API_KEY = 'valid-device-key-test';
     process.env.SUPABASE_URL = 'https://your-project.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'your-service-role-key';
   });
@@ -55,7 +55,7 @@ describe('POST /v1/ops/waste (demo)', () => {
       headers: {
         'Content-Type': 'application/json',
         'X-Tenant-Id': TENANT,
-        Authorization: 'Bearer test-device-key-phase0',
+        Authorization: 'Bearer valid-device-key-test',
       },
       body: JSON.stringify({
         ingredient: 'salmon',

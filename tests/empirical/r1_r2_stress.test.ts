@@ -22,9 +22,10 @@ import type { DomainEvent } from '@culinaryos/shared';
 import {
   enqueueOfflineDelta,
   getOfflineQueue,
+  getPendingOfflineQueue,
   markDeltasSynced,
   flushOfflineQueue,
-} from '@culinaryos/shared';
+} from '../../packages/shared/src/offline-sync.ts';
 
 const STORAGE_KEY = 'culinaryos_offline_transaction_queue';
 
@@ -278,6 +279,9 @@ describe('R2: Offline Delta Sync Engine Storage & Uniqueness Tests', () => {
     });
 
     (globalThis as any).fetch = mock(async () => {
+      const q = getPendingOfflineQueue();
+      const firstId = q[0]?.id;
+
       enqueueOfflineDelta({
         tenant_id: 'tenant-001',
         order_id: 'ord-second-in-flight',
@@ -287,15 +291,17 @@ describe('R2: Offline Delta Sync Engine Storage & Uniqueness Tests', () => {
 
       return {
         ok: true,
-        json: async () => ({ status: 'success', synced: 1 }),
+        json: async () => ({ status: 'success', synced: 1, confirmedIds: firstId ? [firstId] : [] }),
       };
     });
 
     syncedCount = await flushOfflineQueue('http://localhost:3000');
     assert.strictEqual(syncedCount, 1);
-    const remainingQueue = getOfflineQueue();
-    assert.strictEqual(remainingQueue.length, 1);
-    assert.strictEqual(remainingQueue[0].order_id, 'ord-second-in-flight');
+    const pendingQueue = getPendingOfflineQueue();
+    assert.strictEqual(pendingQueue.length, 1);
+    assert.strictEqual(pendingQueue[0].order_id, 'ord-second-in-flight');
+    const fullQueue = getOfflineQueue();
+    assert.strictEqual(fullQueue.length, 2);
 
     (globalThis as any).fetch = originalFetch;
     clearQueue();

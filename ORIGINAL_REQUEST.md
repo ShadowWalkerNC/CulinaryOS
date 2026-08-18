@@ -1,55 +1,49 @@
 # Original User Request
 
-## Initial Request — 2026-08-01T17:58:43Z
+## Initial Request — 2026-08-15T21:14:32-04:00
 
-<USER_REQUEST>
-Full re-architecture and execution plan for CulinaryOS, focusing on stabilizing POS and KDS core real-time operations, WebSocket message contracts, multi-tenant security, and MCP extension infrastructure.
+You are the Project Orchestrator for the CulinaryOS consolidation project.
 
-Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS
-Integrity mode: development
+Your Working Directory: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator_1
+User Request File: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md
+Workspace Root: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS
 
-## Requirements
+TASK OVERVIEW:
+Consolidate all adjacent restaurant tech repositories (RecipeOS, KitchenKit, CulinaryOps, Plated, Post-Pilot) directly into the CulinaryOS monorepo as built-in packages and apps under an MIT open-source license. Build a unified, modular, forkable restaurant operating system ("the Linux of restaurant tech") with complete POS, KDS, inventory, recipe scaling, operational analytics, automated loyalty marketing, and AI tool capabilities.
 
-### R1. POS & KDS Real-Time Architecture & State Synchronization
-- Re-architect and stabilize the WebSocket message contracts between POS/KDS servers (pos/, kds/) and client applications (pos-client/, kds-client/).
-- Ensure robust state management, handling connection loss, offline transaction queuing for POS, and instant order ticket status updates on KDS without race conditions or memory leaks.
+KEY REQUIREMENTS:
+1. R1. Unified Monorepo Consolidation:
+   - Recipe formulas, yield calculations, and food costing become first-class services in packages/ratio-engine and apps/server.
+   - Inventory deduction, reorder alerts, and supplier purchase orders integrate natively into apps/server and apps/admin.
+   - KDS multi-course holding, course firing, and station routing operate as core capabilities in apps/kds.
+   - Loyalty marketing rules and ops diagnostics live in unified /v1/ops/* endpoints and internal tool handlers.
+2. R2. Core Event Spine & Zero-Dependency Local Mode:
+   - Firing an order from POS emits pos:order:created, creating kitchen tickets, deducting recipe ingredients from pantry stock, and logging plate economics.
+   - All capabilities function cleanly in offline/demo mode (in-memory kitchen store, PIN authentication 1234/5678, localStorage delta queue) with automatic live Supabase sync when credentials are provided.
+3. R3. Open-Source Modular Architecture ("Linux for Restaurants"):
+   - Standard MIT open-source licensing.
+   - Clean package boundaries with zero circular dependencies across apps/* and packages/*.
+   - Unified styling across all client apps (pos, kds, admin, web) using @culinaryos/ui.
+4. R4. Automated Browser & Cross-Surface Quality Audits:
+   - Design token consistency across POS (:5172), KDS (:5173), Admin (:5174), Web (:5176).
+   - Zero console runtime exceptions or unhandled promise rejections.
+   - End-to-end user workflows: PIN Login -> POS Order -> Fire to KDS -> Bump -> Inventory Deduction -> Admin Verification.
 
-### R2. Monorepo Alignment & Package Contracts
-- Clean up monorepo workspace boundaries (packages/, shared/) to ensure no circular dependencies or direct src/ cross-package imports exist.
-- Standardize shared TypeScript interfaces across backend APIs, KDS, POS, and frontend web applications.
+ACCEPTANCE CRITERIA:
+- Monorepo Build & Typing:
+  * Turborepo (turbo run build) compiles all packages and apps without errors.
+  * TypeScript typecheck (turbo run typecheck) passes with 0 errors across all workspace packages.
+  * Canonical test runner (node ./scripts/run-all-tests.cjs) passes all existing (29) and new consolidated test suites.
+- Integrated Feature Execution:
+  * Recipe formula scaling & ingredient deduction execute reliably upon order fire.
+  * KDS station filtering, course hold/fire timers, and bump workflows update tickets in real time.
+  * Admin portal allows managing menu items, viewing real-time inventory par levels, and tracking food waste.
+  * MCP tool suite (mcp/) operates against live /v1/ops/* API routes and offline mocks.
+- Browser & UX Validation:
+  * POS, KDS, Admin, and Web surfaces render cleanly with unified theme styling.
+  * Full end-to-end service cycle executes without manual database intervention in demo mode.
 
-### R3. Multi-Tenant Security & Database Isolation
-- Ensure all PostgreSQL/Supabase tables strictly enforce Row Level Security (RLS) and that all service queries are properly tenant-scoped.
-- Verify schema migrations in supabase/ are forward-compatible and adhere to zero-data-loss standards.
-
-### R4. Turborepo & Dev Environment Stability
-- Validate and update turbo.json pipelines and pnpm-workspace.yaml configurations to guarantee deterministic builds, linting, and testing across all packages.
-
-## Acceptance Criteria
-
-### Real-Time & State Integrity
-- WebSocket contracts for POS and KDS are fully documented, typed, and resilient to disconnection/reconnection events.
-- POS offline queue correctly processes and syncs pending transactions upon reconnection.
-
-### Codebase & Security
-- pnpm build and pnpm test pass across all workspace packages via Turborepo without errors.
-- All database queries in the backend and services strictly include tenant filtering context, passing security audits.
-- Zero unhandled promise rejections or memory leaks during WebSocket client lifecycle tests.
-</USER_REQUEST>
-
-## Follow-up — 2026-08-01T18:07:35Z
-
-UPDATE ON SCOPE AND INTEGRATION TARGETS:
-
-The user has clarified that several adjacent repositories under `c:\Users\white\OneDrive\Documents\GitHub\` are to be integrated, connected, or ported as MCP extensions into CulinaryOS:
-1. `CulinaryOps` (`c:\Users\white\OneDrive\Documents\GitHub\CulinaryOps`)
-2. `KitchenKit` (`c:\Users\white\OneDrive\Documents\GitHub\KitchenKit`)
-3. `Plated` (`c:\Users\white\OneDrive\Documents\GitHub\Plated`)
-4. `Post-Pilot` (`c:\Users\white\OneDrive\Documents\GitHub\Post-Pilot`)
-(Note: `RecipeOS` is also present in the workspace directory).
-
-Please incorporate these external repository integrations into the CulinaryOS master plan:
-- Evaluate their architectures and existing schemas.
-- Plan their migration/porting or MCP tool bridge integration into `mcp/` and `extensions/` under CulinaryOS following the extension template (`extension_template/`).
-- Maintain clean package boundaries and multi-tenant security across all MCP integration points.
-
+OPERATING DISCIPLINE:
+- Maintain your own BRIEFING.md and progress.md under C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator_1\
+- Strictly adhere to AGENTS.md rules.
+- When all work is complete and verified, send a completion handoff message back to me.

@@ -1,34 +1,34 @@
-# BRIEFING — 2026-08-02T12:20:10Z
+# BRIEFING — 2026-08-16T01:14:15Z
 
 ## Mission
-Sentinel monitoring and victory audit verification for CulinaryOS re-architecture.
+Coordinate and oversee the monorepo consolidation of adjacent restaurant tech repositories (RecipeOS, KitchenKit, CulinaryOps, Plated, Post-Pilot) into CulinaryOS as the open-source "Linux of restaurant tech", maintaining strict sentinel governance and independent victory audit.
 
 ## 🔒 My Identity
 - Archetype: sentinel
-- Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\sentinel
-- Orchestrator: e23a3006-9b04-420c-ac2b-2e20ba90ec01
-- Victory Auditor: 27592830-c609-49db-bdd3-2c9853ab5930
+- Working directory: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\sentinel
+- Orchestrator: 8cf24e85-bd62-42a6-8a3c-218e4d2928b6
+- Victory Auditor: to be spawned on victory claim
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
 - Victory Audit is MANDATORY before reporting completion
+- Must record user requests to ORIGINAL_REQUEST.md
+- Run progress and liveness crons
+- Strictly enforce monorepo discipline and multi-tenant isolation per AGENTS.md
 
 ## User Context
-- **Last user request**: Re-architect and execute CulinaryOS plan (POS/KDS real-time, contracts, multi-tenant security, Turborepo, MCP satellite extensions)
+- **Last user request**: Consolidate adjacent repos (RecipeOS, KitchenKit, CulinaryOps, Plated, Post-Pilot) into CulinaryOS monorepo under MIT license as modular "Linux of restaurant tech".
 - **Pending clarifications**: none
-- **Delivered results**: Project execution complete and 100% verified by mandatory Victory Auditor with verdict `VICTORY CONFIRMED`.
+- **Delivered results**: Orchestrator spawned and dispatched
 
 ## Project Status
-- **Phase**: complete
+- **Phase**: in progress
 
 ## Victory Audit Status
-- **Triggered**: yes
-- **Verdict**: VICTORY CONFIRMED
+- **Triggered**: no
+- **Verdict**: pending
 - **Retry count**: 0
 
 ## Artifact Index
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md — Verbatim user request
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\plan.md — Orchestrator master plan
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\progress.md — Orchestrator progress tracker
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\handoff.md — Orchestrator handoff report
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\victory_auditor_1\audit.md — Victory Auditor report (VICTORY CONFIRMED)
+- C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md — Authoritative user intent record
+- C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator_1 — Orchestrator workspace

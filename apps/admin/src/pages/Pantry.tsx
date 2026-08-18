@@ -1,297 +1,400 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { CulinaryHeader } from '@culinaryos/ui';
+import { CulinaryCard, CulinaryButton, CulinaryBadge } from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
 const API = getApiBase();
 
 type StockStatus = 'ok' | 'low_stock' | 'out_of_stock';
-type POStatus    = 'draft' | 'approved' | 'sent' | 'received' | 'cancelled';
+type POStatus = 'draft' | 'approved' | 'sent' | 'received' | 'cancelled';
 
 interface PantryItem {
-  id:           string;
-  name:         string;
-  unit:         string;
-  current_qty:  number;
-  reorder_at:   number;
-  reorder_qty:  number;
-  cost_per_unit:number;
-  supplier:     string | null;
+  id: string;
+  name: string;
+  unit: string;
+  current_qty: number;
+  reorder_at: number;
+  reorder_qty: number;
+  cost_per_unit: number;
+  supplier: string | null;
   stock_status: StockStatus;
 }
 
 interface POLine {
-  id:              string;
+  id: string;
   ingredient_name: string;
-  unit:            string;
-  ordered_qty:     number;
-  received_qty:    number;
-  unit_cost:       number;
+  unit: string;
+  ordered_qty: number;
+  received_qty: number;
+  unit_cost: number;
 }
 
 interface PurchaseOrder {
-  id:          string;
-  po_number:   string;
-  status:      POStatus;
-  supplier:    string | null;
-  total_cost:  number;
-  created_at:  string;
+  id: string;
+  po_number: string;
+  status: POStatus;
+  supplier: string | null;
+  total_cost: number;
+  created_at: string;
   approved_at: string | null;
-  sent_at:     string | null;
+  sent_at: string | null;
   received_at: string | null;
   po_line_items: POLine[];
 }
-
-const STATUS_COLOR: Record<StockStatus, string> = {
-  ok:           '#22c55e',
-  low_stock:    '#f59e0b',
-  out_of_stock: '#ef4444',
-};
-
-const PO_STATUS_COLOR: Record<POStatus, string> = {
-  draft:     '#6b7280',
-  approved:  '#7c6aff',
-  sent:      '#f59e0b',
-  received:  '#22c55e',
-  cancelled: '#374151',
-};
 
 function cents(c: number): string {
   return `$${(c / 100).toFixed(2)}`;
 }
 
 export function PantryPage() {
-  const [items,  setItems]  = useState<PantryItem[]>([]);
-  const [pos,    setPOs]    = useState<PurchaseOrder[]>([]);
-  const [tab,    setTab]    = useState<'inventory' | 'orders'>('inventory');
+  const [items, setItems] = useState<PantryItem[]>([]);
+  const [pos, setPOs] = useState<PurchaseOrder[]>([]);
+  const [tab, setTab] = useState<'inventory' | 'orders'>('inventory');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const headers = apiHeaders();
-    const [itemsRes, posRes] = await Promise.all([
-      fetch(`${API}/v1/pantry`, { headers }).then((r) => r.json()),
-      fetch(`${API}/v1/pantry/purchase-orders`, { headers }).then((r) => r.json()),
-    ]);
-    if (itemsRes.ok)  setItems(itemsRes.data  ?? []);
-    if (posRes.ok)    setPOs(posRes.data    ?? []);
-    setLoading(false);
+    try {
+      const headers = apiHeaders();
+      const [itemsRes, posRes] = await Promise.all([
+        fetch(`${API}/v1/pantry`, { headers }).then((r) => r.json()),
+        fetch(`${API}/v1/pantry/purchase-orders`, { headers }).then((r) => r.json()),
+      ]);
+      if (itemsRes.ok) setItems(itemsRes.data ?? []);
+      if (posRes.ok) setPOs(posRes.data ?? []);
+    } catch {
+      setMsg({ text: 'Failed to fetch inventory and PO data from API', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    void fetchAll();
+  }, [fetchAll]);
 
   async function createAutoPO() {
     setCreating(true);
-    await fetch(`${API}/v1/pantry/purchase-orders`, {
-      method:  'POST',
-      headers: apiHeaders(),
-      body:    JSON.stringify({ auto: true }),
-    });
-    await fetchAll();
-    setCreating(false);
-    setTab('orders');
+    setMsg(null);
+    try {
+      const res = await fetch(`${API}/v1/pantry/purchase-orders`, {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({ auto: true }),
+      });
+      const body = await res.json();
+      if (!body.ok) {
+        setMsg({ text: body.error?.message ?? 'Failed to generate purchase order', type: 'error' });
+      } else {
+        setMsg({ text: 'Successfully generated purchase order for restocking', type: 'success' });
+        await fetchAll();
+        setTab('orders');
+      }
+    } catch {
+      setMsg({ text: 'Network error generating purchase order', type: 'error' });
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function approvePO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/approve`, { method: 'PATCH', headers: apiHeaders() });
-    fetchAll();
+    try {
+      await fetch(`${API}/v1/pantry/purchase-orders/${poId}/approve`, {
+        method: 'PATCH',
+        headers: apiHeaders(),
+      });
+      setMsg({ text: 'Purchase order approved', type: 'success' });
+      void fetchAll();
+    } catch {
+      setMsg({ text: 'Network error approving purchase order', type: 'error' });
+    }
   }
 
   async function sendPO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}/send`, { method: 'PATCH', headers: apiHeaders() });
-    fetchAll();
+    try {
+      await fetch(`${API}/v1/pantry/purchase-orders/${poId}/send`, {
+        method: 'PATCH',
+        headers: apiHeaders(),
+      });
+      setMsg({ text: 'Purchase order marked as sent to supplier', type: 'success' });
+      void fetchAll();
+    } catch {
+      setMsg({ text: 'Network error sending purchase order', type: 'error' });
+    }
   }
 
   async function cancelPO(poId: string) {
-    await fetch(`${API}/v1/pantry/purchase-orders/${poId}`, { method: 'DELETE', headers: apiHeaders() });
-    fetchAll();
+    try {
+      await fetch(`${API}/v1/pantry/purchase-orders/${poId}`, {
+        method: 'DELETE',
+        headers: apiHeaders(),
+      });
+      setMsg({ text: 'Purchase order cancelled', type: 'success' });
+      void fetchAll();
+    } catch {
+      setMsg({ text: 'Network error cancelling purchase order', type: 'error' });
+    }
   }
 
   const alerts = items.filter((i) => i.stock_status !== 'ok');
 
   return (
-    <div style={{ padding: '0 0 24px', fontFamily: "'Inter', sans-serif", color: '#1f2937', background: '#f8f9fa', minHeight: '100dvh' }}>
-      <CulinaryHeader activeModule="admin" tenantName="CulinaryOS Back-Office Admin" />
-      <div style={{ padding: '24px' }}>
-      {/* Page header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div className="space-y-6 animate-fadeIn">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Pantry & Inventory</h1>
-          {alerts.length > 0 && (
-            <span style={{ fontSize: '12px', color: '#f59e0b', marginTop: '4px', display: 'block' }}>
-              ⚠️ {alerts.length} item{alerts.length !== 1 ? 's' : ''} need restocking
-            </span>
-          )}
+          <h1 className="text-xl font-black text-[#0b1c30] uppercase tracking-wider">
+            Pantry & Inventory Management
+          </h1>
+          <p className="text-xs text-[#6b7280] mt-1 font-medium">
+            Monitor real-time ingredient levels, replenishment thresholds, and automated purchase orders.
+          </p>
         </div>
-        <button
-          onClick={createAutoPO}
-          disabled={creating || alerts.length === 0}
-          style={{
-            padding:       '10px 18px',
-            borderRadius:  '8px',
-            border:        'none',
-            background:    alerts.length === 0 ? '#2a2d40' : '#7c6aff',
-            color:         alerts.length === 0 ? '#6b7299' : '#fff',
-            fontWeight:    700,
-            fontSize:      '13px',
-            cursor:        alerts.length === 0 || creating ? 'not-allowed' : 'pointer',
-          }}
+        <div className="flex items-center gap-2">
+          {alerts.length > 0 ? (
+            <CulinaryBadge variant="warning">{alerts.length} Restock Alerts</CulinaryBadge>
+          ) : (
+            <CulinaryBadge variant="success">All Stock Levels OK</CulinaryBadge>
+          )}
+          <CulinaryButton
+            variant="primary"
+            size="sm"
+            onClick={createAutoPO}
+            disabled={creating || alerts.length === 0}
+          >
+            <span className="material-symbols-outlined text-[14px]">add_shopping_cart</span>
+            {creating ? 'Generating…' : 'Auto-Generate PO'}
+          </CulinaryButton>
+          <CulinaryButton variant="outline" size="sm" onClick={() => void fetchAll()}>
+            <span className="material-symbols-outlined text-[14px]">refresh</span>
+            Refresh
+          </CulinaryButton>
+        </div>
+      </div>
+
+      {/* Feedback Toast */}
+      {msg && (
+        <div
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+            msg.type === 'success'
+              ? 'bg-[#22c55e10] border-[#22c55e30] text-[#16a34a]'
+              : 'bg-red-50 border-red-200 text-red-600'
+          }`}
         >
-          {creating ? 'Creating…' : '⊕ Auto-Generate PO'}
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px]">
+              {msg.type === 'success' ? 'check_circle' : 'error'}
+            </span>
+            <span>{msg.text}</span>
+          </div>
+          <button
+            onClick={() => setMsg(null)}
+            className="text-xs font-bold hover:underline opacity-80 hover:opacity-100"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Section Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#e5e7eb] pb-2">
+        <button
+          onClick={() => setTab('inventory')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+            tab === 'inventory'
+              ? 'bg-[#0f172a] text-white shadow-xs'
+              : 'bg-white text-[#6b7280] hover:text-[#0b1c30] border border-[#e5e7eb]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">inventory</span>
+          <span>Inventory Roster ({items.length})</span>
+        </button>
+        <button
+          onClick={() => setTab('orders')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+            tab === 'orders'
+              ? 'bg-[#0f172a] text-white shadow-xs'
+              : 'bg-white text-[#6b7280] hover:text-[#0b1c30] border border-[#e5e7eb]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+          <span>Purchase Orders ({pos.length})</span>
         </button>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #2e3150', paddingBottom: '0' }}>
-        {(['inventory', 'orders'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              padding:       '8px 18px',
-              border:        'none',
-              borderBottom:  tab === t ? '2px solid #7c6aff' : '2px solid transparent',
-              background:    'transparent',
-              color:         tab === t ? '#7c6aff' : '#6b7299',
-              fontWeight:    tab === t ? 700 : 400,
-              fontSize:      '13px',
-              cursor:        'pointer',
-              textTransform: 'capitalize',
-            }}
-          >
-            {t === 'inventory' ? `Inventory (${items.length})` : `Purchase Orders (${pos.length})`}
-          </button>
-        ))}
-      </div>
-
-      {loading && <div style={{ color: '#6b7299' }}>Loading…</div>}
-
-      {/* Inventory Tab */}
-      {!loading && tab === 'inventory' && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ color: '#6b7299', textAlign: 'left' }}>
-              {['Ingredient', 'Current', 'Reorder At', 'Reorder Qty', 'Unit', 'Cost/Unit', 'Supplier', 'Status'].map((h) => (
-                <th key={h} style={{ padding: '8px 12px', fontWeight: 500, borderBottom: '1px solid #2e3150' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid #1a1d27' }}>
-                <td style={{ padding: '10px 12px', fontWeight: 600 }}>{item.name}</td>
-                <td style={{ padding: '10px 12px', fontFamily: 'monospace' }}>{item.current_qty}</td>
-                <td style={{ padding: '10px 12px', color: '#6b7299' }}>{item.reorder_at}</td>
-                <td style={{ padding: '10px 12px', color: '#6b7299' }}>{item.reorder_qty}</td>
-                <td style={{ padding: '10px 12px', color: '#6b7299' }}>{item.unit}</td>
-                <td style={{ padding: '10px 12px', color: '#6b7299' }}>{cents(item.cost_per_unit)}</td>
-                <td style={{ padding: '10px 12px', color: '#6b7299' }}>{item.supplier ?? '—'}</td>
-                <td style={{ padding: '10px 12px' }}>
-                  <span style={{
-                    background:    `${STATUS_COLOR[item.stock_status]}22`,
-                    color:         STATUS_COLOR[item.stock_status],
-                    borderRadius:  '4px',
-                    padding:       '2px 8px',
-                    fontSize:      '11px',
-                    fontWeight:    600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}>
-                    {item.stock_status.replace('_', ' ')}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Purchase Orders Tab */}
-      {!loading && tab === 'orders' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {pos.length === 0 && (
-            <div style={{ color: '#6b7299', textAlign: 'center', padding: '40px' }}>
-              No purchase orders yet. Use “Auto-Generate PO” to create one from low-stock alerts.
-            </div>
-          )}
-          {pos.map((po) => (
-            <div key={po.id} style={{
-              background:   '#1a1d27',
-              border:       '1px solid #2e3150',
-              borderLeft:   `4px solid ${PO_STATUS_COLOR[po.status]}`,
-              borderRadius: '8px',
-              padding:      '16px 20px',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div>
-                  <span style={{ fontWeight: 700, fontSize: '15px' }}>{po.po_number}</span>
-                  {po.supplier && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#6b7299' }}>{po.supplier}</span>}
-                  <div style={{ marginTop: '4px', fontSize: '11px', color: '#6b7299' }}>
-                    {new Date(po.created_at).toLocaleDateString()} · {po.po_line_items.length} line{po.po_line_items.length !== 1 ? 's' : ''} · {cents(po.total_cost)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    background:    `${PO_STATUS_COLOR[po.status]}22`,
-                    color:         PO_STATUS_COLOR[po.status],
-                    borderRadius:  '4px',
-                    padding:       '3px 10px',
-                    fontSize:      '11px',
-                    fontWeight:    700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}>
-                    {po.status}
-                  </span>
-                  {po.status === 'draft'    && <button onClick={() => approvePO(po.id)} style={btnStyle('#22c55e')}>Approve</button>}
-                  {po.status === 'approved' && <button onClick={() => sendPO(po.id)}    style={btnStyle('#7c6aff')}>Mark Sent</button>}
-                  {['draft', 'approved'].includes(po.status) && (
-                    <button onClick={() => cancelPO(po.id)} style={btnStyle('#ef4444')}>Cancel</button>
-                  )}
-                </div>
-              </div>
-              {/* Line items */}
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                <thead>
-                  <tr style={{ color: '#6b7299' }}>
-                    {['Ingredient', 'Ordered', 'Received', 'Unit', 'Unit Cost', 'Line Total'].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '4px 8px', fontWeight: 500 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {po.po_line_items.map((line) => (
-                    <tr key={line.id}>
-                      <td style={{ padding: '4px 8px' }}>{line.ingredient_name}</td>
-                      <td style={{ padding: '4px 8px', fontFamily: 'monospace' }}>{line.ordered_qty} {line.unit}</td>
-                      <td style={{ padding: '4px 8px', fontFamily: 'monospace', color: line.received_qty > 0 ? '#22c55e' : '#6b7299' }}>
-                        {line.received_qty > 0 ? line.received_qty : '—'}
+      {/* Main Content Area */}
+      {loading ? (
+        <CulinaryCard>
+          <div className="py-12 text-center text-xs text-[#6b7280] font-medium flex flex-col items-center justify-center gap-2">
+            <span className="material-symbols-outlined animate-spin text-[24px] text-[#0f172a]">progress_activity</span>
+            <span>Loading pantry catalog…</span>
+          </div>
+        </CulinaryCard>
+      ) : tab === 'inventory' ? (
+        <CulinaryCard
+          title="Ingredient Stock Levels"
+          subtitle={`Tracking ${items.length} pantry items with live deduction hooks`}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
+                  <th className="pb-3 px-3">Ingredient</th>
+                  <th className="pb-3 px-3">Current Qty</th>
+                  <th className="pb-3 px-3">Reorder Point</th>
+                  <th className="pb-3 px-3">Reorder Qty</th>
+                  <th className="pb-3 px-3">Unit Cost</th>
+                  <th className="pb-3 px-3">Supplier</th>
+                  <th className="pb-3 px-3 text-right">Stock Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f3f4f6] text-xs">
+                {items.map((item) => {
+                  const isOk = item.stock_status === 'ok';
+                  const isLow = item.stock_status === 'low_stock';
+                  return (
+                    <tr key={item.id} className="hover:bg-[#f8f9fa] transition-colors">
+                      <td className="py-3.5 px-3 font-bold text-[#0b1c30]">
+                        {item.name}
                       </td>
-                      <td style={{ padding: '4px 8px', color: '#6b7299' }}>{line.unit}</td>
-                      <td style={{ padding: '4px 8px', color: '#6b7299' }}>{cents(line.unit_cost)}</td>
-                      <td style={{ padding: '4px 8px', fontWeight: 600 }}>{cents(line.ordered_qty * line.unit_cost)}</td>
+                      <td className="py-3.5 px-3 font-mono font-bold text-[#0f172a]">
+                        {item.current_qty} {item.unit}
+                      </td>
+                      <td className="py-3.5 px-3 text-[#6b7280] font-mono">
+                        {item.reorder_at} {item.unit}
+                      </td>
+                      <td className="py-3.5 px-3 text-[#6b7280] font-mono">
+                        {item.reorder_qty} {item.unit}
+                      </td>
+                      <td className="py-3.5 px-3 font-mono text-[#1f2937]">
+                        {cents(item.cost_per_unit)}
+                      </td>
+                      <td className="py-3.5 px-3 text-[#6b7280]">
+                        {item.supplier ?? '—'}
+                      </td>
+                      <td className="py-3.5 px-3 text-right">
+                        <CulinaryBadge
+                          variant={isOk ? 'success' : isLow ? 'warning' : 'danger'}
+                        >
+                          {item.stock_status.replace('_', ' ')}
+                        </CulinaryBadge>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
+                  );
+                })}
+                {!items.length && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-xs text-[#6b7280]">
+                      No pantry inventory records found. Run <code className="font-mono bg-[#f3f4f6] px-1.5 py-0.5 rounded text-[#0f172a]">pnpm seed</code>.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CulinaryCard>
+      ) : (
+        <div className="space-y-4">
+          {pos.length === 0 ? (
+            <CulinaryCard>
+              <div className="py-12 text-center text-xs text-[#6b7280] font-medium">
+                No purchase orders generated yet. Use “Auto-Generate PO” to automatically restock low inventory items.
+              </div>
+            </CulinaryCard>
+          ) : (
+            pos.map((po) => {
+              const statusVariant =
+                po.status === 'received'
+                  ? 'success'
+                  : po.status === 'sent'
+                  ? 'warning'
+                  : po.status === 'approved'
+                  ? 'brand'
+                  : po.status === 'cancelled'
+                  ? 'danger'
+                  : 'neutral';
+
+              return (
+                <CulinaryCard
+                  key={po.id}
+                  title={po.po_number}
+                  subtitle={`${new Date(po.created_at).toLocaleDateString()} · ${po.po_line_items.length} line item(s) · Total: ${cents(po.total_cost)} ${po.supplier ? `· Supplier: ${po.supplier}` : ''}`}
+                  headerAction={
+                    <div className="flex items-center gap-2">
+                      <CulinaryBadge variant={statusVariant}>{po.status}</CulinaryBadge>
+                      {po.status === 'draft' && (
+                        <CulinaryButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => void approvePO(po.id)}
+                        >
+                          Approve
+                        </CulinaryButton>
+                      )}
+                      {po.status === 'approved' && (
+                        <CulinaryButton
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => void sendPO(po.id)}
+                        >
+                          Mark Sent
+                        </CulinaryButton>
+                      )}
+                      {['draft', 'approved'].includes(po.status) && (
+                        <CulinaryButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => void cancelPO(po.id)}
+                        >
+                          Cancel
+                        </CulinaryButton>
+                      )}
+                    </div>
+                  }
+                >
+                  <div className="overflow-x-auto mt-2">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
+                          <th className="pb-2 px-2">Ingredient</th>
+                          <th className="pb-2 px-2">Ordered Qty</th>
+                          <th className="pb-2 px-2">Received Qty</th>
+                          <th className="pb-2 px-2">Unit Cost</th>
+                          <th className="pb-2 px-2 text-right">Line Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#f3f4f6] text-xs">
+                        {po.po_line_items.map((line) => (
+                          <tr key={line.id}>
+                            <td className="py-2.5 px-2 font-medium text-[#1f2937]">
+                              {line.ingredient_name}
+                            </td>
+                            <td className="py-2.5 px-2 font-mono">
+                              {line.ordered_qty} {line.unit}
+                            </td>
+                            <td className="py-2.5 px-2 font-mono text-[#6b7280]">
+                              {line.received_qty > 0 ? `${line.received_qty} ${line.unit}` : '—'}
+                            </td>
+                            <td className="py-2.5 px-2 font-mono text-[#6b7280]">
+                              {cents(line.unit_cost)}
+                            </td>
+                            <td className="py-2.5 px-2 font-mono font-bold text-[#0f172a] text-right">
+                              {cents(line.ordered_qty * line.unit_cost)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CulinaryCard>
+              );
+            })
+          )}
         </div>
       )}
-      </div>
     </div>
   );
 }
 
-function btnStyle(color: string): React.CSSProperties {
-  return {
-    padding:      '5px 12px',
-    borderRadius: '6px',
-    border:       `1px solid ${color}`,
-    background:   `${color}18`,
-    color,
-    fontSize:     '12px',
-    fontWeight:   600,
-    cursor:       'pointer',
-  };
-}
+export default PantryPage;
