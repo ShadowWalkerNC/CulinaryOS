@@ -135,4 +135,24 @@ describe('Pantry REST API /purchase-orders endpoints', () => {
     const json = await res.json();
     expect(json.ok).toBe(true);
   });
+
+  it('POST /deduct-order deducts inventory for ordered items', async () => {
+    const res = await pantryRoutes.request('/deduct-order', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        orderId: 'ord-test-deduct-1',
+        items: [
+          { menuItemId: 'mi-101', quantity: 2 },
+          { menuItemId: 'mi-102', quantity: 1 },
+        ],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.data.orderId).toBe('ord-test-deduct-1');
+    expect(json.data.plateEconomicsLogged).toBe(true);
+    expect(Array.isArray(json.data.deductedIngredients)).toBe(true);
+  });
 });

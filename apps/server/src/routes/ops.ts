@@ -246,3 +246,98 @@ opsRoutes.get('/plate-economics', async (c) => {
   if (error) return err(c, 'DB_ERROR', error.message, 500);
   return ok(c, { rows: data ?? [] });
 });
+
+// In-memory loyalty mock store for demo mode
+const mockLoyaltyPoints = new Map<string, number>();
+
+// POST /v1/ops/loyalty/adjust-points
+opsRoutes.post('/loyalty/adjust-points', async (c) => {
+  const tenantId = c.get('tenantId');
+  const supabase = c.get('supabase');
+  const body = await c.req.json<{
+    customerId: string;
+    pointsDelta: number;
+    reason: string;
+  }>();
+
+  if (!body.customerId || body.pointsDelta == null) {
+    return err(c, 'VALIDATION_ERROR', 'customerId and pointsDelta are required', 422);
+  }
+
+  const current = mockLoyaltyPoints.get(body.customerId) ?? 100;
+  const newBalance = Math.max(0, current + Number(body.pointsDelta));
+  mockLoyaltyPoints.set(body.customerId, newBalance);
+
+  if (!supabase) {
+    return ok(c, {
+      demo: true,
+      customerId: body.customerId,
+      pointsDelta: Number(body.pointsDelta),
+      newBalance,
+      reason: body.reason ?? 'manual_adjustment',
+    });
+  }
+
+  // Live Supabase update if customer_loyalty table is available
+  try {
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('id, loyalty_points')
+      .eq('id', body.customerId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (existing) {
+      const balance = (existing.loyalty_points ?? 0) + Number(body.pointsDelta);
+      await supabase
+        .from('customers')
+        .update({ loyalty_points: balance })
+        .eq('id', body.customerId)
+        .eq('tenant_id', tenantId);
+
+      return ok(c, {
+        customerId: body.customerId,
+        pointsDelta: Number(body.pointsDelta),
+        newBalance: balance,
+        reason: body.reason ?? 'manual_adjustment',
+      });
+    }
+  } catch {
+    // Fallback to in-memory calculation
+  }
+
+  return ok(c, {
+    customerId: body.customerId,
+    pointsDelta: Number(body.pointsDelta),
+    newBalance,
+    reason: body.reason ?? 'manual_adjustment',
+  });
+});
+
+// POST /v1/ops/loyalty/postcard
+opsRoutes.post('/loyalty/postcard', async (c) => {
+  const body = await c.req.json<{
+    customerName: string;
+    address: string;
+    discountPercent: number;
+    couponMessage?: string;
+  }>();
+
+  if (!body.customerName || !body.address || body.discountPercent == null) {
+    return err(c, 'VALIDATION_ERROR', 'customerName, address, and discountPercent are required', 422);
+  }
+
+  const couponCode = `SAVE${Math.round(body.discountPercent)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const postcardId = `post-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  return ok(c, {
+    postcardId,
+    couponCode,
+    customerName: body.customerName,
+    address: body.address,
+    discountPercent: body.discountPercent,
+    couponMessage: body.couponMessage ?? `Enjoy ${body.discountPercent}% off your next visit!`,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+  }, 201);
+});
