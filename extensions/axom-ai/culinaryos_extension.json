@@ -1,0 +1,78 @@
+{
+  "id": "com.axomai.culinaryos",
+  "name": "AxomAI — Restaurant Intelligence",
+  "version": "1.0.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "AxomAI",
+    "email": "partners@axomai.com",
+    "url": "https://axomai.com"
+  },
+  "description": "AxomAI restaurant intelligence platform — AI-powered demand forecasting, smart prep planning, waste reduction analytics, and loyalty automation for CulinaryOS operators.",
+  "category": "ai",
+  "entry_point": "index.js",
+  "permissions": [
+    "orders.read",
+    "pantry.read",
+    "ops.read",
+    "loyalty.read",
+    "loyalty.write",
+    "reports.read"
+  ],
+  "hooks": [
+    "pos:order:created",
+    "kds:ticket:bumped",
+    "pantry:stock:low"
+  ],
+  "settings_schema": [
+    {
+      "key": "axomai_api_key",
+      "label": "AxomAI API Key",
+      "type": "string",
+      "secret": true,
+      "required": true,
+      "description": "Your AxomAI partner API key. Obtain from https://axomai.com/dashboard."
+    },
+    {
+      "key": "demand_forecast_horizon_days",
+      "label": "Demand Forecast Horizon (days)",
+      "type": "number",
+      "default": 7,
+      "min": 1,
+      "max": 30,
+      "description": "How many days ahead AxomAI should forecast demand."
+    },
+    {
+      "key": "enable_loyalty_automation",
+      "label": "Enable Loyalty Automation",
+      "type": "boolean",
+      "default": true,
+      "description": "Allow AxomAI to automatically trigger loyalty messages and postcard campaigns."
+    }
+  ],
+  "mcp_tools": [
+    {
+      "name": "axom_forecast_demand",
+      "description": "Forecast ingredient and cover demand for the next N days using AxomAI's predictive model.",
+      "endpoint": "/v1/marketplace/extensions/com.axomai.culinaryos/tools/forecast"
+    },
+    {
+      "name": "axom_waste_analysis",
+      "description": "Analyze waste patterns and recommend prep adjustments to minimize food cost.",
+      "endpoint": "/v1/marketplace/extensions/com.axomai.culinaryos/tools/waste-analysis"
+    },
+    {
+      "name": "axom_loyalty_campaign",
+      "description": "Trigger an AI-personalized loyalty campaign for a customer segment.",
+      "endpoint": "/v1/marketplace/extensions/com.axomai.culinaryos/tools/loyalty-campaign"
+    }
+  ],
+  "pricing": {
+    "model": "subscription",
+    "price_cents": 0,
+    "notes": "AxomAI pricing is managed separately via your AxomAI partner agreement."
+  },
+  "marketplace_featured": true,
+  "partner_verified": true,
+  "badge": "partner"
+}

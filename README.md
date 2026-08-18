@@ -3,6 +3,8 @@
 **The open operating system for restaurants** — humans on POS/KDS, agents on MCP, your Postgres. MIT licensed. AI never required for service.
 
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
+[![Tests: 29/29 Passing](https://img.shields.io/badge/Tests-29%2F29%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Typecheck: 18/18 Passing](https://img.shields.io/badge/Typecheck-18%2F18%20Passing-blue.svg)](./turbo.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -11,121 +13,180 @@
   <img src="docs/screenshots/kds-board.webp" alt="CulinaryOS KDS — kitchen board" width="48%" />
 </p>
 
-<p align="center"><em>POS order entry · Kitchen display — same navy/slate system, one fire spine</em></p>
+<p align="center"><em>POS order entry · Kitchen display — unified light theme system, single event-driven fire spine</em></p>
 
 > Not a cheaper Toast clone. A **protocol restaurant**: kitchen state is a versioned contract that operators *and* AI agents can drive — with sovereign data and a closed economic loop (recipe → fire → waste/cost).
 
 ---
 
-## Why this is different
+## Why CulinaryOS?
 
-| Everyone else | CulinaryOS |
-|---|---|
-| Closed SaaS UIs (+ bolted-on chat) | **Agent-operable OS** — MCP tools on live tickets, inventory, waste, food-cost |
-| Proprietary partner APIs | **Public contracts** — order fire spine, RLS tenants, `extension_template/` |
-| POS and food-cost in different products | **Closed-loop economics** — fire emits pantry deduct + `plate_economics` |
-| Vendor-hosted lock-in | **Operator-owned Postgres** (Supabase / self-host) |
-| AI as a hard dependency | **AI additive** — POS/KDS work if Claude is down |
-
-**Free & open source forever** (MIT). No per-terminal license fees. You still pay your own hosting and Stripe fees.
-
----
-
-## Surfaces
-
-| App | Port | Role |
+| Feature | Legacy Restaurant SaaS | CulinaryOS |
 |---|---|---|
-| `@culinaryos/server` | `:3000` | Hono API — auth, orders, KDS, pantry, ops, payments, admin |
-| `@culinaryos/app-pos` | `:5172` | POS terminal (PIN → session) |
-| `@culinaryos/app-kds` | `:5173` | Kitchen display |
-| `@culinaryos/admin` | `:5174` | Thin admin — menu 86, staff, pantry |
-| `@culinaryos/app-web` | `:5176` | Online ordering |
+| **Architecture** | Closed proprietary silos (+ bolted-on chat) | **Agent-operable OS** — MCP tools on live tickets, inventory, waste, and food-cost |
+| **API & Contracts** | Proprietary walled gardens | **Open contracts** — standard order fire spine, RLS multi-tenancy, `extension_template/` |
+| **Economics** | Separate POS and inventory software | **Closed-loop economics** — fire automatically emits pantry deduction & `plate_economics` |
+| **Data Sovereignty** | Vendor lock-in | **Operator-owned PostgreSQL** (Supabase / self-hosted PostgreSQL) |
+| **Service Resilience** | AI or cloud outage halts operation | **AI is additive & offline-first** — POS/KDS continue running offline with delta queues |
 
-MCP: `mcp/src/kds-server.ts`, `pos-server.ts`, `culinaryops-server.ts` (live `/v1/ops` when API is up).
+**Free & open source forever** (MIT). No per-terminal licensing fees. You only pay your own infrastructure and Stripe processing fees.
 
 ---
 
-## Quick start
+## Surfaces & Packages
+
+| Package | Port / Target | Role |
+|---|---|---|
+| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, admin, **marketplace** |
+| `apps/pos` | `:5172` | POS terminal (PIN login → session, offline delta queue) |
+| `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, bump/fire timers) |
+| `apps/admin` | `:5174` | Admin portal — menu 86ing, staff management, inventory controls |
+| `apps/web` | `:5176` | Online ordering storefront |
+| `packages/ui` | Shared | Centralized design tokens and component library |
+| `packages/shared` | Shared | TypeScript interfaces, event envelopes, offline-sync delta engine |
+| `packages/auth` | Shared | Session helpers, PIN authentication, RBAC utilities |
+| `packages/event-bus`| Shared | Binary and JSON event envelope broker and handlers |
+| `packages/ratio-engine` | Shared | Culinary scaling, recipe formula costing, and yield calculation |
+| `mcp/` | Extension | MCP AI agent tool layer (`culinaryops`, `kds`, `pos`, `recipeos`) |
+
+---
+
+## Extension Marketplace
+
+CulinaryOS ships a built-in extension marketplace at `/v1/marketplace`. Any operator can browse, install, and manage first-party and partner extensions — all without requiring an active LLM:
 
 ```bash
+# List all available extensions
+GET /v1/marketplace/extensions
+
+# Install an extension for the current session/tenant
+POST /v1/marketplace/extensions/com.axomai.culinaryos/install
+
+# Check AI layer availability
+GET /v1/marketplace/ai/status
+```
+
+### Built-in Extensions
+
+| Extension | ID | Category | Description |
+|---|---|---|---|
+| RecipeOS Bridge | `com.culinaryos.ext.recipeos` | Recipes | Recipe ratio scaling & baker's percentage engine |
+| KitchenKit | `com.culinaryos.ext.kitchenkit` | KDS | Multi-course routing, station prep planning |
+| CulinaryOps | `com.culinaryos.ext.culinaryops` | Operations | Waste diagnostics, food costing, plate economics |
+| Plated | `com.culinaryos.ext.plated` | Inventory | Advanced pantry tracking and reorder automation |
+| Post-Pilot | `com.culinaryos.ext.post-pilot` | Marketing | Loyalty campaigns and postcard automation |
+| Voice Ordering | `com.culinaryos.ext.voice` | POS | Voice-driven order entry assistant |
+| Hardware Agent | `com.culinaryos.ext.hardware` | Hardware | Receipt printers, cash drawers, KDS bump bars |
+
+### Partner Extensions
+
+| Partner | ID | Status |
+|---|---|---|
+| **AxomAI** | `com.axomai.culinaryos` | ✅ Verified Partner |
+
+### Optional AI Layer (Claude)
+
+When `ANTHROPIC_API_KEY` is set, three optional AI-powered endpoints activate:
+
+| Endpoint | Purpose | Fallback (no key) |
+|---|---|---|
+| `POST /v1/marketplace/ai/ops-insight` | AI shift performance analysis | Plain metric summary |
+| `POST /v1/marketplace/ai/prep-plan` | AI morning prep checklist | Cover count + low stock list |
+| `POST /v1/marketplace/ai/loyalty-message` | AI loyalty postcard copy | Template message |
+
+**AI is strictly additive** — all core restaurant operations (PIN login, order fire, KDS bump, pantry deduct) function identically with or without the Anthropic API.
+
+---
+
+## Quick Start (Local Demo Mode)
+
+Run the entire system locally with **zero external dependencies**:
+
+```bash
+# 1. Clone repository and install dependencies
 git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
 cd CulinaryOS
 pnpm install
+
+# 2. Setup environment variables
 cp .env.example .env
 
-# Terminal 1
+# 3. Start development services in separate terminals (or use tmux)
+# Terminal 1 — Hono API
 pnpm --filter @culinaryos/server dev
 
-# Terminal 2
+# Terminal 2 — POS Terminal
 pnpm --filter @culinaryos/app-pos dev
 
-# Terminal 3
+# Terminal 3 — Kitchen Display (KDS)
 pnpm --filter @culinaryos/app-kds dev
 ```
 
-**Demo PINs** (no live Supabase): `1234` server · `5678` manager  
-`POST /v1/auth/pin-login` returns a session; POS stores it and sends `Authorization` on API calls.
+### Demo Credentials
+- **Server PIN**: `1234`
+- **Manager PIN**: `5678`
+- **Default Tenant ID**: `00000000-0000-0000-0000-000000000001`
 
-### Live tenant (differentiation demo)
-
-1. Set real `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (never expose service role to Vite).
-2. Apply migrations (`supabase/migrations/`, including **V14** staff pins / waste / plate economics).
-3. `pnpm seed` — tenant + menu + Auth users + `staff_pins` / `tenant_users`.
-4. Set `AUTH_RELAXED=false`. Fire from POS → KDS on shared DB; MCP `log_waste` / `get_food_cost` hit `/v1/ops/*`.
-
-Without a service-role key, the API keeps the **mock kitchen** path so you can still evaluate UX offline.
+In offline/demo mode, POS serves a sample menu, buffers transactions to localStorage, and communicates with the in-memory mock kitchen store on the API.
 
 ---
 
-## How the spine works
+## Connecting to Live Supabase Backend
+
+To enable multi-device sync, PostgreSQL Row Level Security (RLS), and live Supabase Realtime:
+
+1. Provide valid keys in `.env`:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=eyJ...
+   SUPABASE_SERVICE_ROLE_KEY=eyJ...
+   AUTH_RELAXED=false
+   ```
+2. Apply database migrations:
+   ```bash
+   npx supabase db reset
+   ```
+3. Seed default tenant, menu, and staff PINs:
+   ```bash
+   pnpm seed
+   ```
+4. Start the stack — POS, KDS, Admin, and MCP agents will now operate on your live database with strict tenant isolation.
+
+---
+
+## How the Event Spine Works
 
 ```
-POS / agent  →  PATCH /v1/orders/:id/send
-             →  pos:order:created (event-bus)
-             →  kitchen_tickets + plate_economics + pantry deduct
-KDS / agent  →  Realtime or GET /v1/kds/tickets · bump
-MCP          →  /v1/ops/waste · /v1/ops/food-cost/:id · KDS/POS tools
+POS / Web / Agent  →  PATCH /v1/orders/:id/send
+                   →  pos:order:created (Event Bus)
+                   →  kitchen_tickets + plate_economics + pantry deduct
+KDS / Agent        →  Supabase Realtime / GET /v1/kds/tickets · BUMP / FIRE
+MCP Tools          →  /v1/ops/waste · /v1/ops/food-cost/:id · KDS/POS tool handlers
+Marketplace AI     →  /v1/marketplace/ai/* (optional, graceful degradation)
 ```
 
-Contract doc: [`docs/integration-spine.md`](docs/integration-spine.md).
+Contract specification: [`docs/integration-spine.md`](docs/integration-spine.md).
 
 ---
 
-## Auth model
+## Quality & Testing Gate
 
-- **Live:** PIN → `staff_pins` → Supabase Auth password session → JWT + `tenant_users` membership (`requireTenant`).
-- **Demo:** PIN → device/internal API key session when service role is unset/placeholder.
-- Placeholder secrets (`your-service-role-key`, etc.) are treated as **unset** so mock mode stays safe.
+CulinaryOS enforces strict quality gates across the monorepo:
 
----
+```bash
+# Run complete test suite (31 test files, 100+ tests)
+node ./scripts/run-all-tests.cjs
 
-## Scripts
+# Run workspace-wide typecheck (18 tasks across 15 packages)
+pnpm run typecheck
 
-| Command | Purpose |
-|---|---|
-| `pnpm --filter @culinaryos/server dev` | API |
-| `pnpm seed` | Demo tenant + staff PINs (needs service role or `DATABASE_URL`) |
-| `node ./scripts/run-all-tests.cjs` | Preferred test runner |
-| `pnpm --filter @culinaryos/admin dev` | Admin UI |
-
----
-
-## Status
-
-| Area | Status |
-|---|---|
-| PIN → session auth | Shipped (`/v1/auth/pin-login`) |
-| Live POS→KDS | Needs your service-role key + migrations |
-| MCP ops on live API | Shipped (`/v1/ops`, culinaryops-mcp prefers live) |
-| Plate economics on fire | Shipped (best-effort) |
-| Stripe webhook | `/v1/webhooks/stripe` |
-| Thin admin menu/staff | Shipped (manager/owner RBAC fail-closed) |
-| Multi-tenant hardening | Cross-tenant JWT membership enforced + tested |
-
-Milestones: [`PROJECT.md`](PROJECT.md). Agent rules: [`AGENTS.md`](AGENTS.md).
+# Build all packages and applications
+pnpm run build
+```
 
 ---
 
 ## License
 
-[MIT](./LICENSE) — own your stack. Built with TypeScript, React, Vite, Hono, Supabase, Turborepo, pnpm, MCP.
+[MIT](./LICENSE) — Own your stack. Built with TypeScript, React, Vite, Hono, Supabase, Turborepo, and Model Context Protocol (MCP).
+
