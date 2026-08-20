@@ -3,7 +3,7 @@
 **The open operating system for restaurants** — humans on POS/KDS, agents on MCP, your Postgres. MIT licensed. AI never required for service.
 
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 29/29 Passing](https://img.shields.io/badge/Tests-29%2F29%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Tests: 31/31 Passing](https://img.shields.io/badge/Tests-31%2F31%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
 [![Typecheck: 18/18 Passing](https://img.shields.io/badge/Typecheck-18%2F18%20Passing-blue.svg)](./turbo.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
