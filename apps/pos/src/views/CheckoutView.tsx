@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue } from '@culinaryos/shared';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 
-const METHODS = ['card', 'cash', 'comp'] as const;
+const METHODS = ['card', 'tap', 'scan', 'cash', 'comp'] as const;
 
 export function CheckoutView() {
   const { activeOrderId, setActiveOrder, setView } = usePOSStore();
@@ -335,15 +335,81 @@ export function CheckoutView() {
           {/* Tender Type Selection */}
           <div className="space-y-2">
             <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Tender Type</span>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-5 gap-1.5">
               {METHODS.map((m) => (
                 <button key={m} onClick={() => setMethod(m)}
                   className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
-                    method === m ? 'bg-[#0f172a] border-[#0f172a] text-white' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
-                  }`}>{m}</button>
+                    method === m ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-xs' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
+                  }`}>
+                  {m === 'tap' ? '📱 TAP' : m === 'scan' ? '📷 SCAN' : m}
+                </button>
               ))}
             </div>
           </div>
+
+          {/* Tap to Pay NFC Card / Phone Flow */}
+          {method === 'tap' && (
+            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-4 rounded-xl border border-[#e5e7eb] text-center shadow-xs">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl animate-pulse">
+                📶
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-[#1f2937] uppercase tracking-wider">Contactless / Tap to Pay</h4>
+                <p className="text-[10px] text-[#6b7280] mt-0.5">Hold Apple Pay, Google Pay, or contactless EMV card near terminal reader.</p>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                NFC Sensor Active & Listening
+              </div>
+            </div>
+          )}
+
+          {/* Scan to Pay QR Code Flow */}
+          {method === 'scan' && (
+            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-4 rounded-xl border border-[#e5e7eb] text-center shadow-xs">
+              <div className="bg-white p-3 border border-[#e5e7eb] rounded-xl inline-block shadow-inner">
+                {/* Visual QR Code SVG Representation */}
+                <svg className="w-28 h-28 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="100" height="100" fill="white"/>
+                  {/* Top-left locator */}
+                  <rect x="10" y="10" width="24" height="24" fill="#0f172a"/>
+                  <rect x="14" y="14" width="16" height="16" fill="white"/>
+                  <rect x="18" y="18" width="8" height="8" fill="#0f172a"/>
+                  {/* Top-right locator */}
+                  <rect x="66" y="10" width="24" height="24" fill="#0f172a"/>
+                  <rect x="70" y="14" width="16" height="16" fill="white"/>
+                  <rect x="74" y="18" width="8" height="8" fill="#0f172a"/>
+                  {/* Bottom-left locator */}
+                  <rect x="10" y="66" width="24" height="24" fill="#0f172a"/>
+                  <rect x="14" y="70" width="16" height="16" fill="white"/>
+                  <rect x="18" y="74" width="8" height="8" fill="#0f172a"/>
+                  {/* Data modules */}
+                  <rect x="42" y="12" width="6" height="6" fill="#0f172a"/>
+                  <rect x="52" y="18" width="6" height="6" fill="#0f172a"/>
+                  <rect x="42" y="28" width="6" height="6" fill="#0f172a"/>
+                  <rect x="12" y="42" width="6" height="6" fill="#0f172a"/>
+                  <rect x="22" y="48" width="6" height="6" fill="#0f172a"/>
+                  <rect x="38" y="42" width="12" height="12" fill="#0f172a"/>
+                  <rect x="56" y="42" width="6" height="6" fill="#0f172a"/>
+                  <rect x="68" y="48" width="6" height="6" fill="#0f172a"/>
+                  <rect x="82" y="42" width="6" height="6" fill="#0f172a"/>
+                  <rect x="42" y="64" width="6" height="6" fill="#0f172a"/>
+                  <rect x="54" y="70" width="10" height="6" fill="#0f172a"/>
+                  <rect x="72" y="68" width="14" height="6" fill="#0f172a"/>
+                  <rect x="42" y="82" width="8" height="8" fill="#0f172a"/>
+                  <rect x="60" y="82" width="6" height="6" fill="#0f172a"/>
+                  <rect x="76" y="80" width="10" height="10" fill="#0f172a"/>
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-[#1f2937] uppercase tracking-wider">Scan to Pay QR</h4>
+                <p className="text-[10px] text-[#6b7280] mt-0.5">Guest scans QR code using phone camera, Venmo, PayPal, or Cash App.</p>
+              </div>
+              <p className="text-[9px] font-mono text-[#0f172a] bg-[#f3f4f6] py-1 px-2 rounded">
+                pay.culinaryos.com/o/{order.id.slice(-6)}
+              </p>
+            </div>
+          )}
 
           {/* Preset Tips Selection */}
           <div className="space-y-2">
@@ -410,7 +476,13 @@ export function CheckoutView() {
         {/* Charge and Submit */}
         <button onClick={startPaymentFlow} disabled={processing}
           className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-colors disabled:opacity-50 active:scale-98 mt-6 shadow-sm">
-          {processing ? 'Authorizing...' : `Finalize Charge $${(total/100).toFixed(2)}`}
+          {processing
+            ? 'Authorizing...'
+            : method === 'tap'
+            ? `Tap Terminal — $${(total/100).toFixed(2)}`
+            : method === 'scan'
+            ? `Confirm QR Paid — $${(total/100).toFixed(2)}`
+            : `Finalize Charge $${(total/100).toFixed(2)}`}
         </button>
       </div>
 
