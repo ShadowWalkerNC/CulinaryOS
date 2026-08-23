@@ -75,6 +75,7 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 | M3 | UI Design Tokens & Admin Portal | Configure Tailwind in admin, mount CulinaryHeader on all pages, standardize tokens | none | COMPLETE |
 | M4 | MCP Servers, Licensing & Build | Unify MCP tool suite with ratio engine, standardize MIT licenses, clean build pipelines | M1, M2 | COMPLETE |
 | M5 | Final Milestone: E2E Pass & Hardening | Phase 1: 100% Pass of Tiers 1-4 E2E tests. Phase 2: Adversarial coverage hardening (Tier 5) | E2E, M1, M2, M3, M4 | COMPLETE |
+| M6 | Production Readiness & Deployment | Contactless Tap/Scan to pay, ErrorBoundary recovery, Docker & Vercel deployment guides, pnpm doctor preflight | M5 | COMPLETE |
 
 ---
 

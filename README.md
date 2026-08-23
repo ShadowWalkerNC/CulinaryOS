@@ -182,7 +182,12 @@ pnpm run typecheck
 
 # Build all packages and applications
 pnpm run build
+
+# Run production readiness preflight doctor
+pnpm doctor
 ```
+
+For full on-premise Docker Compose and cloud hosting steps, see the [Production Deployment Guide](docs/DEPLOYMENT.md).
 
 ---
 
