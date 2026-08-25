@@ -7,3 +7,4 @@ export * from './mappers.js';
 export * from './stations.js';
 export * from './api-client.js';
 export * from './secrets.js';
+export * from './dietary.js';
