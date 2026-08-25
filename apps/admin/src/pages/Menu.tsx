@@ -1,5 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CulinaryCard, CulinaryButton, CulinaryBadge } from '@culinaryos/ui';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Badge,
+  Input,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Search,
+  RefreshCw,
+  Flame,
+  CheckCircle2,
+  AlertCircle,
+} from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
 const API = getApiBase();
@@ -84,36 +104,44 @@ export function MenuPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-[#0b1c30] uppercase tracking-wider">
+          <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
             Menu Catalog & 86 Editor
           </h1>
-          <p className="text-xs text-[#6b7280] mt-1 font-medium">
+          <p className="text-xs text-muted-foreground mt-1 font-medium">
             Manage station routing, catalog pricing, and live 86 availability across POS and Web ordering.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <CulinaryBadge variant="success">{availableCount} Available</CulinaryBadge>
-          {eightySixCount > 0 && <CulinaryBadge variant="danger">{eightySixCount} 86'd</CulinaryBadge>}
-          <CulinaryButton variant="outline" size="sm" onClick={() => void load()}>
-            <span className="material-symbols-outlined text-[14px]">refresh</span>
+          <Badge variant="success" className="px-2.5 py-1">
+            {availableCount} Available
+          </Badge>
+          {eightySixCount > 0 && (
+            <Badge variant="destructive" className="px-2.5 py-1">
+              {eightySixCount} 86'd
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Refresh
-          </CulinaryButton>
+          </Button>
         </div>
       </div>
 
       {/* Feedback Toast */}
       {msg && (
         <div
-          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold animate-fadeIn ${
             msg.type === 'success'
-              ? 'bg-[#22c55e10] border-[#22c55e30] text-[#16a34a]'
-              : 'bg-red-50 border-red-200 text-red-600'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-destructive/10 border-destructive/20 text-destructive'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">
-              {msg.type === 'success' ? 'check_circle' : 'error'}
-            </span>
+            {msg.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-destructive" />
+            )}
             <span>{msg.text}</span>
           </div>
           <button
@@ -126,17 +154,19 @@ export function MenuPage() {
       )}
 
       {/* Main Menu Catalog Card */}
-      <CulinaryCard
-        title="Menu Items Catalog"
-        subtitle={`Showing ${filteredItems.length} of ${items.length} items`}
-        headerAction={
+      <Card className="p-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-4 mb-4">
+          <div>
+            <CardTitle>Menu Items Catalog</CardTitle>
+            <CardDescription>Showing {filteredItems.length} of {items.length} items</CardDescription>
+          </div>
           <div className="flex items-center gap-3">
             {/* Station Filter */}
             <select
               value={selectedStation}
               onChange={(e) => setSelectedStation(e.target.value)}
               aria-label="Filter by station"
-              className="text-xs px-2.5 py-1.5 rounded-lg border border-[#e5e7eb] bg-white text-[#1f2937] font-semibold uppercase tracking-wider focus:outline-none focus:border-[#0f172a]"
+              className="flex h-9 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground font-bold uppercase tracking-wider shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               {stations.map((st) => (
                 <option key={st} value={st}>
@@ -147,97 +177,93 @@ export function MenuPage() {
 
             {/* Search input */}
             <div className="relative">
-              <input
+              <Input
                 type="text"
                 placeholder="Search items..."
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
-                className="text-xs pl-8 pr-3 py-1.5 rounded-lg border border-[#e5e7eb] bg-white text-[#1f2937] focus:outline-none focus:border-[#0f172a] w-48 transition-all"
+                className="pl-8 w-48 font-bold"
               />
-              <span className="material-symbols-outlined text-[16px] text-[#9ca3af] absolute left-2 top-2">
-                search
-              </span>
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
             </div>
           </div>
-        }
-      >
+        </div>
+
         {loading ? (
-          <div className="py-12 text-center text-xs text-[#6b7280] font-medium flex flex-col items-center justify-center gap-2">
-            <span className="material-symbols-outlined animate-spin text-[24px] text-[#0f172a]">progress_activity</span>
+          <div className="py-12 text-center text-xs text-muted-foreground font-medium flex flex-col items-center justify-center gap-2">
+            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
             <span>Loading menu items from database…</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
-                  <th className="pb-3 px-3">Item Details</th>
-                  <th className="pb-3 px-3">Price</th>
-                  <th className="pb-3 px-3">Station</th>
-                  <th className="pb-3 px-3">Status</th>
-                  <th className="pb-3 px-3 text-right">Quick Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f3f4f6] text-xs">
-                {filteredItems.map((item) => {
-                  const isAvailable = item.status === 'available';
-                  return (
-                    <tr key={item.id} className="hover:bg-[#f8f9fa] transition-colors">
-                      <td className="py-3.5 px-3">
-                        <div className="font-bold text-[#0b1c30] text-sm">{item.name}</div>
-                        {item.description && (
-                          <div className="text-[11px] text-[#6b7280] mt-0.5 max-w-md line-clamp-2">
-                            {item.description}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-3 font-mono font-bold text-[#0f172a]">
-                        {dollars(item.price)}
-                      </td>
-                      <td className="py-3.5 px-3">
-                        <CulinaryBadge variant="brand">
-                          {item.station ? item.station.toUpperCase() : 'EXPO'}
-                        </CulinaryBadge>
-                      </td>
-                      <td className="py-3.5 px-3">
-                        <CulinaryBadge variant={isAvailable ? 'success' : 'danger'}>
-                          {isAvailable ? 'AVAILABLE' : "86'D"}
-                        </CulinaryBadge>
-                      </td>
-                      <td className="py-3.5 px-3 text-right">
-                        <CulinaryButton
-                          type="button"
-                          variant={isAvailable ? 'danger' : 'primary'}
-                          size="sm"
-                          onClick={() => void toggleStatus(item)}
-                        >
-                          {isAvailable ? "86 Item" : 'Make Available'}
-                        </CulinaryButton>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {!filteredItems.length && (
-                  <tr>
-                    <td colSpan={5} className="py-12 text-center text-xs text-[#6b7280]">
-                      {items.length === 0 ? (
-                        <div>
-                          <p className="font-semibold text-[#1f2937] mb-1">No menu items found</p>
-                          <p>
-                            Seed demo menu items with <code className="font-mono bg-[#f3f4f6] px-1.5 py-0.5 rounded text-[#0f172a]">pnpm seed</code>.
-                          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item Details</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Station</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Quick Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => {
+                const isAvailable = item.status === 'available';
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="font-bold text-foreground text-sm">{item.name}</div>
+                      {item.description && (
+                        <div className="text-[11px] text-muted-foreground mt-0.5 max-w-md line-clamp-2">
+                          {item.description}
                         </div>
-                      ) : (
-                        <p>No menu items matching your filter query.</p>
                       )}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                    <TableCell className="font-mono font-bold text-foreground">
+                      {dollars(item.price)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="brand">
+                        {item.station ? item.station.toUpperCase() : 'EXPO'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={isAvailable ? 'success' : 'destructive'}>
+                        {isAvailable ? 'AVAILABLE' : "86'D"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant={isAvailable ? 'destructive' : 'brand'}
+                        size="sm"
+                        onClick={() => void toggleStatus(item)}
+                      >
+                        {isAvailable ? "86 Item" : 'Make Available'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {!filteredItems.length && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-12 text-center text-xs text-muted-foreground">
+                    {items.length === 0 ? (
+                      <div>
+                        <p className="font-semibold text-foreground mb-1">No menu items found</p>
+                        <p>
+                          Seed demo menu items with <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">pnpm seed</code>.
+                        </p>
+                      </div>
+                    ) : (
+                      <p>No menu items matching your filter query.</p>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         )}
-      </CulinaryCard>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /* ==========================================================
    CulinaryOS — Unified Design System (CulinaryOS Core / Stitch)
-   Corporate Modern: precise borders, minimal shadows, 4px grid.
+   shadcn/ui Design Tokens & Corporate Modern Theme
    Brand: #0f172a (Deep Navy) | Surface: #f8f9fa
    ========================================================== */
 
@@ -25,7 +25,44 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* — Core Surfaces — */
+  /* — shadcn/ui Base HSL Variables — */
+  --background: 210 20% 98%;
+  --foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 142.1 76.2% 36.3%;
+  --success-foreground: 355.7 100% 97.3%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 48 96% 89%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+
+  --radius: 0.5rem;
+
+  /* — Core CulinaryOS Surfaces (Hex / CSS) — */
   --cos-bg:            #f8f9fa;
   --cos-surface:       #ffffff;
   --cos-surface-2:     #f1f3f5;
@@ -61,7 +98,7 @@
   --cos-shadow-md:     0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
   --cos-shadow-lg:     0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
 
-  /* — Radius (architectural / Stitch: 4px base, 8px cards) — */
+  /* — Radius — */
   --cos-radius-sm:     4px;
   --cos-radius-md:     6px;
   --cos-radius-lg:     8px;
@@ -71,6 +108,36 @@
   /* — Typography — */
   --cos-font-sans:     'Inter', system-ui, -apple-system, sans-serif;
   --cos-font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
 }
 
 /* — Base — */
@@ -213,7 +280,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* — Animations — */
 @keyframes fadeIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
-@keyframes pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.animate-fadeIn  { animation: fadeIn  0.2s ease both; }
-.animate-slideIn { animation: slideIn 0.2s ease both; }
-.animate-pulse   { animation: pulse   2s  ease-in-out infinite; }
+@keyframes pulseGlow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
+.animate-fadeIn    { animation: fadeIn    0.2s ease both; }
+.animate-slideIn   { animation: slideIn   0.2s ease both; }
+.animate-pulseGlow { animation: pulseGlow 2s   ease-in-out infinite; }

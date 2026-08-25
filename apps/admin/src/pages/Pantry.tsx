@@ -1,5 +1,24 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { CulinaryCard, CulinaryButton, CulinaryBadge } from '@culinaryos/ui';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Badge,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Package,
+  RefreshCw,
+  ShoppingBag,
+  CheckCircle2,
+  AlertCircle,
+} from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
 const API = getApiBase();
@@ -144,48 +163,55 @@ export function PantryPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-[#0b1c30] uppercase tracking-wider">
+          <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
             Pantry & Inventory Management
           </h1>
-          <p className="text-xs text-[#6b7280] mt-1 font-medium">
+          <p className="text-xs text-muted-foreground mt-1 font-medium">
             Monitor real-time ingredient levels, replenishment thresholds, and automated purchase orders.
           </p>
         </div>
         <div className="flex items-center gap-2">
           {alerts.length > 0 ? (
-            <CulinaryBadge variant="warning">{alerts.length} Restock Alerts</CulinaryBadge>
+            <Badge variant="warning" pulse className="px-2.5 py-1">
+              {alerts.length} Restock Alerts
+            </Badge>
           ) : (
-            <CulinaryBadge variant="success">All Stock Levels OK</CulinaryBadge>
+            <Badge variant="success" className="px-2.5 py-1">
+              All Stock Levels OK
+            </Badge>
           )}
-          <CulinaryButton
-            variant="primary"
+          <Button
+            variant="brand"
             size="sm"
             onClick={createAutoPO}
             disabled={creating || alerts.length === 0}
+            className="uppercase tracking-wider"
           >
-            <span className="material-symbols-outlined text-[14px]">add_shopping_cart</span>
+            <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
             {creating ? 'Generating…' : 'Auto-Generate PO'}
-          </CulinaryButton>
-          <CulinaryButton variant="outline" size="sm" onClick={() => void fetchAll()}>
-            <span className="material-symbols-outlined text-[14px]">refresh</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => void fetchAll()}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Refresh
-          </CulinaryButton>
+          </Button>
         </div>
       </div>
 
-      {/* Feedback Toast */}
+      {/* Feedback Alert Toast */}
       {msg && (
         <div
-          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold animate-fadeIn ${
             msg.type === 'success'
-              ? 'bg-[#22c55e10] border-[#22c55e30] text-[#16a34a]'
-              : 'bg-red-50 border-red-200 text-red-600'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-destructive/10 border-destructive/20 text-destructive'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">
-              {msg.type === 'success' ? 'check_circle' : 'error'}
-            </span>
+            {msg.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-destructive" />
+            )}
             <span>{msg.text}</span>
           </div>
           <button
@@ -198,110 +224,99 @@ export function PantryPage() {
       )}
 
       {/* Section Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#e5e7eb] pb-2">
+      <div className="flex items-center gap-2 border-b border-border pb-2">
         <button
           onClick={() => setTab('inventory')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
             tab === 'inventory'
-              ? 'bg-[#0f172a] text-white shadow-xs'
-              : 'bg-white text-[#6b7280] hover:text-[#0b1c30] border border-[#e5e7eb]'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'bg-card text-muted-foreground hover:text-foreground border border-border'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">inventory</span>
+          <Package className="w-4 h-4" />
           <span>Inventory Roster ({items.length})</span>
         </button>
         <button
           onClick={() => setTab('orders')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
             tab === 'orders'
-              ? 'bg-[#0f172a] text-white shadow-xs'
-              : 'bg-white text-[#6b7280] hover:text-[#0b1c30] border border-[#e5e7eb]'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'bg-card text-muted-foreground hover:text-foreground border border-border'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+          <ShoppingBag className="w-4 h-4" />
           <span>Purchase Orders ({pos.length})</span>
         </button>
       </div>
 
       {/* Main Content Area */}
       {loading ? (
-        <CulinaryCard>
-          <div className="py-12 text-center text-xs text-[#6b7280] font-medium flex flex-col items-center justify-center gap-2">
-            <span className="material-symbols-outlined animate-spin text-[24px] text-[#0f172a]">progress_activity</span>
-            <span>Loading pantry catalog…</span>
-          </div>
-        </CulinaryCard>
+        <Card className="p-12 text-center text-xs text-muted-foreground font-medium flex flex-col items-center justify-center gap-2">
+          <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+          <span>Loading pantry catalog…</span>
+        </Card>
       ) : tab === 'inventory' ? (
-        <CulinaryCard
-          title="Ingredient Stock Levels"
-          subtitle={`Tracking ${items.length} pantry items with live deduction hooks`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
-                  <th className="pb-3 px-3">Ingredient</th>
-                  <th className="pb-3 px-3">Current Qty</th>
-                  <th className="pb-3 px-3">Reorder Point</th>
-                  <th className="pb-3 px-3">Reorder Qty</th>
-                  <th className="pb-3 px-3">Unit Cost</th>
-                  <th className="pb-3 px-3">Supplier</th>
-                  <th className="pb-3 px-3 text-right">Stock Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f3f4f6] text-xs">
-                {items.map((item) => {
-                  const isOk = item.stock_status === 'ok';
-                  const isLow = item.stock_status === 'low_stock';
-                  return (
-                    <tr key={item.id} className="hover:bg-[#f8f9fa] transition-colors">
-                      <td className="py-3.5 px-3 font-bold text-[#0b1c30]">
-                        {item.name}
-                      </td>
-                      <td className="py-3.5 px-3 font-mono font-bold text-[#0f172a]">
-                        {item.current_qty} {item.unit}
-                      </td>
-                      <td className="py-3.5 px-3 text-[#6b7280] font-mono">
-                        {item.reorder_at} {item.unit}
-                      </td>
-                      <td className="py-3.5 px-3 text-[#6b7280] font-mono">
-                        {item.reorder_qty} {item.unit}
-                      </td>
-                      <td className="py-3.5 px-3 font-mono text-[#1f2937]">
-                        {cents(item.cost_per_unit)}
-                      </td>
-                      <td className="py-3.5 px-3 text-[#6b7280]">
-                        {item.supplier ?? '—'}
-                      </td>
-                      <td className="py-3.5 px-3 text-right">
-                        <CulinaryBadge
-                          variant={isOk ? 'success' : isLow ? 'warning' : 'danger'}
-                        >
-                          {item.stock_status.replace('_', ' ')}
-                        </CulinaryBadge>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {!items.length && (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-xs text-[#6b7280]">
-                      No pantry inventory records found. Run <code className="font-mono bg-[#f3f4f6] px-1.5 py-0.5 rounded text-[#0f172a]">pnpm seed</code>.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CulinaryCard>
+        <Card className="p-5">
+          <CardHeader className="p-0 pb-4">
+            <CardTitle>Ingredient Stock Levels</CardTitle>
+            <CardDescription>
+              Tracking {items.length} pantry items with live deduction hooks
+            </CardDescription>
+          </CardHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ingredient</TableHead>
+                <TableHead>Current Qty</TableHead>
+                <TableHead>Reorder Point</TableHead>
+                <TableHead>Reorder Qty</TableHead>
+                <TableHead>Unit Cost</TableHead>
+                <TableHead>Supplier</TableHead>
+                <TableHead className="text-right">Stock Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => {
+                const isOk = item.stock_status === 'ok';
+                const isLow = item.stock_status === 'low_stock';
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-bold text-foreground">{item.name}</TableCell>
+                    <TableCell className="font-mono font-bold text-foreground">
+                      {item.current_qty} {item.unit}
+                    </TableCell>
+                    <TableCell className="font-mono text-muted-foreground">
+                      {item.reorder_at} {item.unit}
+                    </TableCell>
+                    <TableCell className="font-mono text-muted-foreground">
+                      {item.reorder_qty} {item.unit}
+                    </TableCell>
+                    <TableCell className="font-mono text-foreground">{cents(item.cost_per_unit)}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.supplier ?? '—'}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={isOk ? 'success' : isLow ? 'warning' : 'destructive'}>
+                        {item.stock_status.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {!items.length && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-xs text-muted-foreground">
+                    No pantry inventory records found. Run <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">pnpm seed</code>.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       ) : (
         <div className="space-y-4">
           {pos.length === 0 ? (
-            <CulinaryCard>
-              <div className="py-12 text-center text-xs text-[#6b7280] font-medium">
-                No purchase orders generated yet. Use “Auto-Generate PO” to automatically restock low inventory items.
-              </div>
-            </CulinaryCard>
+            <Card className="p-12 text-center text-xs text-muted-foreground font-medium">
+              No purchase orders generated yet. Use “Auto-Generate PO” to automatically restock low inventory items.
+            </Card>
           ) : (
             pos.map((po) => {
               const statusVariant =
@@ -312,82 +327,79 @@ export function PantryPage() {
                   : po.status === 'approved'
                   ? 'brand'
                   : po.status === 'cancelled'
-                  ? 'danger'
-                  : 'neutral';
+                  ? 'destructive'
+                  : 'secondary';
 
               return (
-                <CulinaryCard
-                  key={po.id}
-                  title={po.po_number}
-                  subtitle={`${new Date(po.created_at).toLocaleDateString()} · ${po.po_line_items.length} line item(s) · Total: ${cents(po.total_cost)} ${po.supplier ? `· Supplier: ${po.supplier}` : ''}`}
-                  headerAction={
+                <Card key={po.id} className="p-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-3">
+                    <div>
+                      <h3 className="font-black text-sm uppercase text-foreground">{po.po_number}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(po.created_at).toLocaleDateString()} · {po.po_line_items.length} line item(s) · Total: {cents(po.total_cost)} {po.supplier ? `· Supplier: ${po.supplier}` : ''}
+                      </p>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <CulinaryBadge variant={statusVariant}>{po.status}</CulinaryBadge>
+                      <Badge variant={statusVariant as any}>{po.status}</Badge>
                       {po.status === 'draft' && (
-                        <CulinaryButton
-                          variant="primary"
+                        <Button
+                          variant="brand"
                           size="sm"
                           onClick={() => void approvePO(po.id)}
                         >
                           Approve
-                        </CulinaryButton>
+                        </Button>
                       )}
                       {po.status === 'approved' && (
-                        <CulinaryButton
+                        <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => void sendPO(po.id)}
                         >
                           Mark Sent
-                        </CulinaryButton>
+                        </Button>
                       )}
                       {['draft', 'approved'].includes(po.status) && (
-                        <CulinaryButton
-                          variant="danger"
+                        <Button
+                          variant="destructive"
                           size="sm"
                           onClick={() => void cancelPO(po.id)}
                         >
                           Cancel
-                        </CulinaryButton>
+                        </Button>
                       )}
                     </div>
-                  }
-                >
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
-                          <th className="pb-2 px-2">Ingredient</th>
-                          <th className="pb-2 px-2">Ordered Qty</th>
-                          <th className="pb-2 px-2">Received Qty</th>
-                          <th className="pb-2 px-2">Unit Cost</th>
-                          <th className="pb-2 px-2 text-right">Line Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#f3f4f6] text-xs">
-                        {po.po_line_items.map((line) => (
-                          <tr key={line.id}>
-                            <td className="py-2.5 px-2 font-medium text-[#1f2937]">
-                              {line.ingredient_name}
-                            </td>
-                            <td className="py-2.5 px-2 font-mono">
-                              {line.ordered_qty} {line.unit}
-                            </td>
-                            <td className="py-2.5 px-2 font-mono text-[#6b7280]">
-                              {line.received_qty > 0 ? `${line.received_qty} ${line.unit}` : '—'}
-                            </td>
-                            <td className="py-2.5 px-2 font-mono text-[#6b7280]">
-                              {cents(line.unit_cost)}
-                            </td>
-                            <td className="py-2.5 px-2 font-mono font-bold text-[#0f172a] text-right">
-                              {cents(line.ordered_qty * line.unit_cost)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
-                </CulinaryCard>
+
+                  <div className="overflow-x-auto mt-3">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Ingredient</TableHead>
+                          <TableHead>Ordered Qty</TableHead>
+                          <TableHead>Received Qty</TableHead>
+                          <TableHead>Unit Cost</TableHead>
+                          <TableHead className="text-right">Line Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {po.po_line_items.map((line) => (
+                          <TableRow key={line.id}>
+                            <TableCell className="font-medium text-foreground">{line.ingredient_name}</TableCell>
+                            <TableCell className="font-mono">{line.ordered_qty} {line.unit}</TableCell>
+                            <TableCell className="font-mono text-muted-foreground">
+                              {line.received_qty > 0 ? `${line.received_qty} ${line.unit}` : '—'}
+                            </TableCell>
+                            <TableCell className="font-mono text-muted-foreground">{cents(line.unit_cost)}</TableCell>
+                            <TableCell className="font-mono font-bold text-foreground text-right">
+                              {cents(line.ordered_qty * line.unit_cost)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
               );
             })
           )}

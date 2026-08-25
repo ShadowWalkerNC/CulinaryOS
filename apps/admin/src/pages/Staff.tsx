@@ -1,5 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CulinaryCard, CulinaryButton, CulinaryBadge } from '@culinaryos/ui';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Badge,
+  Input,
+  Label,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Users,
+  RefreshCw,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+} from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
 const API = getApiBase();
@@ -81,36 +102,42 @@ export function StaffPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-[#0b1c30] uppercase tracking-wider">
+          <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
             Staff & Access Control
           </h1>
-          <p className="text-xs text-[#6b7280] mt-1 font-medium">
+          <p className="text-xs text-muted-foreground mt-1 font-medium">
             Manage restaurant personnel, role authorizations, and terminal PIN credentials (<code>staff_pins</code>).
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <CulinaryBadge variant="brand">{staff.length} Total Staff</CulinaryBadge>
-          <CulinaryBadge variant="success">{pinConfiguredCount} PIN Active</CulinaryBadge>
-          <CulinaryButton variant="outline" size="sm" onClick={() => void load()}>
-            <span className="material-symbols-outlined text-[14px]">refresh</span>
+          <Badge variant="brand" className="px-2.5 py-1">
+            {staff.length} Total Staff
+          </Badge>
+          <Badge variant="success" className="px-2.5 py-1">
+            {pinConfiguredCount} PIN Active
+          </Badge>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Refresh
-          </CulinaryButton>
+          </Button>
         </div>
       </div>
 
       {/* Feedback Toast */}
       {msg && (
         <div
-          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold animate-fadeIn ${
             msg.type === 'success'
-              ? 'bg-[#22c55e10] border-[#22c55e30] text-[#16a34a]'
-              : 'bg-red-50 border-red-200 text-red-600'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-destructive/10 border-destructive/20 text-destructive'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">
-              {msg.type === 'success' ? 'check_circle' : 'error'}
-            </span>
+            {msg.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-destructive" />
+            )}
             <span>{msg.text}</span>
           </div>
           <button
@@ -126,116 +153,110 @@ export function StaffPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column: Staff Directory (2 cols) */}
         <div className="lg:col-span-2">
-          <CulinaryCard
-            title="Team Members Directory"
-            subtitle="Personnel with POS and KDS terminal authorizations"
-            headerAction={
-              <span className="text-[11px] font-bold text-[#6b7280]">
+          <Card className="p-5">
+            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+              <div>
+                <CardTitle>Team Members Directory</CardTitle>
+                <CardDescription>Personnel with POS and KDS terminal authorizations</CardDescription>
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground">
                 {activeStaffCount} Active Accounts
               </span>
-            }
-          >
+            </div>
+
             {loading ? (
-              <div className="py-12 text-center text-xs text-[#6b7280] font-medium flex flex-col items-center justify-center gap-2">
-                <span className="material-symbols-outlined animate-spin text-[24px] text-[#0f172a]">progress_activity</span>
+              <div className="py-12 text-center text-xs text-muted-foreground font-medium flex flex-col items-center justify-center gap-2">
+                <RefreshCw className="w-6 h-6 animate-spin text-primary" />
                 <span>Loading staff records…</span>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#e5e7eb] text-[10px] font-black uppercase tracking-wider text-[#6b7280]">
-                      <th className="pb-3 px-3">Name & ID</th>
-                      <th className="pb-3 px-3">Role Level</th>
-                      <th className="pb-3 px-3">Terminal PIN</th>
-                      <th className="pb-3 px-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#f3f4f6] text-xs">
-                    {staff.map((s, i) => (
-                      <tr key={s.user_id ?? i} className="hover:bg-[#f8f9fa] transition-colors">
-                        <td className="py-3.5 px-3">
-                          <div className="font-bold text-[#0b1c30] text-sm">{s.display_name}</div>
-                          {s.user_id && (
-                            <div className="text-[10px] font-mono text-[#9ca3af] mt-0.5">
-                              {s.user_id}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <CulinaryBadge variant="brand">
-                            {s.role.toUpperCase()}
-                          </CulinaryBadge>
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <CulinaryBadge variant={s.has_pin !== false ? 'success' : 'warning'}>
-                            {s.has_pin !== false ? 'PIN ACTIVE' : 'NO PIN'}
-                          </CulinaryBadge>
-                        </td>
-                        <td className="py-3.5 px-3 text-right">
-                          <CulinaryBadge variant={s.active !== false ? 'neutral' : 'danger'}>
-                            {s.active !== false ? 'ACTIVE' : 'INACTIVE'}
-                          </CulinaryBadge>
-                        </td>
-                      </tr>
-                    ))}
-                    {!staff.length && (
-                      <tr>
-                        <td colSpan={4} className="py-12 text-center text-xs text-[#6b7280]">
-                          No staff found. Use the provision form to add team members.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name & ID</TableHead>
+                    <TableHead>Role Level</TableHead>
+                    <TableHead>Terminal PIN</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map((s, i) => (
+                    <TableRow key={s.user_id ?? i}>
+                      <TableCell>
+                        <div className="font-bold text-foreground text-sm">{s.display_name}</div>
+                        {s.user_id && (
+                          <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+                            {s.user_id}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="brand">{s.role.toUpperCase()}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={s.has_pin !== false ? 'success' : 'warning'}>
+                          {s.has_pin !== false ? 'PIN ACTIVE' : 'NO PIN'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant={s.active !== false ? 'secondary' : 'destructive'}>
+                          {s.active !== false ? 'ACTIVE' : 'INACTIVE'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!staff.length && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-12 text-center text-xs text-muted-foreground">
+                        No staff found. Use the provision form to add team members.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             )}
-          </CulinaryCard>
+          </Card>
         </div>
 
         {/* Right Column: Add Staff Form (1 col) */}
         <div>
-          <CulinaryCard
-            title="Add Staff Member"
-            subtitle="Provision email, role, and terminal PIN"
-          >
+          <Card className="p-5">
+            <CardHeader className="p-0 pb-4 border-b border-border mb-4">
+              <CardTitle>Add Staff Member</CardTitle>
+              <CardDescription>Provision email, role, and terminal PIN</CardDescription>
+            </CardHeader>
             <form onSubmit={onCreate} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-[#6b7280] mb-1">
-                  Email Address
-                </label>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
                   type="email"
                   placeholder="employee@restaurant.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#e5e7eb] focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] focus:outline-none transition-all bg-white"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-[#6b7280] mb-1">
-                  Display Name
-                </label>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="displayName">Display Name</Label>
+                <Input
+                  id="displayName"
                   type="text"
                   placeholder="e.g. Alex Server"
                   value={form.display_name}
                   onChange={(e) => setForm({ ...form, display_name: e.target.value })}
                   required
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#e5e7eb] focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] focus:outline-none transition-all bg-white"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-[#6b7280] mb-1">
-                  Assigned Role
-                </label>
+              <div className="space-y-1.5">
+                <Label htmlFor="role">Assigned Role</Label>
                 <select
+                  id="role"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#e5e7eb] focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] focus:outline-none transition-all bg-white font-medium capitalize"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground font-bold capitalize"
                 >
                   <option value="server">Server (POS Terminal)</option>
                   <option value="chef">Chef (Kitchen KDS)</option>
@@ -245,11 +266,10 @@ export function StaffPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-[#6b7280] mb-1">
-                  Terminal PIN (4–8 digits)
-                </label>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="pin">Terminal PIN (4–8 digits)</Label>
+                <Input
+                  id="pin"
                   type="password"
                   inputMode="numeric"
                   placeholder="••••"
@@ -257,22 +277,25 @@ export function StaffPage() {
                   value={form.pin}
                   onChange={(e) => setForm({ ...form, pin: e.target.value })}
                   required
-                  className="w-full text-xs font-mono px-3 py-2.5 rounded-xl border border-[#e5e7eb] focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] focus:outline-none transition-all bg-white"
+                  className="font-mono"
                 />
-                <p className="text-[10px] text-[#9ca3af] mt-1 font-medium">Used for quick POS/KDS lock screen authentication.</p>
+                <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+                  Used for quick POS/KDS lock screen authentication.
+                </p>
               </div>
 
-              <CulinaryButton
+              <Button
                 type="submit"
-                variant="primary"
-                size="md"
+                variant="brand"
+                size="touch"
                 className="w-full mt-2"
                 disabled={submitting}
               >
+                <Lock className="w-4 h-4 mr-2" />
                 {submitting ? 'Provisioning…' : 'Create Staff Member'}
-              </CulinaryButton>
+              </Button>
             </form>
-          </CulinaryCard>
+          </Card>
         </div>
       </div>
     </div>
