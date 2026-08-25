@@ -1,115 +1,85 @@
-# 📐 Track A — UI/UX Design Specs
+# 📐 Track A — UI/UX Design & Spatial Specifications
 
-This document defines the interface design tokens, core user flows, and wireframe specifications for the **CulinaryOS Android application** (RecipeOS).
+This document defines the interface design tokens, shadcn/ui component architecture, Three.js 3D spatial dining room specifications, and touch-screen accessibility rules across CulinaryOS applications.
 
 ---
 
-## 🎨 Styling Tokens & Jetpack Compose Theme
+## 🎨 Design Tokens & shadcn/ui Theme
 
-The application uses a dark-themed, premium interface designed for high-contrast legibility in intense kitchen lighting.
+The application uses an ergonomic, high-contrast theme built with **Tailwind CSS**, **Radix UI**, and canonical **shadcn/ui** HSL design tokens configured in [`packages/ui/components.json`](../packages/ui/components.json).
 
-### Color Palette
+### Color Palette (HSL Tokens)
 
-| Token | HSL / Hex Value | Role | Usage |
+| Token | Semantic Role | HSL Variable | Usage |
 | :--- | :--- | :--- | :--- |
-| `DarkBg` | `#121416` (Deep Charcoal) | Primary Background | App-wide screen container |
-| `SurfaceBg` | `#1C1F22` (Warm Gray-Black) | Secondary Surface | Cards, sheets, dialogs |
-| `Accent` | `#FF8A00` (Safety Orange) | Brand Accent | Active tabs, key CTAs, primary buttons |
-| `Success` | `#10B981` (Emerald) | Status Positive | In-stock, prep complete, verified |
-| `Warning` | `#F59E0B` (Amber) | Status Warning | Running low, pending sync, near par |
-| `Danger` | `#EF4444` (Crimson) | Status Critical | 86'd / out of stock, overdue task |
-| `TextMain` | `#F3F4F6` (Cool Gray 100) | Primary Text | Headings, main readable text |
-| `TextMuted` | `#9CA3AF` (Cool Gray 400) | Secondary Text | Labels, metadata, helper text |
-
-### Typography (Outfit Font Family)
-* **TitleLarge:** 32sp / LineHeight 40sp / Bold (For recipe names, section headings)
-* **BodyLarge:** 16sp / LineHeight 24sp / Regular (For instructions, recipe lists)
-* **DetailMuted:** 12sp / LineHeight 16sp / SemiBold (For ratios, weights, warnings)
-
-### Kitchen Accessibility Rules
-* **Minimum Touch Target:** 72 x 72 dp for all active elements to support damp or gloved fingers.
-* **Layout Padding:** Minimum 16dp spacing between interactive elements to prevent accidental clicks.
-* **Screen Lock Override:** Keep the screen active during active baking/prep flows automatically via `KeepScreenOn` window flag.
+| `Background` | App Canvas Background | `hsl(var(--background))` | Base viewport background |
+| `Card / Surface` | Elevated Content Surface | `hsl(var(--card))` | POS tiles, KDS cards, modal dialogs |
+| `Primary` | Primary Accent & Action | `hsl(var(--primary))` | Key CTAs, active buttons, selected tabs |
+| `Secondary` | Subtle Action / Surface | `hsl(var(--secondary))` | Secondary buttons, counter badges |
+| `Muted` | Low-emphasis Background | `hsl(var(--muted))` | Table headers, disabled states, borders |
+| `Destructive` | High-alert / Void / Danger | `hsl(var(--destructive))` | Void tickets, delete, 86 warnings |
+| `Success` | Positive Confirmation | `#10B981` (Emerald) | Available tables, bumped tickets, paid checks |
+| `Warning` | Urgent Attention Required | `#F59E0B` (Amber) | Occupied tables, aging tickets (5-10m) |
 
 ---
 
-## 📐 Core UI Flows & Screen Layouts
+## 🌐 Three.js 3D Spatial Dining Room Floor Plan
 
-### 1. The Ratio Blueprint Scaling Screen
-Bakers work in formulas (percentages relative to the flour weight). The Ratio Blueprint screen lets them toggle between absolute weights and percentage ratios seamlessly.
+The POS system integrates an interactive 3D WebGL spatial floor plan visualizer ([`FloorMap3D.tsx`](../packages/ui/src/components/FloorMap3D.tsx)):
 
-#### Wireframe Outline:
 ```
 +--------------------------------------------------------------+
-| [<- Back]              Cinnamon Sourdough        [Save] [•••]|
+| [2D Grid View]  [(•) 3D Spatial View]       [Reset Camera] 🎥|
 +--------------------------------------------------------------+
-| Total Weight Input: [ 1000g ]   Scale Factor: [ 1.00x ]      |
-| Quick Scaling Presets:  ( 0.5x ) ( 1.0x ) ( 2.0x ) ( 5.0x )  |
-+--------------------------------------------------------------+
-| [ Ratios (%) ]                                 (x) Abs (g)   |
 |                                                              |
-| FLOUR (Base 100%) .................................. 100.0%  |
-|   - Bread Flour (80%) .............................  800.0g  |
-|   - Whole Wheat (20%) .............................  200.0g  |
-| WATER ..............................................  78.0%  |
-|   - Temp Target: 76°F .............................  780.0g  |
-| LEAVEN (Sourdough Starter) .........................  20.0%  |
-|   - Active/Bubbling ...............................  200.0g  |
-| SALT ...............................................   2.2%  |
-|   - Fine Sea Salt .................................   22.0g  |
+|        [Table 1 (🟢 Avail)]             [Booth 4 (🟠 $84.50)]|
+|             (2 Covers)                       (4 Covers)      |
+|                                                              |
+|                     [VIP 10 (🟣 Reserved)]                   |
+|                           (6 Covers)                         |
+|                                                              |
+|        [Table 2 (🔴 Dirty)]             [Bar 1-4 (🟢 Avail)] |
+|             (2 Covers)                       (4 Stools)      |
+|                                                              |
 +--------------------------------------------------------------+
-| Yield Estimation: 2 Loaves @ 1000g each                      |
+| Table 4 Details: Occupied · Server: Maria · Active: $84.50  |
+| [Start Order]  [Transfer Table]  [Split Check]  [Print Check]|
 +--------------------------------------------------------------+
 ```
 
-#### UI Logic & Interaction:
-1. **Interactive Scale Slider:** Tapping a preset changes the total output weight immediately. Dragging the slider scales all ingredients dynamically in real-time.
-2. **Formula Mode Toggle:** Tapping the `[ Ratios (%) ]` pill reveals the percentage sliders. Tapping any percentage lets the user edit it. Adjusting a percentage automatically recalculates weights for the entire grid without altering the base flour scale logic.
-3. **Weight/Volume Units:** Easily switch between `g` (Grams), `oz` (Ounces), and `kg` (Kilograms). Unit scaling is performed inline.
+### 3D Lighting & Shading Specifications:
+1. **Dynamic Glowing Status Halos**:
+   - 🟢 **Available (`#10b981`)**: Steady soft green emissive ring.
+   - 🟠 **Occupied (`#f59e0b`)**: Amber pulsing animation with active check sum floating HUD.
+   - 🟣 **Reserved (`#6366f1`)**: Indigo emissive halo with reservation party notes.
+   - 🔴 **Dirty / Bus (`#f43f5e`)**: High-contrast red alert ring signaling floor staff.
+2. **Camera Orbit Navigation**:
+   - Left-click drag to orbit/rotate around the dining room.
+   - Mouse wheel or touch pinch to zoom in/out with boundary limits.
+   - Raycasted hover triggers real-time tooltip with table number, section, covers, and server.
 
 ---
 
-### 2. Prep List Consolidation Screen
-Allows chefs to select multiple recipes and consolidate ingredients into a unified prep checklist, preventing duplicate tasks.
+## 🍽️ FDA FASTER Act Top 9 Dietary & Allergen UI
 
-#### Wireframe Outline:
-```
-+--------------------------------------------------------------+
-| [<- Home]             Consolidated Prep List     [Export PDF]|
-+--------------------------------------------------------------+
-| Selected Recipes:                                            |
-|  [x] Cinnamon Sourdough (5x)   [x] Chocolate Babka (2x)      |
-+--------------------------------------------------------------+
-|  PREP STEPS                                                  |
-|                                                              |
-|  [ ] Autolyse Flour + Water (Sourdough) ....... (Est. 45m)  |
-|  [ ] Scale dry spices (Babka + Sourdough) ...... (Est. 10m)  |
-|  [ ] Prepare egg wash (Babka) .................. (Est.  5m)  |
-|                                                              |
-|  CONSOLIDATED INGREDIENTS TO WEIGH                           |
-|                                                              |
-|  [ ] Bread Flour (Sourdough + Babka) ...........  4,800.0g  |
-|  [ ] Water (Warm, 76°F) ........................  3,900.0g  |
-|  [ ] Fine Sea Salt .............................    118.0g  |
-+--------------------------------------------------------------+
-```
+Every menu item and order card features real-time allergen badges and cross-contact alerts:
+
+| Allergen | Visual Icon | Cross-Contact Risk Detection |
+|---|---|---|
+| **Milk / Dairy** | 🥛 | Shared griddles, steam wands, butter basting |
+| **Eggs** | 🥚 | Shared grill surfaces, unwashed whisks |
+| **Fish** | 🐟 | Shared deep fryer oil, cutting boards |
+| **Shellfish** | 🦐 | Shared fryers, seafood boil pots, grill tongs |
+| **Tree Nuts** | 🌰 | Food processors, salad prep wells, dessert pass |
+| **Peanuts** | 🥜 | Deep fryers, baking prep stations |
+| **Wheat / Gluten** | 🌾 | Shared deep fryers, bread toasters, pizza peel flour |
+| **Soybeans** | 🫘 | Woks, fryers, marinade containers |
+| **Sesame** | 🥯 | Bun toasters, garnish stations, tahini squeeze bottles |
 
 ---
 
-### 3. Pantry & Stock Level Indicators
-Provides a quick glance at pantry health. Out-of-stock items trigger warnings.
+## 📱 Kitchen & POS Touch Ergonomics
 
-```
-+--------------------------------------------------------------+
-| PANTRY STOCK                                   [Update Stock]|
-+--------------------------------------------------------------+
-| [!] 3 Items Below Par                                        |
-|                                                              |
-| * Unbleached Bread Flour: 12kg / Par 50kg   [ CRITICAL RED ] |
-| * Sourdough Starter: 2.5kg / Par 5.0kg     [ WARNING YEL  ] |
-| * Fine Sea Salt: 8.2kg / Par 10.0kg         [ WARNING YEL  ] |
-| * Unsalted Butter: 25.0kg / Par 20.0kg      [ OPTIMAL GRN  ] |
-+--------------------------------------------------------------+
-```
-* Tapping a item expands inline to show past usage and logs.
-* Direct action buttons allow one-tap stock overrides.
+- **Touch Target Minimums**: 48px standard touch targets; 64px for primary POS payment and KDS bump action buttons.
+- **Contrast Ratios**: Minimum 4.5:1 text-to-background contrast ratio compliant with WCAG AAA for dim dining room and bright kitchen environments.
+- **Haptic & Visual Feedback**: 150ms micro-scale transition (`active:scale-[0.98]`) on all button touches.

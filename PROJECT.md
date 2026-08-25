@@ -5,15 +5,15 @@ CulinaryOS is an AI-native, modular, forkable restaurant operating system ("the 
 
 ### Monorepo Workspaces & Package Boundaries
 - `apps/server`: Unified Hono API (POS orders, KDS queue, pantry inventory, ops/waste, plate economics, PIN auth, demo mock kitchen hub).
-- `apps/pos`: Fast touch-screen POS terminal (React + Vite + Tailwind + `@culinaryos/ui`).
+- `apps/pos`: Fast touch-screen POS terminal (React + Vite + Tailwind + shadcn/ui + Three.js 3D spatial floor map).
 - `apps/kds`: Real-time Kitchen Display System (React + Vite + Station Routing + Multi-Course Holding/Firing + Aging Timers).
 - `apps/admin`: Back-office management portal (React + Vite + Menu management, Staff PINs, Pantry stock, Waste analytics, Recipe viewing).
-- `apps/web`: Public online ordering storefront (React + Vite + Menu browsing, Cart, Checkout).
+- `apps/web`: Public online ordering storefront (React + Vite + Dietary filtering, Menu browsing, Cart, Checkout).
 - `packages/ratio-engine`: Pure, zero-dependency culinary mathematical engine (sub-recipe trees, portion scaling, baker's percentages, density unit conversions, food costing, variance analysis, waste summarization, shift prep planning).
 - `packages/db`: Supabase client and TypeScript database schema definitions matching migrations V1–V14.
 - `packages/event-bus`: Domain event broker, binary protocol, realtime bridge, and event handlers (`pos:order:created`, `pos:menu:item-sold`, `kds:ticket:bumped`, `kds:course:fired`).
-- `packages/shared`: Cross-cutting domain models, course engine, station routing matrix, offline transaction queue, and types.
-- `packages/ui`: Corporate Modern design tokens (`culinary-theme.css`) and reusable React primitives (`CulinaryHeader`, `CulinaryCard`, `CulinaryButton`, `CulinaryBadge`).
+- `packages/shared`: Cross-cutting domain models, FDA Top 9 dietary engine, course engine, station routing matrix, offline transaction queue, and types.
+- `packages/ui`: Canonical **shadcn/ui** design system (`components.json`, Radix UI primitives, Three.js 3D WebGL dining room visualizer).
 - `packages/auth`: JWT verification, PIN auth logic, role-based access control (`managerGate`).
 - `packages/config`: Shared environment variable validation and constants.
 - `mcp/`: MCP tool servers (`culinaryos-mcp`, `culinaryops-hub-live`, `recipe-server`, `inventory-server`, `kds-server`, `pos-server`, `post-pilot-server`, `prep-server`).
@@ -23,7 +23,7 @@ CulinaryOS is an AI-native, modular, forkable restaurant operating system ("the 
 
 ## Feature Inventory
 
-Every feature discovered in the Survey phase is mapped to an implementation milestone below:
+Every feature discovered in the Survey and Enhancement phases is mapped to an implementation milestone below:
 
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
@@ -62,6 +62,11 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 | 33 | Turborepo Pipeline & Script Polish | Cleans up recursive test script and ensures clean build & typecheck | M4 | turbo.json & package.json |
 | 34 | Comprehensive 4-Tier E2E Test Suite | Requirement-driven test suite covering all features, boundaries, combinations | E2E Track | ORIGINAL_REQUEST |
 | 35 | Adversarial Coverage Hardening | White-box stress testing and edge-case bug hunting | M5 (Phase 2) | Quality Assurance |
+| 36 | Multi-Tender Payment Methods | Stripe Elements, Contactless Tap to Pay (Apple/Google Pay), QR Scan, Cash change math | M6 | apps/pos checkout |
+| 37 | Canonical shadcn/ui Component Suite | Radix UI primitives, `components.json`, Button, Card, Badge, Dialog, Tabs, Table, Select | M7 | packages/ui |
+| 38 | Three.js 3D Dining Floor Map | Interactive WebGL 3D spatial floor map with real-time status glow halos & orbit navigation | M7 | packages/ui FloorMap3D |
+| 39 | FDA Top 9 Dietary & Allergen Engine | FDA FASTER Act Top 9 allergens, cross-contact matrix, safe substitution suggestions | M8 | packages/shared dietary.ts |
+| 40 | AI Operations Manager & Consultant | Executive Chef / GM operational auditor, daily questions generator, pnpm ops:audit | M8 | scripts/ & docs/ |
 
 ---
 
@@ -76,6 +81,8 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 | M4 | MCP Servers, Licensing & Build | Unify MCP tool suite with ratio engine, standardize MIT licenses, clean build pipelines | M1, M2 | COMPLETE |
 | M5 | Final Milestone: E2E Pass & Hardening | Phase 1: 100% Pass of Tiers 1-4 E2E tests. Phase 2: Adversarial coverage hardening (Tier 5) | E2E, M1, M2, M3, M4 | COMPLETE |
 | M6 | Production Readiness & Deployment | Contactless Tap/Scan to pay, ErrorBoundary recovery, Docker & Vercel deployment guides, pnpm doctor preflight | M5 | COMPLETE |
+| M7 | Modern UI & Three.js 3D Floor Plan | Full canonical shadcn/ui component system, Radix UI primitives, Three.js 3D spatial floor visualizer | M6 | COMPLETE |
+| M8 | Operations Consultant & Dietary Engine | FDA Top 9 dietary & allergen engine, AI Operations Manager agent, daily audit cron task | M7 | COMPLETE |
 
 ---
 
@@ -97,14 +104,17 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 - `generateShiftPrepPlan(items: InventoryStockItem[], shift: 'morning' | 'evening' | 'prep', date: string): ShiftPrepPlan`
 - `projectBatchRequirement(portionWeight: number, covers: number, wasteFactor?: number): number`
 
-### 2. POS Order Fire -> Recipe Resolution -> Pantry Deduction
+### 2. `@culinaryos/shared/dietary`
+- `FDA_TOP_9_ALLERGENS`: Array of FDA FASTER Act Top 9 allergens
+- `ALLERGEN_REGISTRY`: Detailed allergen metadata, aliases, cross-contact vectors
+- `normalizeAllergen(input: string): string`
+- `evaluateDietaryProfile(allergens: string[], ingredients: string[], cookingMethods?: object): DietaryClassification`
+- `ALLERGEN_SUBSTITUTIONS`: Pre-mapped culinary alternatives
+
+### 3. POS Order Fire -> Recipe Resolution -> Pantry Deduction
 - Route: `POST /v1/pantry/deduct-order`
 - In: `{ orderId: string, items: Array<{ menuItemId: string, recipeId?: string, quantity: number }> }`
 - Out: `{ success: true, deductedIngredients: Array<{ id: string, name: string, quantity: number, unit: string }>, plateEconomicsLogged: boolean }`
-
-### 3. Ops & Loyalty API
-- Route: `POST /v1/ops/loyalty/adjust-points` -> In: `{ customerId: string, pointsDelta: number, reason: string }` -> Out: `{ customerId, newBalance }`
-- Route: `POST /v1/ops/loyalty/postcard` -> In: `{ customerName: string, address: string, discountPercent: number, couponMessage?: string }` -> Out: `{ postcardId, couponCode, status: 'queued' }`
 
 ---
 
@@ -114,22 +124,24 @@ Every feature discovered in the Survey phase is mapped to an implementation mile
 CulinaryOS/
 ├── apps/
 │   ├── server/          ← Unified Hono API (orders, KDS, pantry, ops, payments, mock-kitchen)
-│   ├── pos/             ← POS terminal (React / Vite / Tailwind)
+│   ├── pos/             ← POS terminal (React / Vite / Tailwind / shadcn / Three.js 3D)
 │   ├── kds/             ← Kitchen Display client (React / Vite / Station routing)
-│   ├── admin/           ← Admin / pantry portal (React / Vite / Tailwind)
-│   └── web/             ← Online ordering storefront (React / Vite)
+│   ├── admin/           ← Admin / pantry portal (React / Vite / Tailwind / shadcn)
+│   └── web/             ← Online ordering storefront (React / Vite / Dietary filtering)
 ├── packages/
 │   ├── ratio-engine/    ← Pure culinary mathematical engine & models
 │   ├── db/              ← Database schema types (V1–V14) & Supabase client
 │   ├── event-bus/       ← Event broker, binary protocol, handlers
-│   ├── shared/          ← Cross-cutting types, stations, course-engine, offline-sync
-│   ├── ui/              ← Corporate Modern theme CSS & React components
+│   ├── shared/          ← Cross-cutting types, stations, course-engine, offline-sync, dietary
+│   ├── ui/              ← Canonical shadcn/ui design system, Radix UI primitives, Three.js 3D
 │   ├── auth/            ← PIN auth, JWT verification, managerGate
 │   └── config/          ← Monorepo configuration constants
 ├── mcp/                 ← 8 MCP tool servers for AI agent operations
 ├── extensions/          ← First-party extension manifests
 ├── extension_template/  ← Public contract for third-party extensions
-├── tests/               ← Integration & E2E test suites
+├── tests/               ← Integration & E2E test suites (32 test files)
 └── scripts/
-    └── run-all-tests.cjs ← Canonical test runner executing all suites
+    ├── run-all-tests.cjs       ← Canonical test runner executing all suites
+    ├── daily-ops-consultant.ts ← Daily operations audit & operational question generator
+    └── doctor.ts               ← Preflight production readiness diagnostics
 ```
