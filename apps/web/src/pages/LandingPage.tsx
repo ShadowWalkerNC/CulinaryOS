@@ -21,6 +21,27 @@ export function LandingPage() {
   const [activeArchLayer, setActiveArchLayer] = useState<'clients' | 'eventbus' | 'server' | 'database' | 'mcp' | 'engines'>('clients');
   const [modalImage, setModalImage] = useState<{ src: string; title: string } | null>(null);
 
+  // Interactive Live Demo Playground State
+  const [demoCovers, setDemoCovers] = useState<number>(12);
+  const [demoStation, setDemoStation] = useState<'all' | 'grill' | 'fry' | 'cold' | 'pizza' | 'bar'>('all');
+  const [simulatedTickets, setSimulatedTickets] = useState([
+    { id: 'T-101', table: 'Table 4', server: 'John D.', items: ['2x Prime Burger (Med-Rare)', '1x Truffle Fries'], station: 'grill', course: 'Course 1 (Starters)', time: '3:45', status: 'cooking' },
+    { id: 'T-102', table: 'Table 7', server: 'Jane S.', items: ['1x Wood-Fired Margherita', '1x Burrata Salad'], station: 'pizza', course: 'Course 1 (Starters)', time: '8:20', status: 'held' },
+    { id: 'T-103', table: 'Bar 2', server: 'Alex M.', items: ['2x Smoked Old Fashioned', '1x Draft IPA'], station: 'bar', course: 'Immediate (Drinks)', time: '1:10', status: 'ready' },
+  ]);
+
+  const handleBumpTicket = (id: string) => {
+    setSimulatedTickets((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleResetTickets = () => {
+    setSimulatedTickets([
+      { id: 'T-101', table: 'Table 4', server: 'John D.', items: ['2x Prime Burger (Med-Rare)', '1x Truffle Fries'], station: 'grill', course: 'Course 1 (Starters)', time: '3:45', status: 'cooking' },
+      { id: 'T-102', table: 'Table 7', server: 'Jane S.', items: ['1x Wood-Fired Margherita', '1x Burrata Salad'], station: 'pizza', course: 'Course 1 (Starters)', time: '8:20', status: 'held' },
+      { id: 'T-103', table: 'Bar 2', server: 'Alex M.', items: ['2x Smoked Old Fashioned', '1x Draft IPA'], station: 'bar', course: 'Immediate (Drinks)', time: '1:10', status: 'ready' },
+    ]);
+  };
+
   const surfaces: AppSurface[] = [
     {
       id: 'pos',
@@ -28,7 +49,7 @@ export function LandingPage() {
       sourceRepo: 'CulinaryOS Core',
       packagePath: 'apps/pos',
       port: '5172',
-      badge: 'Front of House',
+      badge: 'Front of House & Floor Map',
       summary: 'High-speed touch order entry with 2D/3D spatial floor mapping, multi-seat ordering, and direct ESC/POS thermal printing.',
       screenshot: '/screenshots/pos_ticket_menu.png',
       screenshotAlt: 'CulinaryOS POS Terminal order ticket and menu matrix',
@@ -184,7 +205,7 @@ export function LandingPage() {
                 CulinaryOS
               </span>
               <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                v0.3 · MIT Licensed
+                v0.3 · MIT
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-medium">The Open-Source Restaurant Operating System</p>
@@ -193,8 +214,9 @@ export function LandingPage() {
 
         <nav className="hidden lg:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-slate-300">
           <a href="#apps" className="hover:text-amber-400 transition-colors">Merged Apps (7)</a>
+          <a href="#demo" className="hover:text-amber-400 transition-colors">Live Interactive Demo</a>
           <a href="#packages" className="hover:text-amber-400 transition-colors">Shared Engines</a>
-          <a href="#architecture" className="hover:text-amber-400 transition-colors">Event Architecture</a>
+          <a href="#architecture" className="hover:text-amber-400 transition-colors">Event Spine</a>
           <a href="#mcp" className="hover:text-amber-400 transition-colors">9 MCP AI Servers</a>
           <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing & Self-Host</a>
         </nav>
@@ -207,13 +229,13 @@ export function LandingPage() {
             className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold transition-all flex items-center gap-2 text-slate-200"
           >
             <span className="material-symbols-outlined text-base">code</span>
-            <span>GitHub Repository</span>
+            <span>GitHub</span>
           </a>
           <Link
             to="/demo"
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 flex items-center gap-1.5"
           >
-            <span>Storefront Demo</span>
+            <span>Live Demo Storefront</span>
             <span className="material-symbols-outlined text-sm font-black">arrow_forward</span>
           </Link>
         </div>
@@ -260,24 +282,24 @@ export function LandingPage() {
 
         {/* Hero Action Buttons */}
         <div className="flex flex-wrap justify-center gap-4 pt-2">
-          <a
-            href="#apps"
+          <Link
+            to="/demo"
             className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-sm uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined font-black">apps</span>
-            <span>Explore 7 Merged Applications</span>
-          </a>
+            <span className="material-symbols-outlined font-black">shopping_cart</span>
+            <span>Launch Live Storefront Demo</span>
+          </Link>
           <a
-            href="#architecture"
+            href="#demo"
             className="px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined">account_tree</span>
-            <span>Interactive Architecture</span>
+            <span className="material-symbols-outlined">play_circle</span>
+            <span>Test In-Browser Interactive Demo</span>
           </a>
         </div>
       </section>
 
-      {/* Visual Screenshot Gallery & Merged Apps Showcase */}
+      {/* Merged Apps Showcase with Real Screenshots */}
       <section id="apps" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
         <div className="text-center space-y-3 mb-12">
           <span className="text-amber-400 text-xs font-black uppercase tracking-widest">
@@ -415,6 +437,219 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Dedicated Interactive Live Demo Section */}
+      <section id="demo" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+        <div className="text-center space-y-3 mb-16">
+          <span className="text-amber-400 text-xs font-black uppercase tracking-widest">
+            Interactive Test Drive
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white">
+            Try the CulinaryOS Simulator Live
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+            Test real operational logic right in your browser. Scale batch formulas, bump kitchen tickets, and launch the online ordering demo.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Demo 1: Interactive RecipeOS Batch Scaler */}
+          <div className="lg:col-span-6 bg-[#0b101d] border border-white/15 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">scale</span>
+                <h3 className="text-lg font-black text-white">RecipeOS Formula Scaler Simulator</h3>
+              </div>
+              <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">
+                @culinaryos/ratio-engine
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300">Target Shift Covers / Servings:</span>
+                <strong className="text-amber-400 font-mono text-base">{demoCovers} guests</strong>
+              </div>
+              <input
+                type="range"
+                min="2"
+                max="100"
+                step="2"
+                value={demoCovers}
+                onChange={(e) => setDemoCovers(Number(e.target.value))}
+                className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer"
+              />
+
+              {/* Scaled Ingredients Table */}
+              <div className="bg-black/40 rounded-2xl border border-white/10 p-4 space-y-2 font-mono text-xs">
+                <div className="text-[11px] text-amber-400 font-bold uppercase pb-1 border-b border-white/10 flex justify-between">
+                  <span>Recipe: Wood-Fired Neapolitan Pizza Dough</span>
+                  <span>Yield: {demoCovers} Pies</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>00 Caputo Flour (100%)</span>
+                  <span className="text-amber-300">{(demoCovers * 150).toFixed(0)} g</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Hydration Water (65%)</span>
+                  <span className="text-amber-300">{(demoCovers * 97.5).toFixed(1)} ml</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Fine Sea Salt (3%)</span>
+                  <span className="text-amber-300">{(demoCovers * 4.5).toFixed(1)} g</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Fresh Sourdough Starter (15%)</span>
+                  <span className="text-amber-300">{(demoCovers * 22.5).toFixed(1)} g</span>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-white">
+                  <span>Theoretical Batch Ingredient Cost:</span>
+                  <span className="text-emerald-400">${(demoCovers * 0.82).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Demo 2: Interactive KDS Kitchen Bump Simulator */}
+          <div className="lg:col-span-6 bg-[#0b101d] border border-white/15 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">soup_kitchen</span>
+                <h3 className="text-lg font-black text-white">KDS Kitchen Ticket Simulator</h3>
+              </div>
+              <button
+                onClick={handleResetTickets}
+                className="text-[10px] font-mono text-slate-400 hover:text-amber-400 flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span>Reset Tickets</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {simulatedTickets.length === 0 ? (
+                <div className="p-8 text-center bg-black/40 rounded-2xl border border-white/10 space-y-2">
+                  <span className="material-symbols-outlined text-3xl text-emerald-400">check_circle</span>
+                  <p className="text-xs text-white font-bold">Expo Line Clear! All orders bumped.</p>
+                  <button
+                    onClick={handleResetTickets}
+                    className="px-3 py-1.5 bg-amber-500 text-black text-xs font-bold rounded-lg"
+                  >
+                    Simulate New Tickets
+                  </button>
+                </div>
+              ) : (
+                simulatedTickets.map((t) => (
+                  <div key={t.id} className="p-3.5 bg-black/40 rounded-2xl border border-white/10 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <strong className="text-amber-400 font-mono">{t.id} · {t.table}</strong>
+                        <span className="text-[10px] text-slate-400">({t.server})</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${t.time.startsWith('8') ? 'bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                        ⏱️ {t.time}
+                      </span>
+                    </div>
+                    <p className="text-slate-300 font-medium">{t.items.join(' · ')}</p>
+                    <div className="flex items-center justify-between pt-1 text-[11px]">
+                      <span className="text-slate-400">{t.course}</span>
+                      <button
+                        onClick={() => handleBumpTicket(t.id)}
+                        className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black text-emerald-300 border border-emerald-500/30 font-bold transition-all"
+                      >
+                        ✓ Bump Ticket
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Live Storefront Demo Card */}
+        <div className="mt-8 p-8 bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-transparent border-2 border-amber-500/40 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+              Live Demo Ready
+            </span>
+            <h3 className="text-2xl font-black text-white">Experience Customer Ordering with FDA Allergen Badges</h3>
+            <p className="text-xs text-slate-300 max-w-xl">
+              Launch our live guest ordering storefront demo for "The Golden Fork" bistro with real-time dietary filtering, cart calculations, and kitchen order status tracking.
+            </p>
+          </div>
+          <Link
+            to="/demo"
+            className="px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 shrink-0 flex items-center gap-2"
+          >
+            <span>Open Storefront Demo</span>
+            <span className="material-symbols-outlined text-base font-black">arrow_forward</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* Shared Engines Section */}
+      <section id="packages" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+        <div className="text-center space-y-3 mb-16">
+          <span className="text-amber-400 text-xs font-black uppercase tracking-widest">
+            Modular Monorepo Packages
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white">
+            14 Shared TypeScript Engines
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+            Zero circular dependencies. Every pure calculation and shared data model is published cleanly in <code className="font-mono text-amber-400">packages/*</code>.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/ratio-engine</span>
+            <h4 className="text-base font-black text-white">Culinary Ratio Scaling</h4>
+            <p className="text-xs text-slate-400">Dynamic recipe scaling, baker's percentages, and metric/imperial mass and volume unit conversions.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/prep-engine</span>
+            <h4 className="text-base font-black text-white">Prep Task Forecasting</h4>
+            <p className="text-xs text-slate-400">Generates morning and shift kitchen prep task checklists based on anticipated cover volume.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/food-cost-engine</span>
+            <h4 className="text-base font-black text-white">Theoretical Food Costing</h4>
+            <p className="text-xs text-slate-400">Pure functions calculating theoretical ingredient usage against actual sales and price inflation.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/waste-engine</span>
+            <h4 className="text-base font-black text-white">Waste Leakage Diagnostics</h4>
+            <p className="text-xs text-slate-400">Aggregates spoilage, trim, and drop loss logs to identify top annual cost-leakage ingredients.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/labor-engine</span>
+            <h4 className="text-base font-black text-white">Labor & Wage Analytics</h4>
+            <p className="text-xs text-slate-400">Shift labor hours, wage summaries, and real-time labor cost percentage calculations.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/pdf-tools</span>
+            <h4 className="text-base font-black text-white">Print-Ready PDF Menus</h4>
+            <p className="text-xs text-slate-400">High-resolution vector PDF menu exports, table QR codes, and guest receipts via jsPDF.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/shared</span>
+            <h4 className="text-base font-black text-white">Settings & FDA Allergen Engine</h4>
+            <p className="text-xs text-slate-400">FDA FASTER Act Top 9 allergens, ESC/POS hardware printer driver, and offline delta sync queue.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/event-bus</span>
+            <h4 className="text-base font-black text-white">Typed Event Envelope Broker</h4>
+            <p className="text-xs text-slate-400">Distributed domain event messaging for pos:order:created, kds:ticket:bumped, and pantry deducts.</p>
+          </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span className="font-mono text-xs text-amber-400 font-bold">@culinaryos/ui</span>
+            <h4 className="text-base font-black text-white">Design System & 3D Canvas</h4>
+            <p className="text-xs text-slate-400">Universal top navigation header, Three.js 3D spatial floor map canvas, and shadcn/ui components.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Interactive Architecture Explorer */}
       <section id="architecture" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
         <div className="text-center space-y-3 mb-16">
@@ -517,32 +752,7 @@ export function LandingPage() {
                 <span>Layer 4: Pure Mathematical & Scaling Engines (packages/*)</span>
               </div>
               <h3 className="text-2xl font-black text-white">Zero-Side-Effect Calculation Packages</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/ratio-engine</strong>
-                  <p className="text-slate-400 text-[11px]">Baker’s percentages, recipe yield scaling, and unit conversions.</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/food-cost-engine</strong>
-                  <p className="text-slate-400 text-[11px]">Theoretical vs actual food cost % and ingredient price inflation.</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/waste-engine</strong>
-                  <p className="text-slate-400 text-[11px]">Kitchen loss summaries and top cost-leakage ranking.</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/prep-engine</strong>
-                  <p className="text-slate-400 text-[11px]">Batch requirement forecasting based on expected guest covers.</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/labor-engine</strong>
-                  <p className="text-slate-400 text-[11px]">Shift labor hours, wage summaries, and labor-to-sales ratios.</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                  <strong className="text-amber-400 font-mono">@culinaryos/pdf-tools</strong>
-                  <p className="text-slate-400 text-[11px]">Print-ready PDF menu export and table QR code generation.</p>
-                </div>
-              </div>
+              <p className="text-xs text-slate-400">All calculation engines are decoupled from databases and UI frameworks, enabling fast deterministic unit testing.</p>
             </div>
           )}
 
@@ -550,22 +760,22 @@ export function LandingPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-amber-400 font-mono text-sm font-bold">
                 <span className="material-symbols-outlined">smart_toy</span>
-                <span>Layer 5: Model Context Protocol (MCP) AI Agents</span>
+                <span>Layer 5: Model Context Protocol (MCP) AI Server</span>
               </div>
-              <h3 className="text-2xl font-black text-white">9 Autonomous AI Agent Tools</h3>
+              <h3 className="text-2xl font-black text-white">Unified Master MCP Server</h3>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Connect Claude Desktop, Cursor, or autonomous agent frameworks directly to live restaurant tools:
+                Connect Claude Desktop, Cursor, or autonomous agent frameworks directly to live restaurant tools via <code className="font-mono text-amber-300">pnpm mcp</code>:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs text-slate-300">
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">1. culinaryops-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">2. recipe-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">3. kds-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">4. pos-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">5. inventory-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">6. prep-server</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">7. post-pilot-server (Python)</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">8. culinaryops-hub-live</div>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10">9. api-headers</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">1. Recipe Scaling & Ratios</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">2. Kitchen Prep & Batching</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">3. Food Cost & Waste Logs</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">4. POS Orders & Checks</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">5. KDS Kitchen Tickets</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">6. Inventory Par Levels</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">7. System Settings & Routing</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">8. Post-Pilot Loyalty Postcards</div>
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10">9. Live Shift Diagnostics</div>
               </div>
             </div>
           )}
@@ -582,6 +792,48 @@ export function LandingPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* AI & MCP Agent Layer Section */}
+      <section id="mcp" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+        <div className="text-center space-y-3 mb-16">
+          <span className="text-amber-400 text-xs font-black uppercase tracking-widest">
+            AI-Native Operations
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white">
+            Unified Master MCP AI Server
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+            Connect Claude Desktop, Cursor, or autonomous AI agents directly to your live restaurant state with 1 single command.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 space-y-4 font-mono text-xs">
+            <span className="text-amber-400 font-bold uppercase block">⚡ 1-Command Startup</span>
+            <p className="text-slate-300 font-sans text-xs">Start the all-in-one MCP server on stdio from the monorepo root:</p>
+            <div className="bg-black/60 p-4 rounded-xl border border-white/10 text-emerald-400">
+              $ pnpm mcp
+            </div>
+            <p className="text-slate-400 text-[11px] font-sans">Automatically loads all 40+ operational tools for RecipeOS, KitchenKit, CulinaryOps, POS, and KDS.</p>
+          </div>
+
+          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 space-y-4 font-mono text-xs">
+            <span className="text-amber-400 font-bold uppercase block">🤖 Claude Desktop Integration</span>
+            <p className="text-slate-300 font-sans text-xs">Add to your claude_desktop_config.json:</p>
+            <pre className="bg-black/60 p-4 rounded-xl border border-white/10 text-slate-300 overflow-x-auto text-[11px]">
+{`{
+  "mcpServers": {
+    "culinaryos": {
+      "command": "node",
+      "args": ["dist/src/unified-server.js"],
+      "env": { "CULINARY_API_URL": "http://localhost:3000" }
+    }
+  }
+}`}
+            </pre>
+          </div>
         </div>
       </section>
 
@@ -711,7 +963,7 @@ export function LandingPage() {
 
           <div className="flex items-center gap-6 text-xs text-slate-400 font-semibold">
             <a href="https://github.com/ShadowWalkerNC/CulinaryOS" className="hover:text-amber-400">GitHub Repository</a>
-            <Link to="/demo" className="hover:text-amber-400">Customer Storefront</Link>
+            <Link to="/demo" className="hover:text-amber-400">Customer Storefront Demo</Link>
             <a href="https://github.com/ShadowWalkerNC/CulinaryOS/blob/main/docs/SETTINGS.md" className="hover:text-amber-400">Settings Guide</a>
             <a href="https://github.com/ShadowWalkerNC/CulinaryOS/blob/main/LICENSE" className="hover:text-amber-400">MIT License</a>
           </div>
@@ -719,7 +971,7 @@ export function LandingPage() {
 
         <div className="text-center sm:text-left text-xs text-slate-500 pt-4 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p>© 2026 CulinaryOS Contributors. Complete modular restaurant operating system under the MIT License.</p>
-          <p className="font-mono text-[11px]">release: v0.3.0 · build: 92ae9fa</p>
+          <p className="font-mono text-[11px]">release: v0.3.0 · build: dc931a9</p>
         </div>
       </footer>
     </div>
