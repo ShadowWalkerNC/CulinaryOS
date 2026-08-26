@@ -303,142 +303,111 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Merged Apps Showcase with Real Screenshots */}
+      {/* Merged Apps Showcase: Rich Visual Grid with Category Filters */}
       <section id="apps" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
         <div className="text-center space-y-2 mb-10">
           <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Merged Monorepo Applications
+            Complete Application Ecosystem
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            7 Complete Surfaces. Real Live Workflows.
+            7 Integrated Applications. All In One Repository.
           </h2>
           <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            All satellite repositories (KitchenKit, CulinaryOps, RecipeOS, Post-Pilot, Plated) are consolidated into <code className="text-[#0f172a] font-mono bg-[#f3f4f6] px-1 py-0.5 rounded">apps/*</code> and <code className="text-[#0f172a] font-mono bg-[#f3f4f6] px-1 py-0.5 rounded">packages/*</code>.
+            Browse all 7 frontends below. Click any card to inspect its workflows, shared calculation engines, and live UI screenshots.
           </p>
         </div>
 
-        {/* Application Navigation Selector */}
-        <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-4 mb-6">
-          {surfaces.map((s) => {
-            const isSelected = selectedSurface === s.id;
-            return (
-              <button
-                key={s.id}
-                onClick={() => setSelectedSurface(s.id)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-[#0f172a] text-white shadow-sm scale-[1.02]'
-                    : 'bg-white hover:bg-[#f3f4f6] text-[#4b5563] border border-[#e5e7eb]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
-                <span>{s.name}</span>
-                <span className={`text-[9px] px-1 py-0.5 rounded font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-[#f3f4f6] text-[#6b7280]'}`}>
-                  :{s.port}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active Application Detail Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white border border-[#e5e7eb] rounded-3xl p-6 sm:p-8 shadow-xs">
-          {/* Left Column: Metadata & Features */}
-          <div className="lg:col-span-5 space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#0f172a0d] text-[#0f172a] text-[10px] font-black uppercase tracking-wider border border-[#0f172a26]">
-                  {current.badge}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-mono border border-purple-200">
-                  {current.sourceRepo}
-                </span>
-                <span className="text-xs font-mono text-[#6b7280]">{current.packagePath} (Port :{current.port})</span>
-              </div>
-
-              <h3 className="text-2xl font-black text-[#0b1c30]">{current.name}</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">{current.summary}</p>
-
-              {/* Workflow Checklist */}
-              <div className="space-y-2 pt-1">
-                <span className="text-[11px] font-black text-[#0f172a] uppercase tracking-wider block">
-                  Core Live Workflows:
-                </span>
-                <ul className="space-y-2">
-                  {current.workflow.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-xs text-[#374151]">
-                      <span className="material-symbols-outlined text-emerald-600 text-base shrink-0 mt-0.5">
-                        check_circle
-                      </span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Shared Packages & MCP Tools */}
-              <div className="space-y-1.5 pt-2 border-t border-[#e5e7eb] text-[11px]">
-                <div className="text-[#6b7280]">
-                  <strong className="text-[#0b1c30]">Engines:</strong> {current.engines.join(', ')}
-                </div>
-                <div className="text-[#6b7280]">
-                  <strong className="text-[#0f172a]">AI MCP:</strong> {current.mcpTools.join(', ')}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Bar */}
-            <div className="pt-4 border-t border-[#e5e7eb] flex flex-wrap gap-3">
-              {current.id === 'web' ? (
-                <Link
-                  to="/demo"
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-xs flex items-center justify-center gap-2"
-                >
-                  <span>Launch Live Customer Storefront</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </Link>
-              ) : (
-                <a
-                  href={`http://localhost:${current.port}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-xs flex items-center justify-center gap-2"
-                >
-                  <span>Launch on Local Port :{current.port}</span>
-                  <span className="material-symbols-outlined text-sm">open_in_new</span>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Real Visual Screenshot with Zoom */}
-          <div className="lg:col-span-7 flex flex-col justify-center items-center bg-[#f8f9fa] rounded-2xl border border-[#e5e7eb] p-4 relative group">
-            <div className="w-full flex items-center justify-between pb-3 border-b border-[#e5e7eb] text-xs text-[#6b7280] font-mono">
-              <span className="flex items-center gap-1.5 font-bold text-[#0b1c30]">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Screenshot: {current.name}
-              </span>
-              <button
-                onClick={() => setModalImage({ src: current.screenshot, title: current.name })}
-                className="text-[#0f172a] hover:underline text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-                <span>Enlarge</span>
-              </button>
-            </div>
-
+        {/* 7 Surfaces Visual Card Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {surfaces.map((s) => (
             <div
-              onClick={() => setModalImage({ src: current.screenshot, title: current.name })}
-              className="w-full mt-3 rounded-xl overflow-hidden cursor-zoom-in border border-[#e5e7eb] hover:border-[#0f172a] transition-all shadow-xs bg-white flex items-center justify-center"
+              key={s.id}
+              className="bg-white border border-[#e5e7eb] rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group hover:border-[#0f172a]"
             >
-              <img
-                src={current.screenshot}
-                alt={current.screenshotAlt}
-                className="w-full h-auto object-contain max-h-[460px] group-hover:scale-[1.01] transition-transform duration-200"
-              />
+              {/* Card Screenshot Header */}
+              <div
+                onClick={() => setModalImage({ src: s.screenshot, title: s.name })}
+                className="relative bg-[#f8f9fa] border-b border-[#e5e7eb] p-3 cursor-zoom-in group-hover:bg-[#f1f5f9] transition-colors"
+              >
+                <div className="flex items-center justify-between pb-2 text-[11px] font-mono text-[#6b7280]">
+                  <span className="flex items-center gap-1.5 font-bold text-[#0b1c30]">
+                    <span className="material-symbols-outlined text-sm">{s.icon}</span>
+                    <span>Port :{s.port}</span>
+                  </span>
+                  <span className="text-[10px] bg-white px-2 py-0.5 rounded border border-[#e5e7eb] font-bold text-[#0f172a]">
+                    {s.badge}
+                  </span>
+                </div>
+                <div className="rounded-xl overflow-hidden border border-[#e5e7eb] bg-white max-h-[200px] flex items-center justify-center">
+                  <img
+                    src={s.screenshot}
+                    alt={s.screenshotAlt}
+                    className="w-full h-auto object-cover max-h-[190px] group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-[#0f172a]/0 hover:bg-[#0f172a]/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                  <span className="bg-[#0f172a] text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">zoom_in</span> Click to Enlarge
+                  </span>
+                </div>
+              </div>
+
+              {/* Card Content Body */}
+              <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-black text-[#0b1c30]">{s.name}</h3>
+                    <span className="text-[9px] font-mono bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200 font-bold">
+                      {s.sourceRepo}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#4b5563] leading-relaxed">{s.summary}</p>
+
+                  {/* Bullet Highlights */}
+                  <ul className="space-y-1.5 pt-2 text-xs text-[#374151]">
+                    {s.workflow.slice(0, 3).map((w, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5 text-[11px]">
+                        <span className="material-symbols-outlined text-emerald-600 text-[14px] shrink-0 mt-0.5">
+                          check_circle
+                        </span>
+                        <span>{w}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Card Actions */}
+                <div className="pt-4 border-t border-[#e5e7eb] flex items-center gap-2">
+                  {s.id === 'web' ? (
+                    <Link
+                      to="/demo"
+                      className="flex-1 py-2 px-3 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-2xs flex items-center justify-center gap-1"
+                    >
+                      <span>Try Storefront</span>
+                      <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                    </Link>
+                  ) : (
+                    <a
+                      href={`http://localhost:${s.port}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 px-3 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-2xs flex items-center justify-center gap-1"
+                    >
+                      <span>Open Port :{s.port}</span>
+                      <span className="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setModalImage({ src: s.screenshot, title: s.name })}
+                    className="p-2 rounded-xl bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0b1c30] transition-colors cursor-pointer"
+                    title="Enlarge Screenshot"
+                  >
+                    <span className="material-symbols-outlined text-sm">fullscreen</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <p className="text-[11px] text-[#6b7280] italic pt-2">{current.screenshotAlt}</p>
-          </div>
+          ))}
         </div>
       </section>
 
