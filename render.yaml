@@ -1,12 +1,10 @@
 # ============================================================
-# CulinaryOS — Render Blueprint (apps/* monorepo)
-# After deploy, set secrets in the Render dashboard:
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY,
-#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_TENANT_ID,
-#   INTERNAL_API_KEY / DEVICE_API_KEY, STRIPE_* as needed
+# CulinaryOS — Unified Render Blueprint (Full Monorepo)
+# Deploy all 7 surfaces + unified API with 1-click on Render
 # ============================================================
 
 services:
+  # ---- 1. Unified Hono Backend API ----
   - type: web
     name: culinaryos-api
     runtime: docker
@@ -34,53 +32,7 @@ services:
       - key: SUPABASE_ANON_KEY
         sync: false
 
-  # ---- Frontends (Vite static sites, built from the monorepo) ----
-  # Set VITE_API_URL to the deployed API URL (e.g. https://culinaryos-api.onrender.com).
-  - type: web
-    name: culinaryos-pos
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-pos build
-    staticPublishPath: apps/pos/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        sync: false
-      - key: VITE_API_URL
-        sync: false
-
-  - type: web
-    name: culinaryos-kds
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kds build
-    staticPublishPath: apps/kds/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        sync: false
-      - key: VITE_API_URL
-        sync: false
-
-  - type: web
-    name: culinaryos-admin
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/admin build
-    staticPublishPath: apps/admin/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        sync: false
-      - key: VITE_API_URL
-        sync: false
-
+  # ---- 2. Customer Online Ordering & Marketing Storefront ----
   - type: web
     name: culinaryos-web
     runtime: static
@@ -92,6 +44,116 @@ services:
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
       - key: VITE_TENANT_ID
-        sync: false
+        value: 00000000-0000-0000-0000-000000000001
       - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 3. POS Terminal (Point of Sale) ----
+  - type: web
+    name: culinaryos-pos
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-pos build
+    staticPublishPath: apps/pos/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 4. Kitchen Display System (KDS) ----
+  - type: web
+    name: culinaryos-kds
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kds build
+    staticPublishPath: apps/kds/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 5. Back-Office Admin & Settings Portal ----
+  - type: web
+    name: culinaryos-admin
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/admin build
+    staticPublishPath: apps/admin/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 6. KitchenKit (Recipes & Prep Planner) ----
+  - type: web
+    name: culinaryos-kitchenkit
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kitchenkit build
+    staticPublishPath: apps/kitchenkit/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 7. CulinaryOps (Food Cost & Waste Diagnostics) ----
+  - type: web
+    name: culinaryos-ops
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-ops build
+    staticPublishPath: apps/ops/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: VITE_API_URL
+        fromService:
+          name: culinaryos-api
+          type: web
+          property: host
+
+  # ---- 8. RecipeOS (Next.js Recipe Vault & Scale Engine) ----
+  - type: web
+    name: culinaryos-recipeos
+    runtime: node
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-recipeos build
+    startCommand: pnpm --filter @culinaryos/app-recipeos start -- -p $PORT
+    envVars:
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
