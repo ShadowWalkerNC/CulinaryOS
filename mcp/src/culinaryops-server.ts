@@ -110,6 +110,45 @@ const TOOLS = [
       required: ["vendor_id", "items"],
     },
   },
+  {
+    name: "get_restaurant_settings",
+    description: "CulinaryOps: get restaurant company info, tax rates, tip rules, and display config",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "update_restaurant_settings",
+    description: "CulinaryOps: update restaurant company identity, sales tax %, or default gratuity %",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Restaurant display name" },
+        phone: { type: "string" },
+        taxRatePercent: { type: "number", description: "Sales tax rate in percent e.g. 8.25" },
+        currencySymbol: { type: "string", description: "e.g. $" },
+        receiptHeader: { type: "string" },
+        receiptFooter: { type: "string" },
+      },
+    },
+  },
+  {
+    name: "get_station_routing",
+    description: "CulinaryOps: list all kitchen prep stations and menu item routing rules",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "update_item_routing",
+    description: "CulinaryOps: assign a menu item to a primary kitchen prep station and course",
+    inputSchema: {
+      type: "object",
+      properties: {
+        itemName: { type: "string" },
+        primaryStation: { type: "string", description: "grill | fry | cold | pizza | bar | pastry | pass" },
+        course: { type: "string", enum: ["drinks", "starters", "mains", "desserts"] },
+        targetPrepMinutes: { type: "number" },
+      },
+      required: ["itemName", "primaryStation"],
+    },
+  },
 ];
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
@@ -194,6 +233,48 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           estimated_total: Math.round(estimated_total * 100) / 100,
         });
       }
+      case "get_restaurant_settings":
+        return wrap({
+          company: {
+            name: "The Golden Fork",
+            legalName: "Golden Fork Hospitality Group LLC",
+            taxId: "XX-XXXXXXX",
+            phone: "(555) 234-5678",
+            currencySymbol: "$",
+            taxRatePercent: 8.25,
+            gratuityPresets: [15, 18, 20, 25],
+            receiptHeader: "Welcome to The Golden Fork · Organic & Wood-Fired",
+            receiptFooter: "Thank you for dining with us!",
+          },
+          display: {
+            textSize: "standard",
+            textScalePercent: 110,
+            kdsAlertSounds: true,
+          },
+        });
+      case "update_restaurant_settings":
+        return wrap({
+          message: "Restaurant settings updated successfully.",
+          updated_fields: a,
+        });
+      case "get_station_routing":
+        return wrap({
+          stations: [
+            { id: "pass", name: "Expo Master Pass", code: "EXPO" },
+            { id: "grill", name: "Hot Grill Station", code: "GRILL" },
+            { id: "fry", name: "Fryer & Sauté", code: "FRY" },
+            { id: "cold", name: "Cold Prep & Raw Bar", code: "COLD" },
+            { id: "pizza", name: "Wood-Fired Pizza Oven", code: "PIZZA" },
+            { id: "bar", name: "Cocktail & Beverage Bar", code: "BAR" },
+            { id: "pastry", name: "Pastry & Dessert", code: "PASTRY" },
+          ],
+          routing_rules_count: 4,
+        });
+      case "update_item_routing":
+        return wrap({
+          message: `Menu item '${a.itemName}' routed to station '${a.primaryStation}'.`,
+          rule: a,
+        });
       default:
         throw new Error(`Unknown tool: ${name}`);
     }

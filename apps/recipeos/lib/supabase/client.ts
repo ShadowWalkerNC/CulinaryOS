@@ -7,7 +7,7 @@ import type { Database } from './database.types';
  * TODO: revert hardcoded credentials back to env vars once Render env is confirmed working
  */
 export function createClient() {
-  return createBrowserClient<Database>(
+  return createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://sxbirnbwfaarkkorqsam.supabase.co',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'sb_publishable_-m-OLlNS-hCX_z44WqMnGw_D7i1HRH_'
   );

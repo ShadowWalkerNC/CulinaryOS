@@ -114,21 +114,30 @@ graph TB
 
 ---
 
-## Surfaces & Packages
+## Surfaces & Applications
 
 | Package | Port / Target | Role |
 |---|---|---|
-| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, admin, **marketplace** |
-| `apps/pos` | `:5172` | POS terminal (PIN login, 2D/3D floor map, contactless tap/scan/card checkout, offline delta queue) |
-| `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, course hold/fire timers, bump bar) |
-| `apps/admin` | `:5174` | Admin portal — menu catalog & 86ing, staff PINs, pantry par levels, PO automation |
-| `apps/web` | `:5176` | Online ordering storefront (dietary filtering, cart customization, instant checkout) |
+| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, **settings**, marketplace |
+| `apps/pos` | `:5172` | POS terminal (PIN login, 2D/3D floor map, ESC/POS hardware printer hub, live text scaling) |
+| `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, course hold/fire, TV 140% mode) |
+| `apps/admin` | `:5174` | Admin portal — menu editor, staff PINs, pantry par levels, **system settings & kitchen routing** |
+| `apps/kitchenkit` | `:5175` | KitchenKit — Recipe catalog, station prep planner, par levels, vendor management, shelf life |
+| `apps/web` | `:5176` | Online ordering storefront (FDA Top 9 dietary filtering, cart customization, instant checkout) |
+| `apps/ops` | `:5177` | CulinaryOps — Real-time food cost analytics, waste logging, labor %, and vendor performance |
+| `apps/recipeos` | `:5178` | RecipeOS — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list |
 | `packages/ui` | Shared | Centralized **shadcn/ui** design system (`components.json`, Radix UI primitives, Three.js 3D canvas) |
-| `packages/shared` | Shared | TypeScript interfaces, event envelopes, offline-sync delta engine, FDA Top 9 dietary engine |
-| `packages/auth` | Shared | Session helpers, PIN authentication, RBAC utilities |
-| `packages/event-bus` | Shared | Binary and JSON event envelope broker and handlers |
-| `packages/ratio-engine` | Shared | Culinary scaling, recipe formula costing, and yield calculation |
-| `mcp/` | Extension | MCP AI agent tool layer — 9 specialized servers |
+| `packages/shared` | Shared | Unified settings engine, dietary filter engine, printer driver, offline-sync delta engine |
+| `packages/prep-engine` | Shared | Recipe prep task management and batch requirement calculations |
+| `packages/food-cost-engine` | Shared | Pure functions for actual vs theoretical food cost variance calculations |
+| `packages/waste-engine` | Shared | Kitchen waste summarization and top cost-leakage analysis |
+| `packages/labor-engine` | Shared | Shift labor hours, wage summaries, and labor cost percentage calculations |
+| `packages/pdf-tools` | Shared | Print-ready PDF menu export (`jspdf`) and table QR code generators |
+| `packages/template-engine` | Shared | Multi-concept restaurant website and menu template token engine |
+| `packages/seo-tools` | Shared | Schema.org JSON-LD structured data generators for restaurant menus and locations |
+| `packages/asset-tools` | Shared | OpenGraph banner generator (`satori`), favicons, and palette extractors |
+| `mcp/` | Extension | 9 Model Context Protocol servers + Python Post-Pilot loyalty agent |
+
 
 ---
 

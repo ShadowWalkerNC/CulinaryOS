@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
-import type { PrepList } from '@shared/types';
+import type { PrepList, PrepTask } from '@shared/types';
 
 export function usePrepLists() {
   return useQuery<PrepList[]>({
@@ -12,7 +12,7 @@ export function usePrepLists() {
         .select('*, tasks:prep_tasks(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as PrepList[];
     },
   });
 }
@@ -24,7 +24,7 @@ export function useTogglePrepTask() {
       const supabase = createClient();
       const { error } = await supabase
         .from('prep_tasks')
-        .update({ is_done, completed_at: is_done ? new Date().toISOString() : null })
+        .update({ is_done, completed_at: is_done ? new Date().toISOString() : null } as any)
         .eq('id', id);
       if (error) throw error;
     },

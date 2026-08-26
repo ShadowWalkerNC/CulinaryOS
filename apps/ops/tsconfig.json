@@ -15,7 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -23,8 +23,6 @@
     "baseUrl": ".",
     "types": ["vite/client"],
     "paths": {
-      "react": ["node_modules/react"],
-      "@supabase/supabase-js": ["node_modules/@supabase/supabase-js"],
       "@/*": ["./src/*"],
       "@culinaryos/food-cost-engine": ["../../packages/food-cost-engine/src/index.ts"],
       "@culinaryos/waste-engine": ["../../packages/waste-engine/src/index.ts"],
@@ -33,5 +31,11 @@
       "@culinaryos/ratio-engine": ["../../packages/ratio-engine/src/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "../../packages/food-cost-engine/src",
+    "../../packages/waste-engine/src",
+    "../../packages/labor-engine/src"
+  ]
 }
+

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { gramsToCups, cupsToGrams } from '../../../../shared/ratio-engine';
+import { gramsToCups, cupsToGrams } from '@shared/ratio-engine';
 
 export async function POST(req: NextRequest) {
   const { value, fromUnit, toUnit, ingredient } = await req.json();

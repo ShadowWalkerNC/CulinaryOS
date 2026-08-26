@@ -48,13 +48,16 @@ Key APIs:     Anthropic Claude (AI agent layer), Supabase, RecipeOS MCP
 ```
 CulinaryOS/
 ├── apps/
-│   ├── server/          ← Unified Hono API (orders, KDS, pantry, payments)
-│   ├── pos/             ← POS terminal (React / Vite)
-│   ├── kds/             ← Kitchen Display client (React / Vite)
-│   ├── admin/           ← Admin / pantry portal (React / Vite)
-│   └── web/             ← Online ordering storefront (React / Vite)
-├── packages/            ← shared, event-bus, auth, db, ui, config, ratio-engine
-├── mcp/                 ← MCP servers — AI agent tool layer
+│   ├── server/          ← Unified Hono API (orders, KDS, pantry, payments, settings)
+│   ├── pos/             ← POS terminal (React / Vite / ESC/POS hardware printer hub)
+│   ├── kds/             ← Kitchen Display client (React / Vite / 140% TV mode)
+│   ├── admin/           ← Admin portal (Menu, Staff, Pantry, System Settings & Routing)
+│   ├── kitchenkit/      ← KitchenKit (Recipes, Prep Planner, Par Levels, Vendors)
+│   ├── web/             ← Online ordering storefront (React / Vite)
+│   ├── ops/             ← CulinaryOps (Food Cost, Waste, Labor, Vendors)
+│   └── recipeos/        ← RecipeOS (Next.js Recipe Vault, Pantry, Scale Engine)
+├── packages/            ← shared, ui, prep-engine, food-cost-engine, waste-engine, labor-engine, pdf-tools, template-engine, seo-tools, asset-tools, db, auth, event-bus, config, ratio-engine
+├── mcp/                 ← 9 MCP servers + Python Post-Pilot loyalty agent
 ├── extensions/          ← First-party extension manifests
 ├── extension_template/  ← Public contract for third-party extensions
 ├── mobile/              ← React Native + Expo companion (stub)

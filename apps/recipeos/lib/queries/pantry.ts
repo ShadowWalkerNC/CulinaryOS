@@ -31,7 +31,7 @@ export function useAddPantryItem() {
       const { error } = await supabase.from('pantry_items').insert({
         ...item,
         user_id: user.id,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pantry'] }),

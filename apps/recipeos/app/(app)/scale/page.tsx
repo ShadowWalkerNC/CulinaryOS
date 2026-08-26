@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { scaleIngredients, formatAmount } from '../../../../shared/ratio-engine';
-import type { Ingredient } from '../../../../shared/ratio-engine';
+import { scaleIngredients, formatAmount } from '@shared/ratio-engine';
+import type { Ingredient } from '@shared/ratio-engine';
 
 const STARTER_INGREDIENTS: Ingredient[] = [
   { name: 'All-purpose flour', amount: '2', unit: 'cups' },

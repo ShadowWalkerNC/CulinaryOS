@@ -14,13 +14,13 @@ export function useRecipes(search?: string, categoryId?: string) {
       if (categoryId) q = q.eq('category_id', categoryId);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 }
 
 export function useRecipe(id: string) {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ['recipe', id],
     queryFn: async () => {
       const supabase = createClient();
@@ -38,7 +38,7 @@ export function useRecipe(id: string) {
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!id,
   });

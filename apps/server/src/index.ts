@@ -27,6 +27,7 @@ import { opsRoutes }           from './routes/ops';
 import { adminRoutes }         from './routes/admin';
 import { stripeWebhook }       from './routes/stripe-webhook';
 import { marketplaceRoutes }   from './routes/marketplace';
+import { settingsRoutes }      from './routes/settings';
 import type { Env }            from './types';
 
 const app = new Hono<Env>();
@@ -109,6 +110,7 @@ app.route('/v1/webhooks/stripe', stripeWebhook);
 
 // Marketplace & optional AI layer
 app.route('/v1/marketplace', marketplaceRoutes);
+app.route('/v1/settings',    settingsRoutes);
 
 // ---- Health ----
 
