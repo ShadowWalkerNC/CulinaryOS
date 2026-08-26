@@ -67,6 +67,8 @@ Every feature discovered in the Survey and Enhancement phases is mapped to an im
 | 38 | Three.js 3D Dining Floor Map | Interactive WebGL 3D spatial floor map with real-time status glow halos & orbit navigation | M7 | packages/ui FloorMap3D |
 | 39 | FDA Top 9 Dietary & Allergen Engine | FDA FASTER Act Top 9 allergens, cross-contact matrix, safe substitution suggestions | M8 | packages/shared dietary.ts |
 | 40 | AI Operations Manager & Consultant | Executive Chef / GM operational auditor, daily questions generator, pnpm ops:audit | M8 | scripts/ & docs/ |
+| 41 | Turnkey 1-Command Quickstart & Simulation | Quickstart launcher, Sean's 5-minute guide, and live dinner rush simulator | M9 | scripts/quickstart.ts & simulate-service.ts |
+| 42 | Square Developer API Equivalence & Converter | Direct API equivalence mapping and Square catalog converter utility | M9 | docs/ & scripts/import-square-catalog.ts |
 
 ---
 
@@ -83,6 +85,7 @@ Every feature discovered in the Survey and Enhancement phases is mapped to an im
 | M6 | Production Readiness & Deployment | Contactless Tap/Scan to pay, ErrorBoundary recovery, Docker & Vercel deployment guides, pnpm doctor preflight | M5 | COMPLETE |
 | M7 | Modern UI & Three.js 3D Floor Plan | Full canonical shadcn/ui component system, Radix UI primitives, Three.js 3D spatial floor visualizer | M6 | COMPLETE |
 | M8 | Operations Consultant & Dietary Engine | FDA Top 9 dietary & allergen engine, AI Operations Manager agent, daily audit cron task | M7 | COMPLETE |
+| M9 | Turnkey Quickstart & Square Integration | One-command launcher, live service simulator, Square API mapping & catalog converter | M8 | COMPLETE |
 
 ---
 
@@ -139,9 +142,12 @@ CulinaryOS/
 ├── mcp/                 ← 8 MCP tool servers for AI agent operations
 ├── extensions/          ← First-party extension manifests
 ├── extension_template/  ← Public contract for third-party extensions
-├── tests/               ← Integration & E2E test suites (32 test files)
+├── tests/               ← Integration & E2E test suites (33 test files, 115+ tests)
 └── scripts/
     ├── run-all-tests.cjs       ← Canonical test runner executing all suites
+    ├── quickstart.ts           ← Turnkey one-command startup launcher
+    ├── simulate-service.ts     ← Live restaurant dinner rush simulator
+    ├── import-square-catalog.ts← Square catalog to CulinaryOS menu converter
     ├── daily-ops-consultant.ts ← Daily operations audit & operational question generator
     └── doctor.ts               ← Preflight production readiness diagnostics
 ```

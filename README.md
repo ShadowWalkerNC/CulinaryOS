@@ -3,18 +3,19 @@
 **The open operating system for restaurants** — humans on POS/KDS, agents on MCP, your Postgres. MIT licensed. AI never required for service.
 
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 32/32 Passing](https://img.shields.io/badge/Tests-32%2F32%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Tests: 33/33 Passing](https://img.shields.io/badge/Tests-33%2F33%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
 [![Typecheck: 18/18 Passing](https://img.shields.io/badge/Typecheck-18%2F18%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 <p align="center">
-  <img src="docs/screenshots/pos-order.webp" alt="CulinaryOS POS — order entry" width="48%" />
-  <img src="docs/screenshots/kds-board.webp" alt="CulinaryOS KDS — kitchen board" width="48%" />
+  <img src="docs/screenshots/pos-order.jpg" alt="CulinaryOS POS — order entry" width="32%" />
+  <img src="docs/screenshots/kds-board.jpg" alt="CulinaryOS KDS — kitchen display" width="32%" />
+  <img src="docs/screenshots/floor-map-3d.jpg" alt="CulinaryOS 3D Spatial Floor Plan" width="32%" />
 </p>
 
-<p align="center"><em>POS order entry · Kitchen display · Three.js 3D dining floor visualizer · Canonical shadcn/ui design system</em></p>
+<p align="center"><em>Modern shadcn/ui POS Terminal · Real-Time Kitchen Display · Three.js 3D Dining Room Floor Map</em></p>
 
 > Not a cheaper Toast clone. A **protocol restaurant**: kitchen state is a versioned contract that operators *and* AI agents can drive — with sovereign data and a closed economic loop (recipe → fire → waste/cost).
 
