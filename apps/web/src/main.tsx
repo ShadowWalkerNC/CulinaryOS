@@ -15,6 +15,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           {/* Landing / Marketing Page for CulinaryOS Platform */}
           <Route path="/"                      element={<LandingPage />} />
+          <Route path="/demo"                  element={<Navigate to="/menu/demo" replace />} />
           {/* :slug identifies the restaurant storefront — e.g. /menu/demo */}
           <Route path="/menu/:slug"            element={<MenuPage />} />
           <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
