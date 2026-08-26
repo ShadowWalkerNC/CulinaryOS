@@ -2,10 +2,12 @@
   "name": "culinaryos-mcp-servers",
   "version": "1.0.0",
   "description": "Local-first MCP microservice servers for CulinaryOS POS, KDS, and Inventory",
-  "main": "dist/pos-server.js",
+  "main": "dist/src/unified-server.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "start": "node dist/src/unified-server.js",
+    "dev": "node --import tsx src/unified-server.ts",
     "start-pos": "node dist/pos-server.js",
     "start-kds": "node dist/kds-server.js",
     "start-inventory": "node dist/inventory-server.js",

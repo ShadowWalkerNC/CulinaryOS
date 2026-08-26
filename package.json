@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:kitchenkit": "pnpm --filter @culinaryos/app-kitchenkit dev",
-    "mcp:all": "pnpm --filter culinaryos-mcp-servers run start-culinary",
-    "mcp:hub": "pnpm --filter culinaryos-mcp-servers run dev-culinary",
+    "mcp": "pnpm --filter culinaryos-mcp-servers start",
+    "mcp:all": "pnpm --filter culinaryos-mcp-servers start",
+    "mcp:hub": "pnpm --filter culinaryos-mcp-servers dev",
     "start:all": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",

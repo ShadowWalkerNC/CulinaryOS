@@ -1,4 +1,4 @@
-# CulinaryOS MCP Servers
+# CulinaryOS MCP Server (Unified & All-In-One)
 
 Exposes CulinaryOS restaurant operations as tools for AI agents — Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
 
@@ -6,58 +6,33 @@ The MCP layer is **strictly additive**: every operation is also available via th
 
 ---
 
-## Setup
+## ⚡ 1-Command All-In-One Unified MCP Server
+
+All tools across **KitchenKit, CulinaryOps, RecipeOS, POS, KDS, Pantry, Settings, and Post-Pilot** are bundled into a single unified MCP server:
 
 ```bash
-# From the monorepo root
-pnpm install
-
-# Build all MCP servers
-cd mcp
-pnpm run build
+# Run from root of CulinaryOS monorepo
+pnpm mcp
 ```
 
----
+### Claude Desktop Configuration (1 Single Entry)
 
-## Available Servers
-
-CulinaryOS ships **9 specialized MCP servers** in `src/`:
-
-| Server | Entrypoint | Domain |
-|---|---|---|
-| `culinaryops-server` | `src/culinaryops-server.ts` | Waste logging, food cost, plate economics |
-| `culinaryops-hub-live` | `src/culinaryops-hub-live.ts` | Live shift performance dashboard |
-| `recipe-server` | `src/recipe-server.ts` | Recipes — list, get, scale, create |
-| `inventory-server` | `src/inventory-server.ts` | Pantry stock levels, audit counts |
-| `kds-server` | `src/kds-server.ts` | Kitchen tickets — fetch, bump, fire |
-| `pos-server` | `src/pos-server.ts` | Orders — create, send, loyalty |
-| `prep-server` | `src/prep-server.ts` | Shift prep plans, batch projections |
-| `post-pilot-server` | `src/post-pilot-server.ts` | Loyalty balances, postcards, campaigns |
-
----
-
-## Connect to Claude Desktop
-
-Add to `claude_desktop_config.json` (`~/Library/Application Support/Claude/` on macOS, `%APPDATA%\Claude\` on Windows):
+Add to your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "culinaryos-ops": {
+    "culinaryos": {
       "command": "node",
-      "args": ["/absolute/path/to/CulinaryOS/mcp/dist/culinaryops-server.js"],
+      "args": ["/absolute/path/to/CulinaryOS/mcp/dist/src/unified-server.js"],
       "env": {
         "CULINARY_API_URL": "http://localhost:3000",
         "VITE_TENANT_ID": "00000000-0000-0000-0000-000000000001"
       }
-    },
-    "culinaryos-kds": {
-      "command": "node",
-      "args": ["/absolute/path/to/CulinaryOS/mcp/dist/kds-server.js"],
-      "env": {
-        "CULINARY_API_URL": "http://localhost:3000",
-        "VITE_TENANT_ID": "00000000-0000-0000-0000-000000000001"
-      }
+    }
+  }
+}
+```
     },
     "culinaryos-pos": {
       "command": "node",
