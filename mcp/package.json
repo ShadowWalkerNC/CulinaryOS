@@ -22,7 +22,9 @@
   "dependencies": {
     "@culinaryos/ratio-engine": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "zod": "*",
+    "@supabase/supabase-js": "*"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

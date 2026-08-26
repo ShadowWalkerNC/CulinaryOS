@@ -90,6 +90,10 @@ pnpm --filter @culinaryos/server dev
 | `get_waste_summary` | Aggregated waste trends and top financial loss items |
 | `get_plate_economics` | Theoretical vs actual food cost per menu item |
 | `analyze_food_cost` | Cost variance against theoretical recipe cost |
+| `get_labor_summary` | Summarize labor cost for a date range |
+| `get_food_cost` | Get the food cost % and ingredient breakdown for a menu item |
+| `list_vendors` | List vendors with open PO counts |
+| `create_purchase_order` | Create a draft purchase order |
 
 ### recipe-server
 
@@ -100,6 +104,12 @@ pnpm --filter @culinaryos/server dev
 | `scale_recipe` | Scale recipe to target servings |
 | `create_recipe` | Create a new recipe with ingredient tree |
 | `get_recipe_cost` | Compute cost per serving and food cost % |
+| `add_recipe` | Add a new recipe to the vault |
+| `search_by_ingredient` | Find all recipes that contain a specific ingredient |
+| `get_pantry` | Get current pantry stock levels |
+| `update_pantry` | Update the stock quantity for a pantry item by its ID |
+| `get_shopping_list` | Returns all pantry items that are at or below their reorder threshold |
+| `convert_units` | Convert between weight and volume units for common baking ingredients |
 
 ### kds-server
 
@@ -109,6 +119,15 @@ pnpm --filter @culinaryos/server dev
 | `bump_kds_ticket` | Mark a ticket as complete |
 | `fire_course` | Fire a held course for a multi-course order |
 | `get_ticket_aging` | Aging stats across all open tickets |
+| `build_shift_prep` | Build a shift prep plan from par levels |
+| `save_prep_plan` | Persist a prep plan to the database |
+| `complete_prep_item` | Mark a single prep plan item as done |
+| `get_mise_en_place` | Get a formatted mise en place checklist for a recipe |
+| `project_batch_size` | Project the batch size needed to serve a given number of covers |
+| `update_stock` | Update the current stock level for a par item |
+| `list_vendors` | List registered food vendors and suppliers |
+| `get_order_guide` | Generate an aggregated vendor order guide |
+| `get_expiring_inventory` | Get inventory batches expiring within a specified number of days |
 
 ### pos-server
 

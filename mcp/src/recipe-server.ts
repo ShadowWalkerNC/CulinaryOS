@@ -88,6 +88,88 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["targetCovers"]
         }
+      },
+      {
+        name: 'get_recipe',
+        description: 'Search recipes by name, ingredient, or category. Returns matching recipe objects.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Name or keyword to search for' },
+            category: { type: 'string', description: 'Optional category filter' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'add_recipe',
+        description: 'Add a new recipe to the vault.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            category_id: { type: 'string' },
+            description: { type: 'string' },
+            base_servings: { type: 'number' },
+            difficulty: { type: 'string', enum: ['Beginner', 'Intermediate', 'Advanced'] },
+            tags: { type: 'array', items: { type: 'string' } },
+            yield_amount: { type: 'number' },
+            yield_unit: { type: 'string' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'search_by_ingredient',
+        description: 'Find all recipes that contain a specific ingredient.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ingredient: { type: 'string', description: 'Ingredient name to search for' },
+          },
+          required: ['ingredient'],
+        },
+      },
+      {
+        name: 'get_pantry',
+        description: 'Get current pantry stock levels. Optionally filter to low-stock items only.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            low_stock_only: { type: 'boolean', description: 'If true, return only items at or below reorder threshold' },
+          },
+        },
+      },
+      {
+        name: 'update_pantry',
+        description: 'Update the stock quantity for a pantry item by its ID.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            item_id: { type: 'string' },
+            quantity: { type: 'number' },
+          },
+          required: ['item_id', 'quantity'],
+        },
+      },
+      {
+        name: 'get_shopping_list',
+        description: 'Returns all pantry items that are at or below their reorder threshold.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'convert_units',
+        description: 'Convert between weight and volume units for common baking ingredients (e.g. grams ↔ cups).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            value: { type: 'number', description: 'The numeric value to convert' },
+            from_unit: { type: 'string', description: 'Source unit (e.g. g, grams, cups, cup)' },
+            to_unit: { type: 'string', description: 'Target unit' },
+            ingredient: { type: 'string', description: 'Ingredient name for density-based conversion (e.g. flour, sugar, butter)' },
+          },
+          required: ['value', 'from_unit', 'to_unit'],
+        },
       }
     ]
   };
@@ -164,6 +246,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         ]
       };
+    } else if (['get_recipe', 'add_recipe', 'search_by_ingredient', 'get_pantry', 'update_pantry', 'get_shopping_list', 'convert_units'].includes(name)) {
+      const BASE_URL = process.env.RECIPEOS_API_URL ?? 'https://recipeos.onrender.com';
+      const API_KEY  = process.env.RECIPEOS_API_KEY ?? '';
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(API_KEY ? { 'Authorization': `Bearer ${API_KEY}` } : {})
+      };
+      let method = 'GET';
+      let path = '';
+      let body: any = undefined;
+      let a = args as any;
+
+      if (name === 'get_recipe') {
+        const qs = `?q=${encodeURIComponent(a.query)}${a.category ? `&category=${a.category}` : ''}`;
+        path = `/api/recipes${qs}`;
+      } else if (name === 'add_recipe') {
+        method = 'POST'; path = '/api/recipes'; body = a;
+      } else if (name === 'search_by_ingredient') {
+        path = `/api/recipes?ingredient=${encodeURIComponent(a.ingredient)}`;
+      } else if (name === 'get_pantry') {
+        path = `/api/pantry${a.low_stock_only ? '?filter=low' : ''}`;
+      } else if (name === 'update_pantry') {
+        method = 'PATCH'; path = `/api/pantry/${a.item_id}`; body = { quantity: a.quantity };
+      } else if (name === 'get_shopping_list') {
+        path = '/api/shopping-list';
+      } else if (name === 'convert_units') {
+        method = 'POST'; path = '/api/convert'; body = { value: a.value, fromUnit: a.from_unit, toUnit: a.to_unit, ingredient: a.ingredient };
+      }
+
+      const fetchOpts: any = { method, headers };
+      if (body) fetchOpts.body = JSON.stringify(body);
+      const res = await fetch(`${BASE_URL}${path}`, fetchOpts);
+      if (!res.ok) throw new Error(`${method} ${path} failed: ${res.status}`);
+      const data = await res.json();
+      return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
     } else {
       throw new Error(`Tool not found: ${name}`);
     }
