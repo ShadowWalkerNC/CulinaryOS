@@ -18,6 +18,39 @@ export type MeasurementUnit =
 // 1. Sub-Recipe Trees & Ratio Blueprints
 // ---------------------------------------------------------------------------
 
+export interface Ingredient {
+  name: string;
+  /** Ratio relative to base ingredient weight (1.0 = 100%) */
+  ratio: number;
+  unit?: string;
+  subRecipeId?: string;
+  subRecipe?: Recipe;
+  sortOrder?: number;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  /** The base ingredient that all ratios are calculated against */
+  baseIngredient: string;
+  ingredients: Ingredient[];
+  yieldUnit?: string;
+  baseYieldPortions?: number;
+  station?: string;
+}
+
+/** Scale a recipe to a target base ingredient weight. */
+export function scaleRecipe(
+  recipe: Recipe,
+  targetBaseWeight: number
+): Record<string, number> {
+  const scaled: Record<string, number> = {};
+  for (const ingredient of recipe.ingredients) {
+    scaled[ingredient.name] = ingredient.ratio * targetBaseWeight;
+  }
+  return scaled;
+}
+
 export interface RecipeIngredientItem {
   id: string;
   name: string;
@@ -29,6 +62,7 @@ export interface RecipeIngredientItem {
   /** Cost per unit in dollars/cents */
   costPerUnit?: number | undefined;
 }
+
 
 export interface RecipeBlueprint {
   id: string;
