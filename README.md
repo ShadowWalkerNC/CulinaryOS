@@ -104,7 +104,7 @@ When `ANTHROPIC_API_KEY` is set, optional AI-powered endpoints activate:
 
 ## Quick Start (Local Demo Mode)
 
-Run the entire system locally with **zero external dependencies**:
+Run the entire system locally in under 30 seconds with **zero database setup and zero external API keys**:
 
 ```bash
 # 1. Clone repository and install dependencies
@@ -112,24 +112,22 @@ git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
 cd CulinaryOS
 pnpm install
 
-# 2. Setup environment variables
-cp .env.example .env
-
-# 3. Start development services in separate terminals (or use tmux)
-# Terminal 1 — Hono API
-pnpm --filter @culinaryos/server dev
-
-# Terminal 2 — POS Terminal
-pnpm --filter @culinaryos/app-pos dev
-
-# Terminal 3 — Kitchen Display (KDS)
-pnpm --filter @culinaryos/app-kds dev
+# 2. One-command turnkey boot (launches POS, KDS, Admin, Web, and API)
+pnpm quickstart
 ```
+*(On Windows you can also double-click `quickstart.bat`, or run `./quickstart.sh` on macOS/Linux).*
+
+👉 **Full 5-minute interactive test walkthrough:** See [`SEAN_QUICKSTART.md`](SEAN_QUICKSTART.md).
 
 ### Demo Credentials
-- **Server PIN**: `1234`
-- **Manager PIN**: `5678`
+- **POS Server PIN**: `1234`
+- **POS Manager PIN**: `5678`
 - **Default Tenant ID**: `00000000-0000-0000-0000-000000000001`
+- **POS Terminal**: [http://localhost:5172](http://localhost:5172)
+- **Kitchen Display (KDS)**: [http://localhost:5173](http://localhost:5173)
+- **Admin Portal**: [http://localhost:5174](http://localhost:5174)
+- **Online Storefront**: [http://localhost:5176](http://localhost:5176)
+- **Unified Hono API**: [http://localhost:3000](http://localhost:3000)
 
 In offline/demo mode, POS serves a sample menu, buffers transactions to localStorage, and communicates with the in-memory mock kitchen store on the API.
 
