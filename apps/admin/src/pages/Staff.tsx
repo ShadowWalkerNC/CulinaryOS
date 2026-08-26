@@ -191,7 +191,7 @@ export function StaffPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="brand">{s.role.toUpperCase()}</Badge>
+                        <Badge variant="brand">{(s.role ?? 'staff').toUpperCase()}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={s.has_pin !== false ? 'success' : 'warning'}>

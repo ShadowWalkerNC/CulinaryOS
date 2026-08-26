@@ -277,25 +277,28 @@ export function PantryPage() {
             </TableHeader>
             <TableBody>
               {items.map((item) => {
-                const isOk = item.stock_status === 'ok';
-                const isLow = item.stock_status === 'low_stock';
+                const current = Number(item.current_qty ?? (item as any).stock_quantity ?? 0);
+                const reorder = Number(item.reorder_at ?? (item as any).par_level ?? 0);
+                const status = item.stock_status || (current <= 0 ? 'out_of_stock' : current <= reorder ? 'low_stock' : 'ok');
+                const isOk = status === 'ok';
+                const isLow = status === 'low_stock';
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-bold text-foreground">{item.name}</TableCell>
                     <TableCell className="font-mono font-bold text-foreground">
-                      {item.current_qty} {item.unit}
+                      {current} {item.unit}
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground">
-                      {item.reorder_at} {item.unit}
+                      {reorder} {item.unit}
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground">
-                      {item.reorder_qty} {item.unit}
+                      {item.reorder_qty ?? 0} {item.unit}
                     </TableCell>
-                    <TableCell className="font-mono text-foreground">{cents(item.cost_per_unit)}</TableCell>
+                    <TableCell className="font-mono text-foreground">{cents(item.cost_per_unit ?? 0)}</TableCell>
                     <TableCell className="text-muted-foreground">{item.supplier ?? '—'}</TableCell>
                     <TableCell className="text-right">
                       <Badge variant={isOk ? 'success' : isLow ? 'warning' : 'destructive'}>
-                        {item.stock_status.replace('_', ' ')}
+                        {(status || 'in_stock').replace('_', ' ')}
                       </Badge>
                     </TableCell>
                   </TableRow>

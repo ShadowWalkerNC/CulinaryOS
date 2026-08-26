@@ -61,7 +61,7 @@ export function CourseHoldBanner({ event }: Props) {
         <span style={{ fontSize: '12px', color: '#86efac' }}>
           {event.firedTicketIds.length} ticket{event.firedTicketIds.length !== 1 ? 's' : ''} released
           {' · '}
-          Order {event.orderId.slice(0, 8).toUpperCase()}
+          Order {(event.orderId ?? '').slice(0, 8).toUpperCase()}
         </span>
       </div>
 

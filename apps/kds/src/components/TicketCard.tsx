@@ -138,9 +138,8 @@ export function TicketCard({ ticket, onBump, onFire }: Props) {
               FIRED
             </span>
           )}
-          {/* Status badge */}
           <span style={{ fontSize: '10px', fontWeight: 600, color: STATUS_COLOR[ticket.status] ?? 'var(--text-muted)' }}>
-            {STATUS_LABEL[ticket.status] ?? ticket.status.toUpperCase()}
+            {STATUS_LABEL[ticket.status] ?? (ticket.status ?? 'PENDING').toUpperCase()}
           </span>
         </div>
       </div>
