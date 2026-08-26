@@ -1,13 +1,14 @@
 # ============================================================
-# CulinaryOS — Unified Render Blueprint (Full Monorepo)
-# Deploy all 7 surfaces + unified API with 1-click on Render
+# CulinaryOS — Unified Render Blueprint (100% Free Tier)
+# Static sites are unlimited free on Render. Web service uses plan: free.
 # ============================================================
 
 services:
-  # ---- 1. Unified Hono Backend API ----
+  # ---- 1. Unified Backend API (Free Instance) ----
   - type: web
     name: culinaryos-api
     runtime: docker
+    plan: free
     dockerfilePath: apps/server/Dockerfile
     dockerContext: .
     healthCheckPath: /health
@@ -32,7 +33,7 @@ services:
       - key: SUPABASE_ANON_KEY
         sync: false
 
-  # ---- 2. Customer Online Ordering & Marketing Storefront ----
+  # ---- 2. Customer Online Ordering & Marketing (Free Static Site) ----
   - type: web
     name: culinaryos-web
     runtime: static
@@ -51,7 +52,7 @@ services:
           type: web
           property: host
 
-  # ---- 3. POS Terminal (Point of Sale) ----
+  # ---- 3. POS Terminal (Free Static Site) ----
   - type: web
     name: culinaryos-pos
     runtime: static
@@ -70,7 +71,7 @@ services:
           type: web
           property: host
 
-  # ---- 4. Kitchen Display System (KDS) ----
+  # ---- 4. Kitchen Display System (Free Static Site) ----
   - type: web
     name: culinaryos-kds
     runtime: static
@@ -89,7 +90,7 @@ services:
           type: web
           property: host
 
-  # ---- 5. Back-Office Admin & Settings Portal ----
+  # ---- 5. Back-Office Admin & Settings (Free Static Site) ----
   - type: web
     name: culinaryos-admin
     runtime: static
@@ -107,53 +108,3 @@ services:
           name: culinaryos-api
           type: web
           property: host
-
-  # ---- 6. KitchenKit (Recipes & Prep Planner) ----
-  - type: web
-    name: culinaryos-kitchenkit
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kitchenkit build
-    staticPublishPath: apps/kitchenkit/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
-
-  # ---- 7. CulinaryOps (Food Cost & Waste Diagnostics) ----
-  - type: web
-    name: culinaryos-ops
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-ops build
-    staticPublishPath: apps/ops/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
-
-  # ---- 8. RecipeOS (Next.js Recipe Vault & Scale Engine) ----
-  - type: web
-    name: culinaryos-recipeos
-    runtime: node
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-recipeos build
-    startCommand: pnpm --filter @culinaryos/app-recipeos start -- -p $PORT
-    envVars:
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
