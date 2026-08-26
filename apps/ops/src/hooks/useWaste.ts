@@ -14,13 +14,19 @@ export interface WasteLog {
   created_at: string;
 }
 
+function requireSupabase() {
+  if (!supabase) throw new Error('Supabase not configured — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  return supabase;
+}
+
 export function useWasteLogs(days = 30) {
   return useQuery({
     queryKey: ['waste_logs', days],
     queryFn: async () => {
+      const db = requireSupabase();
       const since = new Date();
       since.setDate(since.getDate() - days);
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('waste_logs')
         .select('*')
         .gte('log_date', since.toISOString().split('T')[0])
@@ -31,12 +37,14 @@ export function useWasteLogs(days = 30) {
   });
 }
 
+
 export function useLogWaste() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (log: Omit<WasteLog, 'id' | 'created_at'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from('waste_logs').insert({ ...log, user_id: user!.id });
+      const db = requireSupabase();
+      const { data: { user } } = await db.auth.getUser();
+      const { error } = await db.from('waste_logs').insert({ ...log, user_id: user!.id });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -50,7 +58,8 @@ export function useDeleteWasteLog() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('waste_logs').delete().eq('id', id);
+      const db = requireSupabase();
+      const { error } = await db.from('waste_logs').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -59,3 +68,4 @@ export function useDeleteWasteLog() {
     },
   });
 }
+

@@ -4,7 +4,9 @@ import {
   generateRobotsTxt,
   generateMetaTags,
   generateSchemaOrg,
+} from '../index.js';
 import type { ProjectSchema } from '@culinaryos/types';
+
 
 
 // ---------------------------------------------------------------------------

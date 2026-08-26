@@ -39,7 +39,13 @@ export default function WastePage() {
   }
 
   const summary = summarizeWaste(
-    logs.map(l => ({ ingredient: l.ingredient, quantity_grams: l.quantity_grams, cost_per_gram: l.cost_per_gram }))
+    logs.map(l => ({
+      date: l.log_date,
+      ingredient: l.ingredient,
+      quantity: l.quantity_grams,
+      reason: l.reason,
+      costPerGram: l.cost_per_gram,
+    }))
   );
 
   const inputCls = 'bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 w-full focus:outline-none focus:border-amber-500';
@@ -69,10 +75,11 @@ export default function WastePage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Top Offender</p>
           <p className="text-lg font-semibold text-amber-400 truncate">
-            {summary.topByGrams[0]?.ingredient ?? '—'}
+            {summary.topWastedIngredients[0]?.ingredient ?? '—'}
           </p>
         </div>
       </div>
+
 
       {/* Log Waste */}
       <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">

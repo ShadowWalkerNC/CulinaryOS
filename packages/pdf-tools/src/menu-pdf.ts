@@ -145,8 +145,9 @@ export function generateMenuPdf(
     );
   }
 
-  return doc.output('arraybuffer') as unknown as Uint8Array;
+  return new Uint8Array(doc.output('arraybuffer'));
 }
+
 
 function renderItem(
   doc: jsPDF,

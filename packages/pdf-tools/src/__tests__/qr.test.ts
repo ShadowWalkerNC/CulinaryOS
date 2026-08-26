@@ -117,4 +117,5 @@ describe('generateQrBuffer', () => {
     expect(result[0]).toBe(0x89);
     expect(result.length).toBeGreaterThan(0);
   });
-};
+});
+

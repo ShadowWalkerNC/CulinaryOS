@@ -99,8 +99,16 @@ export default function FoodCostPage() {
             </thead>
             <tbody>
               {items.map(item => {
-                const costed = costRecipe(item.menu_item_ingredients, item.menu_price);
+                const ings = (item.menu_item_ingredients ?? []).map(i => ({
+                  name: i.name,
+                  quantity: i.quantity,
+                  unit: i.unit,
+                  costPerUnit: i.cost_per_unit,
+                }));
+                const costed = costRecipe(ings, 1, item.menu_price);
                 const pct = costed.foodCostPct;
+
+
                 const color = pct > 35 ? 'text-red-400' : pct > 28 ? 'text-amber-400' : 'text-green-400';
                 return (
                   <tr key={item.id} className="border-b border-zinc-800 hover:bg-zinc-800/40">

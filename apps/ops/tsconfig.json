@@ -25,7 +25,12 @@
     "paths": {
       "react": ["node_modules/react"],
       "@supabase/supabase-js": ["node_modules/@supabase/supabase-js"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@culinaryos/food-cost-engine": ["../../packages/food-cost-engine/src/index.ts"],
+      "@culinaryos/waste-engine": ["../../packages/waste-engine/src/index.ts"],
+      "@culinaryos/labor-engine": ["../../packages/labor-engine/src/index.ts"],
+      "@culinaryos/shared": ["../../packages/shared/src/index.ts"],
+      "@culinaryos/ratio-engine": ["../../packages/ratio-engine/src/index.ts"]
     }
   },
   "include": ["src"]

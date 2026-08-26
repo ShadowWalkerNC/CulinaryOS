@@ -47,9 +47,16 @@ export function useDashboard() {
 
       // Food cost %
       const items = menuRes.data ?? [];
-      const allCosts = items.map((item: any) =>
-        costRecipe(item.menu_item_ingredients ?? [], item.menu_price)
-      );
+      const allCosts = items.map((item: any) => {
+        const ings = (item.menu_item_ingredients ?? []).map((i: any) => ({
+          name: i.name,
+          quantity: i.quantity,
+          unit: i.unit,
+          costPerUnit: i.cost_per_unit ?? 0,
+        }));
+        return costRecipe(ings, 1, item.menu_price);
+      });
+
       const avgFoodCostPct =
         allCosts.length > 0
           ? allCosts.reduce((a: number, c: any) => a + c.foodCostPct, 0) / allCosts.length
@@ -57,11 +64,14 @@ export function useDashboard() {
 
       // Waste this week
       const wastes = (wastesRes.data ?? []).map((w: any) => ({
+        date: w.log_date,
         ingredient: w.ingredient,
-        quantity_grams: w.quantity_grams,
-        cost_per_gram: w.cost_per_gram,
+        quantity: w.quantity_grams,
+        reason: w.reason || 'other',
+        costPerGram: w.cost_per_gram,
       }));
       const wasteSummary = summarizeWaste(wastes);
+
 
       return {
         laborPct,

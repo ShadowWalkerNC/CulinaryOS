@@ -14,6 +14,7 @@ export default function LoginPage() {
     setSent(true);
   };
 
+
   return (
     <div className="flex h-screen items-center justify-center bg-zinc-950">
       <div className="w-full max-w-sm px-8 py-10 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-xl">
