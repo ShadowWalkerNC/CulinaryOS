@@ -101,44 +101,52 @@ export function OrderView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-1 pt-1">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           {order.status === 'open' && (
             <button
               onClick={() => fireOrder(order.id)}
               disabled={firing || !order.items?.length}
-              className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+              className="col-span-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
             >
-              <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
-              {firing ? 'Sending...' : 'SEND TO KITCHEN'}
+              <span className="text-lg">🔥</span>
+              <span>{firing ? 'Sending to Kitchen...' : 'SEND TO KITCHEN'}</span>
             </button>
           )}
 
-          {['sent','in-progress','ready'].includes(order.status) && (
-            <button onClick={() => setView('checkout')} className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-lg py-2.5 text-[11px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px]">payments</span>
-              PROCEED TO PAY
+          {['sent', 'in-progress', 'ready'].includes(order.status) && (
+            <button
+              onClick={() => setView('checkout')}
+              className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
+            >
+              <span className="text-lg">💳</span>
+              <span>PROCEED TO PAY</span>
             </button>
           )}
 
           <button
-            onClick={() => { if (confirm('Void this order?')) voidOrder({ orderId: order.id }); }}
-            className="bg-white text-[#ba1a1a] hover:bg-[#fff0ef] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#f3d0cd] flex flex-col items-center justify-center gap-0.5"
+            onClick={() => {
+              if (confirm('Void this order?')) voidOrder({ orderId: order.id });
+            }}
+            className="bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-0.5 shadow-xs"
           >
-            <span className="material-symbols-outlined text-[16px]">delete</span>
-            Void
+            <span className="text-base">🗑️</span>
+            <span>Void</span>
           </button>
 
           <button
             onClick={() => setShowDiscountModal(true)}
-            className="bg-white text-[#0f172a] hover:bg-[#eff4ff] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5"
+            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs"
           >
-            <span className="material-symbols-outlined text-[16px]">sell</span>
-            Promo
+            <span className="text-base">🏷️</span>
+            <span>Promo</span>
           </button>
 
-          <button onClick={() => setView('menu')} className="bg-white text-[#0b1c30] hover:bg-[#eff4ff] rounded-lg py-2 text-[9px] font-black transition-colors uppercase border border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5">
-            <span className="material-symbols-outlined text-[16px]">restaurant_menu</span>
-            Menu
+          <button
+            onClick={() => setView('menu')}
+            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs"
+          >
+            <span className="text-base">📋</span>
+            <span>Menu</span>
           </button>
         </div>
       </div>

@@ -490,90 +490,80 @@ export function TablesView() {
 
             {/* Start New Order Flow */}
             <div className="space-y-4 py-2">
-              <div className="space-y-3 bg-secondary/50 p-3.5 rounded-xl border border-border">
+              <div className="space-y-3 bg-[#f8f9fa] p-4 rounded-2xl border-2 border-[#e5e7eb]">
                 <div className="flex justify-between items-center text-xs">
-                  <Label htmlFor="covers" className="text-foreground font-bold">Party Size / Covers</Label>
-                  <div className="flex items-center gap-2">
-                    <Button
+                  <Label htmlFor="covers" className="text-foreground font-black uppercase tracking-wider">Party Size / Covers</Label>
+                  <div className="flex items-center gap-3">
+                    <button
                       type="button"
-                      variant="outline"
-                      size="icon"
-                      className="w-8 h-8"
+                      className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
                       onClick={() => setCoverCount((c) => Math.max(1, c - 1))}
                     >
-                      <Minus className="w-3.5 h-3.5" />
-                    </Button>
-                    <span className="font-mono text-sm font-black w-6 text-center">{coverCount}</span>
-                    <Button
+                      -
+                    </button>
+                    <span className="font-mono text-base font-black w-8 text-center">{coverCount}</span>
+                    <button
                       type="button"
-                      variant="outline"
-                      size="icon"
-                      className="w-8 h-8"
+                      className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
                       onClick={() => setCoverCount((c) => Math.min(selectedTable.capacity + 4, c + 1))}
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
+                      +
+                    </button>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="server" className="text-foreground font-bold">Assigned Server</Label>
+                  <Label htmlFor="server" className="text-foreground font-black uppercase tracking-wider text-xs">Assigned Server</Label>
                   <Input
                     id="server"
                     type="text"
                     value={serverName}
                     onChange={(e) => setServerName(e.target.value)}
-                    className="font-bold"
+                    className="font-bold h-11 rounded-xl"
                   />
                 </div>
               </div>
 
-              <Button
+              <button
                 type="button"
-                variant="brand"
-                size="touch"
                 onClick={handleStartOrder}
-                className="w-full uppercase tracking-wider"
+                className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-14 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2"
               >
-                <UtensilsCrossed className="w-4 h-4 mr-2" />
-                Open Table Ticket
-              </Button>
+                <UtensilsCrossed className="w-5 h-5" />
+                <span>Start Order & Seat Guests</span>
+              </button>
             </div>
 
             {/* Manual Status Override Options */}
-            <div className="border-t border-border pt-4 space-y-2">
-              <Label className="block">Quick Table Status Override</Label>
+            <div className="border-t border-border pt-4 space-y-2.5">
+              <Label className="block text-xs font-black uppercase tracking-wider text-[#6b7280]">
+                Quick Table Status Override
+              </Label>
               <div className="grid grid-cols-3 gap-2">
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => handleUpdateStatus('available')}
-                  className="bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                  className="bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:bg-emerald-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
                 >
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Available
-                </Button>
-                <Button
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Available</span>
+                </button>
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => handleUpdateStatus('reserved')}
-                  className="bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100"
+                  className="bg-indigo-50 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
                 >
-                  <Bookmark className="w-3 h-3 mr-1" />
-                  Reserved
-                </Button>
-                <Button
+                  <Bookmark className="w-4 h-4" />
+                  <span>Reserved</span>
+                </button>
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => handleUpdateStatus('dirty')}
-                  className="bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                  className="bg-rose-50 text-rose-800 border-2 border-rose-300 hover:bg-rose-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
                 >
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Dirty
-                </Button>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Dirty</span>
+                </button>
               </div>
             </div>
           </DialogContent>

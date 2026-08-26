@@ -330,60 +330,79 @@ export function CheckoutView() {
       </div>
 
       {/* Right panel: Payment Dashboard */}
-      <div className="w-96 p-5 overflow-y-auto space-y-5 bg-white border-l border-[#e5e7eb] flex flex-col justify-between shrink-0 h-full">
-        <div className="space-y-5">
+      <div className="w-[460px] p-6 overflow-y-auto space-y-6 bg-white border-l border-[#e5e7eb] flex flex-col justify-between shrink-0 h-full shadow-lg">
+        <div className="space-y-6">
           {/* Tender Type Selection */}
-          <div className="space-y-2">
-            <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Tender Type</span>
-            <div className="grid grid-cols-5 gap-1.5">
-              {METHODS.map((m) => (
-                <button key={m} onClick={() => setMethod(m)}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
-                    method === m ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-xs' : 'bg-[#f3f4f6] border-[#e5e7eb] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937]'
-                  }`}>
-                  {m === 'tap' ? '📱 TAP' : m === 'scan' ? '📷 SCAN' : m}
-                </button>
-              ))}
+          <div className="space-y-3">
+            <span className="text-xs font-black text-[#1f2937] tracking-wider uppercase block">
+              1. Select Payment Method
+            </span>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { id: 'card', name: 'Credit / Debit', icon: '💳', desc: 'Swipe, Insert, Chip' },
+                { id: 'tap', name: 'Tap to Pay', icon: '📱', desc: 'Apple Pay, Google Pay, NFC' },
+                { id: 'scan', name: 'Scan to Pay', icon: '📷', desc: 'QR Code on Guest Phone' },
+                { id: 'cash', name: 'Cash Tender', icon: '💵', desc: 'Exact & Change Math' },
+                { id: 'comp', name: 'Comp / House', icon: '🎁', desc: 'Manager Authorized' },
+              ].map((pm) => {
+                const isSelected = method === pm.id;
+                return (
+                  <button
+                    key={pm.id}
+                    type="button"
+                    onClick={() => setMethod(pm.id as any)}
+                    className={`p-3.5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between h-20 ${
+                      isSelected
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white shadow-md scale-[1.02]'
+                        : 'border-[#e5e7eb] bg-[#f8f9fa] text-[#1f2937] hover:border-[#9ca3af] hover:bg-white'
+                    } ${pm.id === 'comp' ? 'col-span-2' : ''}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{pm.icon}</span>
+                      <span className="font-black text-xs uppercase tracking-wide truncate">{pm.name}</span>
+                    </div>
+                    <span className={`text-[10px] font-bold truncate ${isSelected ? 'text-gray-300' : 'text-[#6b7280]'}`}>
+                      {pm.desc}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Tap to Pay NFC Card / Phone Flow */}
           {method === 'tap' && (
-            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-4 rounded-xl border border-[#e5e7eb] text-center shadow-xs">
-              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl animate-pulse">
-                📶
+            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-blue-50/50 to-white p-5 rounded-2xl border-2 border-blue-200 text-center shadow-xs">
+              <div className="w-14 h-14 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto text-3xl animate-pulse">
+                📱
               </div>
               <div>
-                <h4 className="text-xs font-black text-[#1f2937] uppercase tracking-wider">Contactless / Tap to Pay</h4>
-                <p className="text-[10px] text-[#6b7280] mt-0.5">Hold Apple Pay, Google Pay, or contactless EMV card near terminal reader.</p>
+                <h4 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">Contactless / Tap to Pay</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Hold Apple Pay, Google Pay, or contactless chip card near the terminal.</p>
               </div>
-              <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                NFC Sensor Active & Listening
+              <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 py-2 px-4 rounded-xl border border-emerald-200">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                NFC Contactless Sensor Active
               </div>
             </div>
           )}
 
           {/* Scan to Pay QR Code Flow */}
           {method === 'scan' && (
-            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-4 rounded-xl border border-[#e5e7eb] text-center shadow-xs">
-              <div className="bg-white p-3 border border-[#e5e7eb] rounded-xl inline-block shadow-inner">
+            <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-5 rounded-2xl border-2 border-[#e5e7eb] text-center shadow-xs">
+              <div className="bg-white p-3.5 border border-[#e5e7eb] rounded-2xl inline-block shadow-inner">
                 {/* Visual QR Code SVG Representation */}
-                <svg className="w-28 h-28 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-32 h-32 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="100" height="100" fill="white"/>
-                  {/* Top-left locator */}
                   <rect x="10" y="10" width="24" height="24" fill="#0f172a"/>
                   <rect x="14" y="14" width="16" height="16" fill="white"/>
                   <rect x="18" y="18" width="8" height="8" fill="#0f172a"/>
-                  {/* Top-right locator */}
                   <rect x="66" y="10" width="24" height="24" fill="#0f172a"/>
                   <rect x="70" y="14" width="16" height="16" fill="white"/>
                   <rect x="74" y="18" width="8" height="8" fill="#0f172a"/>
-                  {/* Bottom-left locator */}
                   <rect x="10" y="66" width="24" height="24" fill="#0f172a"/>
                   <rect x="14" y="70" width="16" height="16" fill="white"/>
                   <rect x="18" y="74" width="8" height="8" fill="#0f172a"/>
-                  {/* Data modules */}
                   <rect x="42" y="12" width="6" height="6" fill="#0f172a"/>
                   <rect x="52" y="18" width="6" height="6" fill="#0f172a"/>
                   <rect x="42" y="28" width="6" height="6" fill="#0f172a"/>
@@ -402,36 +421,53 @@ export function CheckoutView() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-xs font-black text-[#1f2937] uppercase tracking-wider">Scan to Pay QR</h4>
-                <p className="text-[10px] text-[#6b7280] mt-0.5">Guest scans QR code using phone camera, Venmo, PayPal, or Cash App.</p>
+                <h4 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">Scan to Pay QR</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Guest scans QR code using phone camera, Apple Pay, or Cash App.</p>
               </div>
-              <p className="text-[9px] font-mono text-[#0f172a] bg-[#f3f4f6] py-1 px-2 rounded">
+              <p className="text-xs font-mono font-bold text-[#0f172a] bg-[#f3f4f6] py-1.5 px-3 rounded-lg border border-[#e5e7eb]">
                 pay.culinaryos.com/o/{order.id.slice(-6)}
               </p>
             </div>
           )}
 
           {/* Preset Tips Selection */}
-          <div className="space-y-2">
-            <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Tip Selector</span>
-            <div className="grid grid-cols-5 gap-1.5">
-              {([0, 15, 18, 20] as const).map((pct) => (
-                <button key={pct} onClick={() => setTipPercent(pct)}
-                  className={`py-2 rounded text-[10px] font-bold transition-all border ${
-                    tipPercent === pct
-                      ? 'bg-[#0f172a10] border-[#0f172a] text-[#0f172a] font-black'
-                      : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
-                  }`}>
-                  {pct === 0 ? 'No Tip' : `${pct}%`}
-                </button>
-              ))}
-              <button onClick={() => setTipPercent('custom')}
-                className={`py-2 rounded text-[10px] font-bold transition-all border ${
+          <div className="space-y-2.5">
+            <span className="text-xs font-black text-[#1f2937] tracking-wider uppercase block">
+              2. Add Gratuity / Tip
+            </span>
+            <div className="grid grid-cols-5 gap-2">
+              {([0, 15, 18, 20] as const).map((pct) => {
+                const tipCents = pct === 0 ? 0 : Math.round(taxableSubtotal * (pct / 100));
+                const isSelected = tipPercent === pct;
+                return (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setTipPercent(pct)}
+                    className={`py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center gap-0.5 ${
+                      isSelected
+                        ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md scale-105'
+                        : 'bg-[#f8f9fa] border-[#e5e7eb] text-[#4b5563] hover:border-[#9ca3af] hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-xs font-black">{pct === 0 ? 'No Tip' : `${pct}%`}</span>
+                    <span className={`text-[10px] font-mono ${isSelected ? 'text-gray-300' : 'text-[#6b7280]'}`}>
+                      ${(tipCents / 100).toFixed(2)}
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setTipPercent('custom')}
+                className={`py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center ${
                   tipPercent === 'custom'
-                    ? 'bg-[#0f172a10] border-[#0f172a] text-[#0f172a] font-black'
-                    : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#1f2937] hover:border-[#cbd5e1]'
-                }`}>
-                Custom
+                    ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md scale-105'
+                    : 'bg-[#f8f9fa] border-[#e5e7eb] text-[#4b5563] hover:border-[#9ca3af] hover:bg-white'
+                }`}
+              >
+                <span className="text-xs font-black">Custom</span>
+                <span className="text-[10px] font-mono opacity-80">$$</span>
               </button>
             </div>
             {tipPercent === 'custom' && (
@@ -440,8 +476,8 @@ export function CheckoutView() {
                   type="number"
                   value={customTip}
                   onChange={(e) => setCustomTip(e.target.value)}
-                  placeholder="Enter tip ($)"
-                  className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2 text-xs text-[#1f2937] font-mono"
+                  placeholder="Enter custom tip in dollars ($)"
+                  className="w-full bg-[#f8f9fa] border-2 border-[#cbd5e1] focus:border-[#0f172a] focus:bg-white outline-none rounded-xl p-3 text-xs text-[#1f2937] font-mono font-bold shadow-inner"
                 />
               </div>
             )}
@@ -449,14 +485,20 @@ export function CheckoutView() {
 
           {/* Cash calculator helper */}
           {method === 'cash' && (
-            <div className="space-y-2 animate-fadeIn bg-[#f8f9fa] p-3 rounded-xl border border-[#e5e7eb]">
-              <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block border-b border-[#e5e7eb] pb-1.5">Cash tender hotkeys</span>
-              <div className="grid grid-cols-4 gap-1.5 pt-1.5">
-                {[total/100, 10, 20, 50, 100].map((amt, idx) => {
+            <div className="space-y-3 animate-fadeIn bg-[#f8f9fa] p-4 rounded-2xl border-2 border-[#e5e7eb]">
+              <span className="text-xs font-black text-[#1f2937] tracking-wider uppercase block border-b border-[#e5e7eb] pb-2">
+                Fast Cash Tender Hotkeys
+              </span>
+              <div className="grid grid-cols-4 gap-2 pt-1">
+                {[total / 100, 20, 50, 100].map((amt, idx) => {
                   const val = Math.ceil(amt);
                   return (
-                    <button key={idx} onClick={() => setCashTendered(val.toString())}
-                      className="bg-white border border-[#e5e7eb] hover:border-[#0f172a] text-[#1f2937] font-bold py-2 rounded text-[10px]">
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCashTendered(val.toString())}
+                      className="bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] hover:bg-[#0f172a] hover:text-white text-[#1f2937] font-black py-2.5 rounded-xl text-xs transition-all shadow-xs"
+                    >
                       {idx === 0 ? 'Exact' : `$${val}`}
                     </button>
                   );
@@ -466,23 +508,38 @@ export function CheckoutView() {
                 type="number"
                 value={cashTendered}
                 onChange={(e) => setCashTendered(e.target.value)}
-                placeholder="Or input cash amount ($)"
-                className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2 text-xs text-[#1f2937] mt-3 font-mono"
+                placeholder="Or input custom cash amount ($)"
+                className="w-full bg-white border-2 border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-xl p-3 text-xs text-[#1f2937] font-mono font-bold shadow-inner"
               />
+              {cashAmount > 0 && (
+                <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-[#e5e7eb]">
+                  <span className="text-xs font-bold text-[#6b7280]">Change to return:</span>
+                  <span className="text-base font-black font-mono text-emerald-600">
+                    ${(changeDue / 100).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Charge and Submit */}
-        <button onClick={startPaymentFlow} disabled={processing}
-          className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-colors disabled:opacity-50 active:scale-98 mt-6 shadow-sm">
-          {processing
-            ? 'Authorizing...'
-            : method === 'tap'
-            ? `Tap Terminal — $${(total/100).toFixed(2)}`
-            : method === 'scan'
-            ? `Confirm QR Paid — $${(total/100).toFixed(2)}`
-            : `Finalize Charge $${(total/100).toFixed(2)}`}
+        <button
+          type="button"
+          onClick={startPaymentFlow}
+          disabled={processing}
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
+        >
+          <span className="text-lg">✓</span>
+          <span>
+            {processing
+              ? 'Authorizing Transaction...'
+              : method === 'tap'
+              ? `Tap Terminal • $${(total / 100).toFixed(2)}`
+              : method === 'scan'
+              ? `Confirm QR Paid • $${(total / 100).toFixed(2)}`
+              : `Finalize Payment • $${(total / 100).toFixed(2)}`}
+          </span>
         </button>
       </div>
 
