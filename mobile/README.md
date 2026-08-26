@@ -1,6 +1,10 @@
 # CulinaryOS Mobile
 
-React Native + Expo mobile client for CulinaryOS. Replaces the previous Kotlin/Compose Android app.
+React Native + Expo mobile companion for CulinaryOS.
+
+> **Status: Early stub.** The mobile app scaffolding is in place but is not yet feature-complete. The primary operational surfaces (POS, KDS, Admin) are web-first React applications. This companion app targets staff-facing mobile workflows in a future release.
+
+---
 
 ## Stack
 
@@ -13,17 +17,21 @@ React Native + Expo mobile client for CulinaryOS. Replaces the previous Kotlin/C
 - **Expo SQLite** — offline local storage
 - **EAS Build** — CI/CD to Google Play & App Store
 
+---
+
 ## Getting Started
 
 ```bash
 cd mobile
-npm install
-ncp ../.env.example .env
+pnpm install
+cp ../.env.example .env
 # Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
 npx expo start
 ```
 
-Scan the QR code with Expo Go on your Android or iOS device.
+Scan the QR code with [Expo Go](https://expo.dev/go) on your Android or iOS device.
+
+---
 
 ## Project Structure
 
@@ -42,6 +50,17 @@ mobile/
 │   └── store.ts             # Zustand global store
 └── app.json                 # Expo config
 ```
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (browser-safe) |
+
+---
 
 ## Building for Production
 

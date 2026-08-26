@@ -1,7 +1,11 @@
 # CulinaryOS — Sync Protocol Specification
 
+> ⚠️ **PARTIALLY SUPERSEDED** — The SQLDelight/Kotlin sections describe the original KMP implementation.
+> The offline-first **concept** (write locally → sync to server) still applies to the TypeScript implementation.
+> In the TypeScript monorepo, the offline queue is `packages/shared/src/offline-sync.ts` (localStorage) and the sync path is `PATCH /v1/orders/:id/send`.
+> See [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) and [`docs/integration-spine.md`](integration-spine.md) for the current implementation.
+>
 > v1.0 — June 19, 2026
-> Status: LOCKED — do not implement local queue or sync engine without reading this first.
 
 ---
 

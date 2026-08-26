@@ -13,16 +13,16 @@ const API = getApiBase();
 const TENANT_ID = getTenantId();
 
 const STATIONS = [
-  { id: 'expo', label: 'Expo Pass' },
-  { id: '1', label: 'Hot Grill' },
-  { id: '2', label: 'Cold Prep' },
-  { id: '3', label: 'Fryer' },
-  { id: '4', label: 'Bar' },
-  { id: 'all', label: 'All Stations' },
+  { id: 'expo', label: 'Expo Pass', icon: 'room_service' },
+  { id: '1', label: 'Hot Grill', icon: 'outdoor_grill' },
+  { id: '2', label: 'Cold Prep', icon: 'eco' },
+  { id: '3', label: 'Fryer', icon: 'lunch_dining' },
+  { id: '4', label: 'Bar', icon: 'local_bar' },
+  { id: 'all', label: 'All Stations', icon: 'grid_view' },
 ];
 
 /**
- * Main KitchenKit KDS station view & Expediter (Expo) Pass View.
+ * Main KitchenKit KDS station view & Expediter (Expo) Pass View matching CulinaryOS design system.
  */
 export function Station() {
   const { stationId = 'expo' } = useParams<{ stationId: string }>();
@@ -114,142 +114,111 @@ export function Station() {
   };
 
   return (
-    <div style={{
-      minHeight:     '100dvh',
-      background:    'var(--bg)',
-      display:       'flex',
-      flexDirection: 'column',
-    }}>
-      {/* Universal CulinaryOS Header */}
+    <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden antialiased select-none">
+      {/* Universal CulinaryOS Master Header */}
       <CulinaryHeader activeModule="kds" tenantName={`KitchenKit — ${activeStationLabel}`} />
 
       {/* Course fired flash banner */}
       <CourseHoldBanner event={courseEvent} />
 
-      {/* Station header */}
-      <header style={{
-        padding:        '12px 24px',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'space-between',
-        borderBottom:   '1px solid var(--border)',
-        background:     'var(--surface)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}><path d="M6 18V6a6 6 0 0 1 12 0v12" /><path d="M12 10V6" /><path d="M18 14H6" /><rect width="18" height="4" x="3" y="18" rx="1" /></svg>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)' }}>
-                KitchenKit — {activeStationLabel} {isExpoPass ? '(Head Chef)' : ''}
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>CulinaryOS KDS Terminal</div>
-            </div>
+      {/* Sub-Navigation Bar matching POS & Admin */}
+      <header className="bg-white border-b border-[#e5e7eb] px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px] text-[#0f172a] filled">skillet</span>
+            <span className="font-black text-xs tracking-wider text-[#0b1c30] uppercase">
+              KitchenKit — {activeStationLabel} {isExpoPass ? '(Expo Pass)' : ''}
+            </span>
           </div>
+          <span className="text-[#e5e7eb]">|</span>
 
           {/* Station Selection Tabs */}
-          <nav style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
-            {STATIONS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/station/${s.id}`)}
-                style={{
-                  background:    s.id === stationId ? 'var(--accent-strong)' : 'var(--surface-2)',
-                  color:         s.id === stationId ? '#ffffff' : 'var(--text-muted)',
-                  border:        s.id === stationId ? '1px solid var(--accent-strong)' : '1px solid var(--border)',
-                  borderRadius:  '6px',
-                  padding:       '5px 12px',
-                  fontSize:      '11px',
-                  fontWeight:    700,
-                  cursor:        'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  transition:    'all 0.15s ease',
-                }}
-              >
-                {s.label}
-              </button>
-            ))}
+          <nav className="flex items-center gap-1 bg-[#f8f9fa] border border-[#e5e7eb] p-1 rounded-xl">
+            {STATIONS.map((s) => {
+              const isActive = s.id === stationId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => navigate(`/station/${s.id}`)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isActive
+                      ? 'bg-white text-[#0f172a] shadow-xs border border-[#e5e7eb]'
+                      : 'text-[#6b7280] hover:text-[#0b1c30] hover:bg-[#e5e7eb50]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[13px]">{s.icon}</span>
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Live indicator */}
-          <span style={{
-            width: '8px', height: '8px', borderRadius: '50%',
-            background: error ? 'var(--amber)' : 'var(--green)',
-            boxShadow: error ? '0 0 6px var(--amber)' : '0 0 6px var(--green)',
-            animation: 'pulseLive 2s ease-in-out infinite',
-          }} />
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {error ? 'Demo Mode' : 'Live'}
-          </span>
+        {/* Live / Demo Status Indicator */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-[#f8f9fa] border border-[#e5e7eb] px-3 py-1.5 rounded-xl text-[10px] text-[#6b7280]">
+            <span className={`w-2 h-2 rounded-full ${error ? 'bg-amber-500' : 'bg-[#22c55e] animate-pulse'}`} />
+            <span className="font-semibold">{error ? 'Demo Mode' : 'Live Realtime'}</span>
+          </div>
         </div>
-        <style>{`
-          @keyframes pulseLive {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.4; }
-          }
-        `}</style>
       </header>
 
       {/* Expo Pass Real-Time Station Status Bar */}
       {isExpoPass && (
-        <section style={{
-          background:    'var(--surface-2)',
-          borderBottom:  '1px solid var(--border)',
-          padding:       '8px 24px',
-          display:       'flex',
-          gap:           '16px',
-          alignItems:    'center',
-          fontSize:      '12px',
-        }}>
-          <span style={{ fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Real-Time Station Overview:
-          </span>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {[
-              { icon: 'outdoor_grill', label: 'Hot Grill', value: stationCounts.hotGrill },
-              { icon: 'eco',           label: 'Cold Prep', value: stationCounts.coldPrep },
-              { icon: 'lunch_dining',  label: 'Fryer',     value: stationCounts.fryer },
-              { icon: 'local_bar',     label: 'Bar',       value: stationCounts.bar },
-            ].map((st) => (
-              <span key={st.label} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 9px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '15px', color: 'var(--text-muted)' }}>{st.icon}</span>
-                {st.label}: <strong style={{ color: 'var(--accent)' }}>{st.value}</strong>
-              </span>
-            ))}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 9px', borderRadius: '4px', background: 'var(--amber-glow)', border: '1px solid var(--amber)', fontWeight: 700, color: 'var(--amber)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>pause_circle</span>
-              Held Courses: <strong>{stationCounts.held}</strong>
+        <section className="bg-white border-b border-[#e5e7eb] px-6 py-2 flex items-center justify-between shadow-2xs shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black text-[#1f2937] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[14px] text-[#0f172a]">dashboard</span>
+              <span>Station Overview:</span>
             </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {[
+                { icon: 'outdoor_grill', label: 'Hot Grill', value: stationCounts.hotGrill },
+                { icon: 'eco',           label: 'Cold Prep', value: stationCounts.coldPrep },
+                { icon: 'lunch_dining',  label: 'Fryer',     value: stationCounts.fryer },
+                { icon: 'local_bar',     label: 'Bar',       value: stationCounts.bar },
+              ].map((st) => (
+                <span
+                  key={st.label}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f8f9fa] border border-[#e5e7eb] text-[10px] font-bold text-[#4b5563]"
+                >
+                  <span className="material-symbols-outlined text-[13px] text-[#6b7280]">{st.icon}</span>
+                  <span>{st.label}:</span>
+                  <strong className="text-[#0f172a] font-mono">{st.value}</strong>
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-black text-amber-800">
+                <span className="material-symbols-outlined text-[13px]">pause_circle</span>
+                <span>Held Courses:</span>
+                <strong className="font-mono">{stationCounts.held}</strong>
+              </span>
+            </div>
+          </div>
+          <div className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider">
+            Total Active Tickets: <strong className="text-[#0f172a] font-mono">{stationCounts.total}</strong>
           </div>
         </section>
       )}
 
       {/* Ticket board */}
-      <main style={{
-        flex:       1,
-        overflowX:  'auto',
-        overflowY:  'hidden',
-        display:    'flex',
-        alignItems: 'flex-start',
-        gap:        '16px',
-        padding:    '20px 24px 80px',
-      }}>
+      <main className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-4 p-6 pb-24 bg-[#f8f9fa]">
         {loading && (
-          <div style={{ color: 'var(--text-muted)', margin: 'auto' }}>Loading tickets…</div>
+          <div className="m-auto flex flex-col items-center gap-2 text-[#6b7280]">
+            <span className="material-symbols-outlined text-3xl animate-spin text-[#0f172a]">progress_activity</span>
+            <span className="font-bold text-xs uppercase tracking-wider">Loading kitchen tickets…</span>
+          </div>
         )}
         {!loading && tickets.length === 0 && (
-          <div style={{
-            margin:    'auto',
-            textAlign: 'center',
-            color:     'var(--text-muted)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          <div className="m-auto text-center p-8 bg-white border border-[#e5e7eb] rounded-2xl shadow-xs max-w-md">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto mb-3">
+              <span className="material-symbols-outlined text-2xl">check_circle</span>
             </div>
-            <div style={{ fontWeight: 600, color: 'var(--text)' }}>All clear — no active tickets for {activeStationLabel}</div>
-            <div style={{ fontSize: '12px', marginTop: '4px' }}>New orders will appear here in real time</div>
+            <h3 className="font-black text-sm text-[#1f2937] uppercase tracking-wide">
+              All Clear — No Active Tickets
+            </h3>
+            <p className="text-xs text-[#6b7280] mt-1">
+              Station {activeStationLabel} is currently clear. New orders will appear here automatically in real time.
+            </p>
           </div>
         )}
         {tickets.map((t) => (
@@ -262,3 +231,4 @@ export function Station() {
     </div>
   );
 }
+

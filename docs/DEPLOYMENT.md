@@ -89,10 +89,40 @@ Deploy individual apps by linking the monorepo root to Vercel and configuring ro
 
 ---
 
-## 5. Stripe Terminal & Hardware Pairing
+## 5. Deployment Option C: Railway
+
+A `railway.toml` is included in the repository root. Deploy the unified API to Railway in one step:
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login and deploy
+railway login
+railway link   # link to your Railway project
+railway up
+```
+
+Set all required environment variables in the Railway dashboard under **Variables**.
+
+---
+
+## 6. Deployment Option D: Render
+
+A `render.yaml` is included in the repository root for multi-service Render deployment:
+
+1. Connect your GitHub repository to [Render](https://render.com).
+2. Render automatically detects `render.yaml` and provisions the service blueprint.
+3. Set required environment variables in the Render dashboard.
+4. Deploy — Render handles builds, restarts, and zero-downtime deploys.
+
+---
+
+## 7. Stripe Terminal & Hardware Pairing
 
 1. Open POS at `https://pos.yourdomain.com` or `http://localhost:5172`.
 2. Login using Manager PIN (`5678`) or Server PIN (`1234`).
-3. Navigate to **Settings** $\to$ **Stripe Card Readers**.
+3. Navigate to **Settings** → **Stripe Card Readers**.
 4. Select or pair your **WisePOS E** or **BBPOS Chipper**.
 5. Connect USB/Network thermal receipt printers.
+

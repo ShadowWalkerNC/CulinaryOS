@@ -5,7 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Planned
+- Multi-tenant production hardening
+- Extension marketplace public launch
+- `pnpm lint` ESLint configuration across all packages
+- Bun test suite unification
+
+---
+
 ## [1.0.0] — 2026-08-25: Production-Ready "Linux for Restaurants" Release
+
 
 ### Added
 - **Canonical shadcn/ui Component Suite (`@culinaryos/ui`):**
@@ -37,7 +48,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Monorepo Quality Gates:**
   - 32/32 passing test suites (`node ./scripts/run-all-tests.cjs`).
-  - 25/25 passing Turborepo build & typecheck tasks.
+  - 18/18 passing Turborepo typecheck tasks.
   - Preflight production readiness diagnostics tool (`pnpm doctor`).
 
 ---

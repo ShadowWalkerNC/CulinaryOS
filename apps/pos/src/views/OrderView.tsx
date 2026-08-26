@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { useOrder, useFireOrder, useVoidOrder, useApplyDiscount } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
+import {
+  Flame,
+  CreditCard,
+  Trash2,
+  Tag,
+  ClipboardList,
+  Plus,
+  Minus,
+  Percent,
+  X,
+  Check,
+} from '@culinaryos/ui';
 
 export function OrderView() {
   const { activeOrderId, setView, setActiveOrder } = usePOSStore();
@@ -44,12 +56,12 @@ export function OrderView() {
   return (
     <div className="flex flex-col h-full bg-white relative">
       {/* Ticket Header */}
-      <div className="p-3 border-b border-[#e5e7eb] flex items-center justify-between shrink-0">
+      <div className="p-3.5 border-b border-[#e5e7eb] flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">
             {order.table_number ? `Table ${order.table_number}` : 'Takeaway'}
           </h2>
-          {order.server_name && <p className="text-[10px] text-[#6b7280] mt-0.5">Server: {order.server_name}</p>}
+          {order.server_name && <p className="text-[10px] text-[#6b7280] font-bold mt-0.5">Server: {order.server_name}</p>}
         </div>
         <button onClick={() => setActiveOrder(null)} className="text-[10px] font-black text-[#0f172a] hover:underline uppercase">
           Close
@@ -57,7 +69,7 @@ export function OrderView() {
       </div>
 
       {/* Ticket Items (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-white">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 bg-white">
         {order.items?.length === 0 ? (
           <div className="text-center text-[#9ca3af] mt-16 p-4">
             <p className="text-xs font-bold uppercase tracking-wider">Ticket Empty</p>
@@ -68,7 +80,7 @@ export function OrderView() {
             <div key={item.id} className="border-b border-[#f3f4f6] pb-2 flex justify-between items-start text-xs">
               <div>
                 <p className="text-[#1f2937] font-bold flex items-center gap-1">
-                  {item.quantity > 1 && <span className="text-[#0f172a]">{item.quantity}x</span>}
+                  {item.quantity > 1 && <span className="text-[#0f172a] font-black">{item.quantity}x</span>}
                   <span>{item.name}</span>
                   <span className="text-[9px] font-extrabold bg-[#f3f4f6] text-[#6b7280] px-1 py-0.2 rounded ml-1">S{item.seat_number ?? 1}</span>
                 </p>
@@ -82,7 +94,7 @@ export function OrderView() {
       </div>
 
       {/* Ticket Totals & Operations */}
-      <div className="p-3 border-t border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3">
+      <div className="p-3.5 border-t border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3">
         <div className="space-y-1 text-[11px] text-[#6b7280]">
           <div className="flex justify-between">
             <span>Subtotal</span><span className="font-mono">${(subtotal / 100).toFixed(2)}</span>
@@ -108,7 +120,7 @@ export function OrderView() {
               disabled={firing || !order.items?.length}
               className="col-span-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
             >
-              <span className="text-lg">🔥</span>
+              <Flame className="w-4 h-4" />
               <span>{firing ? 'Sending to Kitchen...' : 'SEND TO KITCHEN'}</span>
             </button>
           )}
@@ -118,7 +130,7 @@ export function OrderView() {
               onClick={() => setView('checkout')}
               className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
             >
-              <span className="text-lg">💳</span>
+              <CreditCard className="w-4 h-4" />
               <span>PROCEED TO PAY</span>
             </button>
           )}
@@ -127,25 +139,25 @@ export function OrderView() {
             onClick={() => {
               if (confirm('Void this order?')) voidOrder({ orderId: order.id });
             }}
-            className="bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-0.5 shadow-xs"
+            className="bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-1 shadow-xs"
           >
-            <span className="text-base">🗑️</span>
+            <Trash2 className="w-4 h-4 text-rose-600" />
             <span>Void</span>
           </button>
 
           <button
             onClick={() => setShowDiscountModal(true)}
-            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs"
+            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
           >
-            <span className="text-base">🏷️</span>
+            <Tag className="w-4 h-4 text-slate-700" />
             <span>Promo</span>
           </button>
 
           <button
             onClick={() => setView('menu')}
-            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs"
+            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
           >
-            <span className="text-base">📋</span>
+            <ClipboardList className="w-4 h-4 text-slate-700" />
             <span>Menu</span>
           </button>
         </div>

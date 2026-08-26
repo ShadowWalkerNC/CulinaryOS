@@ -11,7 +11,7 @@ function fmt(secs: number): string {
 }
 
 /**
- * Slim bottom analytics bar for the KDS station.
+ * Modern bottom analytics bar for the KDS station matching the CulinaryOS Design System.
  * Shows avg ticket time, bump rate, queue depth, and held count.
  */
 export function AnalyticsBar({ analytics }: Props) {
@@ -26,32 +26,22 @@ export function AnalyticsBar({ analytics }: Props) {
   ];
 
   return (
-    <div style={{
-      position:       'fixed',
-      bottom:         0,
-      left:           0,
-      right:          0,
-      display:        'flex',
-      justifyContent: 'center',
-      gap:            '32px',
-      padding:        '10px 24px',
-      background:     'var(--surface)',
-      borderTop:      '1px solid var(--border)',
-      zIndex:         100,
-    }}>
+    <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#e5e7eb] px-6 py-2.5 flex justify-center items-center gap-8 shadow-xs z-50 select-none">
       {stats.map((s) => (
-        <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{
-            fontFamily:  'var(--font-mono)',
-            fontSize:    '18px',
-            fontWeight:  700,
-            color:       s.alert ? 'var(--amber)' : 'var(--text)',
-          }}>{s.value}</span>
-          <span style={{ fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        <div key={s.label} className="flex flex-col items-center gap-0.5">
+          <span
+            className={`font-mono text-base font-black tracking-tight ${
+              s.alert ? 'text-[#d97706]' : 'text-[#0f172a]'
+            }`}
+          >
+            {s.value}
+          </span>
+          <span className="text-[9px] font-bold text-[#6b7280] uppercase tracking-wider">
             {s.label}
           </span>
         </div>
       ))}
-    </div>
+    </footer>
   );
 }
+

@@ -1,22 +1,68 @@
 import { useState, useEffect } from 'react';
 import type { OnlineOrder, OnlineOrderStatus } from '../types';
 import { getOrder, updateOrderStatus } from '../lib/orderStore';
+import {
+  CheckCircle2,
+  Clock,
+  MapPin,
+  ShoppingBag,
+  ChefHat,
+  Sparkles,
+  ArrowRight,
+  Phone,
+  Receipt,
+  Utensils,
+  Share2,
+} from '@culinaryos/ui';
 
 interface Props {
   orderId: string;
   onBackToMenu?: () => void;
 }
 
-const STAGES: { key: OnlineOrderStatus; label: string; icon: string; desc: string }[] = [
-  { key: 'received', label: 'Received', icon: '📋', desc: 'Order confirmed by restaurant' },
-  { key: 'preparing', label: 'Preparing', icon: '🍳', desc: 'Kitchen is cooking your meal' },
-  { key: 'ready', label: 'Ready / Out for Delivery', icon: '🛍️', desc: 'Ready for pickup or on the way' },
-  { key: 'completed', label: 'Completed', icon: '🎉', desc: 'Order complete & enjoyed' },
+interface StageMeta {
+  key: OnlineOrderStatus;
+  label: string;
+  sublabel: string;
+  icon: string;
+  description: string;
+}
+
+const STAGES: StageMeta[] = [
+  {
+    key: 'received',
+    label: 'Order Confirmed',
+    sublabel: 'Sent to Kitchen',
+    icon: '📋',
+    description: 'The kitchen has received and ticketed your order.',
+  },
+  {
+    key: 'preparing',
+    label: 'Preparing Dishes',
+    sublabel: 'Cooking on Station',
+    icon: '🍳',
+    description: 'Our culinary team is crafting your meal from scratch.',
+  },
+  {
+    key: 'ready',
+    label: 'Ready / On The Way',
+    sublabel: 'En Route or At Pass',
+    icon: '🚴',
+    description: 'Hot and packed, heading directly to your destination.',
+  },
+  {
+    key: 'completed',
+    label: 'Order Completed',
+    sublabel: 'Delivered & Enjoyed',
+    icon: '🎉',
+    description: 'Your order has been fulfilled. Bon appétit!',
+  },
 ];
 
 export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
   const [order, setOrder] = useState<OnlineOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Load order data
   useEffect(() => {
@@ -24,7 +70,7 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
     setOrder(loaded);
     setLoading(false);
 
-    // Set up auto-refresh simulation for demo progression
+    // Auto-refresh simulation
     const interval = setInterval(() => {
       const current = getOrder(orderId);
       if (current) setOrder({ ...current });
@@ -48,36 +94,39 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
     if (updated) setOrder({ ...updated });
   }
 
+  function handleShare() {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  }
+
   if (loading) {
     return (
-      <div style={{ padding: '40px 24px', maxWidth: '640px', margin: '0 auto', color: 'var(--text-muted)' }}>
-        Loading order status…
+      <div className="flex justify-center items-center py-20">
+        <div className="w-10 h-10 border-3 border-[#0f172a] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div style={{ padding: '60px 24px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Order Not Found</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-          We could not find an active order with ID: <code style={{ color: 'var(--accent)' }}>{orderId}</code>
+      <div className="max-w-md mx-auto my-12 p-8 bg-white rounded-3xl border border-slate-200 text-center shadow-lg">
+        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400 mb-4">
+          <Receipt className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-black text-slate-900">Order Not Found</h2>
+        <p className="text-xs text-slate-500 mt-2 mb-6">
+          We could not find an active ticket with reference <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-mono font-bold">{orderId}</code>.
         </p>
         {onBackToMenu && (
           <button
+            type="button"
             onClick={onBackToMenu}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: 'var(--accent)',
-              color: '#fff',
-              fontWeight: 600,
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
+            className="px-6 py-3 bg-[#0f172a] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#1e293b] transition-all"
           >
-            Back to Menu
+            Back to Storefront
           </button>
         )}
       </div>
@@ -87,14 +136,17 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
   const currentStageIdx = getStageIndex(order.status);
   const isDelivery = order.mode === 'delivery';
 
-  // Customize Stage 3 label depending on mode
+  // Customize Stage 3 label based on mode
   const displayStages = STAGES.map((s, idx) => {
     if (idx === 2) {
       return {
         ...s,
         label: isDelivery ? 'Out for Delivery' : 'Ready for Pickup',
+        sublabel: isDelivery ? 'Driver Dispatched' : 'At the Pass',
         icon: isDelivery ? '🚗' : '🛍️',
-        desc: isDelivery ? 'Driver is on the way to you' : 'Hot & ready at the pass',
+        description: isDelivery
+          ? 'Your courier is en route with your fresh order.'
+          : 'Your order is hot and ready at the pickup counter.',
       };
     }
     return s;
@@ -103,313 +155,241 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
   const activeStage = displayStages[currentStageIdx];
 
   return (
-    <div style={{ maxWidth: '680px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Top Banner & Status Header */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '24px',
-          textAlign: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        }}
-      >
-        <div style={{ fontSize: '36px', marginBottom: '8px' }}>{activeStage.icon}</div>
-        <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 700 }}>
-          Order #{order.orderNumber}
-        </h1>
-        <div
-          style={{
-            display: 'inline-block',
-            padding: '4px 12px',
-            borderRadius: '999px',
-            background: 'var(--accent-soft)',
-            color: 'var(--accent)',
-            fontWeight: 700,
-            fontSize: '13px',
-            marginTop: '4px',
-            marginBottom: '12px',
-          }}
-        >
-          {activeStage.label}
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      {/* Live Order Hero Status Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm text-center relative overflow-hidden">
+        {/* Glowing Top Accent Bar */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0f172a] to-blue-500" />
+
+        <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-4 animate-pulseGlow">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span>Live Order Tracking</span>
         </div>
-        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px' }}>
-          {activeStage.desc}
+
+        <div className="text-4xl md:text-5xl mb-2">{activeStage.icon}</div>
+
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+          {activeStage.label}
+        </h1>
+        <p className="text-xs md:text-sm text-slate-500 font-medium max-w-md mx-auto mt-1">
+          {activeStage.description}
         </p>
 
-        {/* Estimated Time Card */}
-        <div
-          style={{
-            marginTop: '20px',
-            padding: '14px',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '12px',
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>⏱️</span>
-          <div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-              {isDelivery ? 'Estimated Delivery Time' : 'Estimated Ready Time'}
-            </div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>
+        {/* ETA & Order Badge */}
+        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto mt-6">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+              Order Number
+            </span>
+            <span className="font-mono font-black text-base text-slate-900">
+              #{order.orderNumber}
+            </span>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+              {isDelivery ? 'Est. Arrival' : 'Est. Ready'}
+            </span>
+            <span className="font-mono font-black text-base text-emerald-700">
               {order.estimatedTime}
-            </div>
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Real-time Progress Bar Tracker */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '24px 16px',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <span style={{ fontSize: '14px', fontWeight: 700 }}>Order Status Progress</span>
+      {/* Visual 4-Stage Progress Tracker */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-slate-500" />
+            <span>Preparation Lifecycle</span>
+          </h3>
+
+          {/* Demo Status Advancer */}
           <button
+            type="button"
             onClick={handleAdvanceStage}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-elevated)',
-              color: 'var(--accent)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-            title="Simulate status progression"
+            className="px-2.5 py-1 bg-slate-100 hover:bg-[#0f172a] text-slate-700 hover:text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-xs"
+            title="Advance lifecycle state for testing"
           >
-            ⚡ Advance Stage (Demo)
+            <span>⚡ Next Stage (Demo)</span>
           </button>
         </div>
 
-        {/* Visual Progress Steps */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          {/* Connecting Line */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '20px',
-              left: '12%',
-              right: '12%',
-              height: '4px',
-              background: 'var(--border)',
-              zIndex: 1,
-            }}
-          >
+        {/* Steps Progress Bar */}
+        <div className="relative pt-2 pb-2">
+          {/* Background Connecting Line */}
+          <div className="absolute top-7 left-8 right-8 h-1 bg-slate-100 -translate-y-1/2 z-0">
             <div
-              style={{
-                height: '100%',
-                background: 'var(--accent)',
-                width: `${(currentStageIdx / (displayStages.length - 1)) * 100}%`,
-                transition: 'width 0.4s ease',
-              }}
+              className="h-full bg-[#0f172a] transition-all duration-500 ease-out"
+              style={{ width: `${(currentStageIdx / (displayStages.length - 1)) * 100}%` }}
             />
           </div>
 
-          {displayStages.map((st, idx) => {
-            const isCompleted = idx < currentStageIdx;
-            const isCurrent = idx === currentStageIdx;
-            return (
-              <div
-                key={st.key}
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  width: '24%',
-                  textAlign: 'center',
-                }}
-              >
-                {/* Step Badge / Circle */}
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: isCurrent ? 'var(--accent)' : isCompleted ? 'var(--green)' : 'var(--bg-elevated)',
-                    border: `2px solid ${isCurrent ? 'var(--accent)' : isCompleted ? 'var(--green)' : 'var(--border)'}`,
-                    color: isCurrent || isCompleted ? '#fff' : 'var(--text-muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    boxShadow: isCurrent ? '0 0 12px var(--accent)' : 'none',
-                    transition: 'all 0.3s ease',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {isCompleted ? '✓' : st.icon}
+          {/* Step Indicators */}
+          <div className="relative z-10 flex justify-between">
+            {displayStages.map((stage, idx) => {
+              const isDone = idx < currentStageIdx;
+              const isCurrent = idx === currentStageIdx;
+
+              return (
+                <div key={stage.key} className="flex flex-col items-center text-center w-24">
+                  <div
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                      isCurrent
+                        ? 'bg-[#0f172a] text-white shadow-md scale-110 ring-4 ring-slate-100'
+                        : isDone
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-white border-2 border-slate-200 text-slate-400'
+                    }`}
+                  >
+                    {isDone ? <CheckCircle2 className="w-5 h-5 stroke-[2.5]" /> : <span>{stage.icon}</span>}
+                  </div>
+                  <span
+                    className={`text-xs mt-2.5 font-bold leading-tight ${
+                      isCurrent ? 'text-slate-900' : isDone ? 'text-slate-700' : 'text-slate-400'
+                    }`}
+                  >
+                    {stage.label}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 hidden sm:block">
+                    {stage.sublabel}
+                  </span>
                 </div>
-                {/* Step Label */}
-                <div
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: isCurrent ? 700 : 500,
-                    color: isCurrent ? 'var(--accent)' : isCompleted ? 'var(--text)' : 'var(--text-muted)',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {st.label}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Customer & Delivery/Pickup Details */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '20px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={detailHeader}>Customer Info</div>
-          <div style={detailText}>{order.customer.name}</div>
-          <div style={detailSubtext}>{order.customer.phone}</div>
-          {order.customer.email && <div style={detailSubtext}>{order.customer.email}</div>}
+      {/* Customer & Fulfillment Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+            Customer Information
+          </span>
+          <p className="font-bold text-sm text-slate-900">{order.customer.name}</p>
+          <p className="text-xs text-slate-600 font-mono">{order.customer.phone}</p>
+          {order.customer.email && (
+            <p className="text-xs text-slate-500">{order.customer.email}</p>
+          )}
         </div>
 
-        <div>
-          <div style={detailHeader}>{isDelivery ? 'Delivery Location' : 'Pickup Details'}</div>
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+            {isDelivery ? 'Delivery Location' : 'Pickup Location'}
+          </span>
           {isDelivery ? (
             <>
-              <div style={detailText}>{order.customer.address || 'Address provided'}</div>
+              <p className="font-bold text-sm text-slate-900 flex items-start gap-1.5">
+                <MapPin className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <span>{order.customer.address}</span>
+              </p>
               {order.customer.deliveryNotes && (
-                <div style={{ ...detailSubtext, fontStyle: 'italic', marginTop: '4px' }}>
-                  Note: "{order.customer.deliveryNotes}"
-                </div>
+                <p className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded-xl mt-1 border border-slate-100">
+                  "{order.customer.deliveryNotes}"
+                </p>
               )}
             </>
           ) : (
             <>
-              <div style={detailText}>Requested: {order.customer.pickupTime || 'ASAP'}</div>
-              <div style={detailSubtext}>Present Order #{order.orderNumber} at the counter</div>
+              <p className="font-bold text-sm text-slate-900">142 Mercer Street, Soho, NY</p>
+              <p className="text-xs text-slate-500">
+                Ready in {order.customer.pickupTime || '15-20 mins'}
+              </p>
             </>
           )}
         </div>
       </div>
 
-      {/* Item Breakdown & Summary */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '20px',
-        }}
-      >
-        <h3 style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 700 }}>Item Breakdown</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Itemized Order Receipt Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+            <Receipt className="w-4 h-4 text-slate-500" />
+            <span>Itemized Receipt</span>
+          </h3>
+          <span className="text-xs font-mono font-bold text-slate-400">
+            {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+
+        <div className="divide-y divide-slate-100">
           {order.items.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                paddingBottom: '10px',
-                borderBottom: '1px solid var(--border)',
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '14px' }}>
+            <div key={item.id} className="py-3 first:pt-0 last:pb-0 flex justify-between items-start">
+              <div className="min-w-0 flex-1 pr-3">
+                <p className="font-bold text-xs text-slate-900">
                   {item.quantity}x {item.name}
-                </div>
+                </p>
                 {item.modifiers.length > 0 && (
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     {item.modifiers.map((m) => m.name).join(', ')}
-                  </div>
+                  </p>
                 )}
                 {item.notes && (
-                  <div style={{ fontSize: '12px', color: 'var(--amber)', marginTop: '2px', fontStyle: 'italic' }}>
-                    Notes: {item.notes}
-                  </div>
+                  <p className="text-[11px] text-amber-700 italic mt-0.5">
+                    Note: "{item.notes}"
+                  </p>
                 )}
               </div>
-              <div style={{ fontWeight: 600, fontSize: '14px', flexShrink: 0 }}>
+              <span className="font-mono font-bold text-xs text-slate-900 shrink-0">
                 ${((item.unit_price * item.quantity) / 100).toFixed(2)}
-              </div>
+              </span>
             </div>
           ))}
         </div>
 
         {/* Totals Breakdown */}
-        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={sumRow}>
+        <div className="pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
+          <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${(order.subtotal / 100).toFixed(2)}</span>
+            <span className="font-mono text-slate-800">${(order.subtotal / 100).toFixed(2)}</span>
           </div>
-          <div style={sumRow}>
-            <span>Tax</span>
-            <span>${(order.tax / 100).toFixed(2)}</span>
+          <div className="flex justify-between">
+            <span>Estimated Tax</span>
+            <span className="font-mono text-slate-800">${(order.tax / 100).toFixed(2)}</span>
           </div>
           {isDelivery && (
-            <div style={sumRow}>
+            <div className="flex justify-between">
               <span>Delivery Fee</span>
-              <span>${(order.deliveryFee / 100).toFixed(2)}</span>
+              <span className="font-mono text-slate-800">
+                ${(order.deliveryFee / 100).toFixed(2)}
+              </span>
             </div>
           )}
-          <div style={sumRow}>
-            <span>Tip</span>
-            <span>${(order.tip / 100).toFixed(2)}</span>
+          <div className="flex justify-between">
+            <span>Staff Tip</span>
+            <span className="font-mono text-slate-800">${(order.tip / 100).toFixed(2)}</span>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontWeight: 700,
-              fontSize: '16px',
-              borderTop: '1px dashed var(--border)',
-              paddingTop: '8px',
-              marginTop: '4px',
-            }}
-          >
+          <div className="flex justify-between pt-2 border-t border-slate-200 font-black text-sm text-slate-900">
             <span>Total Paid</span>
-            <span>${(order.total / 100).toFixed(2)}</span>
+            <span className="font-mono text-base">${(order.total / 100).toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      {/* Navigation CTA */}
-      {onBackToMenu && (
+      {/* Action Footer */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        {onBackToMenu && (
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="flex-1 py-3.5 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+          >
+            <Utensils className="w-4 h-4" />
+            <span>Order More / Back to Menu</span>
+          </button>
+        )}
+
         <button
-          onClick={onBackToMenu}
-          style={{
-            padding: '14px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
-            background: 'var(--bg-card)',
-            color: 'var(--text)',
-            fontWeight: 700,
-            fontSize: '15px',
-            cursor: 'pointer',
-            textAlign: 'center',
-          }}
+          type="button"
+          onClick={handleShare}
+          className="py-3.5 px-5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
         >
-          ← Back to Menu
+          <Share2 className="w-4 h-4 text-slate-500" />
+          <span>{copiedLink ? 'Link Copied!' : 'Share Live Tracker'}</span>
         </button>
-      )}
+      </div>
     </div>
   );
 }
@@ -429,30 +409,3 @@ function getStageIndex(status: OnlineOrderStatus): number {
       return 0;
   }
 }
-
-const detailHeader: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  color: 'var(--text-muted)',
-  marginBottom: '4px',
-};
-
-const detailText: React.CSSProperties = {
-  fontSize: '14px',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const detailSubtext: React.CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--text-muted)',
-};
-
-const sumRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '13px',
-  color: 'var(--text-muted)',
-};

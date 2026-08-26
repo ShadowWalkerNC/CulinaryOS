@@ -17,12 +17,29 @@ function requireManager(c: any): Response | null {
   return err(c, 'FORBIDDEN', 'Manager or owner role required', 403);
 }
 
+// In-Memory Mock Store for Offline / Demo Mode (No Supabase required)
+let mockMenuItems: any[] = [
+  { id: 'm-1', name: 'Wood-Fired Margherita Pizza', description: 'San Marzano tomato, fresh mozzarella, basil, EVOO', price: 1800, status: 'available', station: 'grill', sort_order: 1 },
+  { id: 'm-2', name: 'Prime Bistro Burger', description: '8oz dry-aged beef, aged cheddar, caramelized onion, brioche', price: 2200, status: 'available', station: 'grill', sort_order: 2 },
+  { id: 'm-3', name: 'Crispy Truffle Fries', description: 'Hand-cut russet potatoes, white truffle oil, parmigiano, herbs', price: 1000, status: 'available', station: 'fry', sort_order: 3 },
+  { id: 'm-4', name: 'Classic Caesar Salad', description: 'Romaine hearts, sourdough croutons, parmesan crisp, house dressing', price: 1400, status: 'available', station: 'cold', sort_order: 4 },
+  { id: 'm-5', name: 'Crispy Calamari', description: 'Point Judith squid, cherry peppers, citrus aioli', price: 1600, status: 'available', station: 'fry', sort_order: 5 },
+  { id: 'm-6', name: 'Ribeye Steak 12oz', description: 'Prime beef, herb compound butter, roasted garlic', price: 3800, status: 'available', station: 'grill', sort_order: 6 },
+  { id: 'm-7', name: 'Craft IPA Pint', description: 'Local draft India Pale Ale, 6.8% ABV', price: 800, status: 'available', station: 'bar', sort_order: 7 },
+  { id: 'm-8', name: 'House Red Wine Glass', description: 'Cabernet Sauvignon, Napa Valley', price: 1200, status: 'available', station: 'bar', sort_order: 8 },
+];
+
+let mockStaffMembers: any[] = [
+  { user_id: 'u-1', display_name: 'John Doe', role: 'server', active: true, has_pin: true },
+  { user_id: 'u-2', display_name: 'Jane Smith', role: 'manager', active: true, has_pin: true },
+];
+
 // ---- Menu ----
 
 adminRoutes.get('/menu/items', async (c) => {
   const tenantId = c.get('tenantId');
   const supabase = c.get('supabase');
-  if (!supabase) return ok(c, { items: [], demo: true });
+  if (!supabase) return ok(c, { items: mockMenuItems, demo: true });
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -49,7 +66,16 @@ adminRoutes.patch('/menu/items/:id', async (c) => {
     station?: string;
   }>();
 
-  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
+  if (!supabase) {
+    const item = mockMenuItems.find((m) => m.id === id);
+    if (!item) return err(c, 'NOT_FOUND', `Item ${id} not found`, 404);
+    if (body.name !== undefined) item.name = body.name;
+    if (body.description !== undefined) item.description = body.description;
+    if (body.price !== undefined) item.price = body.price;
+    if (body.status !== undefined) item.status = body.status;
+    if (body.station !== undefined) item.station = body.station;
+    return ok(c, item);
+  }
 
   const patch: Record<string, unknown> = {};
   for (const k of ['name', 'description', 'price', 'status', 'station'] as const) {
@@ -78,7 +104,7 @@ adminRoutes.post('/menu/items', async (c) => {
   const tenantId = c.get('tenantId');
   const supabase = c.get('supabase');
   const body = await c.req.json<{
-    section_id: string;
+    section_id?: string;
     name: string;
     description?: string;
     price: number;
@@ -86,10 +112,23 @@ adminRoutes.post('/menu/items', async (c) => {
     status?: string;
   }>();
 
-  if (!body.section_id || !body.name || body.price == null) {
-    return err(c, 'VALIDATION_ERROR', 'section_id, name, price required', 422);
+  if (!body.name || body.price == null) {
+    return err(c, 'VALIDATION_ERROR', 'name, price required', 422);
   }
-  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
+
+  if (!supabase) {
+    const newItem = {
+      id: `m-${Date.now()}`,
+      name: body.name,
+      description: body.description ?? null,
+      price: body.price,
+      station: body.station ?? 'pass',
+      status: body.status ?? 'available',
+      sort_order: mockMenuItems.length + 1,
+    };
+    mockMenuItems.push(newItem);
+    return ok(c, newItem, 201);
+  }
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -119,10 +158,7 @@ adminRoutes.get('/staff', async (c) => {
   if (!supabase) {
     return ok(c, {
       demo: true,
-      staff: [
-        { display_name: 'John Doe', role: 'server', active: true },
-        { display_name: 'Jane Smith', role: 'manager', active: true },
-      ],
+      staff: mockStaffMembers,
     });
   }
 
@@ -154,10 +190,6 @@ adminRoutes.post('/staff', async (c) => {
   const denied = requireManager(c);
   if (denied) return denied;
 
-  if (!isLiveSupabaseConfigured()) {
-    return err(c, 'SERVICE_UNAVAILABLE', 'Live Supabase required to create staff', 503);
-  }
-
   const tenantId = c.get('tenantId');
   const supabase = c.get('supabase');
   const body = await c.req.json<{
@@ -176,7 +208,18 @@ adminRoutes.post('/staff', async (c) => {
   if (!['owner', 'manager', 'chef', 'server', 'viewer'].includes(body.role)) {
     return err(c, 'VALIDATION_ERROR', 'Invalid role', 422);
   }
-  if (!supabase) return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
+
+  if (!supabase) {
+    const newStaff = {
+      user_id: `u-${Date.now()}`,
+      display_name: body.display_name,
+      role: body.role,
+      active: true,
+      has_pin: true,
+    };
+    mockStaffMembers.push(newStaff);
+    return ok(c, newStaff, 201);
+  }
 
   const { data: created, error: createErr } = await supabase.auth.admin.createUser({
     email: body.email,

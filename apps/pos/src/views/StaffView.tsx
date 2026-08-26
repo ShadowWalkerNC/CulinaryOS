@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { pinLogin } from '@culinaryos/auth';
 import { getApiBase } from '@culinaryos/shared';
 import { usePOSStore } from '../lib/store';
+import { UserCheck, ShieldCheck, Lock } from '@culinaryos/ui';
 
 export function StaffView() {
   const [pin, setPin] = useState('');
@@ -106,17 +107,17 @@ export function StaffView() {
           <button
             type="button"
             onClick={() => void handleLogin('1234')}
-            className="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs"
+            className="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs"
           >
-            <span>👤</span>
+            <UserCheck className="w-4 h-4 text-blue-700" />
             <span>Server (1234)</span>
           </button>
           <button
             type="button"
             onClick={() => void handleLogin('5678')}
-            className="flex-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs"
+            className="flex-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs"
           >
-            <span>👔</span>
+            <ShieldCheck className="w-4 h-4 text-purple-700" />
             <span>Manager (5678)</span>
           </button>
         </div>

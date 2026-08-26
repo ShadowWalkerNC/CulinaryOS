@@ -6,9 +6,8 @@ interface Props {
 }
 
 /**
- * Full-width flash banner shown when a new course is fired.
- * Animates in (slide-down + fade), then fades out after 4s.
- * Renders null when event is null.
+ * Modern full-width flash banner shown when a new course is fired.
+ * Animates in and fades out.
  */
 export function CourseHoldBanner({ event }: Props) {
   const [visible, setVisible] = useState(false);
@@ -26,67 +25,38 @@ export function CourseHoldBanner({ event }: Props) {
   if (!visible || !event) return null;
 
   const label = event.firedBy === 'auto'
-    ? `Course ${event.courseNumber} fired automatically`
-    : `Course ${event.courseNumber} fired by server`;
+    ? `Course ${event.courseNumber} Fired Automatically`
+    : `Course ${event.courseNumber} Fired by Server`;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      style={{
-        position:       'fixed',
-        top:            0,
-        left:           0,
-        right:          0,
-        zIndex:         999,
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        gap:            '12px',
-        padding:        '14px 24px',
-        background:     'linear-gradient(90deg, #14532d 0%, #166534 50%, #14532d 100%)',
-        borderBottom:   '2px solid var(--green)',
-        boxShadow:      '0 4px 32px rgba(34,197,94,0.35)',
-        animation:      fading ? 'bannerFadeOut 0.7s ease forwards' : 'bannerSlideIn 0.35s ease',
-        fontFamily:     'var(--font-sans)',
-      }}
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-6 py-3 bg-[#0f172a] text-white border-b border-[#1e293b] shadow-lg transition-all duration-300 ${
+        fading ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0 animate-fadeIn'
+      }`}
     >
-      {/* Flame icon */}
-      <span style={{ fontSize: '22px', lineHeight: 1 }}>🔥</span>
+      {/* Flame Icon */}
+      <span className="material-symbols-outlined text-[20px] text-amber-400 filled">
+        local_fire_department
+      </span>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-        <span style={{ fontWeight: 700, fontSize: '16px', color: '#bbf7d0', letterSpacing: '0.01em' }}>
+      <div className="flex items-center gap-3">
+        <span className="font-black text-sm uppercase tracking-wide text-white">
           {label}
         </span>
-        <span style={{ fontSize: '12px', color: '#86efac' }}>
+        <span className="text-[#cbd5e1]">·</span>
+        <span className="text-xs text-[#94a3b8] font-medium">
           {event.firedTicketIds.length} ticket{event.firedTicketIds.length !== 1 ? 's' : ''} released
-          {' · '}
-          Order {(event.orderId ?? '').slice(0, 8).toUpperCase()}
+        </span>
+        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white/10 text-white uppercase">
+          Order #{(event.orderId ?? '').slice(0, 8).toUpperCase()}
         </span>
       </div>
 
-      {/* Pulse ring */}
-      <span style={{
-        width: '10px', height: '10px', borderRadius: '50%',
-        background: 'var(--green)',
-        boxShadow:  '0 0 0 0 var(--green-glow)',
-        animation:  'pulseDot 1.2s ease-in-out infinite',
-      }} />
-
-      <style>{`
-        @keyframes bannerSlideIn {
-          from { opacity: 0; transform: translateY(-100%); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes bannerFadeOut {
-          from { opacity: 1; }
-          to   { opacity: 0; }
-        }
-        @keyframes pulseDot {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
-          50%       { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-        }
-      `}</style>
+      {/* Pulse indicator */}
+      <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse ml-1" />
     </div>
   );
 }
+

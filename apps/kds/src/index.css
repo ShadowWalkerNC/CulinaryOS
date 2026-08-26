@@ -2,50 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@layer base {
+  :root {
+    --cos-bg:            #f8f9fa;
+    --cos-surface:       #ffffff;
+    --cos-surface-2:     #f1f3f5;
+    --cos-surface-hover: #f8f9fa;
+    --cos-border:        #e5e7eb;
+    --cos-border-strong: #d1d5db;
+    --cos-text:          #1f2937;
+    --cos-text-muted:    #6b7280;
+    --cos-text-dim:      #9ca3af;
+    --cos-brand:         #0f172a;
+    --cos-brand-hover:   #1e293b;
+    --cos-brand-soft:    rgba(15, 23, 42, 0.06);
+    --cos-brand-border:  rgba(15, 23, 42, 0.18);
+  }
 
-/* ==========================================================
-   KDS — Dark "low-light kitchen" theme (CulinaryOS Core / Stitch)
-   Deep navy base with slate surfaces for reduced eye strain.
-   ========================================================== */
-:root {
-  --bg:           #0b1220;
-  --surface:      #131c2e;
-  --surface-2:    #1e2a42;
-  --border:       #2a3852;
-  --text:         #e8eeff;
-  --text-muted:   #93a2c0;
-  --accent:       #93b4ff;
-  --accent-strong:#3b6df6;
-  --accent-glow:  rgba(147, 180, 255, 0.18);
-  --green:        #34d399;
-  --green-glow:   rgba(52, 211, 153, 0.16);
-  --amber:        #fbbf24;
-  --amber-glow:   rgba(251, 191, 36, 0.16);
-  --red:          #f87171;
-  --red-glow:     rgba(248, 113, 113, 0.18);
-  --font-sans:    'Inter', system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-  --radius:       8px;
-  --radius-sm:    4px;
-  --shadow:       0 4px 16px rgba(0,0,0,0.35);
+  html, body, #root {
+    min-height: 100dvh;
+    background-color: var(--cos-bg, #f8f9fa);
+    color: var(--cos-text, #1f2937);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
 }
 
-html, body, #root {
-  background: var(--bg);
-  color: var(--text);
-  color-scheme: dark;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-track {
+  background: #f1f3f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
@@ -57,3 +57,4 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
+

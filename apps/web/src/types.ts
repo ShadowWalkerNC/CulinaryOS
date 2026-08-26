@@ -26,19 +26,36 @@ export interface MenuItem {
   image_url:       string | null;
   sort_order:      number;
   modifier_groups: ModifierGroup[];
+  tags?:           string[];      // e.g. ['popular', 'chef_special', 'spicy', 'vegan', 'gluten_free']
+  calories?:       number;
 }
 
 export interface MenuSection {
   id:         string;
   name:       string;
+  description?: string;
   sort_order: number;
   menu_items: MenuItem[];
 }
 
 export interface MenuData {
-  restaurant: { id: string; name: string; slug: string };
-  menu:       { id: string; name: string; description: string | null };
-  sections:   MenuSection[];
+  restaurant: {
+    id: string;
+    name: string;
+    slug: string;
+    tagline?: string;
+    address?: string;
+    phone?: string;
+    hours?: string;
+    rating?: number;
+    reviewCount?: number;
+  };
+  menu: {
+    id: string;
+    name: string;
+    description: string | null;
+  };
+  sections: MenuSection[];
 }
 
 // Cart
@@ -67,12 +84,14 @@ export type CartState = {
 // Online Order & Checkout
 export type OrderMode = 'pickup' | 'delivery';
 export type OnlineOrderStatus = 'received' | 'preparing' | 'ready' | 'out_for_delivery' | 'completed';
+export type PaymentMethod = 'card' | 'apple_pay' | 'pay_at_counter';
 
 export interface CustomerInfo {
   name:          string;
   phone:         string;
   email:         string;
   address?:      string;
+  aptSuite?:     string;
   deliveryNotes?: string;
   pickupTime?:   string;
 }
@@ -82,6 +101,7 @@ export interface OnlineOrder {
   tenantSlug:    string;
   orderNumber:   number;
   mode:          OrderMode;
+  paymentMethod?: PaymentMethod;
   customer:      CustomerInfo;
   items:         CartItem[];
   subtotal:      number;      // cents
@@ -93,4 +113,3 @@ export interface OnlineOrder {
   createdAt:     string;      // ISO timestamp
   estimatedTime: string;
 }
-

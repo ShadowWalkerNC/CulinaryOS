@@ -1,110 +1,65 @@
-/* CulinaryOS — Public web app global styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-*, *::before, *::after { box-sizing: border-box; }
+@layer base {
+  :root {
+    --cos-bg:            #f8f9fa;
+    --cos-surface:       #ffffff;
+    --cos-surface-2:     #f1f3f5;
+    --cos-surface-hover: #f8f9fa;
+    --cos-border:        #e5e7eb;
+    --cos-border-strong: #d1d5db;
+    --cos-text:          #1f2937;
+    --cos-text-muted:    #6b7280;
+    --cos-text-dim:      #9ca3af;
+    --cos-brand:         #0f172a;
+    --cos-brand-hover:   #1e293b;
+    --cos-brand-soft:    rgba(15, 23, 42, 0.06);
+    --cos-brand-border:  rgba(15, 23, 42, 0.18);
+  }
 
-:root {
-  --bg:          #f8f9fa;
-  --bg-card:     #ffffff;
-  --bg-elevated: #f1f3f5;
-  --border:      #e5e7eb;
-  --text:        #1f2937;
-  --text-muted:  #6b7280;
-  --text-dim:    #9ca3af;
-  --accent:      #ff5f1f;
-  --accent-soft: rgba(255, 95, 31, 0.08);
-  --green:       #16a34a;
-  --amber:       #d97706;
-  --red:         #dc2626;
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   16px;
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
-  font-family: 'Inter', system-ui, sans-serif;
-  color-scheme: light;
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--cos-bg, #f8f9fa);
+    color: var(--cos-text, #1f2937);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f3f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-img { display: block; max-width: 100%; }
-
-button {
-  font-family: inherit;
-  cursor: pointer;
+/* Hide scrollbars for navigation rails */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-
-/* Scroll-spy section anchors */
-.section-anchor {
-  scroll-margin-top: 80px;
-}
-
-/* Sticky section nav */
-.section-nav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  gap: 0;
-  overflow-x: auto;
+.no-scrollbar {
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.section-nav::-webkit-scrollbar { display: none; }
-.section-nav button {
-  padding: 12px 18px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-}
-.section-nav button.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
 
-/* Cart FAB */
-.cart-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
-  font-size: 15px;
-  border: none;
-  border-radius: 999px;
-  box-shadow: 0 4px 20px rgba(124,106,255,0.45);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.cart-fab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(124,106,255,0.55);
-}
-.cart-fab .badge {
-  background: #fff;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 2px 7px;
-  min-width: 22px;
-  text-align: center;
+/* Section scroll-margin */
+.section-anchor {
+  scroll-margin-top: 130px;
 }

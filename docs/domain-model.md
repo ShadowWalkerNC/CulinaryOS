@@ -1,7 +1,10 @@
 # CulinaryOS — Domain Model (MVP)
 
+> ⚠️ **HISTORICAL REFERENCE** — This document describes the conceptual domain model from the original KMP era.
+> The authoritative TypeScript schema types are in `packages/db/src/types.ts` (generated from Supabase migrations V1–V14).
+> See [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) for the current data layer.
+>
 > v1.1 — Updated June 19, 2026
-> Changes from v1.0: Added `timezone` to Restaurant, `receiptNumber` to Order, `firedAt` to CourseGroup, `tenderAmount` to PaymentIntent.
 
 ---
 

@@ -3,8 +3,27 @@ import { useOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue } from '@culinaryos/shared';
+import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue, ReceiptPayload } from '@culinaryos/shared';
+import { hardwarePrinter } from '../lib/hardware-printer';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
+import {
+  CreditCard,
+  Smartphone,
+  QrCode,
+  Banknote,
+  Gift,
+  CheckCircle2,
+  Printer,
+  Send,
+  Check,
+  X,
+  Mail,
+  MessageSquare,
+  Split,
+  Usb,
+  Bluetooth,
+  Wifi,
+} from '@culinaryos/ui';
 
 const METHODS = ['card', 'tap', 'scan', 'cash', 'comp'] as const;
 
@@ -120,17 +139,7 @@ export function CheckoutView() {
       qc.invalidateQueries({ queryKey: ['orders'] });
       setPaid(true);
     } catch (err: any) {
-      try {
-        enqueueOfflineDelta({
-          tenant_id: tenantId,
-          order_id: order.id,
-          action: 'finalize_payment',
-          payload: { ...payload, allow_offline_card: true },
-        });
-        setPaid(true);
-      } catch {
-        alert('Payment failed: ' + (err?.message ?? err));
-      }
+      alert('Payment failed: ' + (err?.message ?? err));
     } finally {
       setProcessing(false);
       setStripeSimState('idle');
@@ -146,102 +155,189 @@ export function CheckoutView() {
     }
   }
 
+  const [printStatus, setPrintStatus] = useState<string | null>(null);
+
+  function buildReceiptPayload(): ReceiptPayload {
+    return {
+      restaurantName: 'CulinaryOS Bistro',
+      restaurantAddress: '100 Restaurant Row, Suite 100',
+      restaurantPhone: '(555) 123-4567',
+      restaurantTaxId: 'US-99482104-K',
+      receiptNumber: order.id.slice(-8).toUpperCase(),
+      orderId: order.id,
+      tableNumber: order.table_number || 'Quick Order',
+      sectionName: 'Main Dining',
+      serverName: order.server_name ?? 'Server',
+      guestCount: order.guest_count ?? 1,
+      timestamp: new Date(),
+      items: filteredItems.map((item: any) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPriceCents: item.unit_price,
+        totalCents: item.line_total,
+        seatNumber: item.seat_number,
+        modifiers: item.modifiers?.map((m: any) => m.name),
+      })),
+      subtotalCents: subtotal,
+      taxCents: tax,
+      tipCents: tipAmount,
+      discountCents: discountAmount,
+      totalCents: total,
+      paymentMethod: method,
+      cardLast4: method === 'card' || method === 'tap' ? '4242' : undefined,
+      authCode: '994821',
+      cashTenderedCents: method === 'cash' ? cashAmount : undefined,
+      changeDueCents: method === 'cash' ? changeDue : undefined,
+      footerMessage: 'Thank you for dining with us! Please come again.',
+      qrCodeData: `https://culinaryos.org/receipt/${order.id}`,
+    };
+  }
+
   function handleCloseCheckout() {
     setActiveOrder(null);
     setView('tables');
   }
 
-  function triggerPrint() {
-    window.print();
+  async function triggerPrint() {
+    setPrintStatus('Sending to receipt printer...');
+    const payload = buildReceiptPayload();
+    const res = await hardwarePrinter.printReceipt(payload);
+    setPrintStatus(res.message);
+    setTimeout(() => setPrintStatus(null), 4500);
   }
 
   if (paid) {
     return (
-      <div className="flex h-full bg-[#f8f9fa] p-6 gap-6 animate-fadeIn">
+      <div className="flex h-full bg-[#f8f9fa] p-6 gap-6 animate-fadeIn overflow-y-auto">
         {/* Left Side: Success Message & Options */}
-        <div className="flex-1 bg-white border border-[#e5e7eb] rounded-2xl p-8 text-center flex flex-col justify-between shadow-sm">
+        <div className="flex-1 bg-white border border-[#e5e7eb] rounded-3xl p-8 text-center flex flex-col justify-between shadow-sm">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="w-16 h-16 bg-[#22c55e1a] text-[#22c55e] rounded-full flex items-center justify-center mx-auto text-3xl font-black">✓</div>
-              <h2 className="text-lg font-black text-[#1f2937] uppercase tracking-wider">
+            <div className="space-y-3">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-200">
+                <CheckCircle2 className="w-9 h-9" />
+              </div>
+              <h2 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">
                 {selectedSeatFilter ? `Seat ${selectedSeatFilter} Paid` : 'Transaction Approved'}
               </h2>
-              <p className="text-xs text-[#6b7280]">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+              <p className="text-xs text-[#6b7280] font-bold">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
             </div>
 
             {method === 'cash' && cashAmount > 0 && (
-              <div className="bg-[#f8f9fa] p-4 rounded-xl border border-[#e5e7eb] max-w-xs mx-auto">
-                <p className="text-[10px] text-[#6b7280] uppercase font-bold tracking-wider">Change Due</p>
-                <p className="text-2xl font-black text-[#22c55e] font-mono mt-1">${(changeDue / 100).toFixed(2)}</p>
+              <div className="bg-[#f8f9fa] p-4 rounded-2xl border border-[#e5e7eb] max-w-xs mx-auto">
+                <p className="text-[10px] text-[#6b7280] uppercase font-black tracking-wider">Change Due</p>
+                <p className="text-3xl font-black text-emerald-600 font-mono mt-1">${(changeDue / 100).toFixed(2)}</p>
               </div>
             )}
 
             {/* Receipt Options */}
-            <div className="space-y-3 text-left border-t border-[#e5e7eb] pt-6 max-w-sm mx-auto">
-              <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block">Select Receipt Output</span>
+            <div className="space-y-3 text-left border-t border-[#e5e7eb] pt-6 max-w-md mx-auto">
+              <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block text-center">
+                Select Receipt Output
+              </span>
               {!receiptChoice ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => { setReceiptChoice('none'); setReceiptSent(true); }}
-                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                    No Receipt
+                <div className="grid grid-cols-3 gap-2.5">
+                  <button
+                    onClick={() => { setReceiptChoice('none'); setReceiptSent(true); }}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all border border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
+                  >
+                    <X className="w-4 h-4 text-slate-500" />
+                    <span>No Receipt</span>
                   </button>
-                  <button onClick={() => setReceiptChoice('email')}
-                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                    Email
+                  <button
+                    onClick={() => setReceiptChoice('email')}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all border border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
+                  >
+                    <Mail className="w-4 h-4 text-blue-600" />
+                    <span>Email</span>
                   </button>
-                  <button onClick={() => setReceiptChoice('text')}
-                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-lg py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-                    SMS/Text
+                  <button
+                    onClick={() => setReceiptChoice('text')}
+                    className="bg-[#f3f4f6] text-[#1f2937] hover:bg-[#e5e7eb] rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all border border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
+                  >
+                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                    <span>SMS/Text</span>
                   </button>
                 </div>
               ) : receiptChoice !== 'none' && !receiptSent ? (
-                <div className="space-y-2 animate-fadeIn">
+                <div className="space-y-2.5 animate-fadeIn">
                   <input
                     value={contactInput}
                     onChange={(e) => setContactInput(e.target.value)}
                     placeholder={receiptChoice === 'email' ? 'customer@example.com' : '(555) 000-0000'}
-                    className="w-full bg-white border border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-lg p-2.5 text-xs text-[#1f2937]"
+                    className="w-full bg-[#f8f9fa] border-2 border-[#cbd5e1] focus:border-[#0f172a] focus:bg-white outline-none rounded-xl p-3 text-xs text-[#1f2937] font-semibold"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => setReceiptChoice(null)}
-                      className="bg-[#f3f4f6] text-[#6b7280] rounded-lg px-4 py-2 text-[10px] font-bold uppercase">Back</button>
-                    <button onClick={() => setReceiptSent(true)}
-                      className="flex-1 bg-[#0f172a] text-white rounded-lg py-2 text-[10px] font-black uppercase">Send Receipt</button>
+                    <button
+                      onClick={() => setReceiptChoice(null)}
+                      className="bg-[#f3f4f6] text-[#6b7280] rounded-xl px-4 py-2.5 text-xs font-bold uppercase"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={() => setReceiptSent(true)}
+                      className="flex-1 bg-[#0f172a] text-white rounded-xl py-2.5 text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Receipt</span>
+                    </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-[#22c55e15] border border-[#22c55e30] rounded-xl text-center text-xs font-bold text-[#22c55e] animate-fadeIn">
-                  Receipt Dispatched Successfully
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center text-xs font-bold text-emerald-700 flex items-center justify-center gap-2 animate-fadeIn">
+                  <Check className="w-4 h-4" />
+                  <span>Receipt Dispatched Successfully</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex gap-3 max-w-sm mx-auto w-full mt-8">
-            <button onClick={triggerPrint}
-              className="flex-1 bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-colors border border-[#e5e7eb]">
-              Print Guest Receipt
+          <div className="flex gap-3 max-w-md mx-auto w-full mt-8">
+            <button
+              onClick={triggerPrint}
+              className="flex-1 bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors border border-[#e5e7eb] flex items-center justify-center gap-2 shadow-xs"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Receipt</span>
             </button>
-            <button onClick={handleCloseCheckout}
-              className="flex-1 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">
-              Done
+            <button
+              onClick={handleCloseCheckout}
+              className="flex-1 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
+            >
+              <Check className="w-4 h-4" />
+              <span>Done</span>
             </button>
           </div>
         </div>
 
         {/* Right Side: Virtual Thermal Receipt Roll */}
-        <div className="w-80 bg-white border border-[#e5e7eb] rounded-2xl p-5 shadow-sm flex flex-col items-center overflow-hidden h-full shrink-0">
-          <span className="text-[10px] text-[#6b7280] font-black tracking-wider uppercase block mb-4">Receipt Tape Roll</span>
-          <div id="print-area" className="flex-1 w-full bg-[#fdfdfd] border border-dashed border-[#cbd5e1] p-4 font-mono text-[10px] text-black overflow-y-auto space-y-4 shadow-inner">
+        <div className="w-96 bg-white border border-[#e5e7eb] rounded-3xl p-6 shadow-sm flex flex-col items-center overflow-hidden h-full shrink-0">
+          <div className="w-full flex items-center justify-between mb-3">
+            <span className="text-[11px] text-[#6b7280] font-black tracking-wider uppercase flex items-center gap-1.5">
+              <Printer className="w-3.5 h-3.5 text-slate-700" />
+              <span>Receipt Tape Preview</span>
+            </span>
+            <span className="text-[9px] font-black uppercase font-mono px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
+              {hardwarePrinter.getConnectionStatus().transport}
+            </span>
+          </div>
+
+          {printStatus && (
+            <div className="w-full mb-3 p-2.5 bg-slate-900 text-white text-[11px] font-bold rounded-xl text-center animate-fadeIn flex items-center justify-center gap-1.5 shadow-sm">
+              <Printer className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
+              <span>{printStatus}</span>
+            </div>
+          )}
+
+          <div id="print-area" className="flex-1 w-full bg-[#fdfdfd] border-2 border-dashed border-[#cbd5e1] rounded-2xl p-4 font-mono text-[11px] text-black overflow-y-auto space-y-4 shadow-inner">
             <div className="text-center space-y-1">
-              <h3 className="font-bold text-xs uppercase tracking-wider">CULINARYOS BISTRO</h3>
-              <p>100 RESTAURANT ROW</p>
-              <p>TEL: (555) 123-4567</p>
+              <h3 className="font-black text-sm uppercase tracking-wider">CULINARYOS BISTRO</h3>
+              <p className="text-[10px] text-gray-500">100 RESTAURANT ROW</p>
+              <p className="text-[10px] text-gray-500">TEL: (555) 123-4567</p>
             </div>
             
-            <div className="border-t border-b border-dashed border-black py-2 space-y-1">
-              <p>CHECK: {order.id} {selectedSeatFilter ? `(SEAT ${selectedSeatFilter})` : ''}</p>
-              <p>DATE: {new Date().toLocaleDateString()}</p>
+            <div className="border-t border-b border-dashed border-gray-400 py-2 space-y-1 text-[10px]">
+              <p className="font-bold">CHECK: {order.id.slice(-8).toUpperCase()} {selectedSeatFilter ? `(SEAT ${selectedSeatFilter})` : ''}</p>
+              <p>DATE: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               <p>SERVER: {order.server_name ?? 'Server'}</p>
             </div>
 
@@ -252,24 +348,24 @@ export function CheckoutView() {
                     <span>{item.quantity}x {item.name} (S{item.seat_number ?? 1})</span>
                     <span>${(item.line_total / 100).toFixed(2)}</span>
                   </div>
-                  {item.modifiers?.map((m: any) => <p key={m.id} className="text-[9px] pl-3">— {m.name}</p>)}
+                  {item.modifiers?.map((m: any) => <p key={m.id} className="text-[10px] pl-3 text-gray-500">— {m.name}</p>)}
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-dashed border-black pt-2 space-y-1.5 text-right">
+            <div className="border-t border-dashed border-gray-400 pt-2 space-y-1.5 text-right">
               <div className="flex justify-between"><span>SUBTOTAL</span><span>${(subtotal/100).toFixed(2)}</span></div>
-              {discountAmount > 0 && <div className="flex justify-between"><span>DISCOUNT</span><span>-${(discountAmount/100).toFixed(2)}</span></div>}
+              {discountAmount > 0 && <div className="flex justify-between text-rose-600"><span>DISCOUNT</span><span>-${(discountAmount/100).toFixed(2)}</span></div>}
               <div className="flex justify-between"><span>TAX (10%)</span><span>${(tax/100).toFixed(2)}</span></div>
               {tipAmount > 0 && <div className="flex justify-between"><span>TIP</span><span>${(tipAmount/100).toFixed(2)}</span></div>}
-              <div className="flex justify-between font-bold text-xs border-t border-dashed border-black pt-1">
+              <div className="flex justify-between font-black text-xs border-t border-dashed border-gray-400 pt-1.5">
                 <span>TOTAL</span><span>${(total/100).toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="text-center pt-4 space-y-2 border-t border-dashed border-black">
-              <p className="font-bold">THANK YOU FOR DINING WITH US!</p>
-              <p className="text-[8px] text-[#888]">CulinaryOS Cloud POS platform</p>
+            <div className="text-center pt-4 space-y-1.5 border-t border-dashed border-gray-400">
+              <p className="font-black text-xs">THANK YOU FOR DINING WITH US!</p>
+              <p className="text-[9px] text-gray-400">CulinaryOS Cloud POS Platform</p>
             </div>
           </div>
         </div>
@@ -277,44 +373,55 @@ export function CheckoutView() {
     );
   }
 
+  const paymentMethods = [
+    { id: 'card', name: 'Credit / Debit', icon: CreditCard, desc: 'Swipe, Insert, Chip' },
+    { id: 'tap', name: 'Tap to Pay', icon: Smartphone, desc: 'Apple Pay, Google Pay, NFC' },
+    { id: 'scan', name: 'Scan to Pay', icon: QrCode, desc: 'QR Code on Guest Phone' },
+    { id: 'cash', name: 'Cash Tender', icon: Banknote, desc: 'Exact & Change Math' },
+    { id: 'comp', name: 'Comp / House', icon: Gift, desc: 'Manager Authorized' },
+  ];
+
   return (
     <div className="flex h-full bg-[#f8f9fa] relative">
       {/* Left panel: Bill details */}
-      <div className="flex-1 p-5 overflow-y-auto border-r border-[#e5e7eb] flex flex-col justify-between bg-white">
+      <div className="flex-1 p-6 overflow-y-auto border-r border-[#e5e7eb] flex flex-col justify-between bg-white">
         <div>
-          <div className="flex justify-between items-center mb-4 border-b border-[#e5e7eb] pb-2">
+          <div className="flex justify-between items-center mb-5 border-b border-[#e5e7eb] pb-3">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">
                 {selectedSeatFilter ? `Seat ${selectedSeatFilter} Summary` : 'Ticket Summary'}
               </h2>
               {selectedSeatFilter != null && (
-                <button onClick={() => setSelectedSeatFilter(null)} className="text-[9px] font-black text-[#0f172a] uppercase underline">
+                <button onClick={() => setSelectedSeatFilter(null)} className="text-[10px] font-black text-[#0f172a] uppercase underline">
                   Show All Seats
                 </button>
               )}
             </div>
-            <button onClick={() => setShowSplitModal(true)}
-              className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0f172a] border border-[#e5e7eb] px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors shadow-sm">
-              Split Check Wizard
+            <button
+              onClick={() => setShowSplitModal(true)}
+              className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0f172a] border border-[#e5e7eb] px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-xs flex items-center gap-1.5"
+            >
+              <Split className="w-3.5 h-3.5" />
+              <span>Split Check Wizard</span>
             </button>
           </div>
 
           <div className="space-y-3">
             {filteredItems.map((item: any) => (
-              <div key={item.id} className="flex justify-between items-start text-xs border-b border-[#f3f4f6] pb-2">
+              <div key={item.id} className="flex justify-between items-start text-xs border-b border-[#f3f4f6] pb-2.5">
                 <div>
                   <p className="text-[#1f2937] font-bold">
-                    {item.quantity}x {item.name} <span className="text-[9px] font-extrabold text-[#6b7280] bg-[#f3f4f6] px-1 py-0.5 rounded ml-1">S{item.seat_number ?? 1}</span>
+                    {item.quantity}x {item.name} <span className="text-[9px] font-extrabold text-[#6b7280] bg-[#f3f4f6] px-1.5 py-0.5 rounded ml-1">S{item.seat_number ?? 1}</span>
                   </p>
                   {item.modifiers?.map((m: any) => <p key={m.id} className="text-[#6b7280] text-[10px] ml-3">— {m.name}</p>)}
                 </div>
-                <span className="font-mono text-[#1f2937]">${(item.line_total / 100).toFixed(2)}</span>
+                <span className="font-mono text-[#1f2937] font-bold">${(item.line_total / 100).toFixed(2)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#f8f9fa] border border-[#e5e7eb] rounded-xl p-4 mt-6 space-y-2 text-xs">
+        <div className="bg-[#f8f9fa] border border-[#e5e7eb] rounded-2xl p-5 mt-6 space-y-2 text-xs shadow-xs">
           <div className="flex justify-between text-[#6b7280]"><span>Subtotal</span><span className="font-mono">${(subtotal/100).toFixed(2)}</span></div>
           {discountAmount > 0 && (
             <div className="flex justify-between text-red-500 font-semibold"><span>Discount</span><span className="font-mono">-${(discountAmount/100).toFixed(2)}</span></div>
@@ -323,14 +430,14 @@ export function CheckoutView() {
           {tipAmount > 0 && (
             <div className="flex justify-between text-[#6b7280]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>
           )}
-          <div className="flex justify-between text-[#1f2937] font-black text-sm border-t border-[#e5e7eb] pt-2 uppercase">
-            <span>Total Bill</span><span className="font-mono text-[#0f172a]">${(total/100).toFixed(2)}</span>
+          <div className="flex justify-between text-[#1f2937] font-black text-sm border-t border-[#e5e7eb] pt-2.5 uppercase">
+            <span>Total Bill</span><span className="font-mono text-[#0f172a] text-base">${(total/100).toFixed(2)}</span>
           </div>
         </div>
       </div>
 
       {/* Right panel: Payment Dashboard */}
-      <div className="w-[460px] p-6 overflow-y-auto space-y-6 bg-white border-l border-[#e5e7eb] flex flex-col justify-between shrink-0 h-full shadow-lg">
+      <div className="w-[480px] p-6 overflow-y-auto space-y-6 bg-white border-l border-[#e5e7eb] flex flex-col justify-between shrink-0 h-full shadow-lg">
         <div className="space-y-6">
           {/* Tender Type Selection */}
           <div className="space-y-3">
@@ -338,14 +445,9 @@ export function CheckoutView() {
               1. Select Payment Method
             </span>
             <div className="grid grid-cols-2 gap-2.5">
-              {[
-                { id: 'card', name: 'Credit / Debit', icon: '💳', desc: 'Swipe, Insert, Chip' },
-                { id: 'tap', name: 'Tap to Pay', icon: '📱', desc: 'Apple Pay, Google Pay, NFC' },
-                { id: 'scan', name: 'Scan to Pay', icon: '📷', desc: 'QR Code on Guest Phone' },
-                { id: 'cash', name: 'Cash Tender', icon: '💵', desc: 'Exact & Change Math' },
-                { id: 'comp', name: 'Comp / House', icon: '🎁', desc: 'Manager Authorized' },
-              ].map((pm) => {
+              {paymentMethods.map((pm) => {
                 const isSelected = method === pm.id;
+                const IconComponent = pm.icon;
                 return (
                   <button
                     key={pm.id}
@@ -358,7 +460,7 @@ export function CheckoutView() {
                     } ${pm.id === 'comp' ? 'col-span-2' : ''}`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{pm.icon}</span>
+                      <IconComponent className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-700'}`} />
                       <span className="font-black text-xs uppercase tracking-wide truncate">{pm.name}</span>
                     </div>
                     <span className={`text-[10px] font-bold truncate ${isSelected ? 'text-gray-300' : 'text-[#6b7280]'}`}>
@@ -373,8 +475,8 @@ export function CheckoutView() {
           {/* Tap to Pay NFC Card / Phone Flow */}
           {method === 'tap' && (
             <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-blue-50/50 to-white p-5 rounded-2xl border-2 border-blue-200 text-center shadow-xs">
-              <div className="w-14 h-14 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto text-3xl animate-pulse">
-                📱
+              <div className="w-14 h-14 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <Smartphone className="w-7 h-7" />
               </div>
               <div>
                 <h4 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">Contactless / Tap to Pay</h4>
@@ -391,34 +493,7 @@ export function CheckoutView() {
           {method === 'scan' && (
             <div className="space-y-3 animate-fadeIn bg-gradient-to-b from-[#f8f9fa] to-white p-5 rounded-2xl border-2 border-[#e5e7eb] text-center shadow-xs">
               <div className="bg-white p-3.5 border border-[#e5e7eb] rounded-2xl inline-block shadow-inner">
-                {/* Visual QR Code SVG Representation */}
-                <svg className="w-32 h-32 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="100" height="100" fill="white"/>
-                  <rect x="10" y="10" width="24" height="24" fill="#0f172a"/>
-                  <rect x="14" y="14" width="16" height="16" fill="white"/>
-                  <rect x="18" y="18" width="8" height="8" fill="#0f172a"/>
-                  <rect x="66" y="10" width="24" height="24" fill="#0f172a"/>
-                  <rect x="70" y="14" width="16" height="16" fill="white"/>
-                  <rect x="74" y="18" width="8" height="8" fill="#0f172a"/>
-                  <rect x="10" y="66" width="24" height="24" fill="#0f172a"/>
-                  <rect x="14" y="70" width="16" height="16" fill="white"/>
-                  <rect x="18" y="74" width="8" height="8" fill="#0f172a"/>
-                  <rect x="42" y="12" width="6" height="6" fill="#0f172a"/>
-                  <rect x="52" y="18" width="6" height="6" fill="#0f172a"/>
-                  <rect x="42" y="28" width="6" height="6" fill="#0f172a"/>
-                  <rect x="12" y="42" width="6" height="6" fill="#0f172a"/>
-                  <rect x="22" y="48" width="6" height="6" fill="#0f172a"/>
-                  <rect x="38" y="42" width="12" height="12" fill="#0f172a"/>
-                  <rect x="56" y="42" width="6" height="6" fill="#0f172a"/>
-                  <rect x="68" y="48" width="6" height="6" fill="#0f172a"/>
-                  <rect x="82" y="42" width="6" height="6" fill="#0f172a"/>
-                  <rect x="42" y="64" width="6" height="6" fill="#0f172a"/>
-                  <rect x="54" y="70" width="10" height="6" fill="#0f172a"/>
-                  <rect x="72" y="68" width="14" height="6" fill="#0f172a"/>
-                  <rect x="42" y="82" width="8" height="8" fill="#0f172a"/>
-                  <rect x="60" y="82" width="6" height="6" fill="#0f172a"/>
-                  <rect x="76" y="80" width="10" height="10" fill="#0f172a"/>
-                </svg>
+                <QrCode className="w-32 h-32 text-[#0f172a]" />
               </div>
               <div>
                 <h4 className="text-sm font-black text-[#1f2937] uppercase tracking-wider">Scan to Pay QR</h4>
@@ -530,7 +605,7 @@ export function CheckoutView() {
           disabled={processing}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
         >
-          <span className="text-lg">✓</span>
+          <Check className="w-5 h-5" />
           <span>
             {processing
               ? 'Authorizing Transaction...'
@@ -560,7 +635,7 @@ export function CheckoutView() {
       {/* Split Checks Wizard Modal */}
       {showSplitModal && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
-          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
+          <div className="bg-white border border-[#e5e7eb] rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-6">
             <div className="border-b border-[#e5e7eb] pb-3">
               <span className="text-[10px] text-[#0f172a] font-black tracking-wider uppercase block">Checkout Wizard</span>
               <h3 className="text-base font-black text-[#1f2937] uppercase mt-0.5">Split Check Options</h3>
@@ -617,7 +692,7 @@ export function CheckoutView() {
       {/* Stripe Terminal Simulator Modal Overlay */}
       {stripeSimState !== 'idle' && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
-          <div className="bg-white border border-[#e5e7eb] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6 text-center">
+          <div className="bg-white border border-[#e5e7eb] rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-6 text-center">
             <div className="space-y-2">
               <span className="text-[9px] text-[#0f172a] font-black tracking-wider uppercase block">Stripe Terminal Simulator</span>
               {stripeSimState === 'waiting' && (

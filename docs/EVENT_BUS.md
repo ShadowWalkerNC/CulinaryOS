@@ -71,10 +71,10 @@ RecipeOS detects ingredient below reorder threshold
 
 ## Adding a New Handler
 
-1. Create `backend/event-bus/handlers/my-handler.ts`
+1. Create `packages/event-bus/src/handlers/my-handler.ts`
 2. Export an `EventHandler<MyPayload>` function
-3. Register it in `backend/event-bus/handlers/index.ts`
-4. Add the `EventType` to `shared/types/events.ts` if it's new
+3. Register it in `packages/event-bus/src/handlers/index.ts`
+4. Add the `EventType` to `packages/shared/src/events.ts` if it's new
 
 That's it. No infrastructure changes required in dev.
 

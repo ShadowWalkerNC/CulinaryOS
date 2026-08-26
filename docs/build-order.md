@@ -1,9 +1,12 @@
 # CulinaryOS — Build Order v2.0
 
+> ⚠️ **ARCHIVED — Historical Reference Only**
+> This document describes the original Kotlin Multiplatform (KMP) architecture that has since been replaced by the TypeScript monorepo (`apps/*`). It is preserved for historical context.
+> For the current architecture, see [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
+>
 > **Version:** 2.0
 > **Updated:** July 18, 2026
-> **Status:** 🟡 Phase 3 — KDS — In Progress
-> **License:** AGPL v3
+> **Status:** Archived
 
 ---
 

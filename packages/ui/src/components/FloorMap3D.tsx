@@ -1,6 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { RotateCcw, ZoomIn, ZoomOut, Maximize2, Compass } from 'lucide-react';
+import {
+  RotateCcw,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Compass,
+  Move,
+  Grid,
+  Layers,
+  Sparkles,
+  SlidersHorizontal,
+  Check,
+  X,
+} from 'lucide-react';
 
 export type TableStatus3D = 'available' | 'occupied' | 'reserved' | 'dirty';
 
@@ -17,7 +31,11 @@ export interface FloorTable3DData {
   covers?: number;
   serverName?: string;
   elapsedMinutes?: number;
+  position?: [number, number]; // [X, Z]
+  rotation?: number; // radians or degrees
 }
+
+export type FloorMaterialTheme = 'hardwood' | 'marble' | 'slate' | 'deck' | 'minimal';
 
 export interface FloorMap3DProps {
   tables: FloorTable3DData[];
@@ -25,6 +43,11 @@ export interface FloorMap3DProps {
   onSelectTable?: (table: FloorTable3DData) => void;
   className?: string;
   height?: number | string;
+  editMode?: boolean;
+  floorTheme?: FloorMaterialTheme;
+  floorDimensions?: { width: number; depth: number };
+  customPositions?: Record<string, { x: number; z: number; rotation?: number }>;
+  onUpdateTablePosition?: (tableId: string, x: number, z: number, rotation?: number) => void;
 }
 
 // Color palette for 3D materials
@@ -35,8 +58,8 @@ const STATUS_COLORS: Record<TableStatus3D, { primary: number; glow: number; text
   dirty:     { primary: 0xf43f5e, glow: 0xfb7185, text: '#f43f5e' },
 };
 
-// Spatial layout positions in 3D coordinate space [X, Z]
-const TABLE_POSITIONS: Record<string, [number, number]> = {
+// Default spatial layout positions in 3D coordinate space [X, Z]
+const DEFAULT_POSITIONS: Record<string, [number, number]> = {
   // Main Dining (Center Area)
   'tbl-1':  [-8, -5],
   'tbl-2':  [-3, -5],
@@ -61,29 +84,49 @@ const TABLE_POSITIONS: Record<string, [number, number]> = {
   'tbl-vip1': [9, 6],
 };
 
+const THEME_STYLES: Record<FloorMaterialTheme, { color: number; roughness: number; metalness: number; gridPrimary: number; gridSecondary: number }> = {
+  minimal:  { color: 0xf8fafc, roughness: 0.9, metalness: 0.05, gridPrimary: 0xe2e8f0, gridSecondary: 0xf1f5f9 },
+  hardwood: { color: 0xdfc5a6, roughness: 0.45, metalness: 0.1,  gridPrimary: 0xc8a984, gridSecondary: 0xe8d7c1 },
+  marble:   { color: 0xffffff, roughness: 0.15, metalness: 0.25, gridPrimary: 0xd1d5db, gridSecondary: 0xf3f4f6 },
+  slate:    { color: 0x334155, roughness: 0.7,  metalness: 0.15, gridPrimary: 0x475569, gridSecondary: 0x1e293b },
+  deck:     { color: 0x9a6b46, roughness: 0.6,  metalness: 0.05, gridPrimary: 0x7c4f2a, gridSecondary: 0xb5855e },
+};
+
 export function FloorMap3D({
   tables,
   selectedTableId,
   onSelectTable,
   className = '',
-  height = '560px',
+  height = '580px',
+  editMode = false,
+  floorTheme = 'minimal',
+  floorDimensions = { width: 50, depth: 40 },
+  customPositions = {},
+  onUpdateTablePosition,
 }: FloorMap3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [hoveredTable, setHoveredTable] = useState<FloorTable3DData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDraggingTable, setIsDraggingTable] = useState(false);
+  const [draggedTableId, setDraggedTableId] = useState<string | null>(null);
+  const [activeCoords, setActiveCoords] = useState<{ x: number; z: number } | null>(null);
 
   // Scene references
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const floorMeshRef = useRef<THREE.Mesh | null>(null);
   const tableMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
   const haloMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map());
   const animFrameIdRef = useRef<number | null>(null);
+  const groundPlaneRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
 
   // Camera Orbit Controls state
-  const isDraggingRef = useRef(false);
+  const isOrbitingRef = useRef(false);
+  const isDraggingTableRef = useRef(false);
+  const activeDragIdRef = useRef<string | null>(null);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
   const cameraAnglesRef = useRef({ theta: Math.PI / 4, phi: Math.PI / 3, radius: 36 });
   const cameraTargetRef = useRef(new THREE.Vector3(0, 0, 0));
@@ -104,22 +147,34 @@ export function FloorMap3D({
   }, []);
 
   const resetCamera = useCallback(() => {
-    cameraAnglesRef.current = { theta: 0.45, phi: 0.85, radius: 34 };
+    cameraAnglesRef.current = { theta: 0.45, phi: 0.85, radius: 36 };
+    cameraTargetRef.current.set(0, 0, 0);
+    updateCameraPosition();
+  }, [updateCameraPosition]);
+
+  const setTopDownView = useCallback(() => {
+    cameraAnglesRef.current = { theta: 0, phi: 0.05, radius: 42 };
+    cameraTargetRef.current.set(0, 0, 0);
+    updateCameraPosition();
+  }, [updateCameraPosition]);
+
+  const setIsometricView = useCallback(() => {
+    cameraAnglesRef.current = { theta: Math.PI / 4, phi: Math.PI / 3.2, radius: 36 };
     cameraTargetRef.current.set(0, 0, 0);
     updateCameraPosition();
   }, [updateCameraPosition]);
 
   const zoomIn = () => {
-    cameraAnglesRef.current.radius = Math.max(15, cameraAnglesRef.current.radius - 4);
+    cameraAnglesRef.current.radius = Math.max(14, cameraAnglesRef.current.radius - 4);
     updateCameraPosition();
   };
 
   const zoomOut = () => {
-    cameraAnglesRef.current.radius = Math.min(60, cameraAnglesRef.current.radius + 4);
+    cameraAnglesRef.current.radius = Math.min(65, cameraAnglesRef.current.radius + 4);
     updateCameraPosition();
   };
 
-  // Build / Update Three.js Scene
+  // Build / Update Three.js Scene Environment
   useEffect(() => {
     const container = containerRef.current;
     const canvas = canvasRef.current;
@@ -127,12 +182,12 @@ export function FloorMap3D({
 
     // 1. Scene & Renderer Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf8f9fa);
-    scene.fog = new THREE.FogExp2(0xf8f9fa, 0.015);
+    scene.background = new THREE.Color(floorTheme === 'slate' ? 0x0f172a : 0xf8f9fa);
+    scene.fog = new THREE.FogExp2(floorTheme === 'slate' ? 0x0f172a : 0xf8f9fa, 0.015);
     sceneRef.current = scene;
 
     const width = container.clientWidth;
-    const heightPx = typeof height === 'number' ? height : container.clientHeight || 560;
+    const heightPx = typeof height === 'number' ? height : container.clientHeight || 580;
 
     const camera = new THREE.PerspectiveCamera(45, width / heightPx, 0.1, 1000);
     cameraRef.current = camera;
@@ -151,50 +206,63 @@ export function FloorMap3D({
     rendererRef.current = renderer;
 
     // 2. Ambient & Directional Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    const ambientLight = new THREE.AmbientLight(0xffffff, floorTheme === 'slate' ? 0.95 : 0.85);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0xfffaed, 1.2);
-    dirLight1.position.set(20, 35, 20);
+    const dirLight1 = new THREE.DirectionalLight(0xfffaed, 1.3);
+    dirLight1.position.set(22, 38, 22);
     dirLight1.castShadow = true;
     dirLight1.shadow.mapSize.width = 2048;
     dirLight1.shadow.mapSize.height = 2048;
     dirLight1.shadow.camera.near = 0.5;
-    dirLight1.shadow.camera.far = 100;
-    dirLight1.shadow.camera.left = -25;
-    dirLight1.shadow.camera.right = 25;
-    dirLight1.shadow.camera.top = 25;
-    dirLight1.shadow.camera.bottom = -25;
+    dirLight1.shadow.camera.far = 120;
+    dirLight1.shadow.camera.left = -30;
+    dirLight1.shadow.camera.right = 30;
+    dirLight1.shadow.camera.top = 30;
+    dirLight1.shadow.camera.bottom = -30;
     dirLight1.shadow.bias = -0.0005;
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0xdbeafe, 0.4);
-    dirLight2.position.set(-20, 20, -20);
+    const dirLight2 = new THREE.DirectionalLight(0xdbeafe, 0.45);
+    dirLight2.position.set(-22, 22, -22);
     scene.add(dirLight2);
 
     // 3. Architectural Floor Grid & Room Base
-    const floorGeo = new THREE.PlaneGeometry(50, 40);
+    const themeStyle = THEME_STYLES[floorTheme] || THEME_STYLES.minimal;
+    const floorGeo = new THREE.PlaneGeometry(floorDimensions.width, floorDimensions.depth);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.8,
-      metalness: 0.1,
+      color: themeStyle.color,
+      roughness: themeStyle.roughness,
+      metalness: themeStyle.metalness,
     });
     const floorMesh = new THREE.Mesh(floorGeo, floorMat);
     floorMesh.rotation.x = -Math.PI / 2;
     floorMesh.position.y = -0.01;
     floorMesh.receiveShadow = true;
     scene.add(floorMesh);
+    floorMeshRef.current = floorMesh;
 
-    // Subtle architectural room grid
-    const gridHelper = new THREE.GridHelper(50, 25, 0xe2e8f0, 0xf1f5f9);
+    // Architectural room grid
+    const gridHelper = new THREE.GridHelper(
+      Math.max(floorDimensions.width, floorDimensions.depth),
+      Math.floor(Math.max(floorDimensions.width, floorDimensions.depth) / 2),
+      themeStyle.gridPrimary,
+      themeStyle.gridSecondary
+    );
     gridHelper.position.y = 0;
     scene.add(gridHelper);
 
-    // Section dividers (aesthetic wood partition markers)
-    const partitionGeo = new THREE.BoxGeometry(0.2, 1.2, 28);
-    const partitionMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.5 });
+    // Section dividers (aesthetic architectural glass/wood partition markers)
+    const partitionGeo = new THREE.BoxGeometry(0.2, 1.3, Math.min(28, floorDimensions.depth * 0.7));
+    const partitionMat = new THREE.MeshStandardMaterial({
+      color: floorTheme === 'slate' ? 0x64748b : 0xcbd5e1,
+      roughness: 0.3,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.85,
+    });
     const partition = new THREE.Mesh(partitionGeo, partitionMat);
-    partition.position.set(4.5, 0.6, 0);
+    partition.position.set(4.5, 0.65, 0);
     partition.receiveShadow = true;
     partition.castShadow = true;
     scene.add(partition);
@@ -218,7 +286,7 @@ export function FloorMap3D({
     const handleResize = () => {
       if (!container || !camera || !renderer) return;
       const newWidth = container.clientWidth;
-      const newHeight = typeof height === 'number' ? height : container.clientHeight || 560;
+      const newHeight = typeof height === 'number' ? height : container.clientHeight || 580;
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(newWidth, newHeight);
@@ -230,9 +298,9 @@ export function FloorMap3D({
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       renderer.dispose();
     };
-  }, [height, resetCamera]);
+  }, [height, resetCamera, floorTheme, floorDimensions.width, floorDimensions.depth]);
 
-  // Create or Update 3D Table Meshes when `tables` or `selectedTableId` change
+  // Create or Update 3D Table Meshes
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
@@ -244,23 +312,27 @@ export function FloorMap3D({
 
     tables.forEach((table, index) => {
       const group = new THREE.Group();
-      const pos = TABLE_POSITIONS[table.id] || [
-        (index % 4) * 6 - 9,
-        Math.floor(index / 4) * 6 - 9,
-      ];
-      group.position.set(pos[0], 0, pos[1]);
-      (group as any).userData = { tableId: table.id, tableData: table };
+      
+      // Determine position from customPositions, table.position, or DEFAULT_POSITIONS fallback
+      const custom = customPositions[table.id];
+      const posX = custom?.x ?? (table.position ? table.position[0] : (DEFAULT_POSITIONS[table.id]?.[0] ?? ((index % 4) * 6 - 9)));
+      const posZ = custom?.z ?? (table.position ? table.position[1] : (DEFAULT_POSITIONS[table.id]?.[1] ?? (Math.floor(index / 4) * 6 - 9)));
+      const rotY = (custom?.rotation ?? (typeof table.rotation === 'number' ? table.rotation : 0)) * (Math.PI / 180);
+
+      group.position.set(posX, 0, posZ);
+      group.rotation.y = rotY;
+      (group as any).userData = { tableId: table.id, tableData: table, posX, posZ, rotY };
 
       const statusColor = STATUS_COLORS[table.status] || STATUS_COLORS.available;
       const isSelected = selectedTableId === table.id;
 
       // Halo base status ring (Floor Glow)
-      const haloGeo = new THREE.RingGeometry(1.6, 2.0, 32);
+      const haloGeo = new THREE.RingGeometry(1.6, editMode ? 2.3 : 2.0, 32);
       const haloMat = new THREE.MeshBasicMaterial({
-        color: statusColor.glow,
+        color: isSelected && editMode ? 0x38bdf8 : statusColor.glow,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: isSelected ? 0.85 : 0.45,
+        opacity: isSelected ? 0.9 : 0.45,
       });
       const haloMesh = new THREE.Mesh(haloGeo, haloMat);
       haloMesh.rotation.x = -Math.PI / 2;
@@ -290,7 +362,7 @@ export function FloorMap3D({
 
       // Top Material
       const topMat = new THREE.MeshStandardMaterial({
-        color: isSelected ? 0x0f172a : 0x1e293b,
+        color: isSelected ? (editMode ? 0x0369a1 : 0x0f172a) : 0x1e293b,
         roughness: 0.3,
         metalness: 0.2,
       });
@@ -300,7 +372,7 @@ export function FloorMap3D({
       topMesh.receiveShadow = true;
       group.add(topMesh);
 
-      // Central Base Leg or 4 Legs
+      // Base Legs
       if (table.shape === 'round' || table.shape === 'bar') {
         const legGeo = new THREE.CylinderGeometry(0.12, 0.12, tableHeight, 16);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.2 });
@@ -331,8 +403,8 @@ export function FloorMap3D({
       // Status Pill Indicator on Top of Table
       const pillGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.08, 16);
       const pillMat = new THREE.MeshStandardMaterial({
-        color: statusColor.primary,
-        emissive: statusColor.primary,
+        color: editMode ? 0x0ea5e9 : statusColor.primary,
+        emissive: editMode ? 0x0ea5e9 : statusColor.primary,
         emissiveIntensity: 0.4,
         roughness: 0.1,
       });
@@ -343,28 +415,121 @@ export function FloorMap3D({
       scene.add(group);
       tableMeshesRef.current.set(table.id, group);
     });
-  }, [tables, selectedTableId]);
+  }, [tables, selectedTableId, customPositions, editMode]);
 
-  // Mouse Interactivity (Raycasting & Orbit Dragging)
+  // Raycasting helper to find table at mouse position
+  const raycastTable = (clientX: number, clientY: number): { tableData: FloorTable3DData; object: THREE.Object3D } | null => {
+    const container = containerRef.current;
+    const camera = cameraRef.current;
+    if (!container || !camera) return null;
+
+    const rect = container.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+
+    const meshes: THREE.Object3D[] = [];
+    tableMeshesRef.current.forEach((group) => {
+      group.children.forEach((child) => meshes.push(child));
+    });
+
+    const intersects = raycaster.intersectObjects(meshes, false);
+    if (intersects.length > 0 && intersects[0]?.object) {
+      let currentObj: THREE.Object3D | null = intersects[0].object;
+      while (currentObj && !(currentObj as any).userData?.tableData) {
+        currentObj = currentObj.parent;
+      }
+      if (currentObj && (currentObj as any).userData?.tableData) {
+        return {
+          tableData: (currentObj as any).userData.tableData,
+          object: currentObj,
+        };
+      }
+    }
+    return null;
+  };
+
+  // Raycasting helper for 3D ground plane intersection (Drag-to-move tables)
+  const raycastGroundPosition = (clientX: number, clientY: number): THREE.Vector3 | null => {
+    const container = containerRef.current;
+    const camera = cameraRef.current;
+    if (!container || !camera) return null;
+
+    const rect = container.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+
+    const target = new THREE.Vector3();
+    const hit = raycaster.ray.intersectPlane(groundPlaneRef.current, target);
+    return hit ? target : null;
+  };
+
+  // Mouse Interaction (Orbiting & Drag-to-Position)
   const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
+    const hit = raycastTable(e.clientX, e.clientY);
+    
+    if (editMode && hit) {
+      // Begin Dragging Table on Ground Plane
+      isDraggingTableRef.current = true;
+      activeDragIdRef.current = hit.tableData.id;
+      setIsDraggingTable(true);
+      setDraggedTableId(hit.tableData.id);
+      if (onSelectTable) onSelectTable(hit.tableData);
+      return;
+    }
+
+    // Otherwise Orbit Camera
+    isOrbitingRef.current = true;
     previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const container = containerRef.current;
     const camera = cameraRef.current;
-    const scene = sceneRef.current;
-    if (!container || !camera || !scene) return;
+    if (!container || !camera) return;
 
-    // 1. Orbit drag movement
-    if (isDraggingRef.current) {
+    // 1. Table Dragging in Edit Mode
+    if (isDraggingTableRef.current && activeDragIdRef.current) {
+      const groundPos = raycastGroundPosition(e.clientX, e.clientY);
+      if (groundPos) {
+        // Snap to 0.5m grid step
+        const snapX = Math.round(groundPos.x * 2) / 2;
+        const snapZ = Math.round(groundPos.z * 2) / 2;
+        
+        // Clamp inside room boundaries
+        const halfW = floorDimensions.width / 2 - 2;
+        const halfD = floorDimensions.depth / 2 - 2;
+        const clampedX = Math.max(-halfW, Math.min(halfW, snapX));
+        const clampedZ = Math.max(-halfD, Math.min(halfD, snapZ));
+
+        setActiveCoords({ x: clampedX, z: clampedZ });
+
+        const meshGroup = tableMeshesRef.current.get(activeDragIdRef.current);
+        if (meshGroup) {
+          meshGroup.position.x = clampedX;
+          meshGroup.position.z = clampedZ;
+        }
+
+        if (onUpdateTablePosition) {
+          onUpdateTablePosition(activeDragIdRef.current, clampedX, clampedZ);
+        }
+      }
+      return;
+    }
+
+    // 2. Camera Orbit Movement
+    if (isOrbitingRef.current) {
       const deltaX = e.clientX - previousMousePositionRef.current.x;
       const deltaY = e.clientY - previousMousePositionRef.current.y;
 
       cameraAnglesRef.current.theta -= deltaX * 0.007;
       cameraAnglesRef.current.phi = Math.max(
-        0.2,
+        0.1,
         Math.min(Math.PI / 2 - 0.05, cameraAnglesRef.current.phi - deltaY * 0.007)
       );
 
@@ -373,78 +538,43 @@ export function FloorMap3D({
       return;
     }
 
-    // 2. Raycasting for hover tooltip
-    const rect = container.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-
-    const meshes: THREE.Object3D[] = [];
-    tableMeshesRef.current.forEach((group) => {
-      group.children.forEach((child) => meshes.push(child));
-    });
-
-    const intersects = raycaster.intersectObjects(meshes, false);
-
-    if (intersects.length > 0) {
-      const firstHit = intersects[0];
-      if (firstHit && firstHit.object) {
-        let currentObj: THREE.Object3D | null = firstHit.object;
-        while (currentObj && !(currentObj as any).userData?.tableData) {
-          currentObj = currentObj.parent;
-        }
-        if (currentObj && (currentObj as any).userData?.tableData) {
-          const data: FloorTable3DData = (currentObj as any).userData.tableData;
-          setHoveredTable(data);
-          setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-          container.style.cursor = 'pointer';
-          return;
-        }
-      }
+    // 3. Hover Tooltip
+    const hit = raycastTable(e.clientX, e.clientY);
+    if (hit) {
+      const rect = container.getBoundingClientRect();
+      setHoveredTable(hit.tableData);
+      setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      container.style.cursor = editMode ? 'grab' : 'pointer';
+    } else {
+      setHoveredTable(null);
+      container.style.cursor = 'default';
     }
-
-    setHoveredTable(null);
-    container.style.cursor = 'default';
   };
 
   const handleMouseUp = () => {
-    isDraggingRef.current = false;
+    isOrbitingRef.current = false;
+    isDraggingTableRef.current = false;
+    activeDragIdRef.current = null;
+    setIsDraggingTable(false);
+    setDraggedTableId(null);
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    const container = containerRef.current;
-    const camera = cameraRef.current;
-    if (!container || !camera) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-
-    const meshes: THREE.Object3D[] = [];
-    tableMeshesRef.current.forEach((group) => {
-      group.children.forEach((child) => meshes.push(child));
-    });
-
-    const intersects = raycaster.intersectObjects(meshes, false);
-
-    if (intersects.length > 0) {
-      const firstHit = intersects[0];
-      if (firstHit && firstHit.object) {
-        let currentObj: THREE.Object3D | null = firstHit.object;
-        while (currentObj && !(currentObj as any).userData?.tableData) {
-          currentObj = currentObj.parent;
-        }
-        if (currentObj && (currentObj as any).userData?.tableData) {
-          const data: FloorTable3DData = (currentObj as any).userData.tableData;
-          if (onSelectTable) onSelectTable(data);
-        }
-      }
+    if (isDraggingTable) return;
+    const hit = raycastTable(e.clientX, e.clientY);
+    if (hit && onSelectTable) {
+      onSelectTable(hit.tableData);
     }
+  };
+
+  const handleRotateSelected = () => {
+    if (!selectedTableId || !onUpdateTablePosition) return;
+    const currentPos = customPositions[selectedTableId];
+    const currentRot = currentPos?.rotation ?? 0;
+    const newRot = (currentRot + 45) % 360;
+    const currentX = currentPos?.x ?? 0;
+    const currentZ = currentPos?.z ?? 0;
+    onUpdateTablePosition(selectedTableId, currentX, currentZ, newRot);
   };
 
   return (
@@ -460,55 +590,100 @@ export function FloorMap3D({
     >
       <canvas ref={canvasRef} className="w-full h-full block" />
 
-      {/* Floating 3D Navigation Controls */}
+      {/* Mode Indicator & Header Banner */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+        {editMode ? (
+          <div className="bg-sky-950/95 text-sky-200 backdrop-blur-md border border-sky-500/40 rounded-xl px-3.5 py-2 shadow-lg flex items-center gap-2.5 text-xs font-black tracking-wider uppercase">
+            <Move className="w-4 h-4 text-sky-400 animate-pulse" />
+            <span>3D Floor Editor Active</span>
+            <span className="bg-sky-500/30 text-sky-300 text-[10px] px-2 py-0.5 rounded-full font-mono">
+              Drag Tables to Position
+            </span>
+          </div>
+        ) : (
+          <div className="bg-white/95 backdrop-blur-xs border border-border rounded-xl p-2.5 shadow-sm flex items-center gap-3 text-[10px] font-bold">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
+              <span className="text-muted-foreground uppercase">Available</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" />
+              <span className="text-muted-foreground uppercase">Occupied</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
+              <span className="text-muted-foreground uppercase">Reserved</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-xs animate-pulse" />
+              <span className="text-muted-foreground uppercase">Dirty</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Live Coordinate Badge during Drag */}
+      {isDraggingTable && activeCoords && (
+        <div className="absolute top-4 right-4 bg-slate-900/90 text-white font-mono text-xs px-3 py-1.5 rounded-xl border border-sky-400 shadow-lg flex items-center gap-2 z-20 animate-fadeIn">
+          <Grid className="w-3.5 h-3.5 text-sky-400" />
+          <span>X: {activeCoords.x.toFixed(1)}m</span>
+          <span>•</span>
+          <span>Z: {activeCoords.z.toFixed(1)}m</span>
+        </div>
+      )}
+
+      {/* Floating Camera & Editor Controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 z-10">
+        {editMode && selectedTableId && (
+          <button
+            onClick={handleRotateSelected}
+            title="Rotate Selected Table 45°"
+            className="w-9 h-9 rounded-xl bg-sky-600 text-white shadow-md flex items-center justify-center hover:bg-sky-500 active:scale-95 transition-all mb-1 border border-sky-400"
+          >
+            <RotateCw className="w-4 h-4" />
+          </button>
+        )}
+        <button
+          onClick={setIsometricView}
+          title="Isometric View"
+          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all text-[11px] font-black"
+        >
+          3D
+        </button>
+        <button
+          onClick={setTopDownView}
+          title="Top-Down Blueprint View"
+          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all text-[11px] font-black"
+        >
+          2D
+        </button>
         <button
           onClick={zoomIn}
           title="Zoom In"
-          className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={zoomOut}
           title="Zoom Out"
-          className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
         >
           <ZoomOut className="w-4 h-4" />
         </button>
         <button
           onClick={resetCamera}
-          title="Reset 3D Perspective"
-          className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          title="Reset Perspective"
+          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Legend & Camera Hint */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs border border-border rounded-xl p-2.5 shadow-sm flex items-center gap-3 text-[10px] font-bold z-10">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
-          <span className="text-muted-foreground uppercase">Available</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" />
-          <span className="text-muted-foreground uppercase">Occupied</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
-          <span className="text-muted-foreground uppercase">Reserved</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-xs animate-pulse" />
-          <span className="text-muted-foreground uppercase">Dirty</span>
-        </div>
-      </div>
-
-      {/* 3D Raycasted Interactive Hover Tooltip */}
-      {hoveredTable && tooltipPos && (
+      {/* 3D Raycasted Interactive Hover Tooltip (When Not Dragging) */}
+      {!isDraggingTable && hoveredTable && tooltipPos && (
         <div
-          className="absolute z-20 pointer-events-none -translate-x-1/2 -translate-y-full mb-3 bg-slate-900/95 text-white p-3 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-sm text-xs min-w-[150px] animate-scaleUp"
+          className="absolute z-20 pointer-events-none -translate-x-1/2 -translate-y-full mb-3 bg-slate-900/95 text-white p-3 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-sm text-xs min-w-[160px] animate-scaleUp"
           style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
           <div className="flex justify-between items-center border-b border-slate-700 pb-1.5 mb-1.5">
@@ -525,6 +700,7 @@ export function FloorMap3D({
           </div>
           <div className="space-y-1 text-[10px] text-slate-300">
             <p>Section: <span className="font-bold text-white">{hoveredTable.sectionName}</span></p>
+            <p>Shape: <span className="font-bold text-white uppercase">{hoveredTable.shape}</span></p>
             <p>Capacity: <span className="font-bold text-white">{hoveredTable.capacity} Guests</span></p>
             {hoveredTable.orderTotal != null && (
               <p>Active Check: <span className="font-black text-emerald-400">${(hoveredTable.orderTotal / 100).toFixed(2)}</span></p>
@@ -534,7 +710,7 @@ export function FloorMap3D({
             )}
           </div>
           <div className="mt-2 pt-1.5 border-t border-slate-800 text-[9px] text-slate-400 text-center font-bold">
-            Click table to open check
+            {editMode ? 'Drag to move • Click to configure' : 'Click table to open check'}
           </div>
         </div>
       )}
