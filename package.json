@@ -17,6 +17,7 @@
     "doctor": "tsx scripts/doctor.ts",
     "quickstart": "tsx scripts/quickstart.ts",
     "demo": "tsx scripts/quickstart.ts",
+    "simulate": "tsx scripts/simulate-service.ts",
     "ops:audit": "tsx scripts/daily-ops-consultant.ts",
     "ops:consultant": "tsx scripts/daily-ops-consultant.ts",
     "local:supabase": "bash ./scripts/local-supabase.sh"
