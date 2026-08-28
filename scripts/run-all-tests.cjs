@@ -31,7 +31,7 @@ for (const file of testFiles) {
   console.log(` Running: ${file}`);
   console.log(`========================================`);
   try {
-    const output = execSync(`npx -y tsx@4.7.1 -r ./scripts/test-hook.cjs "${file}"`, {
+    const output = execSync(`node -r ./scripts/test-hook.cjs --import tsx "${file}"`, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe']
     });
