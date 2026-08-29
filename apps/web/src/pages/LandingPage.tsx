@@ -2,951 +2,678 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CulinaryHeader } from '@culinaryos/ui';
 
-interface AppSurface {
+interface DeviceRole {
   id: string;
+  deviceType: 'phone' | 'tablet' | 'tv' | 'computer';
   name: string;
-  sourceRepo: string;
-  packagePath: string;
+  roleTitle: string;
   port: string;
   badge: string;
-  summary: string;
+  headline: string;
+  description: string;
   screenshot: string;
   screenshotAlt: string;
-  workflow: string[];
-  engines: string[];
-  mcpTools: string[];
   icon: string;
+  keyFeatures: string[];
+  hardwareCapabilities: string[];
 }
 
 export function LandingPage() {
-  const [selectedSurface, setSelectedSurface] = useState<string>('pos');
-  const [activeArchLayer, setActiveArchLayer] = useState<'clients' | 'eventbus' | 'server' | 'database' | 'mcp' | 'engines'>('clients');
+  const [selectedDevice, setSelectedDevice] = useState<string>('phone');
   const [modalImage, setModalImage] = useState<{ src: string; title: string } | null>(null);
 
-  // Interactive In-Browser Live Demo Playground State
-  const [demoCovers, setDemoCovers] = useState<number>(12);
-  const [simulatedTickets, setSimulatedTickets] = useState([
-    { id: 'T-101', table: 'Table 4', server: 'John D.', items: ['2x Prime Burger (Med-Rare)', '1x Truffle Fries'], station: 'Hot Grill', course: 'Course 1 (Starters)', time: '3:45', status: 'cooking' },
-    { id: 'T-102', table: 'Table 7', server: 'Jane S.', items: ['1x Wood-Fired Margherita', '1x Burrata Salad'], station: 'Pizza Oven', course: 'Course 1 (Starters)', time: '8:20', status: 'held' },
-    { id: 'T-103', table: 'Bar 2', server: 'Alex M.', items: ['2x Smoked Old Fashioned', '1x Draft IPA'], station: 'Bar', course: 'Immediate (Drinks)', time: '1:10', status: 'ready' },
+  // Interactive Live POS Simulator State
+  const [selectedSeat, setSelectedSeat] = useState<number>(1);
+  const [posTicket, setPosTicket] = useState<Array<{ name: string; price: number; seat: number; station: string }>>([
+    { name: 'Prime Bistro Burger (Med-Rare)', price: 18.50, seat: 1, station: 'Hot Grill' },
+    { name: 'Truffle Parmesan Fries', price: 8.50, seat: 1, station: 'Fry Station' },
+    { name: 'Wood-Fired Margherita Pizza', price: 16.50, seat: 2, station: 'Pizza Oven' },
+  ]);
+  const [ticketFired, setTicketFired] = useState<boolean>(false);
+  const [simulatedKdsTickets, setSimulatedKdsTickets] = useState([
+    { id: 'T-101', table: 'Table 4', server: 'John D.', items: ['2x Prime Burger (Med-Rare)', '1x Truffle Fries'], station: 'Hot Grill', course: 'Course 1', time: '3:45', status: 'cooking' },
+    { id: 'T-102', table: 'Table 7', server: 'Jane S.', items: ['1x Wood-Fired Margherita'], station: 'Pizza Oven', course: 'Course 1', time: '8:20', status: 'held' },
+    { id: 'T-103', table: 'Bar 2', server: 'Alex M.', items: ['2x Smoked Old Fashioned'], station: 'Bar', course: 'Immediate', time: '1:10', status: 'ready' },
   ]);
 
-  const handleBumpTicket = (id: string) => {
-    setSimulatedTickets((prev) => prev.filter((t) => t.id !== id));
-  };
+  // Recipe Scaler Interactive State
+  const [scaleFlourGrams, setScaleFlourGrams] = useState<number>(1000);
 
-  const handleResetTickets = () => {
-    setSimulatedTickets([
-      { id: 'T-101', table: 'Table 4', server: 'John D.', items: ['2x Prime Burger (Med-Rare)', '1x Truffle Fries'], station: 'Hot Grill', course: 'Course 1 (Starters)', time: '3:45', status: 'cooking' },
-      { id: 'T-102', table: 'Table 7', server: 'Jane S.', items: ['1x Wood-Fired Margherita', '1x Burrata Salad'], station: 'Pizza Oven', course: 'Course 1 (Starters)', time: '8:20', status: 'held' },
-      { id: 'T-103', table: 'Bar 2', server: 'Alex M.', items: ['2x Smoked Old Fashioned', '1x Draft IPA'], station: 'Bar', course: 'Immediate (Drinks)', time: '1:10', status: 'ready' },
-    ]);
-  };
-
-  const surfaces: AppSurface[] = [
+  const deviceRoles: DeviceRole[] = [
     {
-      id: 'pos',
-      name: 'POS Terminal',
-      sourceRepo: 'CulinaryOS Core',
-      packagePath: 'apps/pos',
+      id: 'phone',
+      deviceType: 'phone',
+      name: 'Mobile Handheld POS',
+      roleTitle: '📱 Smartphones & Handheld Terminals',
       port: '5172',
-      badge: 'Front of House & Floor Map',
-      summary: 'High-speed touch order entry with 2D/3D spatial floor mapping, multi-seat ordering, and direct ESC/POS thermal printing.',
-      screenshot: '/screenshots/pos_ticket_menu.png',
-      screenshotAlt: 'CulinaryOS POS Terminal order ticket and menu matrix',
-      icon: 'point_of_sale',
-      workflow: [
-        'PIN authentication (1234 Server, 5678 Manager) with role-based permissions',
-        '3D Floor map editor: drag & drop booths, round tables, bar seats, and room architectural themes',
-        'Seat-by-seat guest ordering with FDA Top 9 allergen cross-contact warnings',
-        'Universal ESC/POS hardware printer hub: WebUSB, Bluetooth BLE, Serial COM, and Network IP',
-        'Offline delta queue buffer: stores signed transactions locally during network drops',
+      badge: 'Tableside & Line Busting',
+      headline: 'Take orders tableside and fire tickets directly to the kitchen line.',
+      description: 'Turn any iPhone, Android, or mobile handheld into a high-speed point-of-sale. Servers take orders at the table, assign dishes by seat number, handle food allergen notes, and take payments on the move.',
+      screenshot: '/screenshots/pos_menu_modern_cards.png',
+      screenshotAlt: 'CulinaryOS Mobile Handheld POS tableside ordering interface',
+      icon: 'smartphone',
+      keyFeatures: [
+        'Rapid tableside order entry with seat-by-seat item assignment (S1, S2, S3)',
+        '1-tap Send to Kitchen: fires appetizers and holds entrées automatically',
+        'Built-in FDA Top 9 Allergen cross-contact & dietary substitution alerts',
+        'Split check by seat, item, or even dollar amounts directly at the table',
+        'Mobile card reader integration & digital receipt texting/emailing',
       ],
-      engines: ['@culinaryos/shared (printer & offline-sync)', '@culinaryos/ui (3D Three.js canvas)'],
-      mcpTools: ['pos-server (create_pos_order, split_check, apply_discount, fire_order)'],
+      hardwareCapabilities: ['Bluetooth Mobile Printers', 'Mobile Card Readers', 'Touch Haptics', 'Offline Local Buffer'],
     },
     {
-      id: 'kds',
+      id: 'tablet',
+      deviceType: 'tablet',
+      name: 'Counter POS Terminal & Floor Map',
+      roleTitle: '📟 Tablets, iPads & Counter Registers',
+      port: '5172',
+      badge: 'Front of House Terminal',
+      headline: 'Full-featured counter POS with 2D/3D floor layouts and hardware printing.',
+      description: 'The core terminal for host stands, main counter registers, and bartending stations. Features interactive 2D and 3D spatial floor mapping, cash drawer management, bar tabs, and direct ESC/POS receipt printing.',
+      screenshot: '/screenshots/pos_checkout_receipt.png',
+      screenshotAlt: 'CulinaryOS POS Terminal floor map and checkout receipt interface',
+      icon: 'tablet',
+      keyFeatures: [
+        'Interactive 2D & 3D Spatial Dining Floor Map with table timers and occupied badges',
+        'Built-in Floor Layout Editor: drag & drop booths, round tables, and custom bar seating',
+        'Automatic cash drawer kick trigger on cash checkout settlement',
+        'Direct ESC/POS receipt printer spooling (WebUSB, Bluetooth, Serial COM, Network IP)',
+        'Pre-authorized bar tabs and fast order recall / reprinting audit history',
+      ],
+      hardwareCapabilities: ['ESC/POS Thermal Printers (80mm & 58mm)', 'Cash Drawers (RJ11/RJ12)', 'Barcode Scanners', 'Stripe WisePOS E'],
+    },
+    {
+      id: 'tv',
+      deviceType: 'tv',
       name: 'Kitchen Display System (KDS)',
-      sourceRepo: 'KitchenKit & Core',
-      packagePath: 'apps/kds',
+      roleTitle: '📺 Kitchen Touchscreens, Monitors & TVs',
       port: '5173',
       badge: 'Back of House & Expediter',
-      summary: 'Real-time kitchen ticket management with 1-second aging timers, station routing, course hold/fire, and 140% TV wall mode.',
-      screenshot: '/screenshots/kds_station_board.png',
+      headline: 'High-visibility kitchen tickets with 1-second aging timers and station routing.',
+      description: 'Replace noisy, wasteful paper kitchen printers with digital ticket screens. Automatically route orders to specific stations (Grill, Fryer, Cold Prep, Pizza Oven, Bar, and Master Expo Pass) with color-coded aging timers.',
+      screenshot: '/screenshots/kds_station_routing.png',
       screenshotAlt: 'CulinaryOS Kitchen Display station board with live aging timers',
-      icon: 'soup_kitchen',
-      workflow: [
-        'Station tabs: Expo Master Pass, Hot Grill, Fryer/Sauté, Cold Prep, Pizza Oven, Bar, Pastry',
-        'Course hold & fire automation: automatic delay timers between Starters and Entrées',
-        'Live visual aging thresholds: <5 min Green, 5–10 min Amber, >10 min Flashing Red',
-        'High-contrast OLED dark theme for hot kitchen line visibility',
-        'One-tap bump bar gestures and audible arrival chimes',
+      icon: 'tv',
+      keyFeatures: [
+        'Station tabs: Master Expo Pass, Hot Grill, Fryer, Cold Salad, Pizza, Bar, Pastry',
+        'Real-time visual aging badges: <5 min Green, 5–10 min Amber, >10 min Flashing Red',
+        'Course hold & fire logic: holds Entrées until Starters are bumped on the line',
+        '140% high-contrast TV / wall-mounted display mode with audible arrival chimes',
+        '1-tap bump bar gestures and completed ticket recall history',
       ],
-      engines: ['@culinaryos/event-bus (kds:ticket:bumped)', '@culinaryos/shared (station mapper)'],
-      mcpTools: ['kds-server (get_active_tickets, bump_ticket, fire_course, hold_ticket)'],
+      hardwareCapabilities: ['Wall-Mounted TVs & Monitors', 'Kitchen Bump Bars (USB)', 'Audio Arrival Chimes', 'Touch Displays'],
     },
     {
-      id: 'admin',
-      name: 'Back-Office Admin & Settings',
-      sourceRepo: 'CulinaryOS Core',
-      packagePath: 'apps/admin',
+      id: 'computer',
+      deviceType: 'computer',
+      name: 'Back-Office Admin, Recipes & Reports',
+      roleTitle: '💻 Office Computers, Desktops & Laptops',
       port: '5174',
-      badge: 'Management & Routing',
-      summary: 'Command center for catalog management, 1-click 86ing, staff PINs, auto-PO par levels, and full station routing.',
+      badge: 'Management & Financial Hub',
+      headline: 'Complete business control: menu catalog, inventory, food costing, and shift reports.',
+      description: 'The master command center on your office computer. Manage menu items with 1-click 86 toggles, set staff PINs, scale recipes with baker’s percentages, track inventory par levels with Auto-PO generation, and audit food waste.',
       screenshot: '/screenshots/admin_pantry_inventory.png',
-      screenshotAlt: 'Admin Back-Office Pantry par levels and inventory tracking',
-      icon: 'admin_panel_settings',
-      workflow: [
-        'Menu editor with instant 1-click 86 item availability toggles',
-        'Staff directory with role-based access control (Server, Chef, Manager, Owner)',
-        'Pantry par shortfall alerts & 1-click automated supplier purchase orders',
-        'Kitchen station routing matrix: assign items to primary & backup cook stations',
-        'Company legal info, tax rate %, tip presets, and receipt Wi-Fi auto-print',
+      screenshotAlt: 'CulinaryOS Back-Office Admin pantry inventory and analytics',
+      icon: 'laptop_mac',
+      keyFeatures: [
+        'Menu Catalog Management with 1-click instant 86 availability toggles',
+        'Staff Directory & Security PIN management (Server, Bartender, Chef, Manager, Owner)',
+        'Inventory Par Levels with 1-click automated supplier Purchase Order generation',
+        'RecipeOS Vault: baker’s percentage ratio scaling and culinary unit conversions',
+        'CulinaryOps Diagnostics: theoretical vs actual food cost % and trim waste logs',
       ],
-      engines: ['@culinaryos/shared (settings engine)', '@culinaryos/db (Supabase RLS)'],
-      mcpTools: ['inventory-server (get_pantry_items, create_po)', 'culinaryops-server (update_settings)'],
-    },
-    {
-      id: 'kitchenkit',
-      name: 'KitchenKit (Prep & Recipes)',
-      sourceRepo: 'Merged from KitchenKit',
-      packagePath: 'apps/kitchenkit',
-      port: '5175',
-      badge: 'Culinary Prep Planner',
-      summary: 'Professional culinary preparation planner, station checklists, batch yield projections, and perishable shelf-life tracking.',
-      screenshot: '/screenshots/admin_menu_management.png',
-      screenshotAlt: 'KitchenKit Recipe formula and batch preparation manager',
-      icon: 'menu_book',
-      workflow: [
-        'Batch requirement forecasting based on expected shift cover volume',
-        'Station-by-station prep task checklists with digital countdown timers',
-        'Perishable ingredient expiration dates & FIFO shelf-life management',
-        'Direct vendor directory with order minimums, contacts, and delivery days',
-        'Synchronized with CulinaryOS event bus for automated pantry deduction',
-      ],
-      engines: ['@culinaryos/prep-engine (batch projection & task scheduling)'],
-      mcpTools: ['prep-server (get_prep_tasks, complete_prep_task, calculate_shift_batch)'],
-    },
-    {
-      id: 'ops',
-      name: 'CulinaryOps (Diagnostics & Costing)',
-      sourceRepo: 'Merged from CulinaryOps',
-      packagePath: 'apps/ops',
-      port: '5177',
-      badge: 'Food Cost & Waste Analytics',
-      summary: 'Real-time theoretical vs actual food costing, kitchen waste cost leakage tracking, and shift labor % calculations.',
-      screenshot: '/screenshots/admin_waste_analytics.png',
-      screenshotAlt: 'CulinaryOps Food cost variance and waste loss analytics',
-      icon: 'analytics',
-      workflow: [
-        'Live food cost % variance tracking against benchmark targets',
-        'Kitchen food waste logging categorized by trim, spoilage, overcook, or drop',
-        'Top cost-leakage ingredient ranker with estimated annual loss in dollars',
-        'Shift labor hours, hourly wage totals, and labor-to-sales ratio metrics',
-        'Vendor price fluctuation audits and purchase order cost verification',
-      ],
-      engines: [
-        '@culinaryos/food-cost-engine (cost variance)',
-        '@culinaryos/waste-engine (loss rankings)',
-        '@culinaryos/labor-engine (wages & labor %)',
-      ],
-      mcpTools: ['culinaryops-server (get_food_cost, log_waste, get_waste_summary, get_labor_summary)'],
-    },
-    {
-      id: 'recipeos',
-      name: 'RecipeOS (Scale & Vault)',
-      sourceRepo: 'Merged from RecipeOS',
-      packagePath: 'apps/recipeos',
-      port: '5178',
-      badge: 'Formula Scaling & Conversions',
-      summary: 'Next.js App Router recipe vault with baker’s percentage ratio scaling and instant culinary unit conversions.',
-      screenshot: '/screenshots/web_storefront_ordering.png',
-      screenshotAlt: 'RecipeOS Formula scaling and ratio blueprints',
-      icon: 'scale',
-      workflow: [
-        'Formula-based ingredient scaling (by guest count, batch yield, or key ingredient weight)',
-        'Baker’s percentage ratio blueprints for doughs, batters, and culinary emulsions',
-        'Imperial to metric mass & volume unit conversion engine (grams, oz, cups, tbsp, ml)',
-        'Interactive step-by-step recipe procedures with culinary technique notes',
-        'Aggregated prep and supplier shopping lists from active scaling sessions',
-      ],
-      engines: ['@culinaryos/ratio-engine (scaling formulas & unit conversion)'],
-      mcpTools: ['recipe-server (scale_recipe, convert_units, calculate_plate_cost)'],
-    },
-    {
-      id: 'web',
-      name: 'Online Storefront & Allergen Hub',
-      sourceRepo: 'CulinaryOS Core',
-      packagePath: 'apps/web',
-      port: '5176',
-      badge: 'Customer Ordering',
-      summary: 'Direct-to-consumer mobile-first storefront with FDA FASTER Act Top 9 allergen filtering and zero third-party commission.',
-      screenshot: '/screenshots/web_store_ordering.png',
-      screenshotAlt: 'CulinaryOS Customer Storefront with FDA allergen badges',
-      icon: 'shopping_bag',
-      workflow: [
-        'FDA Top 9 major allergen filtering: Gluten, Dairy, Peanuts, Tree Nuts, Egg, Soy, Fish, Shellfish, Sesame',
-        'Vegan & Vegetarian diet badges with cross-contact shared fryer warnings',
-        'Customizable modifiers with real-time price and calorie adjustments',
-        'Slide-out bag drawer with automated sales tax and tip calculation',
-        'Live order status tracker with kitchen preparation milestone progress',
-      ],
-      engines: ['@culinaryos/shared (FDA allergen matrix & substitution engine)'],
-      mcpTools: ['pos-server (submit_online_order, track_order_status)'],
+      hardwareCapabilities: ['Standard Office Web Browsers', 'A4 / Letter Report Printers', 'CSV/Excel Export', 'Multi-Monitor Support'],
     },
   ];
 
-  const current = surfaces.find((s) => s.id === selectedSurface)!;
+  const currentDevice = deviceRoles.find((d) => d.id === selectedDevice) || deviceRoles[0];
+
+  const handleAddItemToDemo = (item: { name: string; price: number; station: string }) => {
+    setPosTicket((prev) => [...prev, { ...item, seat: selectedSeat }]);
+    setTicketFired(false);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setPosTicket((prev) => prev.filter((_, i) => i !== index));
+    setTicketFired(false);
+  };
+
+  const handleFireDemoOrder = () => {
+    if (posTicket.length === 0) return;
+    setTicketFired(true);
+    const newKdsTicket = {
+      id: `T-${Math.floor(100 + Math.random() * 900)}`,
+      table: 'Table 4',
+      server: 'John D. (Mobile)',
+      items: posTicket.map((it) => `${it.name} (S${it.seat})`),
+      station: 'Hot Grill',
+      course: 'Course 1 (Fired)',
+      time: '0:01',
+      status: 'cooking',
+    };
+    setSimulatedKdsTickets((prev) => [newKdsTicket, ...prev]);
+  };
+
+  const handleBumpKdsTicket = (id: string) => {
+    setSimulatedKdsTickets((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const subtotal = posTicket.reduce((sum, item) => sum + item.price, 0);
+  const tax = subtotal * 0.08875;
+  const total = subtotal + tax;
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#1f2937] font-sans antialiased selection:bg-[#0f172a] selection:text-white flex flex-col">
       {/* Universal CulinaryOS Header */}
-      <CulinaryHeader activeModule="web" tenantName="CulinaryOS Platform Hub" />
+      <CulinaryHeader activeModule="web" tenantName="CulinaryOS Unified Platform" />
 
-      {/* Sub Header / Quick Navigation Bar */}
-      <div className="bg-white border-b border-[#e5e7eb] px-6 py-2.5 flex items-center justify-between shadow-2xs">
-        <div className="flex items-center gap-3">
-          <span className="bg-[#0f172a] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
-            Open Source
-          </span>
-          <span className="text-xs font-bold text-[#0b1c30]">CulinaryOS Platform Overview & Live Demo Hub</span>
+      {/* Hero Section: Simple, Plain-English Value Proposition */}
+      <section className="px-6 pt-16 pb-12 max-w-5xl mx-auto text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0f172a0d] border border-[#0f172a26] text-[#0f172a] text-xs font-black uppercase tracking-widest">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>One System · One Server · Every Device In Your Restaurant</span>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#6b7280]">
-          <a href="#apps" className="hover:text-[#0b1c30] transition-colors">Merged Apps (7)</a>
-          <a href="#demo" className="hover:text-[#0b1c30] transition-colors">Live Interactive Demo</a>
-          <a href="#packages" className="hover:text-[#0b1c30] transition-colors">Shared Engines</a>
-          <a href="#architecture" className="hover:text-[#0b1c30] transition-colors">Event Spine</a>
-          <a href="#mcp" className="hover:text-[#0b1c30] transition-colors">9 MCP AI Servers</a>
-          <a href="#pricing" className="hover:text-[#0b1c30] transition-colors">Pricing & Self-Host</a>
-        </nav>
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-[#0b1c30] leading-[1.1]">
+          The Complete Restaurant POS <br />
+          <span className="text-[#0f172a] underline decoration-amber-400 decoration-wavy decoration-2">
+            Built for Every Device
+          </span>.
+        </h1>
 
-        <div className="flex items-center gap-2">
+        <p className="max-w-3xl mx-auto text-base sm:text-xl text-[#4b5563] leading-relaxed">
+          <strong className="text-[#0b1c30]">CulinaryOS is an all-in-one Point of Sale (POS) and restaurant operating system.</strong> One simple application and server runs your entire restaurant: mobile phones for tableside ordering, counter terminals for checkout, high-visibility screens for the kitchen, and your computer for deep financial reports.
+        </p>
+
+        {/* 4 Core Pillars */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto pt-2">
+          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
+            <span className="text-xl">📱</span>
+            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Mobile Handhelds</h4>
+            <p className="text-[11px] text-[#6b7280]">Phones take orders at the table.</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
+            <span className="text-xl">📟</span>
+            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Counter Terminals</h4>
+            <p className="text-[11px] text-[#6b7280]">3D floor maps & thermal receipts.</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
+            <span className="text-xl">📺</span>
+            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Kitchen Screens</h4>
+            <p className="text-[11px] text-[#6b7280]">Real-time tickets with aging timers.</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
+            <span className="text-xl">💻</span>
+            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Office Computers</h4>
+            <p className="text-[11px] text-[#6b7280]">Menu, inventory & food costing.</p>
+          </div>
+        </div>
+
+        {/* Hero Quick Launch Buttons */}
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
+          <a
+            href="http://localhost:5172"
+            className="px-6 py-3.5 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
+            <span>Launch POS Terminal (:5172)</span>
+          </a>
+          <a
+            href="http://localhost:5173"
+            className="px-6 py-3.5 rounded-xl bg-white hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#0b1c30] font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs"
+          >
+            <span className="material-symbols-outlined text-[18px]">soup_kitchen</span>
+            <span>Kitchen Display KDS (:5173)</span>
+          </a>
+          <a
+            href="http://localhost:5174"
+            className="px-6 py-3.5 rounded-xl bg-white hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#0b1c30] font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs"
+          >
+            <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+            <span>Back-Office Admin (:5174)</span>
+          </a>
+        </div>
+      </section>
+
+      {/* DEVICE ROLES SECTION: Interactive Selector */}
+      <section className="py-14 px-6 max-w-6xl mx-auto border-t border-[#e5e7eb]">
+        <div className="text-center space-y-2 mb-8">
+          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
+            One Software · Adaptive Hardware Experience
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
+            How CulinaryOS Adapts to Each Device
+          </h2>
+          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
+            Deploy on any hardware with zero special proprietary tablets required. Select a device below to see its exact role in your operation.
+          </p>
+        </div>
+
+        {/* 4 Device Selector Tabs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8 bg-[#f1f5f9] p-1.5 rounded-2xl border border-[#e2e8f0]">
+          {deviceRoles.map((d) => {
+            const isActive = selectedDevice === d.id;
+            return (
+              <button
+                key={d.id}
+                onClick={() => setSelectedDevice(d.id)}
+                className={`py-3 px-4 rounded-xl text-left transition-all flex items-center gap-3 ${
+                  isActive
+                    ? 'bg-white text-[#0f172a] shadow-sm border border-[#cbd5e1]'
+                    : 'text-[#64748b] hover:text-[#0f172a] hover:bg-white/50'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-base ${isActive ? 'bg-[#0f172a] text-white' : 'bg-[#e2e8f0] text-[#64748b]'}`}>
+                  <span className="material-symbols-outlined text-lg">{d.icon}</span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider">{d.name}</h4>
+                  <span className="text-[10px] text-[#94a3b8] font-mono">Port :{d.port}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Device Deep-Dive Card */}
+        <div className="bg-white border border-[#e5e7eb] rounded-3xl p-6 sm:p-8 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-6 space-y-5">
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#0f172a] bg-[#0f172a0d] px-2.5 py-1 rounded border border-[#0f172a26]">
+                {currentDevice.badge}
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-[#0b1c30]">
+                {currentDevice.roleTitle}
+              </h3>
+              <p className="text-sm font-semibold text-[#0f172a] leading-normal">
+                {currentDevice.headline}
+              </p>
+              <p className="text-xs text-[#6b7280] leading-relaxed">
+                {currentDevice.description}
+              </p>
+            </div>
+
+            {/* Key Features List */}
+            <div className="space-y-2 pt-2 border-t border-[#f1f5f9]">
+              <span className="text-[11px] font-black uppercase text-[#0b1c30] tracking-wider block">
+                Core Functionality:
+              </span>
+              <ul className="space-y-2 text-xs text-[#374151]">
+                {currentDevice.keyFeatures.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-emerald-600 text-sm mt-0.5 shrink-0">check_circle</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Hardware Compatibility Chips */}
+            <div className="pt-2">
+              <span className="text-[10px] font-black uppercase text-[#6b7280] tracking-wider block mb-1.5">
+                Hardware Connected:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {currentDevice.hardwareCapabilities.map((hw, i) => (
+                  <span key={i} className="text-[10px] font-bold bg-[#f8f9fa] text-[#0f172a] px-2.5 py-1 rounded-md border border-[#e5e7eb]">
+                    🔌 {hw}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Direct Open Button */}
+            <div className="pt-3 flex gap-3">
+              <a
+                href={`http://localhost:${currentDevice.port}`}
+                className="px-5 py-2.5 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+              >
+                <span>Open {currentDevice.name}</span>
+                <span className="material-symbols-outlined text-sm">open_in_new</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Screenshot Preview */}
+          <div className="lg:col-span-6 bg-[#f8f9fa] border border-[#e5e7eb] rounded-2xl p-3 cursor-zoom-in group" onClick={() => setModalImage({ src: currentDevice.screenshot, title: currentDevice.name })}>
+            <div className="rounded-xl overflow-hidden border border-[#e5e7eb] bg-white shadow-xs">
+              <img
+                src={currentDevice.screenshot}
+                alt={currentDevice.screenshotAlt}
+                className="w-full h-auto object-cover max-h-[340px] group-hover:scale-102 transition-transform duration-200"
+              />
+            </div>
+            <div className="text-center pt-2 text-[10px] font-bold text-[#6b7280] flex items-center justify-center gap-1">
+              <span className="material-symbols-outlined text-xs">zoom_in</span> Click to Zoom Screen
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HARDWARE COMPATIBILITY SECTION */}
+      <section className="py-12 px-6 bg-white border-y border-[#e5e7eb]">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
+              Universal Hardware Support
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#0b1c30]">
+              Plug-and-Play Thermal Printers, Cash Drawers & Displays
+            </h2>
+            <p className="text-[#6b7280] text-xs sm:text-sm max-w-2xl mx-auto">
+              CulinaryOS communicates directly with industry-standard ESC/POS receipt printers and peripherals right through modern browser APIs — no proprietary printer drivers or paid hardware bridges required.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-[#f8f9fa] border border-[#e5e7eb] space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#0f172a] font-bold shadow-xs">
+                <span className="material-symbols-outlined text-xl">print</span>
+              </div>
+              <h4 className="text-sm font-black text-[#0b1c30]">ESC/POS Printers</h4>
+              <p className="text-xs text-[#6b7280]">Supports 80mm standard and 58mm compact thermal rolls via WebUSB, Bluetooth BLE, Serial COM, and Network IP.</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#f8f9fa] border border-[#e5e7eb] space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#0f172a] font-bold shadow-xs">
+                <span className="material-symbols-outlined text-xl">payments</span>
+              </div>
+              <h4 className="text-sm font-black text-[#0b1c30]">Cash Drawers</h4>
+              <p className="text-xs text-[#6b7280]">Auto-fires standard 24V RJ11/RJ12 drawer kick solenoid pulses on cash settlement with audit reconciliations.</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#f8f9fa] border border-[#e5e7eb] space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#0f172a] font-bold shadow-xs">
+                <span className="material-symbols-outlined text-xl">tv</span>
+              </div>
+              <h4 className="text-sm font-black text-[#0b1c30]">Kitchen TVs & Displays</h4>
+              <p className="text-xs text-[#6b7280]">140% high-contrast TV mode with audio arrival chimes, designed for wall mounts and cook-line touchscreens.</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#f8f9fa] border border-[#e5e7eb] space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#0f172a] font-bold shadow-xs">
+                <span className="material-symbols-outlined text-xl">wifi_off</span>
+              </div>
+              <h4 className="text-sm font-black text-[#0b1c30]">Offline Delta Sync</h4>
+              <p className="text-xs text-[#6b7280]">Transactions buffer cryptographically in local storage during internet drops and automatically flush when reconnected.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INTERACTIVE IN-BROWSER RESTAURANT SIMULATOR */}
+      <section id="demo" className="py-14 px-6 max-w-6xl mx-auto">
+        <div className="text-center space-y-2 mb-8">
+          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
+            Interactive In-Browser Demo
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
+            Experience the POS ➔ Kitchen Flow Live
+          </h2>
+          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
+            Try taking an order at Table 4 below and firing it to the kitchen display in real time.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* POS Terminal Simulation (Left 6 Cols) */}
+          <div className="lg:col-span-6 bg-white border border-[#e5e7eb] rounded-3xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-[#e5e7eb] pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#0f172a]">point_of_sale</span>
+                  <h3 className="text-sm font-black text-[#0b1c30] uppercase">POS Order Entry (Table 4)</h3>
+                </div>
+                {/* Seat Selector */}
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-[#6b7280] font-bold text-[10px]">Seat:</span>
+                  {[1, 2, 3].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedSeat(s)}
+                      className={`px-2 py-0.5 rounded text-xs font-bold ${selectedSeat === s ? 'bg-[#0f172a] text-white' : 'bg-[#f3f4f6] text-[#6b7280]'}`}
+                    >
+                      S{s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Add Menu Buttons */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => handleAddItemToDemo({ name: 'Prime Bistro Burger', price: 18.50, station: 'Hot Grill' })}
+                  className="p-2.5 rounded-xl border border-[#e5e7eb] bg-[#f8f9fa] hover:bg-white hover:border-[#0f172a] text-left transition-all text-xs font-bold space-y-0.5"
+                >
+                  <p className="text-[#0b1c30] font-extrabold truncate">🍔 Prime Burger</p>
+                  <p className="text-[10px] text-[#6b7280] font-mono">$18.50 · Grill</p>
+                </button>
+                <button
+                  onClick={() => handleAddItemToDemo({ name: 'Truffle Fries', price: 8.50, station: 'Fry Station' })}
+                  className="p-2.5 rounded-xl border border-[#e5e7eb] bg-[#f8f9fa] hover:bg-white hover:border-[#0f172a] text-left transition-all text-xs font-bold space-y-0.5"
+                >
+                  <p className="text-[#0b1c30] font-extrabold truncate">🍟 Truffle Fries</p>
+                  <p className="text-[10px] text-[#6b7280] font-mono">$8.50 · Fryer</p>
+                </button>
+                <button
+                  onClick={() => handleAddItemToDemo({ name: 'Margherita Pizza', price: 16.50, station: 'Pizza Oven' })}
+                  className="p-2.5 rounded-xl border border-[#e5e7eb] bg-[#f8f9fa] hover:bg-white hover:border-[#0f172a] text-left transition-all text-xs font-bold space-y-0.5"
+                >
+                  <p className="text-[#0b1c30] font-extrabold truncate">🍕 Margherita</p>
+                  <p className="text-[10px] text-[#6b7280] font-mono">$16.50 · Pizza</p>
+                </button>
+              </div>
+
+              {/* Active Ticket List */}
+              <div className="border border-[#e5e7eb] rounded-xl p-3 bg-[#f8f9fa] max-h-[160px] overflow-y-auto space-y-1.5">
+                {posTicket.length === 0 ? (
+                  <p className="text-center text-xs text-[#9ca3af] py-6 font-semibold">Ticket is empty. Tap items above to build order.</p>
+                ) : (
+                  posTicket.map((it, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-[#e5e7eb]/60 last:border-0">
+                      <span className="font-bold text-[#1f2937]">
+                        {it.name} <span className="text-[9px] bg-white px-1.5 py-0.5 rounded border border-[#e5e7eb] text-[#6b7280]">S{it.seat}</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[#0b1c30]">${it.price.toFixed(2)}</span>
+                        <button onClick={() => handleRemoveItem(idx)} className="text-red-500 hover:text-red-700 font-bold text-xs">✕</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Totals & Send Button */}
+            <div className="space-y-3 pt-2 border-t border-[#e5e7eb]">
+              <div className="flex justify-between text-xs font-bold text-[#6b7280]">
+                <span>Subtotal: ${(subtotal).toFixed(2)} · Tax (8.875%): ${(tax).toFixed(2)}</span>
+                <span className="text-sm font-black text-[#0b1c30]">Total: ${(total).toFixed(2)}</span>
+              </div>
+              <button
+                onClick={handleFireDemoOrder}
+                disabled={posTicket.length === 0}
+                className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all ${
+                  ticketFired
+                    ? 'bg-emerald-600 text-white'
+                    : posTicket.length === 0
+                    ? 'bg-[#e5e7eb] text-[#9ca3af] cursor-not-allowed'
+                    : 'bg-[#0f172a] hover:bg-[#1e293b] text-white'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {ticketFired ? 'check_circle' : 'send'}
+                </span>
+                <span>{ticketFired ? 'Order Fired to Kitchen KDS!' : 'Send to Kitchen (Fire Order)'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* KDS Station Display Simulation (Right 6 Cols) */}
+          <div className="lg:col-span-6 bg-[#0f172a] text-white rounded-3xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-400">soup_kitchen</span>
+                  <h3 className="text-sm font-black uppercase text-white">Live Kitchen Rail (Expo & Grill)</h3>
+                </div>
+                <span className="text-[10px] font-bold bg-[#1e293b] text-emerald-400 px-2 py-0.5 rounded">
+                  {simulatedKdsTickets.length} Active Tickets
+                </span>
+              </div>
+
+              {/* KDS Tickets Horizontal Stack */}
+              <div className="space-y-2 max-h-[220px] overflow-y-auto">
+                {simulatedKdsTickets.map((t) => (
+                  <div key={t.id} className="bg-[#1e293b] border border-[#334155] rounded-xl p-3 space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-black text-amber-400">{t.table} ({t.id})</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">
+                          ⏱ {t.time}
+                        </span>
+                        <span className="text-[10px] bg-[#0f172a] px-2 py-0.5 rounded font-bold text-slate-300">
+                          {t.station}
+                        </span>
+                      </div>
+                    </div>
+                    <ul className="text-xs text-slate-200 space-y-0.5">
+                      {t.items.map((it, i) => (
+                        <li key={i} className="font-semibold">• {it}</li>
+                      ))}
+                    </ul>
+                    <div className="flex justify-between items-center pt-1 border-t border-[#334155]">
+                      <span className="text-[10px] text-slate-400 font-medium">Server: {t.server}</span>
+                      <button
+                        onClick={() => handleBumpKdsTicket(t.id)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded transition-colors"
+                      >
+                        Bump Ticket ✓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-400 text-center">
+              Tickets update in real time with 1-second aging timers. When you fire an order on the POS, it immediately appears on the kitchen rail.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ALL 7 MERGED APPLICATIONS DIRECTORY */}
+      <section className="py-14 px-6 max-w-6xl mx-auto border-t border-[#e5e7eb]">
+        <div className="text-center space-y-2 mb-8">
+          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
+            Monorepo Architecture
+          </span>
+          <h2 className="text-3xl font-black text-[#0b1c30]">
+            All 7 Applications In One Sovereign Codebase
+          </h2>
+          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
+            Everything runs under a single repo with zero disjointed microservices or paid SaaS dependencies.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <a href="http://localhost:5172" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">POS Terminal</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5172</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">High-speed touch order entry, 2D/3D floor map editor, tableside seat ordering, and ESC/POS thermal printing.</p>
+          </a>
+
+          <a href="http://localhost:5173" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">Kitchen Display (KDS)</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5173</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">Station-routed kitchen tickets with 1-second aging timers, course holding, and 140% high-contrast TV mode.</p>
+          </a>
+
+          <a href="http://localhost:5174" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">Back-Office Admin</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5174</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">Menu catalog editor, 1-click 86 item toggles, staff security PINs, inventory par levels, and station routing.</p>
+          </a>
+
+          <a href="http://localhost:5175" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">KitchenKit Prep Planner</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5175</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">Shift prep checklists, expected cover volume forecasting, perishable FIFO tracking, and vendor directory.</p>
+          </a>
+
+          <a href="http://localhost:5176" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">Online Storefront</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5176</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">Mobile-first customer ordering with FDA Top 9 allergen filtering, vegan badges, and live prep status tracking.</p>
+          </a>
+
+          <a href="http://localhost:5177" className="p-5 rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#0f172a] shadow-xs transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-black text-sm text-[#0b1c30] group-hover:text-amber-600">CulinaryOps Analytics</span>
+              <span className="text-[10px] font-mono font-bold bg-[#f1f5f9] px-2 py-0.5 rounded text-[#0f172a]">:5177</span>
+            </div>
+            <p className="text-xs text-[#6b7280]">Theoretical vs actual food cost % variance, kitchen trim/spoilage waste logs, and labor hour analytics.</p>
+          </a>
+        </div>
+      </section>
+
+      {/* PRICING & SOVEREIGN SELF-HOSTING */}
+      <section className="py-14 px-6 max-w-4xl mx-auto border-t border-[#e5e7eb] text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider">
+          <span>100% Free & Open Source Forever (MIT)</span>
+        </div>
+
+        <h2 className="text-3xl font-black text-[#0b1c30]">
+          Zero Monthly SaaS Fees. Zero Per-Terminal Licenses.
+        </h2>
+
+        <p className="text-sm text-[#4b5563] max-w-2xl mx-auto leading-relaxed">
+          Traditional restaurant POS providers charge \$100–\$300/month per terminal plus transaction markup. CulinaryOS is open-source software you own completely. Run it locally on your restaurant WiFi or deploy to your private cloud.
+        </p>
+
+        <div className="pt-2 flex justify-center gap-3">
           <a
             href="https://github.com/ShadowWalkerNC/CulinaryOS"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] text-xs font-bold transition-all flex items-center gap-1.5"
+            className="px-6 py-3 rounded-xl bg-[#0f172a] text-white text-xs font-black uppercase tracking-wider hover:bg-[#1e293b] transition-colors shadow-xs"
           >
-            <span className="material-symbols-outlined text-[16px]">code</span>
-            <span>GitHub</span>
-          </a>
-          <Link
-            to="/demo"
-            className="px-3.5 py-1.5 rounded-lg bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-xs"
-          >
-            <span>Storefront Demo</span>
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <section className="px-6 pt-16 pb-14 max-w-6xl mx-auto text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0f172a0d] border border-[#0f172a26] text-[#0f172a] text-xs font-black uppercase tracking-widest">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>7 Merged Apps · 14 Shared Packages · 9 MCP AI Servers</span>
-        </div>
-
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-[#0b1c30] leading-[1.1]">
-          The Open Operating System <br />
-          <span className="text-[#0f172a] underline decoration-amber-400 decoration-wavy decoration-2">
-            for Modern Food Service
-          </span>.
-        </h1>
-
-        <p className="max-w-3xl mx-auto text-base sm:text-lg text-[#4b5563] leading-relaxed">
-          CulinaryOS is an AI-native, 100% open-source restaurant operating system. It consolidates Point-of-Sale, Kitchen Displays, Prep Scheduling, Food Cost Diagnostics, and Model Context Protocol AI agents into a unified, sovereign monorepo.
-        </p>
-
-        {/* 4 Feature Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-2">
-          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
-            <span className="text-2xl font-black text-[#0f172a]">$0 / Mo</span>
-            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Zero Platform Cut</h4>
-            <p className="text-[11px] text-[#6b7280]">100% MIT open source forever.</p>
-          </div>
-          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
-            <span className="text-2xl font-black text-[#0f172a]">7 Surfaces</span>
-            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">All Repos Merged</h4>
-            <p className="text-[11px] text-[#6b7280]">KitchenKit, Ops, RecipeOS unified.</p>
-          </div>
-          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
-            <span className="text-2xl font-black text-[#0f172a]">100% Offline</span>
-            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Zero Outage Risk</h4>
-            <p className="text-[11px] text-[#6b7280]">Local delta sync buffer.</p>
-          </div>
-          <div className="p-4 rounded-2xl bg-white border border-[#e5e7eb] shadow-xs text-left space-y-1">
-            <span className="text-2xl font-black text-[#0f172a]">9 MCP Servers</span>
-            <h4 className="text-xs font-black text-[#0b1c30] uppercase tracking-wider">Agent-Operable</h4>
-            <p className="text-[11px] text-[#6b7280]">Claude & Cursor AI native tools.</p>
-          </div>
-        </div>
-
-        {/* Hero CTAs */}
-        <div className="flex flex-wrap justify-center gap-3 pt-2">
-          <Link
-            to="/demo"
-            className="px-7 py-3.5 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-            <span>Launch Live Storefront Demo</span>
-          </Link>
-          <a
-            href="#demo"
-            className="px-7 py-3.5 rounded-xl bg-white hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#0b1c30] font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs"
-          >
-            <span className="material-symbols-outlined text-[18px]">play_circle</span>
-            <span>In-Browser Live Simulator</span>
+            Clone Repository on GitHub
           </a>
         </div>
       </section>
 
-      {/* Merged Apps Showcase: Rich Visual Grid with Category Filters */}
-      <section id="apps" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Complete Application Ecosystem
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            7 Integrated Applications. All In One Repository.
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Browse all 7 frontends below. Click any card to inspect its workflows, shared calculation engines, and live UI screenshots.
-          </p>
-        </div>
-
-        {/* 7 Surfaces Visual Card Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {surfaces.map((s) => (
-            <div
-              key={s.id}
-              className="bg-white border border-[#e5e7eb] rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group hover:border-[#0f172a]"
-            >
-              {/* Card Screenshot Header */}
-              <div
-                onClick={() => setModalImage({ src: s.screenshot, title: s.name })}
-                className="relative bg-[#f8f9fa] border-b border-[#e5e7eb] p-3 cursor-zoom-in group-hover:bg-[#f1f5f9] transition-colors"
-              >
-                <div className="flex items-center justify-between pb-2 text-[11px] font-mono text-[#6b7280]">
-                  <span className="flex items-center gap-1.5 font-bold text-[#0b1c30]">
-                    <span className="material-symbols-outlined text-sm">{s.icon}</span>
-                    <span>Port :{s.port}</span>
-                  </span>
-                  <span className="text-[10px] bg-white px-2 py-0.5 rounded border border-[#e5e7eb] font-bold text-[#0f172a]">
-                    {s.badge}
-                  </span>
-                </div>
-                <div className="rounded-xl overflow-hidden border border-[#e5e7eb] bg-white max-h-[200px] flex items-center justify-center">
-                  <img
-                    src={s.screenshot}
-                    alt={s.screenshotAlt}
-                    className="w-full h-auto object-cover max-h-[190px] group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-[#0f172a]/0 hover:bg-[#0f172a]/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                  <span className="bg-[#0f172a] text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">zoom_in</span> Click to Enlarge
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Content Body */}
-              <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-black text-[#0b1c30]">{s.name}</h3>
-                    <span className="text-[9px] font-mono bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200 font-bold">
-                      {s.sourceRepo}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#4b5563] leading-relaxed">{s.summary}</p>
-
-                  {/* Bullet Highlights */}
-                  <ul className="space-y-1.5 pt-2 text-xs text-[#374151]">
-                    {s.workflow.slice(0, 3).map((w, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 text-[11px]">
-                        <span className="material-symbols-outlined text-emerald-600 text-[14px] shrink-0 mt-0.5">
-                          check_circle
-                        </span>
-                        <span>{w}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Card Actions */}
-                <div className="pt-4 border-t border-[#e5e7eb] flex items-center gap-2">
-                  {s.id === 'web' ? (
-                    <Link
-                      to="/demo"
-                      className="flex-1 py-2 px-3 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-2xs flex items-center justify-center gap-1"
-                    >
-                      <span>Try Storefront</span>
-                      <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                    </Link>
-                  ) : (
-                    <a
-                      href={`http://localhost:${s.port}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-2 px-3 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider text-center transition-all shadow-2xs flex items-center justify-center gap-1"
-                    >
-                      <span>Open Port :{s.port}</span>
-                      <span className="material-symbols-outlined text-xs">open_in_new</span>
-                    </a>
-                  )}
-                  <button
-                    onClick={() => setModalImage({ src: s.screenshot, title: s.name })}
-                    className="p-2 rounded-xl bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0b1c30] transition-colors cursor-pointer"
-                    title="Enlarge Screenshot"
-                  >
-                    <span className="material-symbols-outlined text-sm">fullscreen</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Dedicated Interactive Live Demo Section */}
-      <section id="demo" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Interactive Test Drive
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            Try the CulinaryOS Simulator Live
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Test real operational logic right in your browser. Scale batch formulas, bump kitchen tickets, and launch the online ordering demo.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Demo 1: Interactive RecipeOS Batch Scaler */}
-          <div className="lg:col-span-6 bg-white border border-[#e5e7eb] rounded-3xl p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center justify-between border-b border-[#e5e7eb] pb-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#0f172a]">scale</span>
-                <h3 className="text-base font-black text-[#0b1c30]">RecipeOS Formula Scaler Simulator</h3>
-              </div>
-              <span className="text-[10px] font-mono bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200 font-bold">
-                @culinaryos/ratio-engine
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#4b5563] font-bold">Target Shift Covers / Servings:</span>
-                <strong className="text-[#0f172a] font-mono text-base">{demoCovers} guests</strong>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="100"
-                step="2"
-                value={demoCovers}
-                onChange={(e) => setDemoCovers(Number(e.target.value))}
-                className="w-full accent-[#0f172a] bg-[#e5e7eb] rounded-lg cursor-pointer h-2"
-              />
-
-              {/* Scaled Ingredients Table */}
-              <div className="bg-[#f8f9fa] rounded-2xl border border-[#e5e7eb] p-4 space-y-2 font-mono text-xs">
-                <div className="text-[11px] text-[#0f172a] font-bold uppercase pb-1 border-b border-[#e5e7eb] flex justify-between">
-                  <span>Recipe: Wood-Fired Neapolitan Pizza Dough</span>
-                  <span>Yield: {demoCovers} Pies</span>
-                </div>
-                <div className="flex justify-between text-[#374151]">
-                  <span>00 Caputo Flour (100%)</span>
-                  <span className="font-bold text-[#0f172a]">{(demoCovers * 150).toFixed(0)} g</span>
-                </div>
-                <div className="flex justify-between text-[#374151]">
-                  <span>Hydration Water (65%)</span>
-                  <span className="font-bold text-[#0f172a]">{(demoCovers * 97.5).toFixed(1)} ml</span>
-                </div>
-                <div className="flex justify-between text-[#374151]">
-                  <span>Fine Sea Salt (3%)</span>
-                  <span className="font-bold text-[#0f172a]">{(demoCovers * 4.5).toFixed(1)} g</span>
-                </div>
-                <div className="flex justify-between text-[#374151]">
-                  <span>Fresh Sourdough Starter (15%)</span>
-                  <span className="font-bold text-[#0f172a]">{(demoCovers * 22.5).toFixed(1)} g</span>
-                </div>
-                <div className="pt-2 border-t border-[#e5e7eb] flex justify-between font-bold text-[#0b1c30]">
-                  <span>Theoretical Batch Cost:</span>
-                  <span className="text-emerald-600">${(demoCovers * 0.82).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Demo 2: Interactive KDS Kitchen Bump Simulator */}
-          <div className="lg:col-span-6 bg-white border border-[#e5e7eb] rounded-3xl p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center justify-between border-b border-[#e5e7eb] pb-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#0f172a]">soup_kitchen</span>
-                <h3 className="text-base font-black text-[#0b1c30]">KDS Kitchen Ticket Simulator</h3>
-              </div>
-              <button
-                onClick={handleResetTickets}
-                className="text-[10px] font-mono text-[#6b7280] hover:text-[#0f172a] flex items-center gap-1 font-bold cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">refresh</span>
-                <span>Reset Tickets</span>
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {simulatedTickets.length === 0 ? (
-                <div className="p-8 text-center bg-[#f8f9fa] rounded-2xl border border-[#e5e7eb] space-y-2">
-                  <span className="material-symbols-outlined text-3xl text-emerald-600">check_circle</span>
-                  <p className="text-xs text-[#0b1c30] font-bold">Expo Line Clear! All orders bumped.</p>
-                  <button
-                    onClick={handleResetTickets}
-                    className="px-3 py-1.5 bg-[#0f172a] text-white text-xs font-bold rounded-lg cursor-pointer"
-                  >
-                    Simulate New Tickets
-                  </button>
-                </div>
-              ) : (
-                simulatedTickets.map((t) => (
-                  <div key={t.id} className="p-3.5 bg-[#f8f9fa] rounded-2xl border border-[#e5e7eb] space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <strong className="text-[#0b1c30] font-mono font-black">{t.id} · {t.table}</strong>
-                        <span className="text-[10px] text-[#6b7280]">({t.server})</span>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${t.time.startsWith('8') ? 'bg-red-100 text-red-700 border border-red-200 animate-pulse' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-                        ⏱️ {t.time}
-                      </span>
-                    </div>
-                    <p className="text-[#374151] font-medium">{t.items.join(' · ')}</p>
-                    <div className="flex items-center justify-between pt-1 text-[11px]">
-                      <span className="text-[#6b7280] font-semibold">{t.station} · {t.course}</span>
-                      <button
-                        onClick={() => handleBumpTicket(t.id)}
-                        className="px-3 py-1 rounded-lg bg-[#0f172a] hover:bg-[#1e293b] text-white font-bold transition-all cursor-pointer shadow-2xs"
-                      >
-                        ✓ Bump Ticket
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Live Storefront Demo Card */}
-        <div className="mt-8 p-6 sm:p-8 bg-white border border-[#e5e7eb] rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
-          <div className="space-y-1.5 text-center sm:text-left">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-200">
-              Live Demo Ready
-            </span>
-            <h3 className="text-xl font-black text-[#0b1c30]">Experience Customer Ordering with FDA Allergen Badges</h3>
-            <p className="text-xs text-[#6b7280] max-w-xl">
-              Launch our live guest ordering storefront demo for "The Golden Fork" bistro with real-time dietary filtering, cart calculations, and kitchen order status tracking.
-            </p>
-          </div>
-          <Link
-            to="/demo"
-            className="px-6 py-3 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider transition-all shadow-xs shrink-0 flex items-center gap-2"
-          >
-            <span>Open Storefront Demo</span>
-            <span className="material-symbols-outlined text-sm">arrow_forward</span>
-          </Link>
-        </div>
-      </section>
-
-      {/* Shared Engines Section */}
-      <section id="packages" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Modular Monorepo Packages
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            14 Shared TypeScript Engines
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Zero circular dependencies. Every pure calculation and shared data model is published cleanly in <code className="font-mono text-[#0f172a] bg-[#f3f4f6] px-1 py-0.5 rounded">packages/*</code>.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/ratio-engine</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Culinary Ratio Scaling</h4>
-            <p className="text-xs text-[#6b7280]">Dynamic recipe scaling, baker's percentages, and metric/imperial mass and volume unit conversions.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/prep-engine</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Prep Task Forecasting</h4>
-            <p className="text-xs text-[#6b7280]">Generates morning and shift kitchen prep task checklists based on anticipated cover volume.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/food-cost-engine</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Theoretical Food Costing</h4>
-            <p className="text-xs text-[#6b7280]">Pure functions calculating theoretical ingredient usage against actual sales and price inflation.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/waste-engine</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Waste Leakage Diagnostics</h4>
-            <p className="text-xs text-[#6b7280]">Aggregates spoilage, trim, and drop loss logs to identify top annual cost-leakage ingredients.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/labor-engine</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Labor & Wage Analytics</h4>
-            <p className="text-xs text-[#6b7280]">Shift labor hours, wage summaries, and real-time labor cost percentage calculations.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/pdf-tools</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Print-Ready PDF Menus</h4>
-            <p className="text-xs text-[#6b7280]">High-resolution vector PDF menu exports, table QR codes, and guest receipts via jsPDF.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/shared</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Settings & FDA Allergen Engine</h4>
-            <p className="text-xs text-[#6b7280]">FDA FASTER Act Top 9 allergens, ESC/POS hardware printer driver, and offline delta sync queue.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/event-bus</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Typed Event Envelope Broker</h4>
-            <p className="text-xs text-[#6b7280]">Distributed domain event messaging for pos:order:created, kds:ticket:bumped, and pantry deducts.</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#e5e7eb] space-y-2 shadow-xs">
-            <span className="font-mono text-xs text-[#0f172a] font-bold">@culinaryos/ui</span>
-            <h4 className="text-sm font-black text-[#0b1c30]">Design System & 3D Canvas</h4>
-            <p className="text-xs text-[#6b7280]">Universal top navigation header, Three.js 3D spatial floor map canvas, and shadcn/ui components.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Architecture Explorer */}
-      <section id="architecture" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Event-Driven Spine
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            How CulinaryOS Coordinates in Real-Time
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Click on any layer below to inspect the data contracts, event envelopes, and security boundaries.
-          </p>
-        </div>
-
-        {/* Architecture Layer Switcher */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-          {[
-            { id: 'clients', label: '1. Frontend Clients (7 Apps)' },
-            { id: 'eventbus', label: '2. @culinaryos/event-bus Spine' },
-            { id: 'server', label: '3. Hono API Server (:3000)' },
-            { id: 'engines', label: '4. Pure Calculation Engines' },
-            { id: 'mcp', label: '5. 9 MCP AI Servers' },
-            { id: 'database', label: '6. Supabase PostgreSQL + RLS' },
-          ].map((layer) => (
-            <button
-              key={layer.id}
-              onClick={() => setActiveArchLayer(layer.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                activeArchLayer === layer.id
-                  ? 'bg-[#0f172a] text-white shadow-xs'
-                  : 'bg-white hover:bg-[#f3f4f6] text-[#4b5563] border border-[#e5e7eb]'
-              }`}
-            >
-              {layer.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Architecture Detail Cards */}
-        <div className="bg-white border border-[#e5e7eb] rounded-3xl p-6 sm:p-8 space-y-4 shadow-xs">
-          {activeArchLayer === 'clients' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">devices</span>
-                <span>Layer 1: Frontend Client Surfaces</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">7 Isolated Micro-Frontends (Vite + React 18 / Next.js)</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">
-                Each surface is completely decoupled. POS runs on tablets/touchscreens, KDS runs in 140% TV mode, KitchenKit handles morning prep, CulinaryOps audits food waste, RecipeOS scales formulas, Admin handles menu 86ing, and Online Storefront serves customers.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs pt-1">
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>POS Terminal:</strong> :5172</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>KDS Display:</strong> :5173</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>Admin Portal:</strong> :5174</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>KitchenKit:</strong> :5175</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>Storefront:</strong> :5176</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>CulinaryOps:</strong> :5177</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]"><strong>RecipeOS:</strong> :5178</div>
-                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800"><strong>Design System:</strong> @culinaryos/ui</div>
-              </div>
-            </div>
-          )}
-
-          {activeArchLayer === 'eventbus' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">sync_alt</span>
-                <span>Layer 2: Event Envelope Spine (@culinaryos/event-bus)</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">Closed-Loop Order Lifecycle Events</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">
-                When a server taps "Send to Kitchen" on POS, it fires <code className="font-mono text-[#0f172a] bg-[#f3f4f6] px-1 py-0.5 rounded">PATCH /v1/orders/:id/send</code>, which emits <code className="font-mono text-[#0f172a] bg-[#f3f4f6] px-1 py-0.5 rounded">pos:order:created</code>. This atomically:
-              </p>
-              <ol className="list-decimal list-inside space-y-1.5 text-xs text-[#374151] bg-[#f8f9fa] p-4 rounded-2xl border border-[#e5e7eb] font-mono">
-                <li>Creates filtered kitchen tickets on the Grill, Fry, Cold, and Expo KDS boards.</li>
-                <li>Deducts raw recipe ingredients from live pantry inventory (<code className="text-emerald-700">/v1/pantry/deduct</code>).</li>
-                <li>Computes plate economics: theoretical food cost vs price and logs potential waste.</li>
-                <li>Dispatches raw binary ESC/POS byte stream to station thermal receipt printers.</li>
-              </ol>
-            </div>
-          )}
-
-          {activeArchLayer === 'server' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">dns</span>
-                <span>Layer 3: Unified Hono Server (apps/server on :3000)</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">Ultra-Fast TypeScript REST API</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">
-                A single lightweight Hono backend running on Node.js / Bun. Serves PIN authentication, order routing, kitchen ticket streaming, pantry par alerts, settings management, and MCP AI endpoints with zero external microservice overhead.
-              </p>
-            </div>
-          )}
-
-          {activeArchLayer === 'engines' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">functions</span>
-                <span>Layer 4: Pure Mathematical & Scaling Engines (packages/*)</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">Zero-Side-Effect Calculation Packages</h3>
-              <p className="text-xs text-[#6b7280]">All calculation engines are decoupled from databases and UI frameworks, enabling fast deterministic unit testing.</p>
-            </div>
-          )}
-
-          {activeArchLayer === 'mcp' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">smart_toy</span>
-                <span>Layer 5: Model Context Protocol (MCP) AI Server</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">Unified Master MCP Server</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">
-                Connect Claude Desktop, Cursor, or autonomous agent frameworks directly to live restaurant tools via <code className="font-mono text-[#0f172a] bg-[#f3f4f6] px-1 py-0.5 rounded">pnpm mcp</code>:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs text-[#374151]">
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">1. Recipe Scaling & Ratios</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">2. Kitchen Prep & Batching</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">3. Food Cost & Waste Logs</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">4. POS Orders & Checks</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">5. KDS Kitchen Tickets</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">6. Inventory Par Levels</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">7. System Settings & Routing</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">8. Post-Pilot Loyalty Postcards</div>
-                <div className="p-2.5 bg-[#f8f9fa] rounded-xl border border-[#e5e7eb]">9. Live Shift Diagnostics</div>
-              </div>
-            </div>
-          )}
-
-          {activeArchLayer === 'database' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#0f172a] font-mono text-sm font-bold">
-                <span className="material-symbols-outlined">storage</span>
-                <span>Layer 6: Supabase PostgreSQL & Row Level Security (RLS)</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0b1c30]">Strict Multi-Tenant Isolation & Sovereign Data</h3>
-              <p className="text-sm text-[#4b5563] leading-relaxed">
-                Every table query is securely scoped by <code className="font-mono text-[#0f172a] bg-[#f3f4f6] px-1 py-0.5 rounded">tenant_id</code> via PostgreSQL Row Level Security. Data never bleeds between restaurant locations. Operators retain 100% data sovereignty.
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* AI & MCP Agent Layer Section */}
-      <section id="mcp" className="py-16 px-6 max-w-7xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            AI-Native Operations
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            Unified Master MCP AI Server
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Connect Claude Desktop, Cursor, or autonomous AI agents directly to your live restaurant state with 1 single command.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 rounded-3xl bg-white border border-[#e5e7eb] space-y-3 font-mono text-xs shadow-xs">
-            <span className="text-[#0f172a] font-bold uppercase block font-sans">⚡ 1-Command Startup</span>
-            <p className="text-[#4b5563] font-sans text-xs">Start the all-in-one MCP server on stdio from the monorepo root:</p>
-            <div className="bg-[#0f172a] p-3 rounded-xl text-emerald-400 font-mono">
-              $ pnpm mcp
-            </div>
-            <p className="text-[#6b7280] text-[11px] font-sans">Automatically loads all 40+ operational tools for RecipeOS, KitchenKit, CulinaryOps, POS, and KDS.</p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-white border border-[#e5e7eb] space-y-3 font-mono text-xs shadow-xs">
-            <span className="text-[#0f172a] font-bold uppercase block font-sans">🤖 Claude Desktop Integration</span>
-            <p className="text-[#4b5563] font-sans text-xs">Add to your claude_desktop_config.json:</p>
-            <pre className="bg-[#0f172a] p-3 rounded-xl text-slate-200 overflow-x-auto text-[11px]">
-{`{
-  "mcpServers": {
-    "culinaryos": {
-      "command": "node",
-      "args": ["dist/src/unified-server.js"],
-      "env": { "CULINARY_API_URL": "http://localhost:3000" }
-    }
-  }
-}`}
-            </pre>
-          </div>
-        </div>
-      </section>
-
-      {/* Transparent Pricing & Comparison */}
-      <section id="pricing" className="py-16 px-6 max-w-6xl mx-auto border-t border-[#e5e7eb]">
-        <div className="text-center space-y-2 mb-10">
-          <span className="text-[#0f172a] text-xs font-black uppercase tracking-widest bg-[#0f172a0d] px-3 py-1 rounded-full border border-[#0f172a26]">
-            Zero Vendor Lock-In
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#0b1c30]">
-            Transparent Pricing. No Hidden Fees.
-          </h2>
-          <p className="text-[#6b7280] text-sm max-w-2xl mx-auto">
-            Traditional restaurant POS vendors lock you into costly hardware leases and extract 2–3% of every transaction. CulinaryOS is 100% open source.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          {/* Free Self-Hosted */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e5e7eb] space-y-5 flex flex-col justify-between shadow-xs">
-            <div className="space-y-3">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-wider border border-emerald-200">
-                Community / Self-Hosted
-              </span>
-              <div className="space-y-0.5">
-                <span className="text-3xl font-black text-[#0b1c30]">$0</span>
-                <span className="text-xs text-[#6b7280] block">Free forever under MIT license</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[#374151] pt-1">
-                <li className="flex items-center gap-2">✓ All 7 applications included</li>
-                <li className="flex items-center gap-2">✓ Unlimited POS & KDS terminals</li>
-                <li className="flex items-center gap-2">✓ 100% offline local mode</li>
-                <li className="flex items-center gap-2">✓ Self-host on Docker / Mac / Linux</li>
-                <li className="flex items-center gap-2">✓ 0% platform revenue cut</li>
-              </ul>
-            </div>
-            <a
-              href="https://github.com/ShadowWalkerNC/CulinaryOS"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-2.5 text-center rounded-xl bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#0b1c30] font-black text-xs uppercase tracking-wider transition-all"
-            >
-              Clone on GitHub
-            </a>
-          </div>
-
-          {/* Managed Cloud */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0f172a] text-white space-y-5 flex flex-col justify-between shadow-md">
-            <div className="space-y-3">
-              <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-xs font-black uppercase tracking-wider">
-                Managed Cloud Deploy
-              </span>
-              <div className="space-y-0.5">
-                <span className="text-3xl font-black text-white">$0</span>
-                <span className="text-xs text-slate-300 block">Deploy to Vercel / Render / Supabase</span>
-              </div>
-              <ul className="space-y-2 text-xs text-slate-200 pt-1">
-                <li className="flex items-center gap-2">✓ 1-click Vercel / Render Blueprint</li>
-                <li className="flex items-center gap-2">✓ Managed Supabase PostgreSQL with RLS</li>
-                <li className="flex items-center gap-2">✓ Real-time cross-device sync</li>
-                <li className="flex items-center gap-2">✓ Free SSL & Custom Domains</li>
-                <li className="flex items-center gap-2">✓ 0% platform take-rate</li>
-              </ul>
-            </div>
-            <Link
-              to="/demo"
-              className="w-full py-2.5 text-center rounded-xl bg-white text-[#0f172a] hover:bg-slate-100 font-black text-xs uppercase tracking-wider transition-all shadow-xs"
-            >
-              Test Live Storefront
-            </Link>
-          </div>
-
-          {/* Legacy Comparison */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e5e7eb] space-y-5 opacity-75 flex flex-col justify-between shadow-xs">
-            <div className="space-y-3">
-              <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 text-xs font-black uppercase tracking-wider border border-red-200">
-                Legacy Proprietary POS
-              </span>
-              <div className="space-y-0.5">
-                <span className="text-3xl font-bold text-[#6b7280]">$150–$400+</span>
-                <span className="text-xs text-[#9ca3af] block">per month + per terminal fees</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[#6b7280] pt-1">
-                <li className="flex items-center gap-2">✗ Closed-source vendor lock-in</li>
-                <li className="flex items-center gap-2">✗ Expensive hardware leases</li>
-                <li className="flex items-center gap-2">✗ 1%–3% added transaction cuts</li>
-                <li className="flex items-center gap-2">✗ Total crash during internet outages</li>
-                <li className="flex items-center gap-2">✗ Proprietary database access</li>
-              </ul>
-            </div>
-            <span className="w-full py-2.5 text-center rounded-xl bg-[#f3f4f6] text-[#9ca3af] font-bold text-xs uppercase">
-              Avoid Vendor Lock-In
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Image Modal Preview */}
+      {/* Image Zoom Modal */}
       {modalImage && (
         <div
           onClick={() => setModalImage(null)}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 cursor-zoom-out"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 cursor-zoom-out"
         >
-          <div className="max-w-5xl w-full bg-white border border-[#e5e7eb] rounded-2xl overflow-hidden p-4 space-y-3 shadow-2xl">
-            <div className="flex items-center justify-between text-xs text-[#0b1c30] border-b border-[#e5e7eb] pb-2 font-bold">
-              <span>{modalImage.title} (Live UI Screenshot)</span>
-              <span className="text-[#6b7280] font-normal">Click anywhere to close</span>
+          <div className="max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-4 py-2 border-b border-[#e5e7eb]">
+              <h4 className="font-black text-sm text-[#0b1c30] uppercase">{modalImage.title}</h4>
+              <button onClick={() => setModalImage(null)} className="text-xs font-bold text-[#6b7280] hover:text-black">✕ Close</button>
             </div>
-            <img
-              src={modalImage.src}
-              alt={modalImage.title}
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-            />
+            <img src={modalImage.src} alt={modalImage.title} className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-[#e5e7eb] py-10 px-6 max-w-7xl mx-auto w-full space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 bg-[#0f172a] text-white rounded-lg flex items-center justify-center font-black">
-              <span className="material-symbols-outlined text-base">skillet</span>
-            </div>
-            <span className="font-black text-sm text-[#0b1c30] tracking-wider uppercase">CulinaryOS</span>
-          </div>
-
-          <div className="flex items-center gap-6 text-xs text-[#6b7280] font-semibold">
-            <a href="https://github.com/ShadowWalkerNC/CulinaryOS" className="hover:text-[#0b1c30]">GitHub Repository</a>
-            <Link to="/demo" className="hover:text-[#0b1c30]">Live Storefront Demo</Link>
-            <a href="https://github.com/ShadowWalkerNC/CulinaryOS/blob/main/docs/SETTINGS.md" className="hover:text-[#0b1c30]">Settings Guide</a>
-            <a href="https://github.com/ShadowWalkerNC/CulinaryOS/blob/main/LICENSE" className="hover:text-[#0b1c30]">MIT License</a>
-          </div>
-        </div>
-
-        <div className="text-center sm:text-left text-xs text-[#9ca3af] pt-4 border-t border-[#e5e7eb] flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p>© 2026 CulinaryOS Contributors. Free and open-source under the MIT License.</p>
-          <p className="font-mono text-[11px]">release: v0.3.0 · build: dc931a9</p>
-        </div>
+      <footer className="mt-auto bg-white border-t border-[#e5e7eb] px-6 py-6 text-center text-xs text-[#6b7280] font-medium space-y-1">
+        <p className="font-bold text-[#0b1c30]">CulinaryOS — The Open Source Point of Sale & Restaurant Operating System</p>
+        <p className="text-[11px]">MIT License · 100% Free · Universal ESC/POS Hardware Support</p>
       </footer>
     </div>
   );

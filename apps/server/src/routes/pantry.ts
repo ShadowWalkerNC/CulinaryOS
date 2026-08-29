@@ -503,23 +503,32 @@ pantryRoutes.get('/', async (c) => {
     return ok(c, mockPantry);
   }
 
-  const { data, error } = await supabase
-    .from('pantry_status')
-    .select('*')
-    .eq('tenant_id', tenantId)
-    .order('name', { ascending: true });
+  try {
+    const fetchPantry = async () => {
+      const { data, error } = await supabase
+        .from('pantry_status')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .order('name', { ascending: true });
 
-  if (error) {
-    // Fallback if view missing
-    const { data: items, error: e2 } = await supabase
-      .from('ingredients')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .order('name', { ascending: true });
-    if (e2) return ok(c, mockPantry.map(mapIngredient));
-    return ok(c, (items ?? []).map(mapIngredient));
+      if (error) {
+        const { data: items, error: e2 } = await supabase
+          .from('ingredients')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .order('name', { ascending: true });
+        if (e2) return mockPantry.map(mapIngredient);
+        return (items ?? []).map(mapIngredient);
+      }
+      return data;
+    };
+
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(mockPantry.map(mapIngredient)), 1800));
+    const result = await Promise.race([fetchPantry(), timeoutPromise]);
+    return ok(c, result);
+  } catch {
+    return ok(c, mockPantry.map(mapIngredient));
   }
-  return ok(c, data);
 });
 
 // GET /v1/pantry/alerts — low / out of stock

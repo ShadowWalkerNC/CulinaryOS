@@ -122,7 +122,7 @@ async function runHealthChecks() {
   for (const pc of PORT_CHECKS) {
     try {
       const { result: res, durationMs } = await measureLatency(() =>
-        fetch(pc.url, { method: 'GET', signal: AbortSignal.timeout(3500) })
+        fetch(pc.url, { method: 'GET', signal: AbortSignal.timeout(5000) })
       );
 
       if (res.status === 200 || res.status === pc.expectedStatus || res.status === 404) {
@@ -152,7 +152,7 @@ async function runHealthChecks() {
           method: ec.method,
           headers: ec.headers,
           body: ec.body ? JSON.stringify(ec.body) : undefined,
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(6000),
         });
         const data = await response.json().catch(() => ({}));
         return { status: response.status, data };

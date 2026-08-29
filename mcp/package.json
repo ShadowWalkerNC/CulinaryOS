@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/src/unified-server.js",
     "dev": "node --import tsx src/unified-server.ts",
     "start-pos": "node dist/src/pos-server.js",

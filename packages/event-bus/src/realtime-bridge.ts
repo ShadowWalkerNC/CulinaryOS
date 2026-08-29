@@ -12,7 +12,7 @@ const broadcastChannels = new Map<string, RealtimeChannel>();
 try {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (url && key && !url.includes('your-project')) {
+  if (url && key && !url.includes('your-project') && key.length > 30 && !key.includes('your-') && !key.includes('placeholder')) {
     supabase = createClient(url, key);
   }
 } catch {
