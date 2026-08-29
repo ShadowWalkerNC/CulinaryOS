@@ -193,7 +193,7 @@ export function MenuPage() {
                   <span>Open Now</span>
                 </span>
                 <span className="text-xs font-bold text-slate-500">
-                  ⭐ {restaurant.rating || 4.9} ({restaurant.reviewCount || 428}+ orders)
+                  {restaurant.rating || 4.9} / 5.0 ({restaurant.reviewCount || 428}+ reviews)
                 </span>
               </div>
 
@@ -229,7 +229,7 @@ export function MenuPage() {
                       : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
                   }`}
                 >
-                  <span className="flex items-center gap-1">🚴 Delivery</span>
+                  <span className="flex items-center gap-1">Delivery</span>
                   <span className="text-[10px] font-mono opacity-80">25–35 min</span>
                 </button>
                 <button
@@ -241,7 +241,7 @@ export function MenuPage() {
                       : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
                   }`}
                 >
-                  <span className="flex items-center gap-1">🛍️ Pickup</span>
+                  <span className="flex items-center gap-1">Pickup</span>
                   <span className="text-[10px] font-mono opacity-80">15–20 min</span>
                 </button>
               </div>
@@ -280,10 +280,10 @@ export function MenuPage() {
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
               {[
                 { id: 'all', label: 'All Items' },
-                { id: 'popular', label: '🔥 Popular' },
-                { id: 'vegetarian', label: '🌱 Vegetarian' },
-                { id: 'vegan', label: '🌿 Vegan' },
-                { id: 'gluten_free', label: '🌾 Gluten-Free' },
+                { id: 'popular', label: 'Popular' },
+                { id: 'vegetarian', label: 'Vegetarian' },
+                { id: 'vegan', label: 'Vegan' },
+                { id: 'gluten_free', label: 'Gluten-Free' },
               ].map((df) => {
                 const isSelected = activeDietary === df.id;
                 return (

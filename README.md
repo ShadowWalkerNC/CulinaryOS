@@ -2,6 +2,9 @@
 
 **The open operating system for restaurants** — humans on POS/KDS, agents on MCP, your Postgres. MIT licensed. AI never required for service.
 
+**Live Marketing Hub & Overview:** [https://culinary-os-marketing.vercel.app/](https://culinary-os-marketing.vercel.app/)
+
+[![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
 [![Tests: 32/32 Passing](https://img.shields.io/badge/Tests-32%2F32%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
 [![Typecheck: 18/18 Passing](https://img.shields.io/badge/Typecheck-18%2F18%20Passing-blue.svg)](./turbo.json)
@@ -224,7 +227,7 @@ pnpm quickstart
 
 *(On Windows you can also double-click `quickstart.bat`, or run `./quickstart.sh` on macOS/Linux).*
 
-👉 **Full 5-minute interactive walkthrough:** See [`QUICKSTART.md`](QUICKSTART.md).
+**Interactive walkthrough:** See [`QUICKSTART.md`](QUICKSTART.md).
 
 ### Demo Credentials
 
@@ -337,22 +340,22 @@ CulinaryOS/
 
 > All screenshots captured live from the running application.
 
-### 🗺️ 3D Spatial Floor Plan & Table Management
+### 3D Spatial Floor Plan & Table Management
 <p align="center">
   <img src="docs/screenshots/floor_map_3d.png" alt="3D Floor Plan with table status rings" width="80%" />
 </p>
 
-### 🍳 Kitchen Display System (KitchenKit — Station Routing)
+### Kitchen Display System (KitchenKit — Station Routing)
 <p align="center">
   <img src="docs/screenshots/kds_station_board.png" alt="KDS with station tabs and aging timers" width="80%" />
 </p>
 
-### 🖥️ POS Terminal — Multi-Seat Ticket Menu
+### POS Terminal — Multi-Seat Ticket Menu
 <p align="center">
   <img src="docs/screenshots/pos_ticket_menu.png" alt="POS multi-seat ticket ordering" width="80%" />
 </p>
 
-### 🌐 Online Customer Storefront
+### Online Customer Storefront
 <p align="center">
   <img src="docs/screenshots/web_store_ordering.png" alt="Online ordering with allergen filtering" width="80%" />
 </p>
@@ -383,10 +386,10 @@ We welcome contributions! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) befor
 
 ## Community & Support
 
-- 🐛 **Bug reports & feature requests:** [GitHub Issues](https://github.com/ShadowWalkerNC/CulinaryOS/issues)
-- 💬 **Questions & discussion:** [GitHub Discussions](https://github.com/ShadowWalkerNC/CulinaryOS/discussions)
-- 📖 **Architecture & API docs:** [`docs/`](docs/)
-- 🔌 **Extension development:** [`extension_template/`](extension_template/)
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/ShadowWalkerNC/CulinaryOS/issues)
+- **Questions & discussion:** [GitHub Discussions](https://github.com/ShadowWalkerNC/CulinaryOS/discussions)
+- **Architecture & API docs:** [`docs/`](docs/)
+- **Extension development:** [`extension_template/`](extension_template/)
 
 ---
 

@@ -69,5 +69,5 @@ try {
 const totalDuration = ((performance.now() - suiteStart) / 1000).toFixed(2);
 
 console.log('\x1b[1m\x1b[38;5;208m========================================================================');
-console.log(`  🎉 MASTER AUDIT COMPLETE IN ${totalDuration}s — ZERO AI TOKENS CONSUMED`);
+console.log(`  [PASS] MASTER AUDIT COMPLETE IN ${totalDuration}s — ZERO AI TOKENS CONSUMED`);
 console.log('========================================================================\x1b[0m\n');

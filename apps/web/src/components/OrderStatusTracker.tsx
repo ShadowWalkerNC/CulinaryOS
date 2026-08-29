@@ -33,29 +33,29 @@ const STAGES: StageMeta[] = [
     key: 'received',
     label: 'Order Confirmed',
     sublabel: 'Sent to Kitchen',
-    icon: '📋',
+    icon: 'confirmed',
     description: 'The kitchen has received and ticketed your order.',
   },
   {
     key: 'preparing',
     label: 'Preparing Dishes',
     sublabel: 'Cooking on Station',
-    icon: '🍳',
+    icon: 'cooking',
     description: 'Our culinary team is crafting your meal from scratch.',
   },
   {
     key: 'ready',
     label: 'Ready / On The Way',
     sublabel: 'En Route or At Pass',
-    icon: '🚴',
+    icon: 'ready',
     description: 'Hot and packed, heading directly to your destination.',
   },
   {
     key: 'completed',
     label: 'Order Completed',
     sublabel: 'Delivered & Enjoyed',
-    icon: '🎉',
-    description: 'Your order has been fulfilled. Bon appétit!',
+    icon: 'completed',
+    description: 'Your order has been fulfilled. Enjoy your meal.',
   },
 ];
 
@@ -143,7 +143,7 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
         ...s,
         label: isDelivery ? 'Out for Delivery' : 'Ready for Pickup',
         sublabel: isDelivery ? 'Driver Dispatched' : 'At the Pass',
-        icon: isDelivery ? '🚗' : '🛍️',
+        icon: isDelivery ? 'delivery' : 'pickup',
         description: isDelivery
           ? 'Your courier is en route with your fresh order.'
           : 'Your order is hot and ready at the pickup counter.',
@@ -153,6 +153,24 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
   });
 
   const activeStage = displayStages[currentStageIdx];
+
+  const renderStageIcon = (iconKey: string, className = "w-6 h-6") => {
+    switch (iconKey) {
+      case 'confirmed':
+        return <Receipt className={className} />;
+      case 'cooking':
+        return <ChefHat className={className} />;
+      case 'ready':
+      case 'pickup':
+        return <ShoppingBag className={className} />;
+      case 'delivery':
+        return <ShoppingBag className={className} />;
+      case 'completed':
+        return <CheckCircle2 className={className} />;
+      default:
+        return <Clock className={className} />;
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -166,7 +184,9 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
           <span>Live Order Tracking</span>
         </div>
 
-        <div className="text-4xl md:text-5xl mb-2">{activeStage.icon}</div>
+        <div className="flex justify-center text-slate-800 mb-3">
+          {renderStageIcon(activeStage.icon, "w-10 h-10")}
+        </div>
 
         <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
           {activeStage.label}
@@ -212,7 +232,7 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
             className="px-2.5 py-1 bg-slate-100 hover:bg-[#0f172a] text-slate-700 hover:text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-xs"
             title="Advance lifecycle state for testing"
           >
-            <span>⚡ Next Stage (Demo)</span>
+            <span>Next Stage (Demo)</span>
           </button>
         </div>
 
@@ -243,7 +263,7 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
                         : 'bg-white border-2 border-slate-200 text-slate-400'
                     }`}
                   >
-                    {isDone ? <CheckCircle2 className="w-5 h-5 stroke-[2.5]" /> : <span>{stage.icon}</span>}
+                    {isDone ? <CheckCircle2 className="w-5 h-5 stroke-[2.5]" /> : renderStageIcon(stage.icon, "w-4 h-4")}
                   </div>
                   <span
                     className={`text-xs mt-2.5 font-bold leading-tight ${

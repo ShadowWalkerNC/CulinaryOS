@@ -84,7 +84,7 @@ export function CartDrawer({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <span>🚴 Delivery</span>
+              <span>Delivery</span>
               <span className="text-[10px] font-mono opacity-80">(25-35m)</span>
             </button>
             <button
@@ -96,7 +96,7 @@ export function CartDrawer({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <span>🛍️ Pickup</span>
+              <span>Pickup</span>
               <span className="text-[10px] font-mono opacity-80">(15-20m)</span>
             </button>
           </div>

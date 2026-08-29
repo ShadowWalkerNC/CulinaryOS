@@ -181,7 +181,7 @@ export function CheckoutDrawer({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span>🚴 Delivery</span>
+                <span>Delivery</span>
                 <span className="text-[10px] font-mono opacity-80">(+$3.99)</span>
               </button>
               <button
@@ -193,7 +193,7 @@ export function CheckoutDrawer({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span>🛍️ Store Pickup</span>
+                <span>Store Pickup</span>
                 <span className="text-[10px] font-mono opacity-80">(Free)</span>
               </button>
             </div>

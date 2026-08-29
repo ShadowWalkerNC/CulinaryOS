@@ -41,8 +41,8 @@ authRoutes.post('/pin-login', async (c) => {
     return ok(c, {
       mode: 'demo',
       tenantId,
-      userId: demoStaff.id,
-      displayName: demoStaff.name,
+      userId: `demo-${demoStaff.role}`,
+      displayName: demoStaff.displayName,
       role: demoStaff.role,
       accessToken: fallbackToken,
       token: fallbackToken,
@@ -57,8 +57,8 @@ authRoutes.post('/pin-login', async (c) => {
         return ok(c, {
           mode: 'demo',
           tenantId,
-          userId: demoStaff.id,
-          displayName: demoStaff.name,
+          userId: `demo-${demoStaff.role}`,
+          displayName: demoStaff.displayName,
           role: demoStaff.role,
           accessToken: fallbackToken,
           token: fallbackToken,
@@ -82,7 +82,7 @@ authRoutes.post('/pin-login', async (c) => {
 
     if (error) return err(c, 'DB_ERROR', error.message, 500);
 
-    const match = (rows ?? []).find((r) => verifyPin(pin, r.pin_hash));
+    const match = (rows ?? []).find((r: any) => verifyPin(pin, r.pin_hash));
     if (!match) {
       // Fallback for demo PINs 1234/5678
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
@@ -90,8 +90,8 @@ authRoutes.post('/pin-login', async (c) => {
         return ok(c, {
           mode: 'device_key',
           tenantId,
-          userId: demo.id,
-          displayName: demo.name,
+          userId: `demo-${demo.role}`,
+          displayName: demo.displayName,
           role: demo.role,
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
@@ -161,8 +161,8 @@ authRoutes.post('/pin-login', async (c) => {
         return ok(c, {
           mode: 'device_key',
           tenantId,
-          userId: demoStaff.id,
-          displayName: demoStaff.name,
+          userId: `demo-${demoStaff.role}`,
+          displayName: demoStaff.displayName,
           role: demoStaff.role,
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
