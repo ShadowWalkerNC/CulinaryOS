@@ -5,12 +5,14 @@ import { MenuPage } from './pages/Menu';
 import { StaffPage } from './pages/Staff';
 import { PantryPage } from './pages/Pantry';
 import { SettingsPage } from './pages/Settings';
+import { IntegrationsPage } from './pages/Integrations';
 
 export function App() {
   const adminNav = [
     { to: '/menu', label: 'Menu Editor', icon: 'restaurant_menu' },
     { to: '/staff', label: 'Staff & PINs', icon: 'badge' },
     { to: '/pantry', label: 'Pantry & Inventory', icon: 'inventory_2' },
+    { to: '/integrations', label: 'Integrations & Hub', icon: 'hub' },
     { to: '/settings', label: 'Settings & Routing', icon: 'tune' },
   ];
 
@@ -54,6 +56,7 @@ export function App() {
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="/pantry" element={<PantryPage />} />
+          <Route path="/integrations" element={<IntegrationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/" element={<Navigate to="/menu" replace />} />
           <Route path="*" element={<Navigate to="/menu" replace />} />
