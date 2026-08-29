@@ -112,6 +112,9 @@ export {
   ExternalLink,
   Activity,
   FileCode,
+  Copy,
+  Terminal,
+  Download,
   Table as TableIcon,
   Badge as BadgeIcon,
 } from 'lucide-react';

@@ -25,6 +25,10 @@ import {
   Radio,
   SlidersHorizontal,
   FileCode,
+  Copy,
+  Terminal,
+  Download,
+  ShoppingBag,
 } from '@culinaryos/ui';
 
 interface DeviceRole {
@@ -45,6 +49,24 @@ interface DeviceRole {
 export function LandingPage() {
   const [selectedDevice, setSelectedDevice] = useState<string>('phone');
   const [modalImage, setModalImage] = useState<{ src: string; title: string } | null>(null);
+  const [quickstartModal, setQuickstartModal] = useState<{
+    title: string;
+    port?: string;
+    role?: string;
+    description?: string;
+    screenshot?: string;
+  } | null>(null);
+  const [copiedCommand, setCopiedCommand] = useState(false);
+
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  function handleCopyQuickstart() {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText('git clone https://github.com/ShadowWalkerNC/CulinaryOS.git && cd CulinaryOS && pnpm quickstart');
+      setCopiedCommand(true);
+      setTimeout(() => setCopiedCommand(false), 2500);
+    }
+  }
 
   // Interactive Live POS Simulator State
   const [selectedSeat, setSelectedSeat] = useState<number>(1);
@@ -247,35 +269,93 @@ export function LandingPage() {
           </div>
         </div>
 
-        {/* Hero Quick Launch Buttons */}
+        {/* Hero Quick Launch & Live Demo Actions */}
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <a
-            href="https://culinary-os-marketing.vercel.app"
+            href="/menu/demo"
             className="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
           >
-            <Radio className="w-4 h-4 text-emerald-400" />
-            <span>Live Production Hub (Vercel)</span>
+            <ShoppingBag className="w-4 h-4 text-emerald-400" />
+            <span>Try Online Storefront (Live Demo)</span>
           </a>
+          {isLocal ? (
+            <>
+              <a
+                href="http://localhost:5172"
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <Receipt className="w-4 h-4 text-slate-700" />
+                <span>Launch POS Terminal (:5172)</span>
+              </a>
+              <a
+                href="http://localhost:5173"
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <ChefHat className="w-4 h-4 text-slate-700" />
+                <span>Kitchen Display KDS (:5173)</span>
+              </a>
+              <a
+                href="http://localhost:5174"
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-slate-700" />
+                <span>Back-Office Admin (:5174)</span>
+              </a>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setQuickstartModal({
+                  title: 'POS Terminal & Touch Hardware',
+                  port: '5172',
+                  role: 'Point of Sale, 3D Floor Maps & Thermal Printing',
+                  description: 'The POS terminal is designed to run directly on tablets, counter registers, and mobile handhelds communicating with hardware receipt printers and cash drawers over your local restaurant network.',
+                  screenshot: '/screenshots/pos_menu_modern_cards.png',
+                })}
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <Receipt className="w-4 h-4 text-slate-700" />
+                <span>POS Terminal (:5172)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickstartModal({
+                  title: 'Kitchen Display System (KDS)',
+                  port: '5173',
+                  role: 'Live Kitchen Tickets, Course Holding & TV Pass',
+                  description: 'The KDS client runs on kitchen touchscreens and high-contrast TV displays with 1-second aging timers, station routing, and bump bar support.',
+                  screenshot: '/screenshots/kds_station_routing.png',
+                })}
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <ChefHat className="w-4 h-4 text-slate-700" />
+                <span>Kitchen Display (:5173)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickstartModal({
+                  title: 'Back-Office Admin & Pantry',
+                  port: '5174',
+                  role: 'Menu Management, Staff PINs, Auto-PO & Inventory',
+                  description: 'The admin portal gives restaurant owners and managers total control over recipes, 86ing items, auto-purchase orders, food cost variance, and staff security PINs.',
+                  screenshot: '/screenshots/admin_pantry_inventory.png',
+                })}
+                className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-slate-700" />
+                <span>Back-Office Admin (:5174)</span>
+              </button>
+            </>
+          )}
           <a
-            href="http://localhost:5172"
-            className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
+            href="https://github.com/ShadowWalkerNC/CulinaryOS"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
           >
-            <Receipt className="w-4 h-4 text-slate-700" />
-            <span>Launch POS Terminal (:5172)</span>
-          </a>
-          <a
-            href="http://localhost:5173"
-            className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
-          >
-            <ChefHat className="w-4 h-4 text-slate-700" />
-            <span>Kitchen Display KDS (:5173)</span>
-          </a>
-          <a
-            href="http://localhost:5174"
-            className="px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs"
-          >
-            <ShieldCheck className="w-4 h-4 text-slate-700" />
-            <span>Back-Office Admin (:5174)</span>
+            <FileCode className="w-4 h-4 text-slate-700" />
+            <span>GitHub Monorepo</span>
           </a>
         </div>
       </section>
@@ -367,15 +447,51 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Direct Open Button */}
-            <div className="pt-3 flex gap-3">
-              <a
-                href={`http://localhost:${currentDevice.port}`}
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+            {/* Action Buttons */}
+            <div className="pt-3 flex flex-wrap gap-3">
+              {isLocal ? (
+                <a
+                  href={`http://localhost:${currentDevice.port}`}
+                  className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+                >
+                  <span>Open {currentDevice.name}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              ) : (
+                <>
+                  {currentDevice.id === 'phone' && (
+                    <a
+                      href="/menu/demo"
+                      className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Try Mobile Storefront Demo</span>
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setQuickstartModal({
+                      title: currentDevice.name,
+                      port: currentDevice.port,
+                      role: currentDevice.roleTitle,
+                      description: currentDevice.description,
+                      screenshot: currentDevice.screenshot,
+                    })}
+                    className="px-4 py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <Terminal className="w-3.5 h-3.5 text-slate-700" />
+                    <span>Deploy on Local Hardware</span>
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setModalImage({ src: currentDevice.screenshot, title: currentDevice.name })}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
               >
-                <span>Open {currentDevice.name}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+                <ZoomIn className="w-3.5 h-3.5" />
+                <span>View Full Screen</span>
+              </button>
             </div>
           </div>
 
@@ -632,53 +748,178 @@ export function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <a href="http://localhost:5172" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">POS Terminal</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5172</span>
+          {/* 1. POS Terminal */}
+          {isLocal ? (
+            <a href="http://localhost:5172" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">POS Terminal</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5172</span>
+              </div>
+              <p className="text-xs text-slate-600">High-speed touch order entry, 2D/3D floor map editor, tableside seat ordering, and ESC/POS thermal printing.</p>
+            </a>
+          ) : (
+            <div
+              onClick={() => setQuickstartModal({
+                title: 'POS Terminal & Floor Map (:5172)',
+                port: '5172',
+                role: 'Point of Sale, 3D Floor Maps & Thermal Printing',
+                description: 'Run the POS terminal on tablets, mobile handhelds, or counter registers with ESC/POS receipt printing and cash drawer kick.',
+                screenshot: '/screenshots/pos_menu_modern_cards.png',
+              })}
+              className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">POS Terminal</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">Hardware Node</span>
+              </div>
+              <p className="text-xs text-slate-600">High-speed touch order entry, 2D/3D floor map editor, tableside seat ordering, and ESC/POS thermal printing.</p>
+              <span className="text-[11px] font-semibold text-slate-900 flex items-center gap-1 pt-1">
+                <Terminal className="w-3 h-3" /> Click to view hardware launch command
+              </span>
             </div>
-            <p className="text-xs text-slate-600">High-speed touch order entry, 2D/3D floor map editor, tableside seat ordering, and ESC/POS thermal printing.</p>
+          )}
+
+          {/* 2. Kitchen Display KDS */}
+          {isLocal ? (
+            <a href="http://localhost:5173" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Kitchen Display (KDS)</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5173</span>
+              </div>
+              <p className="text-xs text-slate-600">Station-routed kitchen tickets with 1-second aging timers, course holding, and 140% high-contrast TV mode.</p>
+            </a>
+          ) : (
+            <div
+              onClick={() => setQuickstartModal({
+                title: 'Kitchen Display System (KDS) (:5173)',
+                port: '5173',
+                role: 'Kitchen Tickets & Station Routing',
+                description: 'Run the KDS on kitchen screens and TV expo pass with live ticket aging timers and station filtering.',
+                screenshot: '/screenshots/kds_station_routing.png',
+              })}
+              className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Kitchen Display (KDS)</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">Kitchen TV / Screen</span>
+              </div>
+              <p className="text-xs text-slate-600">Station-routed kitchen tickets with 1-second aging timers, course holding, and 140% high-contrast TV mode.</p>
+              <span className="text-[11px] font-semibold text-slate-900 flex items-center gap-1 pt-1">
+                <Terminal className="w-3 h-3" /> Click to view hardware launch command
+              </span>
+            </div>
+          )}
+
+          {/* 3. Back-Office Admin */}
+          {isLocal ? (
+            <a href="http://localhost:5174" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Back-Office Admin</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5174</span>
+              </div>
+              <p className="text-xs text-slate-600">Menu catalog editor, 1-click 86 item toggles, staff security PINs, inventory par levels, and station routing.</p>
+            </a>
+          ) : (
+            <div
+              onClick={() => setQuickstartModal({
+                title: 'Back-Office Admin & Settings (:5174)',
+                port: '5174',
+                role: 'Menu Editor, Staff & Par Levels',
+                description: 'Run the admin dashboard to manage menus, 86ing, inventory par levels, auto-PO, and staff security PINs.',
+                screenshot: '/screenshots/admin_pantry_inventory.png',
+              })}
+              className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Back-Office Admin</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">Manager Portal</span>
+              </div>
+              <p className="text-xs text-slate-600">Menu catalog editor, 1-click 86 item toggles, staff security PINs, inventory par levels, and station routing.</p>
+              <span className="text-[11px] font-semibold text-slate-900 flex items-center gap-1 pt-1">
+                <Terminal className="w-3 h-3" /> Click to view hardware launch command
+              </span>
+            </div>
+          )}
+
+          {/* 4. KitchenKit Prep Planner */}
+          {isLocal ? (
+            <a href="http://localhost:5175" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">KitchenKit Prep Planner</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5175</span>
+              </div>
+              <p className="text-xs text-slate-600">Shift prep checklists, expected cover volume forecasting, perishable FIFO tracking, and vendor directory.</p>
+            </a>
+          ) : (
+            <div
+              onClick={() => setQuickstartModal({
+                title: 'KitchenKit Prep Planner (:5175)',
+                port: '5175',
+                role: 'Station Prep Checklists & Batch Scaling',
+                description: 'Manage morning station prep lists, cover count projections, and recipe ratios.',
+                screenshot: '/screenshots/kds_station_routing.png',
+              })}
+              className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">KitchenKit Prep Planner</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">Prep Station</span>
+              </div>
+              <p className="text-xs text-slate-600">Shift prep checklists, expected cover volume forecasting, perishable FIFO tracking, and vendor directory.</p>
+              <span className="text-[11px] font-semibold text-slate-900 flex items-center gap-1 pt-1">
+                <Terminal className="w-3 h-3" /> Click to view hardware launch command
+              </span>
+            </div>
+          )}
+
+          {/* 5. Online Storefront (Works Live on Vercel!) */}
+          <a href="/menu/demo" className="p-5 rounded-xl bg-slate-900 text-white border border-slate-800 hover:border-emerald-500 shadow-sm transition-all space-y-2 group">
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-sm text-white group-hover:text-emerald-400 flex items-center gap-1.5">
+                <span>Online Storefront</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </span>
+              <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">
+                Live on Vercel
+              </span>
+            </div>
+            <p className="text-xs text-slate-300">Mobile-first customer ordering with FDA Top 9 allergen filtering, dietary badges, and live prep status tracking.</p>
+            <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 pt-1">
+              <span>Launch Live Storefront</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
           </a>
 
-          <a href="http://localhost:5173" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Kitchen Display (KDS)</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5173</span>
+          {/* 6. CulinaryOps Analytics */}
+          {isLocal ? (
+            <a href="http://localhost:5177" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">CulinaryOps Analytics</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5177</span>
+              </div>
+              <p className="text-xs text-slate-600">Theoretical vs actual food cost variance, kitchen trim and spoilage waste logs, and labor hour analytics.</p>
+            </a>
+          ) : (
+            <div
+              onClick={() => setQuickstartModal({
+                title: 'CulinaryOps Analytics (:5177)',
+                port: '5177',
+                role: 'Food Cost Variance & Waste Ledger',
+                description: 'Monitor actual vs theoretical food cost %, kitchen trim waste logs, and labor hours.',
+                screenshot: '/screenshots/admin_waste_analytics.png',
+              })}
+              className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">CulinaryOps Analytics</span>
+                <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">Economics Node</span>
+              </div>
+              <p className="text-xs text-slate-600">Theoretical vs actual food cost variance, kitchen trim and spoilage waste logs, and labor hour analytics.</p>
+              <span className="text-[11px] font-semibold text-slate-900 flex items-center gap-1 pt-1">
+                <Terminal className="w-3 h-3" /> Click to view hardware launch command
+              </span>
             </div>
-            <p className="text-xs text-slate-600">Station-routed kitchen tickets with 1-second aging timers, course holding, and 140% high-contrast TV mode.</p>
-          </a>
-
-          <a href="http://localhost:5174" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Back-Office Admin</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5174</span>
-            </div>
-            <p className="text-xs text-slate-600">Menu catalog editor, 1-click 86 item toggles, staff security PINs, inventory par levels, and station routing.</p>
-          </a>
-
-          <a href="http://localhost:5175" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">KitchenKit Prep Planner</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5175</span>
-            </div>
-            <p className="text-xs text-slate-600">Shift prep checklists, expected cover volume forecasting, perishable FIFO tracking, and vendor directory.</p>
-          </a>
-
-          <a href="http://localhost:5176" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">Online Storefront</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5176</span>
-            </div>
-            <p className="text-xs text-slate-600">Mobile-first customer ordering with FDA Top 9 allergen filtering, dietary badges, and live prep status tracking.</p>
-          </a>
-
-          <a href="http://localhost:5177" className="p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-900 shadow-xs transition-all space-y-2 group">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-sm text-slate-900 group-hover:text-slate-950">CulinaryOps Analytics</span>
-              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded text-slate-700">:5177</span>
-            </div>
-            <p className="text-xs text-slate-600">Theoretical vs actual food cost variance, kitchen trim and spoilage waste logs, and labor hour analytics.</p>
-          </a>
+          )}
         </div>
       </section>
 
@@ -698,11 +939,11 @@ export function LandingPage() {
 
         <div className="pt-2 flex flex-wrap justify-center gap-3">
           <a
-            href="https://culinary-os-marketing.vercel.app"
+            href="/menu/demo"
             className="px-5 py-2.5 rounded-lg bg-slate-900 text-white text-xs font-semibold uppercase tracking-wider hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-2"
           >
-            <Radio className="w-4 h-4 text-emerald-400" />
-            <span>Visit Live Vercel Marketing Hub</span>
+            <ShoppingBag className="w-4 h-4 text-emerald-400" />
+            <span>Try Live Online Ordering Demo</span>
           </a>
           <a
             href="https://github.com/ShadowWalkerNC/CulinaryOS"
@@ -715,6 +956,106 @@ export function LandingPage() {
           </a>
         </div>
       </section>
+
+      {/* Quickstart / Hardware Deployment Modal */}
+      {quickstartModal && (
+        <div
+          onClick={() => setQuickstartModal(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div
+            className="max-w-xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl p-6 space-y-5 animate-fadeIn border border-slate-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start border-b border-slate-200 pb-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                    Local Restaurant Deployment
+                  </span>
+                  {quickstartModal.port && (
+                    <span className="text-[10px] font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded">
+                      Port :{quickstartModal.port}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-lg text-slate-950">{quickstartModal.title}</h3>
+                {quickstartModal.role && (
+                  <p className="text-xs font-medium text-slate-500">{quickstartModal.role}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setQuickstartModal(null)}
+                className="text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {quickstartModal.description || 'This module is designed to run directly on tablets, kitchen displays, and counter terminals communicating with hardware receipt printers and cash drawers over your local restaurant network.'}
+            </p>
+
+            {/* Turnkey 1-Command Startup Box */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold uppercase text-slate-900 tracking-wider block">
+                Run Turnkey Stack Locally (Zero DB Setup Needed):
+              </span>
+              <div className="bg-slate-950 text-slate-100 p-3.5 rounded-xl font-mono text-xs flex items-center justify-between gap-3 shadow-inner border border-slate-800">
+                <code className="text-emerald-400 select-all overflow-x-auto">
+                  git clone https://github.com/ShadowWalkerNC/CulinaryOS.git && cd CulinaryOS && pnpm quickstart
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyQuickstart}
+                  className="px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-sans font-semibold shrink-0 flex items-center gap-1.5 transition-colors"
+                >
+                  {copiedCommand ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                On Windows double-click <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">quickstart.bat</code> · On macOS/Linux run <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">./quickstart.sh</code>.
+              </p>
+            </div>
+
+            {/* Action Buttons in Modal */}
+            <div className="pt-2 flex flex-wrap gap-2.5 border-t border-slate-100">
+              <a
+                href="/menu/demo"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <span>Try Online Storefront (Live on Vercel)</span>
+              </a>
+              {quickstartModal.screenshot && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sc = quickstartModal.screenshot!;
+                    const t = quickstartModal.title;
+                    setQuickstartModal(null);
+                    setModalImage({ src: sc, title: t });
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                >
+                  <ZoomIn className="w-4 h-4 text-slate-600" />
+                  <span>Inspect Screenshot</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Zoom Modal */}
       {modalImage && (
