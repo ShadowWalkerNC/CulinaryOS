@@ -13,7 +13,6 @@
     "@culinaryos/shared": "workspace:*",
     "@culinaryos/ui":     "workspace:*",
     "@culinaryos/config": "workspace:*",
-    "lucide-react":       "^1.34.0",
     "react":              "^18.3.0",
     "react-dom":          "^18.3.0",
     "react-router-dom":   "^6.23.0"
