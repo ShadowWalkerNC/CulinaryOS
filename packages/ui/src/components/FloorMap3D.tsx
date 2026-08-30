@@ -5,15 +5,8 @@ import {
   RotateCw,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  Compass,
   Move,
   Grid,
-  Layers,
-  Sparkles,
-  SlidersHorizontal,
-  Check,
-  X,
 } from 'lucide-react';
 
 export type TableStatus3D = 'available' | 'occupied' | 'reserved' | 'dirty';
@@ -110,7 +103,6 @@ export function FloorMap3D({
   const [hoveredTable, setHoveredTable] = useState<FloorTable3DData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [isDraggingTable, setIsDraggingTable] = useState(false);
-  const [draggedTableId, setDraggedTableId] = useState<string | null>(null);
   const [activeCoords, setActiveCoords] = useState<{ x: number; z: number } | null>(null);
 
   // Scene references
@@ -478,7 +470,6 @@ export function FloorMap3D({
       isDraggingTableRef.current = true;
       activeDragIdRef.current = hit.tableData.id;
       setIsDraggingTable(true);
-      setDraggedTableId(hit.tableData.id);
       if (onSelectTable) onSelectTable(hit.tableData);
       return;
     }
@@ -556,7 +547,6 @@ export function FloorMap3D({
     isDraggingTableRef.current = false;
     activeDragIdRef.current = null;
     setIsDraggingTable(false);
-    setDraggedTableId(null);
   };
 
   const handleClick = (e: React.MouseEvent) => {

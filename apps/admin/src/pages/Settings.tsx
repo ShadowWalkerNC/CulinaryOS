@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ThemeCustomizer } from '@culinaryos/ui';
 import {
   loadLocalSettings,
   saveLocalSettings,
@@ -10,7 +11,7 @@ import {
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<CulinaryOSSettings>(loadLocalSettings());
-  const [activeTab, setActiveTab] = useState<'company' | 'routing' | 'receipts' | 'display' | 'delivery'>('company');
+  const [activeTab, setActiveTab] = useState<'company' | 'routing' | 'receipts' | 'display' | 'delivery' | 'theme'>('company');
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
@@ -166,6 +167,7 @@ export function SettingsPage() {
           { id: 'receipts', label: 'Receipt & Hardware', icon: 'receipt_long' },
           { id: 'delivery', label: 'Delivery & Maps', icon: 'local_shipping' },
           { id: 'display', label: 'Display & Accessibility', icon: 'contrast' },
+          { id: 'theme', label: 'Appearance & Themes', icon: 'palette' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1124,6 +1126,13 @@ export function SettingsPage() {
               <p>Zero per-order commission fees. Direct driver dispatch to mobile phones with native turn-by-turn routing.</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 6. Appearance & Themes */}
+      {activeTab === 'theme' && (
+        <div className="animate-fadeIn space-y-6">
+          <ThemeCustomizer />
         </div>
       )}
     </div>

@@ -14,7 +14,14 @@ export * from './components/Skeleton';
 export * from './components/Sheet';
 export * from './components/Progress';
 export * from './components/Toast';
+export * from './components/ThemeCustomizer';
 export * from './components/FloorMap3D';
+
+// Universal CulinaryOS Theme Engine & Presets
+export * from './theme/types';
+export * from './theme/presets';
+export * from './theme/engine';
+export * from './theme/ThemeContext';
 
 // Radix-backed Canonical shadcn/ui components
 export * from './components/ui/dropdown-menu';

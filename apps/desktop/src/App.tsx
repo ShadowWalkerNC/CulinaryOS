@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ThemeCustomizer } from '@culinaryos/ui';
 
 interface SurfaceTab {
   id: string;
@@ -24,6 +25,7 @@ export function App() {
   const [splitView, setSplitView] = useState<boolean>(false);
   const [secondaryTab, setSecondaryTab] = useState<string>('kds');
   const [isKiosk, setIsKiosk] = useState<boolean>(false);
+  const [showThemeModal, setShowThemeModal] = useState<boolean>(false);
   const [pinUser] = useState<string>('John Doe (Server #1234)');
 
   useEffect(() => {
@@ -117,6 +119,16 @@ export function App() {
             <span>{pinUser}</span>
           </div>
 
+          {/* Theme & Palette Customizer Toggle */}
+          <button
+            onClick={() => setShowThemeModal(true)}
+            title="Theme & UI Customizer"
+            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition text-[10px] font-bold uppercase tracking-wider"
+          >
+            <span className="material-symbols-outlined text-[14px] text-orange-400">palette</span>
+            <span>Theme</span>
+          </button>
+
           {/* Full-screen Kiosk Toggle */}
           <button
             onClick={() => {
@@ -137,6 +149,21 @@ export function App() {
           </button>
         </div>
       </header>
+
+      {/* Theme Customizer Popup Modal */}
+      {showThemeModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowThemeModal(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold"
+            >
+              ✕
+            </button>
+            <ThemeCustomizer />
+          </div>
+        </div>
+      )}
 
       {/* Main View Area (Single or Split) */}
       <main className="flex-1 flex overflow-hidden bg-slate-950">
