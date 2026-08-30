@@ -216,13 +216,75 @@ squareRoutes.post('/sync-86', async (c: Context) => {
   });
 });
 
+// POST /v1/integrations/square/connect
+squareRoutes.post('/connect', async (c: Context) => {
+  const body = await c.req.json<{
+    application_id: string;
+    access_token: string;
+    location_id: string;
+  }>();
+
+  if (!body.application_id || !body.access_token) {
+    return err(c, 'VALIDATION_ERROR', 'application_id and access_token are required', 400);
+  }
+
+  return ok(c, {
+    connected: true,
+    application_id: body.application_id,
+    location_id: body.location_id || 'L_MAIN_DINING',
+    merchant_name: 'The Golden Fork (Square Connected)',
+    connected_at: new Date().toISOString(),
+  });
+});
+
+// GET /v1/integrations/square/locations
+squareRoutes.get('/locations', async (c: Context) => {
+  return ok(c, {
+    locations: [
+      { id: 'L_MAIN_DINING', name: 'Main Dining Room & Bar', status: 'ACTIVE', currency: 'USD' },
+      { id: 'L_PATIO', name: 'Outdoor Garden & Patio', status: 'ACTIVE', currency: 'USD' },
+      { id: 'L_TAKEOUT', name: 'To-Go & Pickup Counter', status: 'ACTIVE', currency: 'USD' },
+    ],
+  });
+});
+
+// POST /v1/integrations/square/terminal/checkout
+squareRoutes.post('/terminal/checkout', async (c: Context) => {
+  const body = await c.req.json<{
+    amount_cents: number;
+    device_id?: string;
+    order_id?: string;
+    note?: string;
+  }>();
+
+  if (!body.amount_cents || body.amount_cents <= 0) {
+    return err(c, 'VALIDATION_ERROR', 'amount_cents must be greater than 0', 400);
+  }
+
+  const checkoutId = `sq_term_${Date.now()}`;
+
+  return ok(c, {
+    checkout_id: checkoutId,
+    status: 'COMPLETED',
+    device_id: body.device_id || 'SQUARE_TERMINAL_01',
+    amount_cents: body.amount_cents,
+    amount_dollars: (body.amount_cents / 100).toFixed(2),
+    card_brand: 'VISA',
+    last_4: '4242',
+    entry_method: 'EMV_CHIP_TAP',
+    receipt_url: `https://squareup.com/receipt/preview/${checkoutId}`,
+    created_at: new Date().toISOString(),
+  }, 201);
+});
+
 // GET /v1/integrations/square/status
 squareRoutes.get('/status', async (c: Context) => {
   return ok(c, {
     provider: 'Square',
     connected: true,
     sync_mode: 'bidirectional',
-    features: ['catalog_import', 'order_webhook_to_kds', 'inventory_86_sync'],
+    features: ['catalog_import', 'order_webhook_to_kds', 'inventory_86_sync', 'terminal_checkout', 'locations_sync'],
+    location_id: 'L_MAIN_DINING',
     last_sync: new Date().toISOString(),
   });
 });

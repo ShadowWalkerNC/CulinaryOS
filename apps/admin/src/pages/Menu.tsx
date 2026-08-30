@@ -22,6 +22,8 @@ import {
 } from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
+import { detectAllergensFromIngredients } from '@culinaryos/ratio-engine';
+
 const API = getApiBase();
 
 interface MenuItem {
@@ -208,13 +210,32 @@ export function MenuPage() {
             <TableBody>
               {filteredItems.map((item) => {
                 const isAvailable = item.status === 'available';
+                const words = `${item.name} ${item.description || ''}`.toLowerCase().split(/[\s,]+/);
+                const { allergens, dietaryBadges } = detectAllergensFromIngredients(words);
+
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <div className="font-bold text-foreground text-sm">{item.name}</div>
+                      <div className="font-bold text-foreground text-sm flex items-center gap-2">
+                        <span>{item.name}</span>
+                        {dietaryBadges.map((badge) => (
+                          <span
+                            key={badge}
+                            className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
                       {item.description && (
                         <div className="text-[11px] text-muted-foreground mt-0.5 max-w-md line-clamp-2">
                           {item.description}
+                        </div>
+                      )}
+                      {allergens.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1 text-[10px] text-amber-700">
+                          <span className="font-bold uppercase tracking-wider">Contains:</span>
+                          <span>{allergens.join(', ')}</span>
                         </div>
                       )}
                     </TableCell>

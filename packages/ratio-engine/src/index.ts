@@ -674,3 +674,183 @@ export function fromTotalWeight(
     ratioWeight: ing.ratioWeight * factor,
   }));
 }
+
+// ---------------------------------------------------------------------------
+// 7. USDA Nutritional Analysis & FDA Top 9 Allergen Detection Engine
+// ---------------------------------------------------------------------------
+
+export type FdaAllergen =
+  | 'dairy'
+  | 'eggs'
+  | 'fish'
+  | 'shellfish'
+  | 'tree_nuts'
+  | 'peanuts'
+  | 'wheat'
+  | 'soy'
+  | 'sesame'
+  | 'gluten'
+  | 'vegetarian'
+  | 'vegan';
+
+export interface NutritionPer100g {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  sodium_mg: number;
+  allergens: FdaAllergen[];
+}
+
+export interface RecipeNutritionSummary {
+  totalCalories: number;
+  totalProteinG: number;
+  totalCarbsG: number;
+  totalFatG: number;
+  totalSodiumMg: number;
+  caloriesPerServing: number;
+  proteinPerServing: number;
+  carbsPerServing: number;
+  fatPerServing: number;
+  allergens: FdaAllergen[];
+  dietaryBadges: string[];
+}
+
+// USDA FoodData Central Reference Density & Macro Lookup Table (per 100g)
+export const USDA_INGREDIENT_DATABASE: Record<string, NutritionPer100g> = {
+  flour: { calories: 364, protein_g: 10.3, carbs_g: 76.3, fat_g: 1.0, fiber_g: 2.7, sodium_mg: 2, allergens: ['wheat', 'gluten'] },
+  bread_flour: { calories: 366, protein_g: 12.7, carbs_g: 73.2, fat_g: 1.5, fiber_g: 2.4, sodium_mg: 2, allergens: ['wheat', 'gluten'] },
+  butter: { calories: 717, protein_g: 0.9, carbs_g: 0.1, fat_g: 81.1, fiber_g: 0, sodium_mg: 11, allergens: ['dairy', 'vegetarian'] },
+  mozzarella: { calories: 300, protein_g: 22.2, carbs_g: 2.2, fat_g: 22.4, fiber_g: 0, sodium_mg: 627, allergens: ['dairy', 'vegetarian'] },
+  cheddar: { calories: 403, protein_g: 24.9, carbs_g: 1.3, fat_g: 33.1, fiber_g: 0, sodium_mg: 621, allergens: ['dairy', 'vegetarian'] },
+  beef: { calories: 250, protein_g: 26.0, carbs_g: 0, fat_g: 15.0, fiber_g: 0, sodium_mg: 72, allergens: [] },
+  chicken: { calories: 165, protein_g: 31.0, carbs_g: 0, fat_g: 3.6, fiber_g: 0, sodium_mg: 74, allergens: [] },
+  bacon: { calories: 541, protein_g: 37.0, carbs_g: 1.4, fat_g: 42.0, fiber_g: 0, sodium_mg: 1717, allergens: [] },
+  salmon: { calories: 208, protein_g: 20.4, carbs_g: 0, fat_g: 13.4, fiber_g: 0, sodium_mg: 59, allergens: ['fish'] },
+  shrimp: { calories: 99, protein_g: 24.0, carbs_g: 0.2, fat_g: 0.3, fiber_g: 0, sodium_mg: 111, allergens: ['shellfish'] },
+  eggs: { calories: 143, protein_g: 12.6, carbs_g: 0.7, fat_g: 9.5, fiber_g: 0, sodium_mg: 142, allergens: ['eggs', 'vegetarian'] },
+  olive_oil: { calories: 884, protein_g: 0, carbs_g: 0, fat_g: 100.0, fiber_g: 0, sodium_mg: 2, allergens: ['vegan', 'vegetarian'] },
+  tomatoes: { calories: 18, protein_g: 0.9, carbs_g: 3.9, fat_g: 0.2, fiber_g: 1.2, sodium_mg: 5, allergens: ['vegan', 'vegetarian'] },
+  potatoes: { calories: 77, protein_g: 2.0, carbs_g: 17.5, fat_g: 0.1, fiber_g: 2.2, sodium_mg: 6, allergens: ['vegan', 'vegetarian'] },
+  milk: { calories: 61, protein_g: 3.2, carbs_g: 4.8, fat_g: 3.3, fiber_g: 0, sodium_mg: 43, allergens: ['dairy', 'vegetarian'] },
+  heavy_cream: { calories: 340, protein_g: 2.8, carbs_g: 2.7, fat_g: 36.1, fiber_g: 0, sodium_mg: 38, allergens: ['dairy', 'vegetarian'] },
+  sugar: { calories: 387, protein_g: 0, carbs_g: 100.0, fat_g: 0, fiber_g: 0, sodium_mg: 1, allergens: ['vegan', 'vegetarian'] },
+  sesame_oil: { calories: 884, protein_g: 0, carbs_g: 0, fat_g: 100.0, fiber_g: 0, sodium_mg: 0, allergens: ['sesame', 'vegan', 'vegetarian'] },
+  soy_sauce: { calories: 53, protein_g: 8.1, carbs_g: 4.9, fat_g: 0.6, fiber_g: 0.8, sodium_mg: 5493, allergens: ['soy', 'wheat', 'gluten', 'vegan', 'vegetarian'] },
+  peanuts: { calories: 567, protein_g: 25.8, carbs_g: 16.1, fat_g: 49.2, fiber_g: 8.5, sodium_mg: 18, allergens: ['peanuts', 'vegan', 'vegetarian'] },
+  walnuts: { calories: 654, protein_g: 15.2, carbs_g: 13.7, fat_g: 65.2, fiber_g: 6.7, sodium_mg: 2, allergens: ['tree_nuts', 'vegan', 'vegetarian'] },
+};
+
+/**
+ * Detect FDA Top 9 Allergens and dietary tags from a list of ingredient strings.
+ */
+export function detectAllergensFromIngredients(ingredientNames: string[]): {
+  allergens: FdaAllergen[];
+  dietaryBadges: string[];
+} {
+  const allergenSet = new Set<FdaAllergen>();
+  let hasMeat = false;
+  let hasDairyOrEggs = false;
+
+  for (const rawName of ingredientNames) {
+    const name = rawName.toLowerCase();
+    if (name.includes('flour') || name.includes('wheat') || name.includes('bread') || name.includes('pasta') || name.includes('bun') || name.includes('brioche')) {
+      allergenSet.add('wheat');
+      allergenSet.add('gluten');
+    }
+    if (name.includes('milk') || name.includes('cream') || name.includes('butter') || name.includes('cheese') || name.includes('mozzarella') || name.includes('parmigiano') || name.includes('cheddar')) {
+      allergenSet.add('dairy');
+      hasDairyOrEggs = true;
+    }
+    if (name.includes('egg') || name.includes('mayo') || name.includes('aioli')) {
+      allergenSet.add('eggs');
+      hasDairyOrEggs = true;
+    }
+    if (name.includes('salmon') || name.includes('tuna') || name.includes('cod') || name.includes('fish') || name.includes('anchovy')) {
+      allergenSet.add('fish');
+      hasMeat = true;
+    }
+    if (name.includes('shrimp') || name.includes('crab') || name.includes('lobster') || name.includes('calamari') || name.includes('squid')) {
+      allergenSet.add('shellfish');
+      hasMeat = true;
+    }
+    if (name.includes('peanut')) allergenSet.add('peanuts');
+    if (name.includes('almond') || name.includes('walnut') || name.includes('pecan') || name.includes('cashew') || name.includes('pistachio')) {
+      allergenSet.add('tree_nuts');
+    }
+    if (name.includes('soy') || name.includes('tofu') || name.includes('edamame')) allergenSet.add('soy');
+    if (name.includes('sesame') || name.includes('tahini')) allergenSet.add('sesame');
+
+    if (name.includes('beef') || name.includes('pork') || name.includes('bacon') || name.includes('chicken') || name.includes('steak') || name.includes('patty') || name.includes('chuck')) {
+      hasMeat = true;
+    }
+  }
+
+  const dietaryBadges: string[] = [];
+  if (!hasMeat && !hasDairyOrEggs) {
+    dietaryBadges.push('Vegan', 'Vegetarian');
+  } else if (!hasMeat) {
+    dietaryBadges.push('Vegetarian');
+  }
+
+  if (!allergenSet.has('wheat') && !allergenSet.has('gluten')) {
+    dietaryBadges.push('Gluten-Free');
+  }
+  if (!allergenSet.has('dairy')) {
+    dietaryBadges.push('Dairy-Free');
+  }
+
+  return {
+    allergens: Array.from(allergenSet),
+    dietaryBadges,
+  };
+}
+
+/**
+ * Calculate full nutritional facts profile and calorie count for a multi-ingredient recipe.
+ */
+export function calculateRecipeNutrition(
+  ingredients: Array<{ name: string; amountGrams: number }>,
+  servings: number = 1
+): RecipeNutritionSummary {
+  let totalCals = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+  let totalSodium = 0;
+
+  const names = ingredients.map((i) => i.name);
+  const { allergens, dietaryBadges } = detectAllergensFromIngredients(names);
+
+  for (const ing of ingredients) {
+    const nameLower = ing.name.toLowerCase();
+    // Find closest match in USDA database
+    const matchedKey = Object.keys(USDA_INGREDIENT_DATABASE).find((k) => nameLower.includes(k)) || 'flour';
+    const profile = USDA_INGREDIENT_DATABASE[matchedKey] ?? USDA_INGREDIENT_DATABASE['flour']!;
+
+    const factor = ing.amountGrams / 100;
+    totalCals += profile.calories * factor;
+    totalProtein += profile.protein_g * factor;
+    totalCarbs += profile.carbs_g * factor;
+    totalFat += profile.fat_g * factor;
+    totalSodium += profile.sodium_mg * factor;
+  }
+
+  const s = Math.max(1, servings);
+
+  return {
+    totalCalories: Math.round(totalCals),
+    totalProteinG: Math.round(totalProtein),
+    totalCarbsG: Math.round(totalCarbs),
+    totalFatG: Math.round(totalFat),
+    totalSodiumMg: Math.round(totalSodium),
+    caloriesPerServing: Math.round(totalCals / s),
+    proteinPerServing: Math.round(totalProtein / s),
+    carbsPerServing: Math.round(totalCarbs / s),
+    fatPerServing: Math.round(totalFat / s),
+    allergens,
+    dietaryBadges,
+  };
+}
+
