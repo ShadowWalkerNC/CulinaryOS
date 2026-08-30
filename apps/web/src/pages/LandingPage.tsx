@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  CulinaryHeader,
+  MarketingHeader,
   Smartphone,
   Tablet,
   Tv,
@@ -205,8 +205,19 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-slate-900 selection:text-white flex flex-col">
-      {/* Universal CulinaryOS Header */}
-      <CulinaryHeader activeModule="web" tenantName="CulinaryOS Unified Platform" />
+      {/* Universal CulinaryOS Marketing Header */}
+      <MarketingHeader
+        currentPath="/"
+        onOpenQuickstart={() =>
+          setQuickstartModal({
+            title: 'Turnkey Local Restaurant Deployment',
+            role: 'Hardware Thermal Printers, Cash Drawers & Kitchen TVs',
+            description:
+              'Deploy CulinaryOS directly onto tablets, touch terminals, and mobile handhelds in your restaurant with zero cloud dependency. Run on standard hardware over local WiFi.',
+            screenshot: '/screenshots/pos_menu_modern_cards.png',
+          })
+        }
+      />
 
       {/* Hero Section: Simple, Plain-English Value Proposition */}
       <section className="px-4 sm:px-6 pt-10 sm:pt-16 pb-8 sm:pb-12 max-w-5xl mx-auto text-center space-y-5 sm:space-y-6">
@@ -303,7 +314,7 @@ export function LandingPage() {
       </section>
 
       {/* DEVICE ROLES SECTION: Interactive Selector */}
-      <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-6xl mx-auto border-t border-slate-200 w-full">
+      <section id="products" className="py-10 sm:py-14 px-4 sm:px-6 max-w-6xl mx-auto border-t border-slate-200 w-full scroll-mt-16">
         <div className="text-center space-y-2 mb-8">
           <span className="text-slate-900 text-xs font-semibold uppercase tracking-wider bg-slate-200/70 px-3 py-1 rounded-full border border-slate-300">
             One Software · Adaptive Hardware Experience
@@ -444,7 +455,7 @@ export function LandingPage() {
       </section>
 
       {/* HARDWARE COMPATIBILITY SECTION */}
-      <section className="py-10 sm:py-12 px-4 sm:px-6 bg-white border-y border-slate-200">
+      <section id="hardware" className="py-10 sm:py-12 px-4 sm:px-6 bg-white border-y border-slate-200 scroll-mt-16">
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           <div className="text-center space-y-2">
             <span className="text-slate-900 text-[11px] sm:text-xs font-semibold uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full border border-slate-200">

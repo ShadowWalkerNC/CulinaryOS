@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { CulinaryHeader, UtensilsCrossed, ArrowRight } from '@culinaryos/ui';
+import { MarketingHeader, UtensilsCrossed, ArrowRight } from '@culinaryos/ui';
 
 export function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col">
-      <CulinaryHeader activeModule="web" tenantName="CulinaryOS Hub" />
+      <MarketingHeader />
 
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg space-y-5">

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { CulinaryHeader, ChevronLeft } from '@culinaryos/ui';
+import { ChevronLeft } from '@culinaryos/ui';
 import { OrderStatusTracker } from '../components/OrderStatusTracker';
 
 export function OrderStatusPage() {
@@ -8,9 +8,6 @@ export function OrderStatusPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 select-none">
-      {/* Universal CulinaryOS Hub Header */}
-      <CulinaryHeader activeModule="web" tenantName="The Golden Fork" />
-
       {/* Sub-Header Breadcrumb */}
       <div className="bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">

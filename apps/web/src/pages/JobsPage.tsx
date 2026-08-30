@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  CulinaryHeader,
+  MarketingHeader,
   Briefcase,
   ChefHat,
   Clock,
@@ -187,8 +187,8 @@ export function JobsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-slate-900 selection:text-white">
-      {/* Universal CulinaryOS Hub Header */}
-      <CulinaryHeader activeModule="web" tenantName="The Golden Fork" />
+      {/* Universal CulinaryOS Marketing Header */}
+      <MarketingHeader currentPath="/jobs" />
 
       {/* Hero Banner */}
       <section className="bg-white border-b border-slate-200 py-10 sm:py-14 px-4 sm:px-6">

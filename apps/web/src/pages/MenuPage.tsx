@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CulinaryHeader } from '@culinaryos/ui';
 import { useMenu } from '../hooks/useMenu';
 import { MenuSection } from '../components/MenuSection';
 import { ItemModal } from '../components/ItemModal';
@@ -19,6 +18,7 @@ import {
   Filter,
   Check,
   ChevronRight,
+  ArrowLeft,
 } from '@culinaryos/ui';
 
 function emptyCart(): CartState {
@@ -29,6 +29,17 @@ function cartFrom(items: CartItem[]): CartState {
   const total = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   return { items, total, itemCount };
+}
+
+function getSectionIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes('pizza')) return 'local_pizza';
+  if (n.includes('burger') || n.includes('sandwich')) return 'lunch_dining';
+  if (n.includes('drink') || n.includes('beverage') || n.includes('cocktail') || n.includes('bar')) return 'local_bar';
+  if (n.includes('dessert') || n.includes('sweet') || n.includes('cake') || n.includes('ice cream')) return 'icecream';
+  if (n.includes('salad') || n.includes('starter') || n.includes('appetizer')) return 'tapas';
+  if (n.includes('pasta') || n.includes('noodle')) return 'ramen_dining';
+  return 'restaurant_menu';
 }
 
 type DietaryFilter = 'all' | 'popular' | 'vegetarian' | 'vegan' | 'gluten_free';
@@ -155,7 +166,6 @@ export function MenuPage() {
   if (menuResult.status === 'loading') {
     return (
       <div className="min-h-screen bg-[#f8f9fa]">
-        <CulinaryHeader activeModule="web" tenantName="The Golden Fork" />
         <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-pulse">
           <div className="h-44 bg-slate-200 rounded-3xl" />
           <div className="h-12 bg-slate-200 rounded-2xl" />
@@ -178,11 +188,25 @@ export function MenuPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 pb-28 select-none">
-      {/* Top Universal CulinaryOS Hub Header */}
-      <CulinaryHeader activeModule="web" tenantName={restaurant.name} />
-
       {/* Restaurant Hero Section */}
       <header className="bg-white border-b border-slate-200/90 shadow-xs">
+        {/* Top Mini Brand Bar */}
+        <div className="border-b border-slate-100 px-4 py-2 bg-slate-50/70">
+          <div className="max-w-4xl mx-auto flex items-center justify-between text-xs">
+            <a
+              href="/"
+              className="font-bold text-slate-500 hover:text-slate-950 flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>CulinaryOS Platform</span>
+            </a>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-semibold text-emerald-700">Kitchen Live · Accepting Orders</span>
+            </div>
+          </div>
+        </div>
+
         <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             {/* Restaurant Info */}
@@ -193,7 +217,7 @@ export function MenuPage() {
                   <span>Open Now</span>
                 </span>
                 <span className="text-xs font-bold text-slate-500">
-                  {restaurant.rating || 4.9} / 5.0 ({restaurant.reviewCount || 428}+ reviews)
+                  ⭐ {restaurant.rating || 4.9} ({restaurant.reviewCount || 428}+ orders)
                 </span>
               </div>
 
@@ -223,25 +247,31 @@ export function MenuPage() {
                 <button
                   type="button"
                   onClick={() => setOrderMode('delivery')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center ${
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
                     orderMode === 'delivery'
                       ? 'bg-[#0f172a] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
                   }`}
                 >
-                  <span className="flex items-center gap-1">Delivery</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">moped</span>
+                    <span>Delivery</span>
+                  </span>
                   <span className="text-[10px] font-mono opacity-80">25–35 min</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setOrderMode('pickup')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center ${
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
                     orderMode === 'pickup'
                       ? 'bg-[#0f172a] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
                   }`}
                 >
-                  <span className="flex items-center gap-1">Pickup</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">shopping_bag</span>
+                    <span>Pickup</span>
+                  </span>
                   <span className="text-[10px] font-mono opacity-80">15–20 min</span>
                 </button>
               </div>
@@ -276,50 +306,57 @@ export function MenuPage() {
               )}
             </div>
 
-            {/* Quick Dietary Filters */}
+            {/* Quick Dietary Filters — Symbol & Icon Forward */}
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
               {[
-                { id: 'all', label: 'All Items' },
-                { id: 'popular', label: 'Popular' },
-                { id: 'vegetarian', label: 'Vegetarian' },
-                { id: 'vegan', label: 'Vegan' },
-                { id: 'gluten_free', label: 'Gluten-Free' },
+                { id: 'all', label: 'All Items', icon: 'restaurant' },
+                { id: 'popular', label: 'Popular', icon: 'local_fire_department', color: 'text-amber-500' },
+                { id: 'vegetarian', label: 'Vegetarian', icon: 'eco', color: 'text-emerald-600' },
+                { id: 'vegan', label: 'Vegan', icon: 'nature', color: 'text-green-600' },
+                { id: 'gluten_free', label: 'Gluten-Free', icon: 'grain', color: 'text-amber-600' },
               ].map((df) => {
-                const isSelected = activeDietary === df.id;
+                const isActive = activeDietary === df.id;
                 return (
                   <button
                     key={df.id}
                     onClick={() => setActiveDietary(df.id as DietaryFilter)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-                      isSelected
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-[#0f172a] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
                     }`}
                   >
-                    {df.label}
+                    <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-white' : df.color || 'text-slate-400'}`}>
+                      {df.icon}
+                    </span>
+                    <span>{df.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Bottom Bar: Category Anchor Pills */}
+          {/* Bottom Bar: Category Anchor Pills with Food Symbols */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-t border-slate-100 pt-2">
             {sections.map((sec) => {
               const isActive = activeSection === `section-${sec.id}`;
+              const icon = getSectionIcon(sec.name);
               return (
                 <button
                   key={sec.id}
                   onClick={() => {
                     document.getElementById(`section-${sec.id}`)?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                     isActive
-                      ? 'bg-slate-100 text-[#0f172a] shadow-xs border border-slate-200'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-[#0f172a] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                   }`}
                 >
-                  {sec.name}
+                  <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-amber-400' : 'text-slate-400'}`}>
+                    {icon}
+                  </span>
+                  <span>{sec.name}</span>
                 </button>
               );
             })}

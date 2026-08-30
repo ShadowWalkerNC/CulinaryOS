@@ -141,6 +141,7 @@ export {
 
 // Legacy / stitch components compatibility
 export * from './CulinaryHeader';
+export * from './MarketingHeader';
 export * from './CulinaryCard';
 export * from './CulinaryButton';
 export * from './CulinaryBadge';

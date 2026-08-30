@@ -1,6 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CulinaryHeader } from '@culinaryos/ui';
+import {
+  Grid,
+  X,
+  ExternalLink,
+  Tablet,
+  Tv,
+  Laptop,
+  ChefHat,
+  ShoppingBag,
+  TrendingUp,
+  CulinaryHeader,
+} from '@culinaryos/ui';
 import { apiHeaders, getApiBase, getTenantId, loadLocalSettings, saveLocalSettings, applyDisplaySettingsToDOM } from '@culinaryos/shared';
 import { useRealtimeTickets, bumpDemoTicket, fireDemoTicket } from '../hooks/useRealtimeTickets';
 import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
@@ -13,12 +24,12 @@ const API = getApiBase();
 const TENANT_ID = getTenantId();
 
 const STATIONS = [
-  { id: 'expo', label: 'Expo Pass', icon: 'room_service' },
-  { id: '1', label: 'Hot Grill', icon: 'outdoor_grill' },
-  { id: '2', label: 'Cold Prep', icon: 'eco' },
-  { id: '3', label: 'Fryer', icon: 'lunch_dining' },
-  { id: '4', label: 'Bar', icon: 'local_bar' },
-  { id: 'all', label: 'All Stations', icon: 'grid_view' },
+  { id: 'expo', label: 'Expo Pass', icon: 'room_service', color: 'text-amber-400' },
+  { id: '1', label: 'Hot Grill', icon: 'outdoor_grill', color: 'text-orange-400' },
+  { id: '2', label: 'Cold Prep', icon: 'eco', color: 'text-emerald-400' },
+  { id: '3', label: 'Fryer', icon: 'lunch_dining', color: 'text-yellow-400' },
+  { id: '4', label: 'Bar', icon: 'local_bar', color: 'text-purple-400' },
+  { id: 'all', label: 'All Stations', icon: 'grid_view', color: 'text-slate-400' },
 ];
 
 export function Station() {
@@ -30,6 +41,16 @@ export function Station() {
   const [analytics, setAnalytics]               = useState<AnalyticsSummary | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [displaySettings, setDisplaySettings]     = useState(loadLocalSettings().display);
+  const [showApps, setShowApps]                   = useState(false);
+
+  const appModules = [
+    { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },
+    { id: 'kds', label: 'KDS Kitchen', port: '5173', desc: 'Kitchen tickets, station filters & aging timers', icon: Tv, active: true },
+    { id: 'admin', label: 'Back-Office Admin', port: '5174', desc: 'Menu editor, staff PINs, auto-PO & settings', icon: Laptop },
+    { id: 'kitchenkit', label: 'KitchenKit', port: '5175', desc: 'Shift prep lists, recipe ratios & shelf life', icon: ChefHat },
+    { id: 'web', label: 'Guest Storefront', port: '5176', desc: 'Online customer ordering & live order tracker', icon: ShoppingBag },
+    { id: 'ops', label: 'CulinaryOps', port: '5177', desc: 'Theoretical vs actual food cost & waste ledger', icon: TrendingUp },
+  ];
 
   useEffect(() => {
     applyDisplaySettingsToDOM(displaySettings);
@@ -59,12 +80,10 @@ export function Station() {
   const handleBump = useCallback(async (ticketId: string) => {
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
-        method:  'PATCH',
+        method: 'POST',
         headers: apiHeaders(TENANT_ID),
-        body:    JSON.stringify({ stationId }),
       });
-      if (!res.ok) throw new Error(`Bump failed (${res.status})`);
-      bumpDemoTicket(ticketId);
+      if (!res.ok) throw new Error(`Bump failed: ${res.status}`);
       setTickets(prev => prev.filter(t => t.id !== ticketId));
     } catch {
       // Demo / offline fallback only when API unreachable
@@ -73,16 +92,42 @@ export function Station() {
         setTickets(prev => prev.filter(t => t.id !== ticketId));
       }
     }
-  }, [stationId, setTickets]);
+  }, [setTickets]);
 
-  // Manual course fire handler — only mutate local state on success
+  // Hold a course via REST
+  const handleHoldCourse = useCallback(async (ticketId: string) => {
+    try {
+      const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/hold`, {
+        method: 'POST',
+        headers: apiHeaders(TENANT_ID),
+      });
+      if (!res.ok) throw new Error(`Hold failed: ${res.status}`);
+      setTickets(prev => prev.map(t => t.id === ticketId ? {
+        ...t,
+        courseHoldStatus: 'held',
+        status: 'queued',
+        heldAt: new Date().toISOString(),
+      } : t));
+    } catch {
+      if (!import.meta.env.VITE_SUPABASE_URL || String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) {
+        setTickets(prev => prev.map(t => t.id === ticketId ? {
+          ...t,
+          courseHoldStatus: 'held',
+          status: 'queued',
+          heldAt: new Date().toISOString(),
+        } : t));
+      }
+    }
+  }, [setTickets]);
+
+  // Fire a held course via REST
   const handleFireCourse = useCallback(async (ticketId: string) => {
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/fire`, {
-        method:  'PATCH',
+        method: 'POST',
         headers: apiHeaders(TENANT_ID),
       });
-      if (!res.ok) throw new Error(`Fire failed (${res.status})`);
+      if (!res.ok) throw new Error(`Fire failed: ${res.status}`);
       fireDemoTicket(ticketId);
       setTickets(prev => prev.map(t => t.id === ticketId ? {
         ...t,
@@ -118,60 +163,175 @@ export function Station() {
 
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden antialiased select-none">
-      {/* Universal CulinaryOS Master Header */}
-      <CulinaryHeader activeModule="kds" tenantName={`KitchenKit — ${activeStationLabel}`} />
-
-      {/* Course fired flash banner */}
-      <CourseHoldBanner event={courseEvent} />
-
-      {/* Sub-Navigation Bar matching POS & Admin */}
-      <header className="bg-white border-b border-[#e5e7eb] px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-[#0f172a] filled">skillet</span>
-            <span className="font-black text-xs tracking-wider text-[#0b1c30] uppercase">
-              KitchenKit — {activeStationLabel} {isExpoPass ? '(Expo Pass)' : ''}
-            </span>
+      {/* Single Unified KDS Kitchen Navigation Header */}
+      <header className="bg-white border-b border-[#e5e7eb] px-4 sm:px-6 h-14 flex items-center justify-between shrink-0 shadow-xs gap-3">
+        {/* Left: Brand & Station Title */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
+            <span className="material-symbols-outlined filled text-[18px]">skillet</span>
           </div>
-          <span className="text-[#e5e7eb]">|</span>
-
-          {/* Station Selection Tabs */}
-          <nav className="flex items-center gap-1 bg-[#f8f9fa] border border-[#e5e7eb] p-1 rounded-xl">
-            {STATIONS.map((s) => {
-              const isActive = s.id === stationId;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => navigate(`/station/${s.id}`)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isActive
-                      ? 'bg-white text-[#0f172a] shadow-xs border border-[#e5e7eb]'
-                      : 'text-[#6b7280] hover:text-[#0b1c30] hover:bg-[#e5e7eb50]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[13px]">{s.icon}</span>
-                  <span>{s.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-xs sm:text-sm tracking-tight text-slate-950 uppercase">
+                CulinaryOS KDS
+              </span>
+              <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-200">
+                {activeStationLabel} {isExpoPass ? '(Expo Pass)' : ''}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Live / Demo Status Indicator & Quick Settings */}
-        <div className="flex items-center gap-2">
+        {/* Center: Station Selection Tabs — High-Contrast Kitchen Symbols */}
+        <nav className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar">
+          {STATIONS.map((s) => {
+            const isActive = s.id === stationId;
+            return (
+              <button
+                key={s.id}
+                onClick={() => navigate(`/station/${s.id}`)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#0f172a] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-white/70'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-[17px] ${isActive ? s.color : 'text-slate-500'}`}>
+                  {s.icon}
+                </span>
+                <span>{s.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right: Display Settings, Apps & Status */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="flex items-center gap-1.5 bg-white border border-[#e5e7eb] hover:bg-[#f8f9fa] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-[#0f172a] shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-xs cursor-pointer transition-colors"
+            title="Display & Audio Scale"
           >
-            <span className="material-symbols-outlined text-[14px]">tune</span>
-            <span>Display & Audio ({displaySettings.textScalePercent}%)</span>
+            <span className="material-symbols-outlined text-[15px]">tune</span>
+            <span className="hidden md:inline">{displaySettings.textScalePercent}%</span>
           </button>
-          <div className="flex items-center gap-2 bg-[#f8f9fa] border border-[#e5e7eb] px-3 py-1.5 rounded-xl text-[10px] text-[#6b7280]">
-            <span className={`w-2 h-2 rounded-full ${error ? 'bg-amber-500' : 'bg-[#22c55e] animate-pulse'}`} />
-            <span className="font-semibold">{error ? 'Demo Mode' : 'Live Realtime'}</span>
+
+          <button
+            type="button"
+            onClick={() => setShowApps(!showApps)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+              showApps
+                ? 'bg-[#0f172a] text-white border-[#0f172a]'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+            }`}
+            title="Switch Applications"
+          >
+            <Grid className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Apps</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] text-slate-600 font-semibold">
+            <span className={`w-2 h-2 rounded-full ${error ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+            <span className="hidden sm:inline">{error ? 'Demo Mode' : 'Realtime'}</span>
           </div>
         </div>
       </header>
+
+      {/* App Switcher Modal */}
+      {showApps && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setShowApps(false)}
+        >
+          <div
+            className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 text-slate-900 animate-slideIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#0f172a] text-white flex items-center justify-center">
+                  <Grid className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                    CulinaryOS Applications
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowApps(false)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {appModules.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <a
+                    key={m.id}
+                    href={`http://localhost:${m.port}`}
+                    onClick={() => setShowApps(false)}
+                    className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 ${
+                      m.active
+                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-800'
+                    }`}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        m.active ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-xs'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className={`text-xs font-bold truncate ${m.active ? 'text-white' : 'text-slate-950'}`}>
+                          {m.label}
+                        </p>
+                        {m.active && (
+                          <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-black uppercase">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-[10px] line-clamp-1 mt-0.5 ${m.active ? 'text-slate-200' : 'text-slate-500'}`}>
+                        {m.desc}
+                      </p>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <a
+                href="http://localhost:5176/"
+                className="font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"
+              >
+                <span>Platform Home</span>
+              </a>
+              <a
+                href="https://github.com/ShadowWalkerNC/CulinaryOS"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+              >
+                <span>GitHub Monorepo</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Course fired flash banner */}
+      <CourseHoldBanner event={courseEvent} />
 
       {/* Expo Pass Real-Time Station Status Bar */}
       {isExpoPass && (
