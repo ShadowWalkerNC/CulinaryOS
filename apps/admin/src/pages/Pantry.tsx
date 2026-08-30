@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
 } from '@culinaryos/ui';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 
@@ -180,6 +181,15 @@ export function PantryPage() {
               All Stock Levels OK
             </Badge>
           )}
+          <a
+            href="https://dennisfoodservice.pepr.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-xs transition"
+          >
+            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+            Dennis Pepr Portal
+          </a>
           <Button
             variant="brand"
             size="sm"

@@ -47,8 +47,13 @@ pantryRoutes.use('*', requireTenant);
 
 // Local Mock Pantry State
 let mockPantry = [
-  { id: "i1", name: "Unbleached Bread Flour", stock_quantity: 12.5, par_level: 50.0, unit: "kg", cost_per_unit: 200 },
-  { id: "i2", name: "Active Starter Culture", stock_quantity: 2.2, par_level: 5.0, unit: "kg", cost_per_unit: 150 }
+  { id: "i1", name: "Unbleached Bread Flour (King Arthur / Dennis 50lb)", stock_quantity: 12.5, par_level: 50.0, unit: "lb", cost_per_unit: 200, supplier: "Dennis Food Service (SKU 44109)" },
+  { id: "i2", name: "Bacon 10-12 Applewood (North Country 4x5lb)", stock_quantity: 4.0, par_level: 20.0, unit: "lb", cost_per_unit: 375, supplier: "Dennis Food Service (SKU 20231)" },
+  { id: "i3", name: "Ground Chuck 80/20 Fresh (Dennis Choice 2x10lb)", stock_quantity: 8.0, par_level: 40.0, unit: "lb", cost_per_unit: 340, supplier: "Dennis Food Service (SKU 11204)" },
+  { id: "i4", name: "Mozzarella Whole Milk Shred (Dennis Select 6x5lb)", stock_quantity: 10.0, par_level: 30.0, unit: "lb", cost_per_unit: 298, supplier: "Dennis Food Service (SKU 30412)" },
+  { id: "i5", name: "San Marzano Style Tomatoes (#10 Cans Stanislaus)", stock_quantity: 2.0, par_level: 12.0, unit: "cans", cost_per_unit: 775, supplier: "Dennis Food Service (SKU 28841)" },
+  { id: "i6", name: "Extra Virgin Olive Oil (Dennis Import 4x3L)", stock_quantity: 1.0, par_level: 4.0, unit: "tins", cost_per_unit: 2800, supplier: "Dennis Food Service (SKU 55201)" },
+  { id: "i7", name: "Heavy Cream 36% Grade A (Oakhurst / Dennis 12x1qt)", stock_quantity: 3.0, par_level: 12.0, unit: "qts", cost_per_unit: 350, supplier: "Dennis Food Service (SKU 18420)" }
 ];
 
 // Local Mock Purchase Orders State
@@ -75,8 +80,8 @@ let mockPurchaseOrders: Array<{
     id: 'po-1001',
     po_number: 'PO-2026-0001',
     status: 'draft',
-    supplier: 'Grain & Mill Distributors',
-    total_cost: 7500,
+    supplier: 'Dennis Food Service (Pepr: dennisfoodservice.pepr.app)',
+    total_cost: 38450,
     created_at: new Date().toISOString(),
     approved_at: null,
     sent_at: null,
@@ -84,11 +89,27 @@ let mockPurchaseOrders: Array<{
     po_line_items: [
       {
         id: 'poli-1',
-        ingredient_name: 'Unbleached Bread Flour',
-        unit: 'kg',
-        ordered_qty: 37.5,
+        ingredient_name: 'Bacon 10-12 Applewood (North Country)',
+        unit: 'cases (4x5lb)',
+        ordered_qty: 4,
         received_qty: 0,
-        unit_cost: 200,
+        unit_cost: 7450,
+      },
+      {
+        id: 'poli-2',
+        ingredient_name: 'Ground Chuck 80/20 Fresh (Dennis Choice)',
+        unit: 'cases (2x10lb)',
+        ordered_qty: 2,
+        received_qty: 0,
+        unit_cost: 6800,
+      },
+      {
+        id: 'poli-3',
+        ingredient_name: 'Mozzarella Whole Milk Shred (Dennis Select)',
+        unit: 'cases (6x5lb)',
+        ordered_qty: 3,
+        received_qty: 0,
+        unit_cost: 8950,
       },
     ],
   },
@@ -655,7 +676,8 @@ pantryRoutes.post('/', async (c) => {
       stock_quantity: body.stockQuantity ?? 0,
       par_level: body.parLevel ?? 0,
       unit: body.unit ?? 'pcs',
-      cost_per_unit: body.costPerUnit ?? 0
+      cost_per_unit: body.costPerUnit ?? 0,
+      supplier: body.supplier ?? 'Dennis Food Service',
     };
     mockPantry.push(newItem);
     return ok(c, newItem, 201);
