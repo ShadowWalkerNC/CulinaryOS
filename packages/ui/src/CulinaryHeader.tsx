@@ -38,31 +38,31 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-[#e5e7eb] px-5 py-3 flex items-center justify-between shadow-xs shrink-0 select-none">
+    <header className="bg-white border-b border-[#e5e7eb] px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-xs shrink-0 select-none gap-2">
       {/* Brand Logo & Wordmark (Links to Marketing / Landing Hub) */}
       <a
         href={isLocal ? `${protocol}//${hostname}:5176/` : '/'}
-        className="flex items-center gap-3 group cursor-pointer"
+        className="flex items-center gap-2 sm:gap-3 group cursor-pointer shrink-0"
         title="CulinaryOS Platform Home"
       >
-        <div className="w-8 h-8 bg-[#0f172a] text-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-amber-500 group-hover:text-black transition-colors">
-          <span className="material-symbols-outlined filled text-[18px]">skillet</span>
+        <div className="w-7 h-7 sm:w-8 h-8 bg-[#0f172a] text-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-amber-500 group-hover:text-black transition-colors shrink-0">
+          <span className="material-symbols-outlined filled text-[16px] sm:text-[18px]">skillet</span>
         </div>
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-black text-sm text-[#0b1c30] uppercase tracking-wider group-hover:text-amber-600 transition-colors">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h1 className="font-black text-xs sm:text-sm text-[#0b1c30] uppercase tracking-wider group-hover:text-amber-600 transition-colors">
               CulinaryOS
             </h1>
-            <span className="bg-[#0f172a0d] text-[#0f172a] text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-[#0f172a26]">
-              {isLocal ? 'LAN / Dev' : 'SaaS / Cloud'}
+            <span className="bg-[#0f172a0d] text-[#0f172a] text-[8px] sm:text-[9px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full border border-[#0f172a26]">
+              {isLocal ? 'LAN' : 'Cloud'}
             </span>
           </div>
-          <p className="text-[10px] text-[#6b7280] font-medium">{tenantName}</p>
+          <p className="text-[9px] sm:text-[10px] text-[#6b7280] font-medium hidden xs:block">{tenantName}</p>
         </div>
       </a>
 
-      {/* Cross-Application Module Navigation Tabs */}
-      <nav className="flex items-center gap-1.5 bg-[#f8f9fa] border border-[#e5e7eb] p-1 rounded-xl overflow-x-auto">
+      {/* Cross-Application Module Navigation Tabs (Desktop & Tablet Horizontal Scroller) */}
+      <nav className="hidden md:flex items-center gap-1.5 bg-[#f8f9fa] border border-[#e5e7eb] p-1 rounded-xl overflow-x-auto max-w-full">
         {modules.map((m) => {
           const isActive = activeModule === m.id;
           const url = getModuleUrl(m);
@@ -77,7 +77,7 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
                   setShowSaaSHelp(true);
                 }
               }}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
                 isActive
                   ? 'bg-white text-[#0f172a] shadow-xs border border-[#e5e7eb]'
                   : 'text-[#6b7280] hover:text-[#0b1c30] hover:bg-[#e5e7eb50]'
@@ -92,8 +92,17 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
         })}
       </nav>
 
-      {/* System Status Indicators */}
-      <div className="flex items-center gap-3">
+      {/* Mobile Apps Button & System Status */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <button
+          type="button"
+          onClick={() => setShowSaaSHelp(true)}
+          className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#f8f9fa] border border-[#e5e7eb] text-[10px] font-black uppercase text-[#0f172a]"
+        >
+          <span className="material-symbols-outlined text-[14px]">apps</span>
+          <span>Apps</span>
+        </button>
+
         <a
           href={isLocal ? `${protocol}//${hostname}:5176/` : '/'}
           className="hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#6b7280] hover:text-[#0f172a] transition-colors"
@@ -101,11 +110,9 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
           <span className="material-symbols-outlined text-[14px]">home</span>
           <span>Hub</span>
         </a>
-        <div className="flex items-center gap-2 bg-[#f8f9fa] border border-[#e5e7eb] px-3 py-1.5 rounded-xl text-[10px] text-[#6b7280]">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#f8f9fa] border border-[#e5e7eb] px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[9px] sm:text-[10px] text-[#6b7280]">
           <span className={`w-2 h-2 rounded-full ${serverStatus === 'connected' ? 'bg-[#22c55e] animate-pulse' : 'bg-red-500'}`} />
           <span className="font-semibold">{isLocal ? 'LAN Active' : 'Cloud Online'}</span>
-          <span className="text-[#cbd5e1]">|</span>
-          <span className="font-mono text-[9px] font-bold text-[#0f172a]">MCP</span>
         </div>
       </div>
 

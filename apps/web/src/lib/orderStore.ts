@@ -26,39 +26,41 @@ export async function saveOrder(order: OnlineOrder): Promise<OnlineOrder> {
   orders[order.id] = order;
   saveStoredOrders(orders);
 
-  // 2. Sync via public online-orders endpoint (resolves slug → tenant UUID server-side)
-  try {
-    const res = await fetch(`${API}/v1/online-orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: order.id,
-        tenantSlug: order.tenantSlug,
-        takeaway: order.mode === 'pickup',
-        delivery: order.mode === 'delivery',
-        customer: order.customer,
-        items: order.items,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        deliveryFee: order.deliveryFee,
-        tip: order.tip,
-        total: order.total,
-        mode: order.mode,
-        status: order.status,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.ok && data.data?.id) {
-        order.id = data.data.id;
-        orders[order.id] = order;
-        saveStoredOrders(orders);
+  // 2. Sync via public online-orders endpoint if API is configured
+  if (API && typeof fetch !== 'undefined') {
+    try {
+      const res = await fetch(`${API}/v1/online-orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: order.id,
+          tenantSlug: order.tenantSlug,
+          takeaway: order.mode === 'pickup',
+          delivery: order.mode === 'delivery',
+          customer: order.customer,
+          items: order.items,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          deliveryFee: order.deliveryFee,
+          tip: order.tip,
+          total: order.total,
+          mode: order.mode,
+          status: order.status,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && data.data?.id) {
+          order.id = data.data.id;
+          orders[order.id] = order;
+          saveStoredOrders(orders);
+        }
       }
+    } catch {
+      // API not reachable or offline - fallback to local storage order
     }
-  } catch {
-    // API not reachable or offline - fallback to local storage order
   }
 
   return order;
