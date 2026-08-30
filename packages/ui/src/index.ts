@@ -11,6 +11,9 @@ export * from './components/Tabs';
 export * from './components/Table';
 export * from './components/Separator';
 export * from './components/Skeleton';
+export * from './components/Sheet';
+export * from './components/Progress';
+export * from './components/Toast';
 export * from './components/FloorMap3D';
 
 // Radix-backed Canonical shadcn/ui components
@@ -20,6 +23,9 @@ export * from './components/ui/switch';
 export * from './components/ui/checkbox';
 export * from './components/ui/tooltip';
 export * from './components/ui/popover';
+export * from './components/ui/sheet';
+export * from './components/ui/progress';
+export * from './components/ui/toast';
 
 export {
   LayoutGrid,

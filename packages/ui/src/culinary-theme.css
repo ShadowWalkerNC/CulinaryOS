@@ -277,10 +277,37 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   box-shadow: 0 6px 28px rgba(15,23,42,0.45);
 }
 
-/* — Animations — */
+/* — Keyframe Animations & Micro-Interactions — */
 @keyframes fadeIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@keyframes fadeOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
 @keyframes pulseGlow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
-.animate-fadeIn    { animation: fadeIn    0.2s ease both; }
-.animate-slideIn   { animation: slideIn   0.2s ease both; }
-.animate-pulseGlow { animation: pulseGlow 2s   ease-in-out infinite; }
+@keyframes ticketArrive {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ticketBump {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.92) translateY(20px); }
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes scaleSpring {
+  0% { transform: scale(0.94); opacity: 0; }
+  70% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fadeIn        { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fadeOut       { animation: fadeOut 0.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slideIn       { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slideOut      { animation: slideOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-pulseGlow     { animation: pulseGlow 2s ease-in-out infinite; }
+.animate-ticket-arrive { animation: ticketArrive 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-ticket-bump   { animation: ticketBump 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale-spring  { animation: scaleSpring 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-shimmer       { animation: shimmer 2s infinite linear; }
