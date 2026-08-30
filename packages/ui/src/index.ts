@@ -120,6 +120,8 @@ export {
   User,
   Award,
   Building,
+  Zap,
+  Palette,
   Table as TableIcon,
   Badge as BadgeIcon,
 } from 'lucide-react';

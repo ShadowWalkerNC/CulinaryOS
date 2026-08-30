@@ -301,3 +301,150 @@ marketplaceRoutes.post('/ai/loyalty-message', async (c) => {
     },
   });
 });
+
+// ---- Custom Tool Registration & Developer Extension Submission ----
+
+let customRegisteredExtensions: ExtensionManifest[] = [
+  {
+    id: 'batch-scaler-tool',
+    name: 'Culinary Batch Scaler & Yield Engine',
+    version: '1.2.0',
+    min_platform_version: '0.1.0',
+    author: { name: 'CulinaryOS Core Team', email: 'dev@culinaryos.org' },
+    description: 'Dynamic batch recipe scaling with pan size dimensional scaling and baker percentage ratios.',
+    category: 'Kitchen Tools',
+    entry_point: '/tools/batch-scaler',
+    permissions: ['recipes:read', 'pantry:read'],
+    hooks: ['pos:order:created'],
+    settings_schema: [],
+    pricing: { model: 'free', price_cents: 0 },
+    installed: true,
+  },
+  {
+    id: 'culinary-unit-converter',
+    name: 'Density-Aware Unit & Volume Math',
+    version: '1.1.0',
+    min_platform_version: '0.1.0',
+    author: { name: 'Chef Labs Community', email: 'cheflabs@culinaryos.org' },
+    description: 'Instant conversion between volume (tsp, tbsp, cups, fl oz, mL, L) and weight (g, oz, lb, kg) tailored to ingredient densities.',
+    category: 'Calculators',
+    entry_point: '/tools/unit-converter',
+    permissions: [],
+    hooks: [],
+    settings_schema: [],
+    pricing: { model: 'free', price_cents: 0 },
+    installed: true,
+  },
+  {
+    id: 'promo-flyer-builder',
+    name: 'Promo Flyer & Event Menu Designer',
+    version: '1.0.0',
+    min_platform_version: '0.1.0',
+    author: { name: 'Plated Design Studio', url: 'https://plated.culinaryos.org' },
+    description: 'Quickly design and print tabletop tents, happy hour flyers, and event menus with branded typography and QR codes.',
+    category: 'Marketing & Design',
+    entry_point: '/tools/flyer-builder',
+    permissions: ['menu:read'],
+    hooks: [],
+    settings_schema: [],
+    pricing: { model: 'free', price_cents: 0 },
+    installed: true,
+  },
+];
+
+/**
+ * POST /v1/marketplace/extensions/custom
+ * Allows developers and operators to register custom tools / extensions.
+ */
+marketplaceRoutes.post('/extensions/custom', async (c) => {
+  const body = await c.req.json().catch(() => null) as Partial<ExtensionManifest> | null;
+  if (!body || !body.name || !body.category) {
+    return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'Tool Name and Category are required.' } }, 422);
+  }
+
+  const id = body.id || `ext-custom-${Date.now()}`;
+  const newExt: ExtensionManifest = {
+    id,
+    name: body.name,
+    version: body.version || '1.0.0',
+    min_platform_version: '0.1.0',
+    author: body.author || { name: 'Community Developer' },
+    description: body.description || 'Custom user-created tool for CulinaryOS.',
+    category: body.category,
+    entry_point: body.entry_point || `/tools/${id}`,
+    permissions: body.permissions || [],
+    hooks: body.hooks || [],
+    settings_schema: body.settings_schema || [],
+    pricing: body.pricing || { model: 'free', price_cents: 0 },
+    installed: true,
+  };
+
+  customRegisteredExtensions.unshift(newExt);
+  installedExtensions.add(id);
+
+  return c.json({
+    ok: true,
+    data: {
+      message: `Custom tool "${newExt.name}" registered and activated successfully!`,
+      extension: newExt,
+    },
+  }, 201);
+});
+
+/**
+ * GET /v1/marketplace/themes
+ * Returns curated UI color theme presets.
+ */
+marketplaceRoutes.get('/themes', (c) => {
+  return c.json({
+    ok: true,
+    data: [
+      {
+        id: 'bistro-dark',
+        name: 'Bistro Dark (Obsidian & Amber)',
+        description: 'Warm, low-glare kitchen and dining room theme with rich amber accents.',
+        primary: '#f59e0b',
+        background: '#09090b',
+        card: '#18181b',
+        text: '#fafafa',
+      },
+      {
+        id: 'nordic-clean',
+        name: 'Nordic Clean (Slate & Ice Blue)',
+        description: 'Crisp, high-clarity minimalist aesthetic for modern daytime cafes and bistros.',
+        primary: '#0ea5e9',
+        background: '#f8fafc',
+        card: '#ffffff',
+        text: '#0f172a',
+      },
+      {
+        id: 'tuscan-olive',
+        name: 'Tuscan Olive (Terracotta & Sage)',
+        description: 'Earthy, rustic Italian warmth with sage green and terracotta tones.',
+        primary: '#16a34a',
+        background: '#1c1917',
+        card: '#292524',
+        text: '#f5f5f4',
+      },
+      {
+        id: 'midnight-chef',
+        name: 'Midnight Chef (OLED & Emerald)',
+        description: 'Ultra-high contrast OLED dark theme engineered for fast KDS station reading.',
+        primary: '#10b981',
+        background: '#000000',
+        card: '#111827',
+        text: '#f9fafb',
+      },
+      {
+        id: 'solar-gold',
+        name: 'Solar Gold (High Contrast)',
+        description: 'Bright daylight-optimized theme for outdoor patio POS terminals.',
+        primary: '#d97706',
+        background: '#ffffff',
+        card: '#f3f4f6',
+        text: '#111827',
+      },
+    ],
+  });
+});
+
