@@ -6,6 +6,7 @@ import './index.css';
 import { LandingPage } from './pages/LandingPage';
 import { MenuPage } from './pages/MenuPage';
 import { OrderStatusPage } from './pages/OrderStatusPage';
+import { JobsPage } from './pages/JobsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -16,6 +17,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           {/* Landing / Marketing Page for CulinaryOS Platform */}
           <Route path="/"                      element={<LandingPage />} />
           <Route path="/demo"                  element={<Navigate to="/menu/demo" replace />} />
+          {/* Public CulinaryJobs Restaurant Career Board */}
+          <Route path="/jobs"                  element={<JobsPage />} />
           {/* :slug identifies the restaurant storefront — e.g. /menu/demo */}
           <Route path="/menu/:slug"            element={<MenuPage />} />
           <Route path="/order-status/:orderId" element={<OrderStatusPage />} />

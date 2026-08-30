@@ -30,6 +30,7 @@ import { marketplaceRoutes }   from './routes/marketplace';
 import { settingsRoutes }      from './routes/settings';
 import { squareRoutes }        from './routes/integrations/square';
 import { toastRoutes }         from './routes/integrations/toast';
+import { talentPublicRoutes, talentAdminRoutes } from './routes/talent';
 import type { Env }            from './types';
 
 const app = new Hono<Env>();
@@ -117,6 +118,10 @@ app.route('/v1/settings',    settingsRoutes);
 // External POS & Payment Hub Bridges (Square, Toast)
 app.route('/v1/integrations/square', squareRoutes);
 app.route('/v1/integrations/toast',  toastRoutes);
+
+// CulinaryTalent & Jobs Engine
+app.route('/v1/jobs', talentPublicRoutes);
+app.route('/v1/talent', talentAdminRoutes);
 
 // ---- Health ----
 

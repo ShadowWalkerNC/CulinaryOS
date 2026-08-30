@@ -115,6 +115,11 @@ export {
   Copy,
   Terminal,
   Download,
+  Briefcase,
+  UserPlus,
+  User,
+  Award,
+  Building,
   Table as TableIcon,
   Badge as BadgeIcon,
 } from 'lucide-react';
