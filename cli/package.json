@@ -4,7 +4,9 @@
   "description": "CulinaryOS command-line interface — manage menus, inventory, orders, tenants, and reports from the terminal",
   "main": "dist/index.js",
   "bin": {
-    "culinary": "./dist/index.js"
+    "culinary": "./dist/index.js",
+    "culinaryos": "./dist/index.js",
+    "create-culinaryos": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

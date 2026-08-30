@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "description": "Open-source, self-hostable restaurant OS",
+  "bin": {
+    "culinary": "./cli/dist/index.js",
+    "culinaryos": "./cli/dist/index.js",
+    "create-culinaryos": "./cli/dist/index.js"
+  },
   "scripts": {
-    "start": "turbo run dev",
+    "setup": "tsx scripts/quickstart.ts",
+    "launch": "tsx scripts/quickstart.ts",
+    "start": "tsx scripts/quickstart.ts",
     "dev": "turbo run dev",
     "server": "pnpm --filter @culinaryos/server dev",
     "pos": "pnpm --filter @culinaryos/app-pos dev",
