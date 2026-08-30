@@ -7,7 +7,7 @@
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
 [![Tests: 32/32 Passing](https://img.shields.io/badge/Tests-32%2F32%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
-[![Typecheck: 18/18 Passing](https://img.shields.io/badge/Typecheck-18%2F18%20Passing-blue.svg)](./turbo.json)
+[![Typecheck: 37/37 Passing](https://img.shields.io/badge/Typecheck-37%2F37%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -28,16 +28,39 @@
 
 ---
 
+## ⚡ 1-Click Turnkey Installer
+
+Install and launch the entire CulinaryOS restaurant workstation in one command:
+
+### Windows (PowerShell)
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+```
+
+### macOS / Linux (Bash)
+```bash
+chmod +x ./scripts/install.sh && ./scripts/install.sh
+```
+
+The 1-click installer verifies your Node.js runtime (>= 18), auto-provisions `.env` in zero-config offline demo mode, installs monorepo dependencies, pre-builds core engines, and boots the **Desktop Workstation Hub (`:5180`)** with POS, KDS, Admin, Storefront, KitchenKit, and CulinaryOps.
+
+---
+
 ## What is CulinaryOS?
 
 CulinaryOS is a **complete, MIT-licensed restaurant operating system** built as a TypeScript monorepo. It covers every surface of a modern food-service operation:
 
-- **POS Terminal** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp)
-- **Kitchen Display System (KDS)** — real-time ticket aging, station routing, multi-course hold/fire
-- **Admin Back-Office** — menu builder, 86ing, staff PINs, pantry par levels, purchase orders
-- **Online Storefront** — guest ordering with FDA Top 9 dietary filtering and cart checkout
-- **Unified API** — Hono on Node.js 20; single source of truth for orders, inventory, ops, and payments
-- **MCP Agent Layer** — 9 specialized Model Context Protocol servers that let AI agents operate on live restaurant state
+- **Desktop Workstation (`:5180`)** — Unified split-screen workstation with F1–F6 hotkeys, PIN manager, and full-screen Kiosk mode.
+- **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
+- **Kitchen Display System (`:5173`)** — real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode.
+- **Admin Back-Office (`:5174`)** — menu builder, 86ing, staff PINs, pantry par levels, purchase orders, and system customizer.
+- **KitchenKit & Prep Planner (`:5175`)** — Recipe formulas, yield calculations, batch sizing, and vendor purchase orders.
+- **Online Storefront (`:5176`)** — guest ordering with FDA Top 9 dietary filtering, allergen matrices, and cart checkout.
+- **CulinaryOps (`:5177`)** — Live food cost variance, kitchen waste logging, labor % tracking, and plate economics.
+- **RecipeOS Vault (`:5178`)** — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list.
+- **Android Mobile POS (`mobile/`)** — React Native + Expo companion app with offline SQLite cache.
+- **Unified Hono API (`:3000`)** — single source of truth for orders, inventory, ops, payments, and settings.
+- **MCP Agent Layer (`mcp/`)** — 9 specialized Model Context Protocol servers that let AI agents operate on live restaurant state.
 
 All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive** — every core operation works identically with or without an Anthropic API key.
 
@@ -48,11 +71,15 @@ All surfaces share a single Supabase PostgreSQL backend with Row Level Security 
 ```mermaid
 graph TB
     subgraph Clients
+        DSK["Desktop Workstation :5180\nReact + Vite + Dual Pane Split"]
         POS["POS Terminal :5172\nReact + Vite + Three.js"]
-        KDS["KDS Display :5173\nReact + Vite"]
+        KDS["KDS Display :5173\nReact + Vite + KitchenKit"]
         ADM["Admin Portal :5174\nReact + Vite"]
         WEB["Online Storefront :5176\nReact + Vite"]
-        MOB["Mobile Companion\nReact Native + Expo"]
+        KIT["KitchenKit :5175\nReact + Vite"]
+        OPS["CulinaryOps :5177\nReact + Vite"]
+        REC["RecipeOS :5178\nNext.js App Router"]
+        MOB["Mobile Companion\nReact Native + Expo (Android/iOS)"]
     end
 
     subgraph API["apps/server :3000 — Hono on Node.js 20"]
@@ -60,7 +87,7 @@ graph TB
         ORD["/v1/orders"]
         KDS_API["/v1/kds"]
         PAN["/v1/pantry"]
-        OPS["/v1/ops"]
+        OPS_API["/v1/ops"]
         MKT["/v1/marketplace"]
     end
 
@@ -68,7 +95,7 @@ graph TB
         EB["@culinaryos/event-bus\npos:order:created\nkds:ticket:bumped"]
         RE["@culinaryos/ratio-engine\nRecipe scaling & costing"]
         SH["@culinaryos/shared\nDietary engine, offline-sync"]
-        UI["@culinaryos/ui\nshadcn/ui + Three.js"]
+        UI["@culinaryos/ui\nshadcn/ui + Three.js + Theme Engine"]
         DB["@culinaryos/db\nSupabase types V1–V14"]
     end
 
@@ -86,10 +113,16 @@ graph TB
         MCP7["post-pilot-server"]
     end
 
+    DSK --> POS
+    DSK --> KDS
+    DSK --> ADM
     POS --> API
     KDS --> API
     ADM --> API
     WEB --> API
+    KIT --> API
+    OPS --> API
+    REC --> API
     MOB --> API
 
     API --> Packages
@@ -101,19 +134,24 @@ graph TB
 
 ---
 
-## Why CulinaryOS?
+## 🎨 shadcn/ui Design System & Universal Theme Engine
 
-| Feature | Legacy Restaurant SaaS | CulinaryOS |
-|---|---|---|
-| **Architecture** | Closed proprietary silos (+ bolted-on chat) | **Agent-operable OS** — MCP tools on live tickets, inventory, waste, and food-cost |
-| **API & Contracts** | Proprietary walled gardens | **Open contracts** — standard order fire spine, RLS multi-tenancy, `extension_template/` |
-| **Economics** | Separate POS and inventory software | **Closed-loop economics** — fire automatically emits pantry deduction & `plate_economics` |
-| **Data Sovereignty** | Vendor lock-in | **Operator-owned PostgreSQL** (Supabase / self-hosted PostgreSQL) |
-| **Design & Ergonomics** | Clunky legacy interfaces | **Modern shadcn/ui suite + Three.js 3D spatial floor map** with real-time status glow halos |
-| **Dietary Safety** | Basic static ingredient text | **FDA FASTER Act Top 9 allergen engine** + cross-contact matrix & safe substitution paths |
-| **Operations Review** | Expensive manual consultants | **Built-in AI Operations Manager agent** + daily workflow audits (`pnpm ops:audit`) |
-| **Service Resilience** | AI or cloud outage halts operation | **AI is additive & offline-first** — POS/KDS continue running offline with delta queues |
-| **Cost** | Per-terminal licensing + revenue share | **Free forever (MIT)** — pay only your own infrastructure and Stripe processing fees |
+CulinaryOS includes a centralized design system in `@culinaryos/ui` built on **Radix UI**, **Tailwind CSS**, and **Three.js**, with a live **Theme Customizer**:
+
+### Theme Presets
+- **Classic Bistro (Light)**: Clean warm linen, balanced typography, elegant fine dining.
+- **Midnight Slate (Dark)**: Deep navy slate (`#090d16`), cyan accents, low-light evening bar feel.
+- **Kitchen OLED (Pure Black `#000000`)**: Zero eye strain high-heat high-contrast mode for busy commercial kitchen lines.
+- **Cyberpunk Neon**: Electric cyan (`#06b6d4`), magenta accents, modern lounge style.
+- **Botanical Garden (Emerald)**: Forest green (`#047857`), sage, warm cream farm-to-table aesthetic.
+- **Bordeaux & Wine**: Intimate steakhouse, ruby crimson (`#e11d48`), rich deep tones.
+
+### Micro-Interaction Animations
+- `.animate-ticket-arrive`: Spring bounce animation (`cubic-bezier(0.34, 1.56, 0.64, 1)`) on order fire.
+- `.animate-ticket-bump`: Smooth exit slide & scale fade on KDS ticket completion.
+- `.animate-scale-spring`: Elastic button pop and table focus feedback.
+
+See [`docs/UI_THEME_CUSTOMIZER.md`](docs/UI_THEME_CUSTOMIZER.md) for direct CSS token export and React usage.
 
 ---
 
@@ -121,16 +159,19 @@ graph TB
 
 | Package | Port / Target | Role |
 |---|---|---|
-| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, **settings**, marketplace |
+| `apps/desktop` | `:5180` | **Desktop Workstation Hub** — Unified split-screen manager, F1–F6 hotkeys, theme switcher, kiosk mode |
+| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, settings, marketplace |
 | `apps/pos` | `:5172` | POS terminal (PIN login, 2D/3D floor map, ESC/POS hardware printer hub, live text scaling) |
 | `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, course hold/fire, TV 140% mode) |
-| `apps/admin` | `:5174` | Admin portal — menu editor, staff PINs, pantry par levels, **system settings & kitchen routing** |
+| `apps/admin` | `:5174` | Admin portal — menu editor, staff PINs, pantry par levels, system settings, **🎨 Appearance & Themes** |
 | `apps/kitchenkit` | `:5175` | KitchenKit — Recipe catalog, station prep planner, par levels, vendor management, shelf life |
 | `apps/web` | `:5176` | Online ordering storefront (FDA Top 9 dietary filtering, cart customization, instant checkout) |
 | `apps/ops` | `:5177` | CulinaryOps — Real-time food cost analytics, waste logging, labor %, and vendor performance |
 | `apps/recipeos` | `:5178` | RecipeOS — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list |
-| `packages/ui` | Shared | Centralized **shadcn/ui** design system (`components.json`, Radix UI primitives, Three.js 3D canvas) |
+| `mobile/` | Android/iOS | React Native + Expo Mobile POS with offline SQLite cache |
+| `packages/ui` | Shared | Centralized **shadcn/ui** design system, Three.js 3D canvas, and Universal Theme Engine |
 | `packages/shared` | Shared | Unified settings engine, dietary filter engine, printer driver, offline-sync delta engine |
+| `packages/ratio-engine` | Shared | Baker's percentage calculations, yield formulas, and batch scaling |
 | `packages/prep-engine` | Shared | Recipe prep task management and batch requirement calculations |
 | `packages/food-cost-engine` | Shared | Pure functions for actual vs theoretical food cost variance calculations |
 | `packages/waste-engine` | Shared | Kitchen waste summarization and top cost-leakage analysis |
@@ -140,67 +181,6 @@ graph TB
 | `packages/seo-tools` | Shared | Schema.org JSON-LD structured data generators for restaurant menus and locations |
 | `packages/asset-tools` | Shared | OpenGraph banner generator (`satori`), favicons, and palette extractors |
 | `mcp/` | Extension | 9 Model Context Protocol servers + Python Post-Pilot loyalty agent |
-
-
----
-
-## MCP AI Agent Layer
-
-CulinaryOS ships 9 Model Context Protocol servers that expose live restaurant operations to AI agents (Claude Desktop, Cursor, Windsurf, any MCP-compatible client):
-
-| Server | Entrypoint | Key Tools |
-|---|---|---|
-| `culinaryops-server` | `mcp/src/culinaryops-server.ts` | `get_ops_summary`, `log_waste`, `get_plate_economics`, `analyze_food_cost` |
-| `culinaryops-hub-live` | `mcp/src/culinaryops-hub-live.ts` | Live ops dashboard — shift performance, cover counts |
-| `recipe-server` | `mcp/src/recipe-server.ts` | `get_recipe`, `scale_recipe`, `list_recipes`, `create_recipe` |
-| `inventory-server` | `mcp/src/inventory-server.ts` | `get_inventory_levels`, `log_audit_count`, `update_pantry_item` |
-| `kds-server` | `mcp/src/kds-server.ts` | `fetch_kds_tickets`, `bump_kds_ticket`, `fire_course` |
-| `pos-server` | `mcp/src/pos-server.ts` | `create_order`, `send_order_to_kitchen`, `apply_loyalty_points` |
-| `prep-server` | `mcp/src/prep-server.ts` | `generate_prep_list`, `get_prep_list`, `project_batch_requirement` |
-| `post-pilot-server` | `mcp/src/post-pilot-server.ts` | `get_loyalty_balance`, `generate_postcard`, `send_loyalty_campaign` |
-
-See [`mcp/README.md`](mcp/README.md) for Claude Desktop configuration and full tool reference.
-
----
-
-## Extension Marketplace
-
-CulinaryOS ships a built-in extension marketplace at `/v1/marketplace`. Any operator can browse, install, and manage first-party and partner extensions — all without requiring an active LLM:
-
-```bash
-# List all available extensions
-GET /v1/marketplace/extensions
-
-# Install an extension for the current session/tenant
-POST /v1/marketplace/extensions/com.axomai.culinaryos/install
-
-# Check AI layer availability
-GET /v1/marketplace/ai/status
-```
-
-### Built-in Extensions
-
-| Extension | ID | Category | Description |
-|---|---|---|---|
-| RecipeOS Bridge | `com.culinaryos.ext.recipeos` | Recipes | Recipe ratio scaling & baker's percentage engine |
-| KitchenKit | `com.culinaryos.ext.kitchenkit` | KDS | Multi-course routing, station prep planning |
-| CulinaryOps | `com.culinaryos.ext.culinaryops` | Operations | Waste diagnostics, food costing, plate economics |
-| Plated | `com.culinaryos.ext.plated` | Inventory | Advanced pantry tracking and reorder automation |
-| Post-Pilot | `com.culinaryos.ext.post-pilot` | Marketing | Loyalty campaigns and postcard automation |
-| Voice Ordering | `com.culinaryos.ext.voice` | POS | Voice-driven order entry assistant |
-| Hardware Agent | `com.culinaryos.ext.hardware` | Hardware | Receipt printers, cash drawers, KDS bump bars |
-
-### Optional AI Layer (Claude)
-
-When `ANTHROPIC_API_KEY` is set, optional AI-powered endpoints activate:
-
-| Endpoint | Purpose | Fallback (no key) |
-|---|---|---|
-| `POST /v1/marketplace/ai/ops-insight` | AI shift performance analysis | Plain metric summary |
-| `POST /v1/marketplace/ai/prep-plan` | AI morning prep checklist | Cover count + low stock list |
-| `POST /v1/marketplace/ai/loyalty-message` | AI loyalty postcard copy | Template message |
-
-**AI is strictly additive** — all core restaurant operations (PIN login, order fire, KDS bump, pantry deduct, tender) function identically with or without the Anthropic API.
 
 ---
 
@@ -221,11 +201,11 @@ git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
 cd CulinaryOS
 pnpm install
 
-# 2. One-command turnkey boot (launches POS, KDS, Admin, Web, and API)
+# 2. One-command turnkey boot (launches Desktop Hub, POS, KDS, Admin, Web, and API)
 pnpm quickstart
 ```
 
-*(On Windows you can also double-click `quickstart.bat`, or run `./quickstart.sh` on macOS/Linux).*
+*(On Windows you can also run `.\scripts\install.ps1`, or `./scripts/install.sh` on macOS/Linux).*
 
 **Interactive walkthrough:** See [`QUICKSTART.md`](QUICKSTART.md).
 
@@ -233,10 +213,14 @@ pnpm quickstart
 
 | Surface | URL | Credential |
 |---|---|---|
+| **Desktop Workstation** | [localhost:5180](http://localhost:5180) | F1–F6 quick switch · Kiosk mode · Split view |
 | **POS Terminal** | [localhost:5172](http://localhost:5172) | Server PIN: `1234` · Manager PIN: `5678` |
 | **Kitchen Display (KDS)** | [localhost:5173](http://localhost:5173) | No login required |
 | **Admin Portal** | [localhost:5174](http://localhost:5174) | No login required |
 | **Online Storefront** | [localhost:5176](http://localhost:5176) | No login required |
+| **KitchenKit** | [localhost:5175](http://localhost:5175) | No login required |
+| **CulinaryOps** | [localhost:5177](http://localhost:5177) | No login required |
+| **RecipeOS** | [localhost:5178](http://localhost:5178) | No login required |
 | **Unified Hono API** | [localhost:3000](http://localhost:3000) | `X-Tenant-Id: 00000000-0000-0000-0000-000000000001` |
 
 In offline/demo mode, POS serves a sample menu, buffers transactions to localStorage, and communicates with the in-memory mock kitchen store on the API. POS and KDS do **not** share live state in demo mode — use a live Supabase backend for cross-app POS→KDS order flow.
