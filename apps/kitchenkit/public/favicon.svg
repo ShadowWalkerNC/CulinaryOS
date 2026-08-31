@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Container Background -->
+  <rect width="64" height="64" rx="16" fill="#0f172a"/>
+  
+  <!-- Subtle Ring Accent -->
+  <circle cx="32" cy="32" r="28" stroke="#334155" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Skillet & Handle -->
+  <ellipse cx="28" cy="36" rx="16" ry="11" fill="#f59e0b" />
+  <ellipse cx="28" cy="36" rx="13" ry="8.5" fill="#d97706" />
+  <path d="M41 33L54 22" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round" />
+  <circle cx="53" cy="23" r="2.5" fill="#fef3c7"/>
+
+  <!-- Culinary Steam / Flavour Accent -->
+  <path d="M22 20C21 16 25 14 23 11" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M29 18C28 14 32 12 30 9" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M36 21C35 17 38 15 37 12" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

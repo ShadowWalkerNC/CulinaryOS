@@ -38,13 +38,25 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
       <div className="flex gap-3.5 items-start">
         {/* Item Image or Fallback Graphic */}
         {item.image_url ? (
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100 shadow-xs">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100 shadow-xs flex items-center justify-center">
             <img
               src={item.image_url}
               alt={item.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              onError={(e) => {
+                // If remote photo fails to load, gracefully hide image and show fallback
+                e.currentTarget.style.display = 'none';
+                const parent = e.currentTarget.parentElement;
+                if (parent) {
+                  const fallback = parent.querySelector('.img-fallback');
+                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                }
+              }}
             />
+            <div className="img-fallback hidden w-full h-full bg-slate-100 text-slate-400 items-center justify-center">
+              <Utensils className="w-7 h-7 text-slate-300" />
+            </div>
             {item.tags?.includes('popular') && (
               <span className="absolute top-1.5 left-1.5 bg-[#0f172a]/90 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded backdrop-blur-sm flex items-center gap-0.5">
                 <Sparkles className="w-2.5 h-2.5 text-amber-400" />

@@ -117,6 +117,9 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
               src={item.image_url}
               alt={item.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <button
