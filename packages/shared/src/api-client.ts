@@ -17,11 +17,24 @@ function readEnv(key: string): string | undefined {
   }
 }
 
-const API = readEnv('VITE_API_URL') ?? 'http://localhost:3000';
 const SESSION_KEY = 'culinaryos_session';
 
 export function getApiBase(): string {
-  return API;
+  const envUrl = readEnv('VITE_API_URL');
+  // If explicitly configured with a non-localhost remote URL, honor it
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl;
+  }
+  // In browser environments on LAN / WiFi (e.g. tablet opening 192.168.1.50:5172),
+  // route API calls to the same host on port 3000
+  if (typeof window !== 'undefined' && window.location) {
+    const host = window.location.hostname;
+    const protocol = window.location.protocol || 'http:';
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `${protocol}//${host}:3000`;
+    }
+  }
+  return envUrl ?? 'http://localhost:3000';
 }
 
 export function getTenantId(fallback?: string): string {
@@ -92,7 +105,8 @@ export async function apiFetch(
     ...apiHeaders(tenantId),
     ...(initHeaders as Record<string, string> | undefined),
   };
-  return fetch(`${API}${path.startsWith('/') ? path : `/${path}`}`, {
+  const base = getApiBase();
+  return fetch(`${base}${path.startsWith('/') ? path : `/${path}`}`, {
     ...rest,
     headers,
   });

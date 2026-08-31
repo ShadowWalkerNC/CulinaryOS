@@ -48,8 +48,14 @@ app.use('*', cors({
   origin: (origin) => {
     if (!origin) return corsAllowlist[0] ?? 'http://localhost:5173';
     if (corsAllowlist.length === 0) {
-      // Dev default: localhost only
-      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+      // Dev & LAN default: localhost + private network ranges (192.168.x, 10.x, 172.16-31.x, *.local)
+      if (
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+        /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin) ||
+        /^https?:\/\/[a-zA-Z0-9-]+\.local(:\d+)?$/.test(origin)
+      ) {
+        return origin;
+      }
       return '';
     }
     return corsAllowlist.includes(origin) ? origin : '';
@@ -136,8 +142,9 @@ app.get('/health', (c) => c.json({
 // ---- Boot ----
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
+const HOST = process.env.HOST ?? '0.0.0.0';
 startRealtimeBridge();
 
-serve({ fetch: app.fetch, port: PORT }, () => {
-  console.log(`[culinaryos-api] listening on :${PORT}`);
+serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
+  console.log(`[culinaryos-api] listening on http://${HOST}:${PORT}`);
 });

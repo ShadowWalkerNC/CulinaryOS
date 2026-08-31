@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { getApiBase } from '@culinaryos/shared';
 import type { MenuData } from '../types';
 
-const API = import.meta.env.VITE_API_URL ?? '';
+const API = getApiBase();
 
 const MOCK_MENU: MenuData = {
   restaurant: {

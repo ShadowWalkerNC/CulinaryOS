@@ -212,24 +212,34 @@
 
     <!-- 1-Click Launch Instructions -->
     <div class="hero-card">
-      <h2>🚀 How to Start in 1 Click</h2>
-      <p style="color: #cbd5e1; font-size: 14px;">If you haven't started the system yet, double-click <strong style="color: var(--accent);">START_HERE.bat</strong> inside this folder. Everything will configure, install, and open automatically.</p>
+      <h2>🚀 How to Start in 1 Click (Cross-Platform)</h2>
+      <p style="color: #cbd5e1; font-size: 14px;">CulinaryOS is 100% sovereign and turnkey. Choose your operating system below to launch:</p>
       
       <div class="step-list">
         <div class="step-item">
-          <span class="step-num">1</span>
-          <div class="step-title">Double Click START_HERE.bat</div>
-          <div class="step-desc">Automatically verifies Node.js, installs dependencies, and configures demo credentials.</div>
+          <span class="step-num">🪟</span>
+          <div class="step-title">Windows 10 / 11</div>
+          <div class="step-desc">Double-click <strong style="color: var(--accent);">START_HERE.bat</strong> in this folder. It auto-installs Node.js/pnpm, builds engines, and boots all services.</div>
         </div>
         <div class="step-item">
-          <span class="step-num">2</span>
-          <div class="step-title">Browser Opens Automatically</div>
-          <div class="step-desc">The Desktop Workstation opens at localhost:5180 with all restaurant apps loaded.</div>
+          <span class="step-num">🍎</span>
+          <div class="step-title">macOS / Linux</div>
+          <div class="step-desc">Open Terminal in this folder and run <strong style="color: var(--accent);">./START_HERE.sh</strong> (or <code>bash START_HERE.sh</code>).</div>
         </div>
         <div class="step-item">
-          <span class="step-num">3</span>
-          <div class="step-title">Enter Demo PIN</div>
-          <div class="step-desc">Enter PIN <strong style="color:#10b981">1234</strong> to take orders tableside or test the 3D dining floor map.</div>
+          <span class="step-num">📱</span>
+          <div class="step-title">Tablets & Handhelds</div>
+          <div class="step-desc">Open your computer's local Wi-Fi IP (e.g. <code>http://192.168.1.x:5172</code>) on any iPad, phone, or kitchen TV display.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile LAN & Firewall Helper -->
+    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 18px 20px; border-radius: 14px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <strong style="color: #60a5fa; font-size: 14px;">📡 Connecting iPads, Mobile POS & Kitchen Screens Over Local Wi-Fi:</strong>
+          <p style="font-size: 12px; color: #94a3b8; margin-top: 2px;">All servers bind to <code>0.0.0.0</code> with dynamic LAN API routing. If Windows Firewall blocks incoming connections from other devices, double-click <strong style="color: #fff;">scripts/setup-firewall.bat</strong> to allow CulinaryOS ports with 1 click.</p>
         </div>
       </div>
     </div>

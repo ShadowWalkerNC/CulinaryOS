@@ -27,7 +27,13 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
   const isBrowser = typeof window !== 'undefined';
   const hostname = isBrowser ? window.location.hostname : 'localhost';
   const protocol = isBrowser ? window.location.protocol : 'http:';
-  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || /^192\.168\./.test(hostname) || /^10\./.test(hostname);
+  const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    /^192\.168\./.test(hostname) ||
+    /^10\./.test(hostname) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+    hostname.endsWith('.local');
 
   const modules = [
     { id: 'pos', label: 'POS Terminal', port: '5172', path: '/pos', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },

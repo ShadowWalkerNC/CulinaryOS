@@ -1,6 +1,7 @@
+import { getApiBase } from '@culinaryos/shared';
 import type { OnlineOrder, OnlineOrderStatus } from '../types';
 
-const API = import.meta.env.VITE_API_URL ?? '';
+const API = getApiBase();
 const STORAGE_KEY = 'culinaryos_online_orders';
 
 function loadStoredOrders(): Record<string, OnlineOrder> {
