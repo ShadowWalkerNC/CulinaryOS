@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CulinaryOS — Quickstart Guide & Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="./apps/web/public/favicon.svg">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #f59e0b;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #475569;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .hero-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .step-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .step-item {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .step-num {
+      display: inline-block;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      text-align: center;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 900;
+      border-radius: 50%;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .surface-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.2s, border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-col: column;
+      justify-content: space-between;
+    }
+    .surface-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+    .surface-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .surface-icon {
+      font-size: 28px;
+    }
+    .port-pill {
+      font-family: monospace;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .surface-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+    .surface-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .pin-cheat {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .pin-badge {
+      background: #10b981;
+      color: #0f172a;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 900;
+      font-family: monospace;
+      margin-left: 6px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 40px;
+      border-top: 1px solid #1e293b;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-badge">
+        <span>🍳</span>
+        <span>CulinaryOS Turnkey Dashboard</span>
+      </div>
+      <h1>Linux for Restaurants</h1>
+      <p class="subtitle">An AI-native, sovereign restaurant operating system for POS terminals, kitchen display systems, inventory control, and online ordering.</p>
+    </div>
+
+    <!-- 1-Click Launch Instructions -->
+    <div class="hero-card">
+      <h2>🚀 How to Start in 1 Click</h2>
+      <p style="color: #cbd5e1; font-size: 14px;">If you haven't started the system yet, double-click <strong style="color: var(--accent);">START_HERE.bat</strong> inside this folder. Everything will configure, install, and open automatically.</p>
+      
+      <div class="step-list">
+        <div class="step-item">
+          <span class="step-num">1</span>
+          <div class="step-title">Double Click START_HERE.bat</div>
+          <div class="step-desc">Automatically verifies Node.js, installs dependencies, and configures demo credentials.</div>
+        </div>
+        <div class="step-item">
+          <span class="step-num">2</span>
+          <div class="step-title">Browser Opens Automatically</div>
+          <div class="step-desc">The Desktop Workstation opens at localhost:5180 with all restaurant apps loaded.</div>
+        </div>
+        <div class="step-item">
+          <span class="step-num">3</span>
+          <div class="step-title">Enter Demo PIN</div>
+          <div class="step-desc">Enter PIN <strong style="color:#10b981">1234</strong> to take orders tableside or test the 3D dining floor map.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN Reference -->
+    <div class="pin-cheat">
+      <div>
+        <strong style="color: #10b981;">🔑 Default Offline PINs:</strong>
+        <span style="margin-left: 12px; color: #cbd5e1; font-size: 13px;">Server: <span class="pin-badge">1234</span> &nbsp;·&nbsp; Manager: <span class="pin-badge">5678</span></span>
+      </div>
+      <div style="font-size: 12px; color: #94a3b8;">Zero cloud or database setup required for offline testing</div>
+    </div>
+
+    <!-- Live Surfaces Grid -->
+    <div class="grid">
+      <!-- Desktop Workstation -->
+      <a href="http://localhost:5180" target="_blank" class="surface-card" style="border-color: #f59e0b;">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">🖥️</span>
+            <span class="port-pill">:5180</span>
+          </div>
+          <div class="surface-title">Desktop Workstation</div>
+          <div class="surface-desc">All-in-one multi-surface kiosk. Switch between POS, KDS, Admin, and Storefront with F1–F6 keys or split-screen.</div>
+        </div>
+        <div class="btn-link">Open Workstation ➔</div>
+      </a>
+
+      <!-- POS Terminal -->
+      <a href="http://localhost:5172" target="_blank" class="surface-card">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">📱</span>
+            <span class="port-pill">:5172</span>
+          </div>
+          <div class="surface-title">POS Terminal</div>
+          <div class="surface-desc">Point of sale for waitstaff and bartenders. 2D/3D interactive spatial floor maps, bar tabs, and payment receipt hub.</div>
+        </div>
+        <div class="btn-link">Open POS ➔</div>
+      </a>
+
+      <!-- Kitchen Display -->
+      <a href="http://localhost:5173" target="_blank" class="surface-card">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">🍳</span>
+            <span class="port-pill">:5173</span>
+          </div>
+          <div class="surface-title">Kitchen Display (KDS)</div>
+          <div class="surface-desc">Cook-line order board with real-time ticket aging timers, station routing (Grill, Fryer, Cold, Bar), and 140% TV mode.</div>
+        </div>
+        <div class="btn-link">Open KDS ➔</div>
+      </a>
+
+      <!-- Back-Office Admin -->
+      <a href="http://localhost:5174" target="_blank" class="surface-card">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">💻</span>
+            <span class="port-pill">:5174</span>
+          </div>
+          <div class="surface-title">Back-Office Admin</div>
+          <div class="surface-desc">Menu catalog editor with 1-click 86 availability toggles, staff security PINs, pantry inventory, and auto-purchase orders.</div>
+        </div>
+        <div class="btn-link">Open Admin ➔</div>
+      </a>
+
+      <!-- Guest Storefront -->
+      <a href="http://localhost:5176" target="_blank" class="surface-card">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">🛍️</span>
+            <span class="port-pill">:5176</span>
+          </div>
+          <div class="surface-title">Online Storefront</div>
+          <div class="surface-desc">Guest digital ordering page with allergen filters (FDA Top 9), dietary badges, modifier customizations, and live status tracker.</div>
+        </div>
+        <div class="btn-link">Open Storefront ➔</div>
+      </a>
+
+      <!-- CulinaryOps -->
+      <a href="http://localhost:5177" target="_blank" class="surface-card">
+        <div>
+          <div class="surface-head">
+            <span class="surface-icon">📈</span>
+            <span class="port-pill">:5177</span>
+          </div>
+          <div class="surface-title">CulinaryOps & Costing</div>
+          <div class="surface-desc">Theoretical vs actual food cost diagnostics, plate economics, waste logs, and kitchen performance analytics.</div>
+        </div>
+        <div class="btn-link">Open Ops ➔</div>
+      </a>
+    </div>
+
+    <div class="footer">
+      CulinaryOS Monorepo · Sovereign Restaurant Operating System · MIT Licensed
+    </div>
+  </div>
+</body>
+</html>

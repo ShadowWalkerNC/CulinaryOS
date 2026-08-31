@@ -17,7 +17,7 @@ if %errorlevel% neq 0 (
         echo [INFO] Installing Node.js LTS automatically via Windows Package Manager...
         winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
         echo.
-        echo [SUCCESS] Node.js installed! Please close and re-run start.bat.
+        echo [SUCCESS] Node.js installed! Please close and re-run START_HERE.bat.
         pause
         exit /b 0
     ) else (
@@ -72,6 +72,6 @@ call pnpm quickstart
 
 if %errorlevel% neq 0 (
     echo.
-    echo [NOTICE] Services stopped. You can restart anytime by running start.bat.
+    echo [NOTICE] Services stopped. You can restart anytime by running START_HERE.bat.
     pause
 )

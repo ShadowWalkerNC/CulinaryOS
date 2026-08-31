@@ -88,6 +88,22 @@ async function start() {
     shell: true,
   });
 
+  // Automatically open the user's browser to the Workstation dashboard after booting
+  setTimeout(() => {
+    try {
+      const targetUrl = 'http://localhost:5180';
+      if (isWindows) {
+        spawn('cmd', ['/c', 'start', targetUrl], { detached: true, stdio: 'ignore' });
+      } else if (process.platform === 'darwin') {
+        spawn('open', [targetUrl], { detached: true, stdio: 'ignore' });
+      } else {
+        spawn('xdg-open', [targetUrl], { detached: true, stdio: 'ignore' });
+      }
+    } catch {
+      // Non-fatal if browser cannot be automatically launched
+    }
+  }, 4000);
+
   const cleanup = () => {
     console.log('\n\x1b[33mShutting down all CulinaryOS services...\x1b[0m');
     child.kill('SIGINT');
