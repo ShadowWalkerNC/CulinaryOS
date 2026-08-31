@@ -118,6 +118,12 @@ These extend global rules. Global Tier 1–3 rules cannot be overridden.
 10. **Migrations are forward-only.** Numbered sequential migrations in `supabase/migrations/`. DATABASE agent reviews all migrations before push. No destructive migration without an explicit data preservation plan.
 11. **docker-compose is the dev standard.** All local development runs via `docker-compose up`. Do not require manual service startup steps outside of Docker.
 12. **Branch naming:** `feature/[module]-[short-description]` · `fix/[module]-[issue]` · `chore/[scope]`
+13. **Jakob's Law for Mobile & Touch Surfaces.** Users spend most of their time on other mobile apps and expect interfaces to work familiarly. All mobile viewports and touch surfaces (Storefront, Handheld POS, KDS, Mobile app) must strictly adhere to mobile platform conventions:
+    - **Thumb-Zone Optimization:** Primary actions (View Bag, Checkout, Send to Kitchen, Bump) must sit in the bottom ergonomic thumb zone (`fixed bottom-0` sticky action bar or bottom sheet).
+    - **Standard Navigation Patterns:** Bottom navigation bars, standard hamburger/drawer sheets, swipe-down modals, and sticky top search/filter headers. No non-standard gesture requirements.
+    - **Physical Touch Target Minimums:** Interactive elements must have a minimum touch target of 48×48px (Apple HIG & Material 3 guidelines) with at least 8px spacing between tap targets.
+    - **Standard E-Commerce & Ordering Flow:** Search & Filter at top → Scrollable menu categories → Item Modal with standard radio/checkbox modifier selection → Sticky Bottom Cart Bar → Swipeable Bottom Sheet / Drawer for Checkout → Clear Order Status Timeline.
+    - **Instant Familiar Feedback:** Haptic-style visual active states (`active:scale-95`), loading skeletons, standard back navigation buttons in top-left, and explicit error states with clear recovery actions.
 
 ---
 

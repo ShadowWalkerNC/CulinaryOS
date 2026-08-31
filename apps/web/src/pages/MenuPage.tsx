@@ -400,27 +400,31 @@ export function MenuPage() {
         )}
       </main>
 
-      {/* Floating Cart Button (Cart FAB) */}
+      {/* Mobile Sticky Thumb-Zone Action Bar & Desktop Floating FAB (Jakob's Law compliant) */}
       {cart.itemCount > 0 && (
-        <div className="fixed bottom-6 right-6 z-40 animate-fadeIn">
+        <div className="fixed bottom-0 left-0 right-0 p-3 sm:bottom-6 sm:right-6 sm:left-auto sm:p-0 z-40 bg-white/90 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t border-slate-200/80 sm:border-0 shadow-lg sm:shadow-none animate-fadeIn">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="bg-[#0f172a] hover:bg-[#1e293b] text-white px-5 py-3.5 rounded-full shadow-2xl border border-slate-700/60 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto bg-[#0f172a] hover:bg-[#1e293b] text-white px-5 py-3.5 rounded-xl sm:rounded-full shadow-2xl border border-slate-700/60 flex items-center justify-between sm:justify-center gap-3 transition-all hover:scale-[1.02] sm:hover:scale-105 active:scale-95 group min-h-[48px]"
           >
-            <div className="relative">
-              <ShoppingBag className="w-5 h-5 text-white" />
-              <span className="absolute -top-1.5 -right-2 bg-white text-[#0f172a] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                {cart.itemCount}
+            <div className="flex items-center gap-2.5">
+              <div className="relative">
+                <ShoppingBag className="w-5 h-5 text-white" />
+                <span className="absolute -top-1.5 -right-2 bg-amber-400 text-[#0f172a] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                  {cart.itemCount}
+                </span>
+              </div>
+              <span className="text-xs font-black uppercase tracking-wider">
+                View Bag · {cart.itemCount} {cart.itemCount === 1 ? 'item' : 'items'}
               </span>
             </div>
-            <span className="text-xs font-black uppercase tracking-wider">
-              View Bag
-            </span>
-            <span className="font-mono font-bold text-sm bg-white/10 px-2 py-0.5 rounded-full">
-              ${(cart.total / 100).toFixed(2)}
-            </span>
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-bold text-sm bg-white/10 px-2.5 py-0.5 rounded-full text-white">
+                ${(cart.total / 100).toFixed(2)}
+              </span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </button>
         </div>
       )}
