@@ -21,23 +21,28 @@ pnpm --version   # should print 9.x.x or later
 
 ---
 
-## ⚡ Step 1 — Boot (30 Seconds)
+## ⚡ Step 1 — 1-Click Launch (30 Seconds)
 
+### 🪟 Windows (1-Click Desktop Installer & Shortcut)
+Double-click [**`Install-CulinaryOS.bat`**](Install-CulinaryOS.bat) in File Explorer (or run via PowerShell):
+```powershell
+.\Install-CulinaryOS.bat
+```
+- Auto-installs Node.js & `pnpm` if missing.
+- Creates a permanent **`CulinaryOS` shortcut on your Windows Desktop**.
+- Double-clicking the Desktop shortcut automatically pulls the newest repository updates (`git pull --rebase`) and boots the restaurant workstation!
+
+### 🍎 macOS / Linux (1-Click Bash Launcher)
 ```bash
-# Clone the repository
-git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
-cd CulinaryOS
+./START_HERE.sh
+```
 
-# Install all dependencies
-pnpm install
-
-# One-command turnkey launch
+### 💻 Direct pnpm Command
+```bash
 pnpm quickstart
 ```
 
-*(On Windows: double-click `quickstart.bat`. On macOS/Linux: `./quickstart.sh`)*
-
-The launcher automatically creates your `.env` from `.env.example`, builds the shared packages, and launches all 5 services in parallel. Wait for all 5 "ready" messages before proceeding.
+The launcher automatically creates your `.env` from `.env.example`, builds shared packages, and launches all services in parallel. Wait for the services to boot and your browser to open.
 
 > **What's happening behind the scenes:** `pnpm quickstart` runs `scripts/quickstart.ts` which starts `apps/server` (Hono API on Node.js 20), `apps/pos` (Vite), `apps/kds` (Vite), `apps/admin` (Vite), and `apps/web` (Vite) in parallel. With no Supabase keys configured, the API boots in **demo mode**: auth is relaxed (no bearer token needed), and the in-memory mock kitchen store handles POS → KDS communication.
 

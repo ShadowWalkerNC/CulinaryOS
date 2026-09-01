@@ -28,21 +28,31 @@
 
 ---
 
-## ⚡ 1-Click Turnkey Installer
+## ⚡ 1-Click Turnkey Installers & Desktop Shortcuts
 
-Install and launch the entire CulinaryOS restaurant workstation in one command:
+Install and launch CulinaryOS across any platform with zero manual configuration:
 
-### Windows (PowerShell)
+### 🪟 Windows 10 / 11 (1-Click Desktop Installer)
+Double-click [**`Install-CulinaryOS.bat`**](Install-CulinaryOS.bat) in File Explorer (or run via PowerShell):
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+.\Install-CulinaryOS.bat
 ```
+- Automatically installs Node.js LTS (via `winget` if missing) and `pnpm`.
+- Creates a permanent **`CulinaryOS` shortcut on your Windows Desktop**.
+- **Auto-Updates on Launch:** Double-clicking the Desktop Icon automatically syncs to the latest repository commit via `git pull --rebase` before booting services!
+- To configure Windows Defender Firewall for local tablets/iPads, double-click [**`scripts/setup-firewall.bat`**](scripts/setup-firewall.bat).
 
-### macOS / Linux (Bash)
+### 🍎 macOS & Linux (1-Click Bash Launcher)
 ```bash
-chmod +x ./scripts/install.sh && ./scripts/install.sh
+./START_HERE.sh
 ```
 
-The 1-click installer verifies your Node.js runtime (>= 18), auto-provisions `.env` in zero-config offline demo mode, installs monorepo dependencies, pre-builds core engines, and boots the **Desktop Workstation Hub (`:5180`)** with POS, KDS, Admin, Storefront, KitchenKit, and CulinaryOps.
+### 📱 Connecting Tablets & Mobile Devices (Over Wi-Fi)
+All servers bind to `0.0.0.0` with dynamic LAN routing. Simply open `http://<YOUR_WIFI_IP>:5172` (e.g. `http://192.168.1.50:5172`) on any iPad, Android terminal, or kitchen TV display connected to your local network.
+
+### ☁️ Deploy Online (Render & Vercel)
+- **Render Blueprint:** Deploy the Unified API, Web Storefront, and Admin portals using the included [`render.yaml`](render.yaml).
+- **Vercel Frontend:** Deploy the guest digital ordering app with 1-click using [`vercel.json`](vercel.json).
 
 ---
 
@@ -50,7 +60,7 @@ The 1-click installer verifies your Node.js runtime (>= 18), auto-provisions `.e
 
 CulinaryOS is a **complete, MIT-licensed restaurant operating system** built as a TypeScript monorepo. It covers every surface of a modern food-service operation:
 
-- **Desktop Workstation (`:5180`)** — Unified split-screen workstation with F1–F6 hotkeys, PIN manager, and full-screen Kiosk mode.
+- **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F6 hotkeys, PIN manager, theme customizer, and full-screen Kiosk mode.
 - **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
 - **Kitchen Display System (`:5173`)** — real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode.
 - **Admin Back-Office (`:5174`)** — menu builder, 86ing, staff PINs, pantry par levels, purchase orders, and system customizer.
