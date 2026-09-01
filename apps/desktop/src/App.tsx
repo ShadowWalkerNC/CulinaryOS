@@ -15,9 +15,10 @@ const SURFACES: SurfaceTab[] = [
   { id: 'pos', name: 'POS Terminal', url: 'http://localhost:5172', icon: 'point_of_sale', shortcut: 'F1', port: 5172, description: 'Table orders, 3D floor map, checkout' },
   { id: 'kds', name: 'Kitchen KDS', url: 'http://localhost:5173', icon: 'soup_kitchen', shortcut: 'F2', port: 5173, description: 'Ticket aging, bump bar, station routing' },
   { id: 'admin', name: 'Admin Back-Office', url: 'http://localhost:5174', icon: 'admin_panel_settings', shortcut: 'F3', port: 5174, description: 'Pantry inventory, menu editor, staff & tools' },
-  { id: 'web', name: 'Online Storefront', url: 'http://localhost:5176', icon: 'storefront', shortcut: 'F4', port: 5176, description: 'Customer ordering, dietary filters, delivery' },
-  { id: 'kitchenkit', name: 'KitchenKit & Recipes', url: 'http://localhost:5175', icon: 'menu_book', shortcut: 'F5', port: 5175, description: 'Batch scaling, prep planner, Dennis vendor POs' },
+  { id: 'web', name: 'Storefront', url: 'http://localhost:5176/menu/demo', icon: 'storefront', shortcut: 'F4', port: 5176, description: 'Customer ordering, dietary filters, delivery' },
+  { id: 'kitchenkit', name: 'KitchenKit', url: 'http://localhost:5175', icon: 'menu_book', shortcut: 'F5', port: 5175, description: 'Batch scaling, prep planner, vendor POs' },
   { id: 'ops', name: 'CulinaryOps', url: 'http://localhost:5177', icon: 'monitoring', shortcut: 'F6', port: 5177, description: 'Food waste diagnostics, labor, plate economics' },
+  { id: 'marketing', name: 'Marketing & Hub', url: 'http://localhost:5176', icon: 'campaign', shortcut: 'F7', port: 5176, description: 'Public marketing landing page, ROI calculator & specs' },
 ];
 
 export function App() {
@@ -34,6 +35,7 @@ export function App() {
       if (e.key === 'F4') { e.preventDefault(); setActiveTab('web'); }
       if (e.key === 'F5') { e.preventDefault(); setActiveTab('kitchenkit'); }
       if (e.key === 'F6') { e.preventDefault(); setActiveTab('ops'); }
+      if (e.key === 'F7') { e.preventDefault(); setActiveTab('marketing'); }
       if (e.key === 'F11') { e.preventDefault(); setIsKiosk((k) => !k); }
     };
     window.addEventListener('keydown', handleKeyDown);

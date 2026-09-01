@@ -17,7 +17,7 @@ if %errorlevel% neq 0 (
         echo [INFO] Installing Node.js LTS automatically via Windows Package Manager...
         winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
         echo.
-        echo [SUCCESS] Node.js installed! Please close and re-run start.bat.
+        echo [SUCCESS] Node.js installed! Please close and re-run START_HERE.bat.
         pause
         exit /b 0
     ) else (
@@ -39,10 +39,9 @@ if %errorlevel% neq 0 (
     )
 )
 
-:: 3. Ensure .env file exists for zero-config demo
+:: 3. Ensure .env file exists
 if not exist ".env" (
     if exist ".env.example" (
-        echo [INFO] Initializing .env configuration from template...
         copy /y ".env.example" ".env" >nul
     )
 )
@@ -64,14 +63,14 @@ if not exist "packages\ui\dist" (
 echo.
 echo ========================================================================
 echo  🚀 Starting all CulinaryOS restaurant applications...
-echo  🌐 Your browser will open automatically at http://localhost:5180
+echo  🌐 Your browser will open automatically!
 echo ========================================================================
 echo.
 
-call pnpm quickstart
+call pnpm quickstart %*
 
 if %errorlevel% neq 0 (
     echo.
-    echo [NOTICE] Services stopped. You can restart anytime by running start.bat.
+    echo [NOTICE] Services stopped. You can restart anytime by running START_HERE.bat.
     pause
 )

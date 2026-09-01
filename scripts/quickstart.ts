@@ -99,9 +99,33 @@ function printServiceDirectory() {
   console.log('\x1b[90mStarting services via Turborepo... Press Ctrl+C at any time to stop.\x1b[0m\n');
 }
 
+function getProfile(): 'demo' | 'clean' | 'marketing' {
+  const args = process.argv.slice(2);
+  for (const arg of args) {
+    if (arg.startsWith('--profile=')) {
+      const p = arg.split('=')[1]?.toLowerCase();
+      if (p === 'clean' || p === 'marketing' || p === 'demo') return p;
+    }
+    if (arg === '--clean') return 'clean';
+    if (arg === '--marketing') return 'marketing';
+    if (arg === '--demo') return 'demo';
+  }
+  const envProfile = (process.env.INSTALL_PROFILE || 'demo').toLowerCase();
+  if (envProfile === 'clean' || envProfile === 'marketing') return envProfile;
+  return 'demo';
+}
+
 async function start() {
+  const profile = getProfile();
   printBanner();
   ensureEnvFile();
+
+  console.log(`\x1b[1m\x1b[35m⚡ Active Profile: \x1b[32m${profile.toUpperCase()}\x1b[0m ` +
+    (profile === 'demo' ? '(Sandbox pre-loaded with "The Golden Fork")' :
+     profile === 'clean' ? '(Clean slate for live restaurant onboarding)' :
+     '(Public marketing landing page & feature showcase)'));
+  console.log();
+
   printServiceDirectory();
 
   const isWindows = process.platform === 'win32';
@@ -113,10 +137,16 @@ async function start() {
     shell: true,
   });
 
-  // Automatically open the user's browser to the Workstation dashboard after booting
+  // Automatically open the user's browser to the tailored landing page
   setTimeout(() => {
     try {
-      const targetUrl = 'http://localhost:5180';
+      let targetUrl = 'http://localhost:5180'; // Demo Workstation
+      if (profile === 'clean') {
+        targetUrl = 'http://localhost:5174'; // Admin Portal setup & onboarding
+      } else if (profile === 'marketing') {
+        targetUrl = 'http://localhost:5176'; // Marketing Landing Page
+      }
+
       if (isWindows) {
         spawn('cmd', ['/c', 'start', targetUrl], { detached: true, stdio: 'ignore' });
       } else if (process.platform === 'darwin') {
