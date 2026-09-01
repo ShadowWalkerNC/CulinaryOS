@@ -22,11 +22,9 @@ const SURFACES: SurfaceTab[] = [
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('pos');
-  const [splitView, setSplitView] = useState<boolean>(false);
-  const [secondaryTab, setSecondaryTab] = useState<string>('kds');
   const [isKiosk, setIsKiosk] = useState<boolean>(false);
   const [showThemeModal, setShowThemeModal] = useState<boolean>(false);
-  const [pinUser] = useState<string>('John Doe (Server #1234)');
+  const [pinUser] = useState<string>('Server #1234');
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,79 +41,62 @@ export function App() {
   }, []);
 
   const activeSurface = SURFACES.find((s) => s.id === activeTab) || SURFACES[0];
-  const secSurface = SURFACES.find((s) => s.id === secondaryTab) || SURFACES[1];
 
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none overflow-hidden">
-      {/* Top Desktop Master Titlebar */}
-      <header className="h-12 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-orange-600 flex items-center justify-center font-black text-sm text-white shadow-xs">
+      {/* Top Desktop Master Navigation Bar */}
+      <header className="h-13 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-lg gap-3">
+        {/* Left: Brand Identity & Active Surface */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-orange-600 flex items-center justify-center font-black text-base text-white shadow-md shadow-orange-600/20">
               🍽️
-            </span>
+            </div>
             <div>
-              <span className="font-black text-xs uppercase tracking-wider text-slate-100 block">
-                CulinaryOS Desktop
+              <span className="font-black text-xs uppercase tracking-wider text-slate-100 block leading-tight">
+                CulinaryOS
               </span>
-              <span className="text-[10px] text-slate-400 font-mono -mt-0.5 block">
-                Turnkey Restaurant Workstation v1.0
+              <span className="text-[10px] text-slate-400 font-mono block leading-tight">
+                Restaurant Workstation
               </span>
             </div>
           </div>
 
-          <span className="text-slate-700">|</span>
-
-          {/* Surface Tab Strip */}
-          <nav className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-xl border border-slate-800">
-            {SURFACES.map((s) => {
-              const isSelected = activeTab === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveTab(s.id)}
-                  title={s.description}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                    isSelected
-                      ? 'bg-orange-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[15px]">{s.icon}</span>
-                  <span>{s.name}</span>
-                  <span className="text-[9px] font-mono opacity-60 bg-black/30 px-1 py-0.2 rounded">
-                    {s.shortcut}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+          <div className="h-5 w-px bg-slate-800 hidden md:block" />
         </div>
 
-        {/* Right Status & Kiosk Controls */}
-        <div className="flex items-center gap-3 text-xs">
-          {/* Split Screen Mode Toggle */}
-          <button
-            onClick={() => setSplitView(!splitView)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
-              splitView
-                ? 'bg-cyan-600/20 border-cyan-500 text-cyan-300'
-                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[14px]">splitscreen</span>
-            <span>{splitView ? 'Dual View Active' : 'Split Screen'}</span>
-          </button>
+        {/* Center: Surface Tab Strip */}
+        <nav className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
+          {SURFACES.map((s) => {
+            const isSelected = activeTab === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setActiveTab(s.id)}
+                title={s.description}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
+                <span>{s.name}</span>
+                <span className={`text-[9px] font-mono px-1 py-0.5 rounded font-bold ${
+                  isSelected ? 'bg-black/30 text-white' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {s.shortcut}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
-          {/* System Kernel Health */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-[10px] font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Hono Kernel :3000</span>
-          </div>
-
-          {/* Active PIN User */}
-          <div className="flex items-center gap-1 text-[11px] font-medium text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
-            <span className="material-symbols-outlined text-[14px] text-orange-400">badge</span>
+        {/* Right Status Controls */}
+        <div className="flex items-center gap-2 text-xs shrink-0">
+          {/* Active PIN Staff Session */}
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>{pinUser}</span>
           </div>
 
@@ -123,10 +104,10 @@ export function App() {
           <button
             onClick={() => setShowThemeModal(true)}
             title="Theme & UI Customizer"
-            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition text-[10px] font-bold uppercase tracking-wider"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition text-[11px] font-bold uppercase tracking-wider"
           >
-            <span className="material-symbols-outlined text-[14px] text-orange-400">palette</span>
-            <span>Theme</span>
+            <span className="material-symbols-outlined text-[15px] text-orange-400">palette</span>
+            <span className="hidden sm:inline">Theme</span>
           </button>
 
           {/* Full-screen Kiosk Toggle */}
@@ -152,11 +133,11 @@ export function App() {
 
       {/* Theme Customizer Popup Modal */}
       {showThemeModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
             <button
               onClick={() => setShowThemeModal(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold"
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold transition"
             >
               ✕
             </button>
@@ -165,61 +146,14 @@ export function App() {
         </div>
       )}
 
-      {/* Main View Area (Single or Split) */}
+      {/* Main Single Fullscreen View Area */}
       <main className="flex-1 flex overflow-hidden bg-slate-950">
-        {splitView ? (
-          <div className="w-full h-full flex divide-x divide-slate-800">
-            {/* Left Pane */}
-            <div className="w-1/2 h-full flex flex-col">
-              <div className="h-7 bg-slate-900 px-3 flex items-center justify-between border-b border-slate-800 text-[10px] font-bold text-slate-400">
-                <span className="flex items-center gap-1 text-orange-400">
-                  <span className="material-symbols-outlined text-[13px]">{activeSurface.icon}</span>
-                  {activeSurface.name} (Port :{activeSurface.port})
-                </span>
-                <span className="font-mono text-slate-500">{activeSurface.url}</span>
-              </div>
-              <iframe
-                src={activeSurface.url}
-                className="w-full flex-1 border-none bg-white"
-                title={activeSurface.name}
-              />
-            </div>
-
-            {/* Right Pane */}
-            <div className="w-1/2 h-full flex flex-col">
-              <div className="h-7 bg-slate-900 px-3 flex items-center justify-between border-b border-slate-800 text-[10px] font-bold text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-cyan-400">
-                    <span className="material-symbols-outlined text-[13px]">{secSurface.icon}</span>
-                    {secSurface.name}
-                  </span>
-                  <select
-                    value={secondaryTab}
-                    onChange={(e) => setSecondaryTab(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-[10px] text-slate-200 rounded px-1.5 py-0.5 outline-none font-bold"
-                  >
-                    {SURFACES.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <span className="font-mono text-slate-500">{secSurface.url}</span>
-              </div>
-              <iframe
-                src={secSurface.url}
-                className="w-full flex-1 border-none bg-white"
-                title={secSurface.name}
-              />
-            </div>
-          </div>
-        ) : (
-          <iframe
-            key={activeSurface.id}
-            src={activeSurface.url}
-            className="w-full h-full border-none bg-white"
-            title={activeSurface.name}
-          />
-        )}
+        <iframe
+          key={activeSurface.id}
+          src={activeSurface.url}
+          className="w-full h-full border-none bg-white"
+          title={activeSurface.name}
+        />
       </main>
     </div>
   );

@@ -1,110 +1,52 @@
 # ============================================================
-# CulinaryOS — Unified Render Blueprint (100% Free Tier)
-# Static sites are unlimited free on Render. Web service uses plan: free.
+# CulinaryOS — Render Cloud Deployment Blueprint
 # ============================================================
 
 services:
-  # ---- 1. Unified Backend API (Free Instance) ----
+  # 1. Hono API Backend Service
   - type: web
     name: culinaryos-api
-    runtime: docker
-    plan: free
-    dockerfilePath: apps/server/Dockerfile
-    dockerContext: .
-    healthCheckPath: /health
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: pnpm install && pnpm --filter @culinaryos/server build
+    startCommand: pnpm --filter @culinaryos/server start
     envVars:
       - key: PORT
         value: 3000
-      - key: SERVICE_NAME
-        value: culinaryos
-      - key: CULINARYOS_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
-      - key: INTERNAL_API_KEY
-        generateValue: true
-      - key: DEVICE_API_KEY
-        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_RELAXED
+        value: "true"
       - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
 
-  # ---- 2. Customer Online Ordering & Marketing (Free Static Site) ----
+  # 2. Guest Online Storefront
   - type: web
     name: culinaryos-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-web build
-    staticPublishPath: apps/web/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
+    plan: free
+    region: oregon
+    buildCommand: pnpm install && pnpm --filter @culinaryos/app-web build
+    staticPublishPath: ./apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
-  # ---- 3. POS Terminal (Free Static Site) ----
-  - type: web
-    name: culinaryos-pos
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-pos build
-    staticPublishPath: apps/pos/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
-
-  # ---- 4. Kitchen Display System (Free Static Site) ----
-  - type: web
-    name: culinaryos-kds
-    runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/app-kds build
-    staticPublishPath: apps/kds/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
-
-  # ---- 5. Back-Office Admin & Settings (Free Static Site) ----
+  # 3. Back-Office Admin Portal
   - type: web
     name: culinaryos-admin
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @culinaryos/admin build
-    staticPublishPath: apps/admin/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_TENANT_ID
-        value: 00000000-0000-0000-0000-000000000001
-      - key: VITE_API_URL
-        fromService:
-          name: culinaryos-api
-          type: web
-          property: host
+    plan: free
+    region: oregon
+    buildCommand: pnpm install && pnpm --filter @culinaryos/admin build
+    staticPublishPath: ./apps/admin/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
