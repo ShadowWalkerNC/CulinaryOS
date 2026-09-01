@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { ThemeCustomizer } from '@culinaryos/ui';
 
 interface SurfaceTab {
   id: string;
@@ -24,7 +23,6 @@ const SURFACES: SurfaceTab[] = [
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('pos');
   const [isKiosk, setIsKiosk] = useState<boolean>(false);
-  const [showThemeModal, setShowThemeModal] = useState<boolean>(false);
   const [pinUser] = useState<string>('Server #1234');
 
   useEffect(() => {
@@ -102,16 +100,6 @@ export function App() {
             <span>{pinUser}</span>
           </div>
 
-          {/* Theme & Palette Customizer Toggle */}
-          <button
-            onClick={() => setShowThemeModal(true)}
-            title="Theme & UI Customizer"
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition text-[11px] font-bold uppercase tracking-wider"
-          >
-            <span className="material-symbols-outlined text-[15px] text-orange-400">palette</span>
-            <span className="hidden sm:inline">Theme</span>
-          </button>
-
           {/* Full-screen Kiosk Toggle */}
           <button
             onClick={() => {
@@ -132,21 +120,6 @@ export function App() {
           </button>
         </div>
       </header>
-
-      {/* Theme Customizer Popup Modal */}
-      {showThemeModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
-            <button
-              onClick={() => setShowThemeModal(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold transition"
-            >
-              ✕
-            </button>
-            <ThemeCustomizer />
-          </div>
-        </div>
-      )}
 
       {/* Main Single Fullscreen View Area */}
       <main className="flex-1 flex overflow-hidden bg-slate-950">
