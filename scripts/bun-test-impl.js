@@ -134,6 +134,12 @@ export function expect(actual) {
     toBeInstanceOf(expected) {
       assert.ok(actual instanceof expected, `Expected ${actual} to be instance of ${expected}`);
     },
+    toHaveProperty(prop, value) {
+      assert.ok(Boolean(actual && (Object.prototype.hasOwnProperty.call(actual, prop) || actual[prop] !== undefined)), `Expected property ${prop}`);
+      if (value !== undefined) {
+        assert.deepStrictEqual(actual[prop], value);
+      }
+    },
     toBeTypeOf(expected) {
       assert.strictEqual(typeof actual, expected, `Expected typeof ${actual} to be ${expected}`);
     },
@@ -183,6 +189,9 @@ export function expect(actual) {
     toBeInstanceOf(expected) {
       assert.ok(!(actual instanceof expected), `Expected ${actual} not to be instance of ${expected}`);
     },
+    toHaveProperty(prop) {
+      assert.ok(!actual || (!Object.prototype.hasOwnProperty.call(actual, prop) && actual[prop] === undefined), `Expected object NOT to have property ${prop}`);
+    },
     toBeTypeOf(expected) {
       assert.notStrictEqual(typeof actual, expected, `Expected typeof ${actual} NOT to be ${expected}`);
     },
@@ -209,17 +218,41 @@ export function expect(actual) {
     }
   };
 
-  const resolves = Promise.resolve(actual).then((val) => expect(val));
-  const rejects = Promise.resolve(actual).then(
-    () => { throw new Error('Promise resolved but was expected to reject'); },
-    (err) => expect(err)
-  );
-
   return {
     ...matchers,
     not: notMatchers,
-    resolves,
-    rejects,
+    get resolves() {
+      return {
+        toBe(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toBe(expected));
+        },
+        toEqual(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toEqual(expected));
+        },
+        toMatch(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toMatch(expected));
+        },
+        toBeTypeOf(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toBeTypeOf(expected));
+        },
+        toBeInstanceOf(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toBeInstanceOf(expected));
+        },
+        toContain(expected) {
+          return Promise.resolve(actual).then((val) => expect(val).toContain(expected));
+        }
+      };
+    },
+    get rejects() {
+      return {
+        toThrow(expected) {
+          return Promise.resolve(actual).then(
+            () => { throw new Error('Promise resolved but was expected to reject'); },
+            (err) => expect(() => { throw err; }).toThrow(expected)
+          );
+        }
+      };
+    }
   };
 }
 
