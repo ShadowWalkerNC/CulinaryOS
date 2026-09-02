@@ -55,3 +55,5 @@ export function laborCostPct(totalLaborCost: number, revenue: number): number {
   if (revenue === 0) return 0;
   return Math.round((totalLaborCost / revenue) * 10_000) / 100;
 }
+
+export * from './tip-pool.js';

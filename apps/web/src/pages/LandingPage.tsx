@@ -816,6 +816,83 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* DEVELOPER ECOSYSTEM: CLI, API, MCP & SDK PLATFORM */}
+      <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-6xl mx-auto border-t border-slate-200 space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-slate-900 text-[11px] sm:text-xs font-semibold uppercase tracking-wider bg-orange-100 text-orange-800 px-3 py-1 rounded-full border border-orange-200">
+            Open Extensibility Platform
+          </span>
+          <h2 className="text-xl sm:text-3xl font-bold text-slate-950">
+            Unified API, Universal CLI, 9 MCP Servers & SDK
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto px-2">
+            CulinaryOS isn't just an interface—it's a programmable restaurant protocol with command-line automation, Model Context Protocol tools, and client SDKs.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-orange-400" />
+                <h4 className="font-bold text-sm text-white">Universal CLI Tool</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                Execute POS fires, bump KDS tickets, 86 items, log waste, and run diagnostics directly from terminal.
+              </p>
+            </div>
+            <code className="text-[11px] font-mono bg-slate-900 px-2.5 py-1.5 rounded text-orange-300 block truncate">
+              culinary pos fire 4 "Burger"
+            </code>
+          </div>
+
+          <div className="bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileCode className="w-4 h-4 text-cyan-400" />
+                <h4 className="font-bold text-sm text-white">Unified REST API</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                High-performance Hono API server running on port 3000 for orders, pantry, tables, ops, and real-time events.
+              </p>
+            </div>
+            <code className="text-[11px] font-mono bg-slate-900 px-2.5 py-1.5 rounded text-cyan-300 block truncate">
+              GET /v1/orders · POST /v1/kds/86
+            </code>
+          </div>
+
+          <div className="bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ChefHat className="w-4 h-4 text-purple-400" />
+                <h4 className="font-bold text-sm text-white">9 MCP Servers</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                AI agents (Claude/Deepseek) autonomously manage inventory, prep schedules, menu nutrition, and food cost.
+              </p>
+            </div>
+            <code className="text-[11px] font-mono bg-slate-900 px-2.5 py-1.5 rounded text-purple-300 block truncate">
+              mcp/recipe-server, kds-server
+            </code>
+          </div>
+
+          <div className="bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <h4 className="font-bold text-sm text-white">Client SDK & Types</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                End-to-end type safety with shared TypeScript ratio engines, dietary filters, and multi-tier tax calculators.
+              </p>
+            </div>
+            <code className="text-[11px] font-mono bg-slate-900 px-2.5 py-1.5 rounded text-emerald-300 block truncate">
+              @culinaryos/shared, ratio-engine
+            </code>
+          </div>
+        </div>
+      </section>
+
       {/* PRICING & SOVEREIGN SELF-HOSTING */}
       <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-4xl mx-auto border-t border-slate-200 text-center space-y-5 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] sm:text-xs font-semibold uppercase tracking-wider">

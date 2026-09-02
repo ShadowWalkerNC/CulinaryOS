@@ -62,3 +62,5 @@ export function projectBatchSize(
 ): number {
   return portionWeight * covers * wasteFactor;
 }
+
+export * from './labels.js';

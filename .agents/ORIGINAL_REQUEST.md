@@ -1,49 +1,37 @@
 # Original User Request
 
-## Initial Request — 2026-08-15T21:14:32-04:00
+## 2026-09-01T19:59:42Z
 
-You are the Project Orchestrator for the CulinaryOS consolidation project.
+Implement the complete suite of high-priority modular restaurant operations engines and the zero-dependency turnkey installer for CulinaryOS across all frontends, backend APIs, and shared packages.
 
-Your Working Directory: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator_1
-User Request File: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\ORIGINAL_REQUEST.md
-Workspace Root: C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS
+Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS
+Integrity mode: development
 
-TASK OVERVIEW:
-Consolidate all adjacent restaurant tech repositories (RecipeOS, KitchenKit, CulinaryOps, Plated, Post-Pilot) directly into the CulinaryOS monorepo as built-in packages and apps under an MIT open-source license. Build a unified, modular, forkable restaurant operating system ("the Linux of restaurant tech") with complete POS, KDS, inventory, recipe scaling, operational analytics, automated loyalty marketing, and AI tool capabilities.
+## Requirements
 
-KEY REQUIREMENTS:
-1. R1. Unified Monorepo Consolidation:
-   - Recipe formulas, yield calculations, and food costing become first-class services in packages/ratio-engine and apps/server.
-   - Inventory deduction, reorder alerts, and supplier purchase orders integrate natively into apps/server and apps/admin.
-   - KDS multi-course holding, course firing, and station routing operate as core capabilities in apps/kds.
-   - Loyalty marketing rules and ops diagnostics live in unified /v1/ops/* endpoints and internal tool handlers.
-2. R2. Core Event Spine & Zero-Dependency Local Mode:
-   - Firing an order from POS emits pos:order:created, creating kitchen tickets, deducting recipe ingredients from pantry stock, and logging plate economics.
-   - All capabilities function cleanly in offline/demo mode (in-memory kitchen store, PIN authentication 1234/5678, localStorage delta queue) with automatic live Supabase sync when credentials are provided.
-3. R3. Open-Source Modular Architecture ("Linux for Restaurants"):
-   - Standard MIT open-source licensing.
-   - Clean package boundaries with zero circular dependencies across apps/* and packages/*.
-   - Unified styling across all client apps (pos, kds, admin, web) using @culinaryos/ui.
-4. R4. Automated Browser & Cross-Surface Quality Audits:
-   - Design token consistency across POS (:5172), KDS (:5173), Admin (:5174), Web (:5176).
-   - Zero console runtime exceptions or unhandled promise rejections.
-   - End-to-end user workflows: PIN Login -> POS Order -> Fire to KDS -> Bump -> Inventory Deduction -> Admin Verification.
+### R1. Front-of-House Dining & Service Engines
+Implement the hierarchical modifier engine (min/max rules, nested choices, free vs upcharge limits), dynamic 2D/3D floor map operations (drag-and-drop table merging, splitting, server shift transfers), automated daypart/happy hour scheduled pricing, and 3-mode tableside QR experience (Server-Only, QR Pay-at-Table, Full Self-Ordering).
 
-ACCEPTANCE CRITERIA:
-- Monorepo Build & Typing:
-  * Turborepo (turbo run build) compiles all packages and apps without errors.
-  * TypeScript typecheck (turbo run typecheck) passes with 0 errors across all workspace packages.
-  * Canonical test runner (node ./scripts/run-all-tests.cjs) passes all existing (29) and new consolidated test suites.
-- Integrated Feature Execution:
-  * Recipe formula scaling & ingredient deduction execute reliably upon order fire.
-  * KDS station filtering, course hold/fire timers, and bump workflows update tickets in real time.
-  * Admin portal allows managing menu items, viewing real-time inventory par levels, and tracking food waste.
-  * MCP tool suite (mcp/) operates against live /v1/ops/* API routes and offline mocks.
-- Browser & UX Validation:
-  * POS, KDS, Admin, and Web surfaces render cleanly with unified theme styling.
-  * Full end-to-end service cycle executes without manual database intervention in demo mode.
+### R2. Back-of-House Kitchen & Prep Engines
+Implement live 86 inventory countdowns with real-time multi-terminal decrement, multi-course hold/fire pacing timers, per-station dual-language translation (English FOH ➔ Spanish/French KDS and thermal chits), 1-click kitchen waste logging linked to actual-vs-theoretical food cost variance, and batch prep recipe scaling with adhesive expiration date label formatting.
 
-OPERATING DISCIPLINE:
-- Maintain your own BRIEFING.md and progress.md under C:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator_1\
-- Strictly adhere to AGENTS.md rules.
-- When all work is complete and verified, send a completion handoff message back to me.
+### R3. Security, Void Governance, & Accounting Ledger
+Implement configurable manager PIN authorization gates for post-send voids, comps, and drawer opens with mandatory reason codes, auto-waste debiting, and automated End-of-Day Z-Report generation (multi-rate sales/alcohol taxes and tip pooling).
+
+### R4. Turnkey Zero-Tech Installer & System Tray Engine
+Provide a self-contained Windows installation package and background tray manager (with silent boot, 1-click diagnostics, port self-healing, and local QR / mDNS network discovery).
+
+## Acceptance Criteria
+
+### Automated Typecheck & Build Verification
+- [ ] Workspace-wide `pnpm run typecheck` passes across all packages and apps with 0 errors.
+- [ ] `node ./scripts/run-all-tests.cjs` passes all integration and unit test suites.
+- [ ] All frontends (`apps/pos`, `apps/kds`, `apps/admin`, `apps/web`, `apps/kitchenkit`, `apps/ops`, `apps/desktop`) build successfully into `dist/`.
+
+### Functional Verification
+- [ ] Modifiers enforce min/max constraints and calculate nested upcharges correctly.
+- [ ] Table merge combines orders into a single master ticket and table transfer shifts server ownership.
+- [ ] Setting an 86 countdown decrements live on order fire and disables the item at count 0.
+- [ ] Holding Course 2 keeps items off the active grill line until FIRE is triggered.
+- [ ] Waste events record dollar loss and update the food cost variance report.
+- [ ] Daily closeout computes multi-tier tax and generates a complete Z-Report summary.

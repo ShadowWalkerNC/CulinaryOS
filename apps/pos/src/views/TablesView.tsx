@@ -1,33 +1,30 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOrderStore } from '../lib/useOrderStore';
-import { useCreateOrder } from '../lib/queries';
+import {
+  useCreateOrder,
+  useMergeTables,
+  useSplitOrder,
+  useTransferTable,
+  useActiveAssistance,
+  useDismissAssistance,
+} from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import {
   FloorMap3D,
   type FloorTable3DData,
   type FloorMaterialTheme,
-  Button,
   Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
   Badge,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   Input,
   Label,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
   LayoutGrid,
   Box,
   Users,
-  DollarSign,
   Plus,
   Minus,
   UtensilsCrossed,
@@ -35,19 +32,19 @@ import {
   Bookmark,
   AlertCircle,
   Wrench,
-  RotateCw,
   RotateCcw,
-  Save,
   Trash2,
-  Sliders,
   SlidersHorizontal,
-  Move,
   Check,
   X,
   Armchair,
-  Sparkles,
   Layers,
+  Split,
+  UserCheck,
+  Bell,
+  Lock,
 } from '@culinaryos/ui';
+
 
 export type TableStatus = 'available' | 'occupied' | 'reserved' | 'dirty';
 export type SectionId = 'all' | 'main' | 'patio' | 'bar' | 'vip' | 'rooftop';
@@ -122,6 +119,12 @@ const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: stri
 export function TablesView() {
   const { orders, loading, error } = useOrderStore();
   const { mutate: createOrder } = useCreateOrder();
+  const { mutate: mergeTables, isPending: isMerging } = useMergeTables();
+  const { mutate: splitOrder, isPending: isSplitting } = useSplitOrder();
+  const { mutate: transferTable, isPending: isTransferring } = useTransferTable();
+  const { data: activeAssistance = [] } = useActiveAssistance();
+  const { mutate: dismissAssistance } = useDismissAssistance();
+
   const setActiveOrder = usePOSStore((s) => s.setActiveOrder);
   const setView = usePOSStore((s) => s.setView);
   const employee = usePOSStore((s) => s.employee);
@@ -171,6 +174,24 @@ export function TablesView() {
   const [coverCount, setCoverCount] = useState<number>(2);
   const [serverName, setServerName] = useState<string>(employee?.name || 'Server');
 
+  // Table Operation Modals State
+  const [showMergeModal, setShowMergeModal] = useState<boolean>(false);
+  const [mergeTargetTableId, setMergeTargetTableId] = useState<string>('');
+  const [mergeSourceTableIds, setMergeSourceTableIds] = useState<string[]>([]);
+  const [mergeManagerPin, setMergeManagerPin] = useState<string>('');
+
+  const [showSplitModal, setShowSplitModal] = useState<boolean>(false);
+  const [splitTargetOrder, setSplitTargetOrder] = useState<any | null>(null);
+  const [splitMethod, setSplitMethod] = useState<'seat' | 'custom'>('seat');
+  const [splitCustomCheckCount, setSplitCustomCheckCount] = useState<number>(2);
+  const [customItemAssignments, setCustomItemAssignments] = useState<Record<string, number>>({});
+
+  const [showTransferModal, setShowTransferModal] = useState<boolean>(false);
+  const [transferTargetTable, setTransferTargetTable] = useState<FloorTable | null>(null);
+  const [transferToServerName, setTransferToServerName] = useState<string>('Jane Smith');
+  const [transferManagerPin, setTransferManagerPin] = useState<string>('');
+  const [transferError, setTransferError] = useState<string | null>(null);
+
   // New Table Form State
   const [newTableNumber, setNewTableNumber] = useState('');
   const [newTableLabel, setNewTableLabel] = useState('');
@@ -212,8 +233,9 @@ export function TablesView() {
 
     const effStatus = getEffectiveStatus(table, activeOrder);
     if (effStatus === 'occupied' && activeOrder) {
-      setActiveOrder(activeOrder.id);
-      setView('menu');
+      setSelectedTable(table);
+      setCoverCount(activeOrder.cover_count || 2);
+      setServerName(activeOrder.server_name || employee?.name || 'Server');
     } else {
       setSelectedTable(table);
       setCoverCount(Math.min(2, table.capacity));
@@ -279,7 +301,6 @@ export function TablesView() {
       defaultStatus: 'available',
     };
 
-    // Position near center
     const posX = (Math.random() - 0.5) * 10;
     const posZ = (Math.random() - 0.5) * 10;
 
@@ -313,6 +334,127 @@ export function TablesView() {
       localStorage.removeItem('culinaryos_floor_dimensions');
       localStorage.removeItem('culinaryos_floor_theme');
     }
+  };
+
+  // Execute Merge Operation
+  const handleExecuteMerge = () => {
+    if (!mergeTargetTableId || mergeSourceTableIds.length === 0) return;
+    mergeTables(
+      {
+        targetTableId: mergeTargetTableId,
+        sourceTableIds: mergeSourceTableIds,
+        managerPin: mergeManagerPin.trim() || undefined,
+      },
+      {
+        onSuccess: (res: any) => {
+          alert(`Successfully merged tables into Table ${res.targetTableId}!`);
+          setShowMergeModal(false);
+          setMergeSourceTableIds([]);
+          setMergeTargetTableId('');
+          setMergeManagerPin('');
+        },
+        onError: (err: any) => {
+          alert(err.message || 'Table merge failed');
+        },
+      }
+    );
+  };
+
+  // Execute Split Operation
+  const handleExecuteSplit = () => {
+    if (!splitTargetOrder) return;
+    const items = splitTargetOrder.items || [];
+
+    let partitions: { seatNumber?: number; itemIds: string[]; guestLabel?: string }[] = [];
+
+    if (splitMethod === 'seat') {
+      const seatsMap: Record<number, string[]> = {};
+      items.forEach((it: any) => {
+        const s = it.seat_number ?? 1;
+        seatsMap[s] = seatsMap[s] || [];
+        seatsMap[s].push(it.id);
+      });
+
+      partitions = Object.entries(seatsMap).map(([sNum, ids]) => ({
+        seatNumber: Number(sNum),
+        itemIds: ids,
+        guestLabel: `Seat ${sNum}`,
+      }));
+
+      if (partitions.length < 2) {
+        // Fallback to even 2-way split
+        const mid = Math.ceil(items.length / 2);
+        partitions = [
+          { guestLabel: 'Check 1', itemIds: items.slice(0, mid).map((i: any) => i.id) },
+          { guestLabel: 'Check 2', itemIds: items.slice(mid).map((i: any) => i.id) },
+        ];
+      }
+    } else {
+      // Custom assignments
+      const checkGroups: Record<number, string[]> = {};
+      for (let c = 1; c <= splitCustomCheckCount; c++) {
+        checkGroups[c] = [];
+      }
+      items.forEach((it: any) => {
+        const assignedCheck = customItemAssignments[it.id] || 1;
+        checkGroups[assignedCheck] = checkGroups[assignedCheck] || [];
+        checkGroups[assignedCheck].push(it.id);
+      });
+
+      partitions = Object.entries(checkGroups)
+        .filter(([_, ids]) => ids.length > 0)
+        .map(([cNum, ids]) => ({
+          guestLabel: `Guest Check ${cNum}`,
+          itemIds: ids,
+        }));
+    }
+
+    splitOrder(
+      {
+        orderId: splitTargetOrder.id,
+        splitType: splitMethod === 'seat' ? 'seat' : 'items',
+        partitions,
+      },
+      {
+        onSuccess: (res: any) => {
+          alert(`Check successfully split into ${res.newOrderIds.length} separate checks!`);
+          setShowSplitModal(false);
+          setSplitTargetOrder(null);
+          setSelectedTable(null);
+        },
+        onError: (err: any) => {
+          alert(err.message || 'Order split failed');
+        },
+      }
+    );
+  };
+
+  // Execute Server Transfer
+  const handleExecuteTransfer = () => {
+    if (!transferTargetTable || !transferManagerPin.trim()) return;
+    setTransferError(null);
+
+    transferTable(
+      {
+        tableId: transferTargetTable.number,
+        fromServerId: employee?.name || 'Server',
+        toServerId: transferToServerName,
+        toServerName: transferToServerName,
+        managerPin: transferManagerPin.trim(),
+      },
+      {
+        onSuccess: () => {
+          alert(`Table ${transferTargetTable.label} reassigned to server ${transferToServerName}.`);
+          setShowTransferModal(false);
+          setTransferTargetTable(null);
+          setTransferManagerPin('');
+          setSelectedTable(null);
+        },
+        onError: (err: any) => {
+          setTransferError(err.message || 'Manager PIN authorization failed');
+        },
+      }
+    );
   };
 
   // Filtered table list for 2D Grid
@@ -366,6 +508,12 @@ export function TablesView() {
   const dirtyCount = tableStats.filter((x) => x.status === 'dirty').length;
   const totalActiveRevenue = orders.reduce((sum: number, o: any) => sum + (o.total ?? 0), 0);
 
+  const selectedTableActiveOrder = selectedTable
+    ? orders.find(
+        (o: any) => String(o.table_number) === String(selectedTable.number) || String(o.table_number) === String(selectedTable.label)
+      )
+    : null;
+
   function getShapeBadge(shape: FloorTable['shape']) {
     switch (shape) {
       case 'round':
@@ -383,6 +531,32 @@ export function TablesView() {
 
   return (
     <div className="p-6 bg-cos-bg h-full overflow-y-auto flex flex-col gap-5 animate-fadeIn">
+      {/* Tableside Assistance Buzzer Alert Banner */}
+      {activeAssistance && activeAssistance.length > 0 && (
+        <div className="bg-amber-500 text-slate-950 p-3.5 rounded-2xl shadow-lg border border-amber-400 flex flex-wrap items-center justify-between gap-3 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center font-black">
+              <Bell className="w-5 h-5 animate-bounce" />
+            </div>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider block">
+                {activeAssistance.length} Active Tableside Request{activeAssistance.length > 1 ? 's' : ''}
+              </span>
+              <p className="text-xs font-bold text-slate-900">
+                Table {activeAssistance[0].tableNumber}: {activeAssistance[0].type.toUpperCase()} requested
+                {activeAssistance[0].note ? ` ("${activeAssistance[0].note}")` : ''}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => dismissAssistance(activeAssistance[0].id)}
+            className="px-4 py-2 rounded-xl bg-slate-950 text-white font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-md active:scale-95"
+          >
+            Acknowledge & Clear
+          </button>
+        </div>
+      )}
+
       {/* Top Header & Floor Stats Summary */}
       <Card className="p-5 shadow-xs border-border bg-card">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -396,7 +570,7 @@ export function TablesView() {
               </h1>
             </div>
             <p className="text-xs text-muted-foreground mt-1 font-semibold">
-              Interactive 3D table editor, drag-to-position spatial blueprint & live seating check controls.
+              Interactive 3D table editor, table merging, check splitting & server shift transfers.
             </p>
           </div>
 
@@ -434,7 +608,7 @@ export function TablesView() {
         </div>
       </Card>
 
-      {/* View Switcher, Layout Editor Toggle & Filter Controls */}
+      {/* View Switcher, Operations & Layout Editor Controls */}
       <Card className="p-3.5 shadow-xs border-border bg-card">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -463,6 +637,15 @@ export function TablesView() {
                 2D Grid
               </button>
             </div>
+
+            {/* Quick Table Merge Action Button */}
+            <button
+              onClick={() => setShowMergeModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-secondary hover:bg-muted text-foreground border border-border transition-all shadow-xs active:scale-95"
+            >
+              <Layers className="w-3.5 h-3.5 text-primary" />
+              <span>Merge Tables</span>
+            </button>
 
             {/* Layout Editor Button */}
             <button
@@ -532,7 +715,7 @@ export function TablesView() {
             )}
           </div>
 
-          {/* Status Filter / Legend Options */}
+          {/* Status Filter Options */}
           {viewMode === '2d' && (
             <div className="flex items-center gap-1.5 overflow-x-auto">
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-1">Filter:</span>
@@ -588,7 +771,7 @@ export function TablesView() {
             <span>
               {editMode
                 ? '🛠️ Edit Mode Active: Drag tables in 3D to reposition • Click to edit properties • Grid snaps to 0.5m'
-                : '💡 Orbit with mouse drag • Scroll to zoom • Click any table to seat guests or view active ticket'}
+                : '💡 Orbit with mouse drag • Scroll to zoom • Click any table for check operations (Seat, Merge, Split, Transfer)'}
             </span>
             <span className="font-mono text-[10px]">
               Theme: <span className="uppercase text-foreground font-black">{floorTheme}</span> • Room: {floorDimensions.width}x{floorDimensions.depth}m
@@ -620,7 +803,6 @@ export function TablesView() {
                   onClick={() => handleTableClick(table, activeOrder)}
                   className={`border-2 ${theme.border} ${theme.bg} ${shapeStyle} p-4 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[145px] group`}
                 >
-                  {/* Top Bar */}
                   <div className="flex justify-between items-start gap-2 w-full">
                     <div>
                       <div className="flex items-center gap-1.5">
@@ -639,7 +821,6 @@ export function TablesView() {
                     </span>
                   </div>
 
-                  {/* Middle Active Order */}
                   {effStatus === 'occupied' && activeOrder ? (
                     <div className="my-2 p-2 bg-white/90 backdrop-blur-xs rounded-xl border border-amber-200 space-y-1">
                       <div className="flex justify-between items-center text-[11px] font-bold">
@@ -666,9 +847,8 @@ export function TablesView() {
                     </div>
                   )}
 
-                  {/* Bottom Action Indicator */}
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-muted-foreground group-hover:text-foreground">
-                    <span>{editMode ? 'Edit Table ⚙️' : effStatus === 'occupied' ? 'Open Order →' : 'Manage Table →'}</span>
+                    <span>{editMode ? 'Edit Table ⚙️' : effStatus === 'occupied' ? 'Table Check & Actions →' : 'Manage Table →'}</span>
                     <span className="font-mono text-[9px] text-muted-foreground">ID #{table.number}</span>
                   </div>
                 </div>
@@ -678,13 +858,18 @@ export function TablesView() {
         </div>
       )}
 
-      {/* Table Order & Status Action Modal */}
+      {/* Table Check & Order Operations Modal */}
       <Dialog open={!editMode && !!selectedTable} onOpenChange={(open) => !open && setSelectedTable(null)}>
         {selectedTable && (
           <DialogContent onClose={() => setSelectedTable(null)}>
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <Badge variant="brand" className="text-[9px]">Table Check</Badge>
+                {selectedTableActiveOrder && (
+                  <Badge variant="secondary" className="text-[9px] uppercase font-black">
+                    {selectedTableActiveOrder.status}
+                  </Badge>
+                )}
               </div>
               <DialogTitle>{selectedTable.label} — {selectedTable.sectionName}</DialogTitle>
               <DialogDescription>
@@ -692,53 +877,121 @@ export function TablesView() {
               </DialogDescription>
             </DialogHeader>
 
-            {/* Start New Order Flow */}
-            <div className="space-y-4 py-2">
-              <div className="space-y-3 bg-[#f8f9fa] p-4 rounded-2xl border-2 border-[#e5e7eb]">
-                <div className="flex justify-between items-center text-xs">
-                  <Label htmlFor="covers" className="text-foreground font-black uppercase tracking-wider">Party Size / Covers</Label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
-                      onClick={() => setCoverCount((c) => Math.max(1, c - 1))}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="font-mono text-base font-black w-8 text-center">{coverCount}</span>
-                    <button
-                      type="button"
-                      className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
-                      onClick={() => setCoverCount((c) => Math.min(selectedTable.capacity + 4, c + 1))}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+            {/* Occupied Table Operations */}
+            {selectedTableActiveOrder ? (
+              <div className="space-y-4 py-2">
+                <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200/80 space-y-2.5">
+                  <div className="flex justify-between items-center text-xs font-bold text-amber-950">
+                    <span>Assigned Server: {selectedTableActiveOrder.server_name || 'Server'}</span>
+                    <span className="font-mono text-base font-black">
+                      ${((selectedTableActiveOrder.total || 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedTableActiveOrder.items?.length || 0} items ordered • Covers: {selectedTableActiveOrder.cover_count || selectedTable.capacity}
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="server" className="text-foreground font-black uppercase tracking-wider text-xs">Assigned Server</Label>
-                  <Input
-                    id="server"
-                    type="text"
-                    value={serverName}
-                    onChange={(e) => setServerName(e.target.value)}
-                    className="font-bold h-11 rounded-xl"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveOrder(selectedTableActiveOrder.id);
+                      setView('menu');
+                      setSelectedTable(null);
+                    }}
+                    className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-12 rounded-xl text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <UtensilsCrossed className="w-4 h-4" />
+                    <span>View & Add Dishes</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSplitTargetOrder(selectedTableActiveOrder);
+                      setShowSplitModal(true);
+                    }}
+                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                  >
+                    <Split className="w-4 h-4 text-sky-600" />
+                    <span>Split Check</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransferTargetTable(selectedTable);
+                      setShowTransferModal(true);
+                    }}
+                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                  >
+                    <UserCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Transfer Server</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMergeTargetTableId(selectedTable.number);
+                      setShowMergeModal(true);
+                    }}
+                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                  >
+                    <Layers className="w-4 h-4 text-amber-600" />
+                    <span>Merge into Table</span>
+                  </button>
                 </div>
               </div>
+            ) : (
+              /* Available Table - Seat Party Flow */
+              <div className="space-y-4 py-2">
+                <div className="space-y-3 bg-[#f8f9fa] p-4 rounded-2xl border-2 border-[#e5e7eb]">
+                  <div className="flex justify-between items-center text-xs">
+                    <Label htmlFor="covers" className="text-foreground font-black uppercase tracking-wider">Party Size / Covers</Label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
+                        onClick={() => setCoverCount((c) => Math.max(1, c - 1))}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="font-mono text-base font-black w-8 text-center">{coverCount}</span>
+                      <button
+                        type="button"
+                        className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
+                        onClick={() => setCoverCount((c) => Math.min(selectedTable.capacity + 4, c + 1))}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={handleStartOrder}
-                className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-14 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2"
-              >
-                <UtensilsCrossed className="w-5 h-5" />
-                <span>Start Order & Seat Guests</span>
-              </button>
-            </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="server" className="text-foreground font-black uppercase tracking-wider text-xs">Assigned Server</Label>
+                    <Input
+                      id="server"
+                      type="text"
+                      value={serverName}
+                      onChange={(e) => setServerName(e.target.value)}
+                      className="font-bold h-11 rounded-xl"
+                    />
+                  </div>
+                </div>
 
-            {/* Manual Status Override Options */}
+                <button
+                  type="button"
+                  onClick={handleStartOrder}
+                  className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-14 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2"
+                >
+                  <UtensilsCrossed className="w-5 h-5" />
+                  <span>Start Order & Seat Guests</span>
+                </button>
+              </div>
+            )}
+
+            {/* Quick Status Override Options */}
             <div className="border-t border-border pt-4 space-y-2.5">
               <Label className="block text-xs font-black uppercase tracking-wider text-[#6b7280]">
                 Quick Table Status Override
@@ -747,7 +1000,7 @@ export function TablesView() {
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus('available')}
-                  className="bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:bg-emerald-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                  className="bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:bg-emerald-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Available</span>
@@ -755,7 +1008,7 @@ export function TablesView() {
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus('reserved')}
-                  className="bg-indigo-50 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                  className="bg-indigo-50 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
                 >
                   <Bookmark className="w-4 h-4" />
                   <span>Reserved</span>
@@ -763,7 +1016,7 @@ export function TablesView() {
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus('dirty')}
-                  className="bg-rose-50 text-rose-800 border-2 border-rose-300 hover:bg-rose-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                  className="bg-rose-50 text-rose-800 border-2 border-rose-300 hover:bg-rose-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
                 >
                   <AlertCircle className="w-4 h-4" />
                   <span>Dirty</span>
@@ -772,6 +1025,287 @@ export function TablesView() {
             </div>
           </DialogContent>
         )}
+      </Dialog>
+
+      {/* Table Merge Modal */}
+      <Dialog open={showMergeModal} onOpenChange={setShowMergeModal}>
+        <DialogContent onClose={() => setShowMergeModal(false)}>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Badge variant="brand" className="text-[9px] bg-amber-600 text-white">Table Merging</Badge>
+            </div>
+            <DialogTitle>Merge Table Checks & Seating</DialogTitle>
+            <DialogDescription>
+              Combine checks and tickets from multiple tables into a single master check.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            {/* Select Target Master Table */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase">Target Master Table *</Label>
+              <select
+                value={mergeTargetTableId}
+                onChange={(e) => setMergeTargetTableId(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl border border-border bg-background font-bold text-xs"
+              >
+                <option value="">Select Destination Table...</option>
+                {floorTables.map((t) => (
+                  <option key={t.id} value={t.number}>
+                    {t.label} (Table #{t.number} - {t.sectionName})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Select Source Tables to Merge into Target */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase">Source Tables to Merge In *</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-muted/40 rounded-xl border border-border">
+                {floorTables
+                  .filter((t) => t.number !== mergeTargetTableId)
+                  .map((t) => {
+                    const isSelected = mergeSourceTableIds.includes(t.number);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setMergeSourceTableIds((prev) => prev.filter((id) => id !== t.number));
+                          } else {
+                            setMergeSourceTableIds((prev) => [...prev, t.number]);
+                          }
+                        }}
+                        className={`p-2.5 rounded-xl border text-xs font-bold text-left flex items-center justify-between transition-all ${
+                          isSelected
+                            ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
+                            : 'bg-card text-foreground border-border hover:bg-muted'
+                        }`}
+                      >
+                        <span className="truncate">{t.label} (#{t.number})</span>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Optional Manager PIN */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase">Manager PIN (Optional)</Label>
+              <Input
+                type="password"
+                maxLength={8}
+                placeholder="Enter 4-8 digit manager PIN"
+                value={mergeManagerPin}
+                onChange={(e) => setMergeManagerPin(e.target.value)}
+                className="font-mono font-bold rounded-xl"
+              />
+            </div>
+
+            <button
+              type="button"
+              disabled={!mergeTargetTableId || mergeSourceTableIds.length === 0 || isMerging}
+              onClick={handleExecuteMerge}
+              className="w-full h-13 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+            >
+              <Layers className="w-4 h-4" />
+              <span>{isMerging ? 'Merging Checks...' : 'Confirm Table Merge'}</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Split Modal */}
+      <Dialog open={showSplitModal} onOpenChange={setShowSplitModal}>
+        <DialogContent onClose={() => setShowSplitModal(false)}>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Badge variant="brand" className="text-[9px] bg-sky-600 text-white">Bill Splitting</Badge>
+            </div>
+            <DialogTitle>Split Order Check</DialogTitle>
+            <DialogDescription>
+              Divide items and charges by seat numbers or into custom guest checks.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            {/* Split Method Toggle */}
+            <div className="flex bg-muted rounded-xl p-1 border border-border">
+              <button
+                type="button"
+                onClick={() => setSplitMethod('seat')}
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                  splitMethod === 'seat'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Split By Seat
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitMethod('custom')}
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                  splitMethod === 'custom'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Custom Partitions
+              </button>
+            </div>
+
+            {/* Split Details Preview */}
+            {splitTargetOrder && (
+              <div className="space-y-3">
+                <div className="text-xs font-bold text-muted-foreground">
+                  Total Items in Order: {splitTargetOrder.items?.length || 0} • Order Total: ${((splitTargetOrder.total || 0) / 100).toFixed(2)}
+                </div>
+
+                {splitMethod === 'custom' && (
+                  <div className="flex items-center justify-between bg-muted/40 p-3 rounded-xl border border-border">
+                    <span className="text-xs font-black uppercase">Number of Split Checks:</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSplitCustomCheckCount((c) => Math.max(2, c - 1))}
+                        className="w-8 h-8 rounded-lg bg-card border border-border font-bold flex items-center justify-center"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-mono font-black text-sm w-6 text-center">{splitCustomCheckCount}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSplitCustomCheckCount((c) => Math.min(6, c + 1))}
+                        className="w-8 h-8 rounded-lg bg-card border border-border font-bold flex items-center justify-center"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {splitTargetOrder.items?.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="p-3 bg-muted/30 border border-border rounded-xl flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-foreground block">{item.name}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          ${((item.line_total || item.unit_price) / 100).toFixed(2)} • Assigned Seat {item.seat_number ?? 1}
+                        </span>
+                      </div>
+
+                      {splitMethod === 'custom' && (
+                        <select
+                          value={customItemAssignments[item.id] || 1}
+                          onChange={(e) =>
+                            setCustomItemAssignments((prev) => ({
+                              ...prev,
+                              [item.id]: Number(e.target.value),
+                            }))
+                          }
+                          className="h-8 px-2 rounded-lg border border-border bg-background font-bold text-[11px]"
+                        >
+                          {Array.from({ length: splitCustomCheckCount }, (_, i) => i + 1).map((cNum) => (
+                            <option key={cNum} value={cNum}>
+                              Check {cNum}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={isSplitting}
+              onClick={handleExecuteSplit}
+              className="w-full h-13 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+            >
+              <Split className="w-4 h-4" />
+              <span>{isSplitting ? 'Splitting Check...' : 'Confirm Order Split'}</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Server Shift Transfer Modal */}
+      <Dialog open={showTransferModal} onOpenChange={setShowTransferModal}>
+        <DialogContent onClose={() => setShowTransferModal(false)}>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Badge variant="brand" className="text-[9px] bg-emerald-600 text-white">Shift Transfer</Badge>
+            </div>
+            <DialogTitle>Transfer Table & Server Shift</DialogTitle>
+            <DialogDescription>
+              Reassign table ownership to another server with Manager PIN authorization.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            {transferTargetTable && (
+              <div className="bg-muted/40 p-3 rounded-xl border border-border text-xs font-bold">
+                Table: {transferTargetTable.label} (#{transferTargetTable.number}) • Section: {transferTargetTable.sectionName}
+              </div>
+            )}
+
+            {/* Destination Server Selection */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase">Transfer to Server *</Label>
+              <select
+                value={transferToServerName}
+                onChange={(e) => setTransferToServerName(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl border border-border bg-background font-bold text-xs"
+              >
+                <option value="Jane Smith">Jane Smith (Floor Lead)</option>
+                <option value="John Doe">John Doe (Server)</option>
+                <option value="Alex Johnson">Alex Johnson (Server)</option>
+                <option value="Emily Davis">Emily Davis (Bar Server)</option>
+              </select>
+            </div>
+
+            {/* Manager PIN Authorization Gate */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-rose-600" />
+                <span>Manager Authorization PIN *</span>
+              </Label>
+              <Input
+                type="password"
+                maxLength={8}
+                placeholder="Enter Manager PIN (Demo: 5678)"
+                value={transferManagerPin}
+                onChange={(e) => setTransferManagerPin(e.target.value)}
+                className="font-mono font-bold rounded-xl h-11"
+              />
+            </div>
+
+            {transferError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{transferError}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={!transferManagerPin.trim() || isTransferring}
+              onClick={handleExecuteTransfer}
+              className="w-full h-13 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>{isTransferring ? 'Authorizing Transfer...' : 'Authorize Server Reassignment'}</span>
+            </button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* Table Property Inspector Modal (Edit Mode) */}

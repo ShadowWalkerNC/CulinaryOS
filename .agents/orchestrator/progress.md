@@ -1,19 +1,22 @@
-# Orchestrator Progress
+# Orchestrator Progress Log
 
 ## Current Status
-Last visited: 2026-08-02T12:30:46Z
-- [x] Initialized orchestrator briefing, plan, and original request records
-- [x] Verified project architecture and requirements (R1–R5)
-- [x] Dispatch Explorer for system-wide architecture verification (Conv ID: 0a30e482-5cd8-4843-a224-3bcedd893c90) — COMPLETED & VERIFIED
-- [x] Dispatch Worker 1 to execute monorepo build and test suite (Conv ID: 202f1f97-ef00-4291-b8b4-0b8f772f03fe) — COMPLETED
-- [x] Dispatch Reviewer for contract and multi-tenant security verification (Conv ID: 7637b5dd-07c9-4dad-8995-3fd557847b37) — COMPLETED (REQUEST_CHANGES)
-- [x] Dispatch Remediation Worker to fix extension manifests & Turborepo test compliance (Conv ID: d28b53bb-a1d4-4d03-963c-3b87fe1b9233) — IN-PROGRESS
-- [x] Dispatch Forensic Auditor for integrity audit (Conv ID: 2c1b4b10-d8ca-441a-86ca-62e0b7245904) — COMPLETED (INTEGRITY_VIOLATION)
-- [x] Enforce Forensic Audit Veto — Forward audit failure evidence (11 failing test suites) to Remediation Explorer
-- [x] Dispatch Remediation Explorer for module resolution & loader analysis (Conv ID: 2fc54646-18bf-4b6b-9eb6-d3ae7d974afd) — IN-PROGRESS
-- [ ] Dispatch Remediation Worker 2 to fix ESM module specifiers and loader script
-- [ ] Re-run Reviewer and Forensic Auditor until verdict is CLEAN
-- [ ] Complete formal completion report
+Last visited: 2026-09-01T20:10:05Z
+- [x] Initialized orchestrator state (DISPATCH.md, BRIEFING.md, progress.md)
+- [x] Started Heartbeat Cron (task-9)
+- [x] Dispatched 3 Survey Subagents (explorer_survey_1, explorer_survey_2, spec_miner_survey_3)
+- [x] Received Survey Reports & Synthesized Findings
+- [x] Created PROJECT.md (Feature Inventory, Architecture, Milestones, Contracts) and TEST_INFRA.md
+- [x] Dispatched E2E Testing Track (test_writer_track) - in progress
+- [x] Dispatched Milestone 1 Worker (worker_m1_foh - FOH Dining & Service Engines) - in progress
+- [x] Dispatched Milestone 2 Worker (worker_m2_boh - BOH Kitchen & Prep Engines) - in progress
+- [x] Dispatched Milestone 3 Worker (worker_m3_security - Security, Void Governance & Ledger) - in progress
+- [x] Dispatched Milestone 4 Worker (worker_m4_installer - Turnkey Installer & Tray Engine) - in progress
+- [ ] Receive Implementation & Test Reports
+- [ ] Milestone Gate Verification (Reviewers, Challengers, Forensic Auditor)
+- [ ] Milestone 5 (Full E2E Pass & Adversarial Hardening)
+- [ ] Final Workspace Verification (`pnpm run typecheck`, `node ./scripts/run-all-tests.cjs`, client builds)
 
 ## Iteration Status
-Current iteration: 2 / 32
+Current iteration: 1 / 32
+- Heartbeat check confirmed all 5 workers (`test_writer_track`, `worker_m1_foh`, `worker_m2_boh`, `worker_m3_security`, `worker_m4_installer`) actively executing without blockage.

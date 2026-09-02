@@ -25,6 +25,14 @@ export interface RestaurantCompanyInfo {
   currencySymbol: string;
   currencyPosition: 'prefix' | 'suffix';
   taxRatePercent: number;
+  preparedFoodTaxRatePercent?: number;
+  alcoholTaxRatePercent?: number;
+  taxRates?: {
+    preparedFoodRatePercent: number;
+    alcoholRatePercent: number;
+    taxExemptRatePercent: 0;
+    defaultRatePercent?: number;
+  };
   gratuityPresets: number[];
   autoGratuityPartySize: number;
   autoGratuityPercent: number;
@@ -207,6 +215,14 @@ export const DEFAULT_SETTINGS: CulinaryOSSettings = {
     currencySymbol: '$',
     currencyPosition: 'prefix',
     taxRatePercent: 8.25,
+    preparedFoodTaxRatePercent: 8.25,
+    alcoholTaxRatePercent: 10.0,
+    taxRates: {
+      preparedFoodRatePercent: 8.25,
+      alcoholRatePercent: 10.0,
+      taxExemptRatePercent: 0,
+      defaultRatePercent: 8.25,
+    },
     gratuityPresets: [15, 18, 20, 25],
     autoGratuityPartySize: 6,
     autoGratuityPercent: 18,

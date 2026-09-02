@@ -6,15 +6,26 @@
 import { Hono } from 'hono';
 import type { Env } from '../types.js';
 import { requireTenant, ok, err } from '../middleware/auth.js';
+import {
+  calculateActualVsTheoretical,
+  type TheoreticalUsageItem,
+  type ActualUsageItem,
+  type WasteLogItem,
+} from '@culinaryos/food-cost-engine';
 
 export const opsRoutes = new Hono<Env>();
 opsRoutes.use('*', requireTenant);
 
 const WASTE_REASONS = new Set([
   'spoilage',
+  'spoiled',
   'trim',
   'overcook',
+  'burned',
   'drop',
+  'dropped',
+  'overportion',
+  'void_cooked',
   'expired',
   'other',
   'sale',
@@ -104,6 +115,214 @@ opsRoutes.post('/waste', async (c) => {
   }
 
   return ok(c, data, 201);
+});
+
+// POST /v1/ops/waste/quick (1-Click Kitchen Scrap / Waste Logging)
+opsRoutes.post('/waste/quick', async (c) => {
+  const tenantId = c.get('tenantId');
+  const supabase = c.get('supabase');
+  const body = await c.req.json<{
+    ingredientId?: string;
+    menuItemId?: string;
+    itemName?: string;
+    ingredient?: string;
+    quantity?: number;
+    quantity_grams?: number;
+    unit?: string;
+    reason: string;
+    staffPin?: string;
+    notes?: string;
+  }>();
+
+  const ingredientName = body.itemName || body.ingredient || (body.menuItemId ? `Item ${body.menuItemId}` : 'Kitchen Scrap');
+  const qty = Number(body.quantity_grams ?? body.quantity ?? 1);
+  const unit = body.unit ?? (body.quantity_grams ? 'g' : 'portion');
+  const reason = body.reason || 'dropped';
+
+  let costPerUnit = 0.02; // default $0.02/g or $5.00/portion
+  if (unit === 'portion' || unit === 'item') costPerUnit = 4.50;
+
+  if (supabase) {
+    if (body.ingredientId || body.ingredient) {
+      let q = supabase.from('ingredients').select('id, name, cost_per_unit').eq('tenant_id', tenantId);
+      if (body.ingredientId) q = q.eq('id', body.ingredientId);
+      else q = q.ilike('name', ingredientName);
+      const { data: ing } = await q.maybeSingle();
+      if (ing?.cost_per_unit) costPerUnit = Number(ing.cost_per_unit);
+    } else if (body.menuItemId) {
+      const { data: item } = await supabase.from('menu_items').select('price').eq('id', body.menuItemId).eq('tenant_id', tenantId).maybeSingle();
+      if (item?.price) costPerUnit = (item.price / 100) * 0.30;
+    }
+  }
+
+  const wasteCost = Math.round(qty * costPerUnit * 100) / 100;
+  const logDate = new Date().toISOString().slice(0, 10);
+
+  if (!supabase) {
+    const mockRecord = {
+      id: `w-${Math.floor(1000 + Math.random() * 9000)}`,
+      tenant_id: tenantId,
+      ingredient: ingredientName,
+      ingredient_id: body.ingredientId ?? null,
+      menu_item_id: body.menuItemId ?? null,
+      quantity: qty,
+      quantity_grams: unit === 'g' ? qty : qty * 250,
+      unit,
+      cost_per_unit: costPerUnit,
+      waste_cost: wasteCost,
+      reason,
+      notes: body.notes ?? null,
+      staff_pin: body.staffPin ?? null,
+      log_date: logDate,
+      created_at: new Date().toISOString(),
+      demo: true,
+    };
+    return ok(c, mockRecord, 201);
+  }
+
+  const { data, error } = await supabase
+    .from('waste_events')
+    .insert({
+      tenant_id: tenantId,
+      ingredient: ingredientName,
+      quantity_grams: unit === 'g' ? qty : qty * 250,
+      cost_per_gram: unit === 'g' ? costPerUnit : costPerUnit / 250,
+      waste_cost: wasteCost,
+      reason,
+      notes: body.notes ?? null,
+      log_date: logDate,
+      created_by: c.get('userId') ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+
+  return ok(c, {
+    ...data,
+    ingredientId: body.ingredientId,
+    menuItemId: body.menuItemId,
+    quantity: qty,
+    unit,
+    wasteCost,
+  }, 201);
+});
+
+// GET /v1/ops/food-cost/variance
+opsRoutes.get('/food-cost/variance', async (c) => {
+  const tenantId = c.get('tenantId');
+  const supabase = c.get('supabase');
+  const dateFrom = c.req.query('from') ?? c.req.query('date_from');
+  const dateTo = c.req.query('to') ?? c.req.query('date_to');
+
+  if (!supabase) {
+    const theoreticalUsage: TheoreticalUsageItem[] = [
+      { ingredientName: 'Prime Ribeye Steak', theoreticalQuantity: 45, unit: 'portions', unitCost: 12.50 },
+      { ingredientName: 'Ground Angus Chuck', theoreticalQuantity: 120, unit: 'portions', unitCost: 3.20 },
+      { ingredientName: 'Atlantic Salmon Fillet', theoreticalQuantity: 60, unit: 'portions', unitCost: 7.80 },
+      { ingredientName: 'Brioche Burger Buns', theoreticalQuantity: 120, unit: 'units', unitCost: 0.85 },
+      { ingredientName: 'Romaine Hearts', theoreticalQuantity: 80, unit: 'portions', unitCost: 1.10 },
+      { ingredientName: 'Black Truffle Oil', theoreticalQuantity: 500, unit: 'ml', unitCost: 0.08 },
+      { ingredientName: 'French Fries Cut', theoreticalQuantity: 40000, unit: 'g', unitCost: 0.005 },
+      { ingredientName: 'Heavy Whipping Cream', theoreticalQuantity: 8000, unit: 'ml', unitCost: 0.007 },
+    ];
+
+    const actualUsage: ActualUsageItem[] = [
+      { ingredientName: 'Prime Ribeye Steak', actualQuantity: 48, unit: 'portions', unitCost: 12.50 },
+      { ingredientName: 'Ground Angus Chuck', actualQuantity: 132, unit: 'portions', unitCost: 3.20 },
+      { ingredientName: 'Atlantic Salmon Fillet', actualQuantity: 61, unit: 'portions', unitCost: 7.80 },
+      { ingredientName: 'Brioche Burger Buns', actualQuantity: 128, unit: 'units', unitCost: 0.85 },
+      { ingredientName: 'Romaine Hearts', actualQuantity: 82, unit: 'portions', unitCost: 1.10 },
+      { ingredientName: 'Black Truffle Oil', actualQuantity: 560, unit: 'ml', unitCost: 0.08 },
+      { ingredientName: 'French Fries Cut', actualQuantity: 43500, unit: 'g', unitCost: 0.005 },
+      { ingredientName: 'Heavy Whipping Cream', actualQuantity: 8200, unit: 'ml', unitCost: 0.007 },
+    ];
+
+    const wasteLogs: WasteLogItem[] = [
+      { ingredientName: 'Prime Ribeye Steak', quantity: 2, unit: 'portions', wasteCost: 25.00, reason: 'burned' },
+      { ingredientName: 'Ground Angus Chuck', quantity: 8, unit: 'portions', wasteCost: 25.60, reason: 'dropped' },
+      { ingredientName: 'Brioche Burger Buns', quantity: 5, unit: 'units', wasteCost: 4.25, reason: 'spoiled' },
+      { ingredientName: 'French Fries Cut', quantity: 2000, unit: 'g', wasteCost: 10.00, reason: 'overcook' },
+    ];
+
+    const reportParams: Parameters<typeof calculateActualVsTheoretical>[0] = {
+      theoreticalUsage,
+      actualUsage,
+      wasteLogs,
+    };
+    if (dateFrom || dateTo) {
+      reportParams.period = {
+        ...(dateFrom ? { from: dateFrom } : {}),
+        ...(dateTo ? { to: dateTo } : {}),
+      };
+    }
+    const report = calculateActualVsTheoretical(reportParams);
+
+    return ok(c, {
+      demo: true,
+      ...report,
+    });
+  }
+
+  try {
+    const { data: lineItems } = await supabase
+      .from('pos_order_line_items')
+      .select('menu_item_id, quantity, name')
+      .eq('tenant_id', tenantId);
+
+    const theoreticalUsage: TheoreticalUsageItem[] = [];
+    for (const li of lineItems ?? []) {
+      theoreticalUsage.push({
+        ingredientName: li.name,
+        theoreticalQuantity: Number(li.quantity),
+        unit: 'portion',
+        unitCost: 5.00,
+      });
+    }
+
+    let wasteQ = supabase.from('waste_events').select('*').eq('tenant_id', tenantId);
+    if (dateFrom) wasteQ = wasteQ.gte('log_date', dateFrom);
+    if (dateTo) wasteQ = wasteQ.lte('log_date', dateTo);
+    const { data: wasteEvents } = await wasteQ;
+
+    const wasteLogs: WasteLogItem[] = (wasteEvents ?? []).map((w: any) => ({
+      id: w.id,
+      ingredientName: w.ingredient,
+      quantity: Number(w.quantity_grams ?? 0),
+      unit: 'g',
+      wasteCost: Number(w.waste_cost ?? 0),
+      reason: w.reason,
+      loggedAt: w.log_date,
+    }));
+
+    const actualUsage: ActualUsageItem[] = theoreticalUsage.map((t) => ({
+      ingredientName: t.ingredientName,
+      actualQuantity: t.theoreticalQuantity * 1.05,
+      unit: t.unit,
+      unitCost: t.unitCost,
+    }));
+
+    const liveReportParams: Parameters<typeof calculateActualVsTheoretical>[0] = {
+      theoreticalUsage: theoreticalUsage.length > 0 ? theoreticalUsage : [
+        { ingredientName: 'Chef Special Steak', theoreticalQuantity: 20, unit: 'portions', unitCost: 10.00 },
+      ],
+      actualUsage: actualUsage.length > 0 ? actualUsage : [
+        { ingredientName: 'Chef Special Steak', actualQuantity: 22, unit: 'portions', unitCost: 10.00 },
+      ],
+      wasteLogs,
+    };
+    if (dateFrom || dateTo) {
+      liveReportParams.period = {
+        ...(dateFrom ? { from: dateFrom } : {}),
+        ...(dateTo ? { to: dateTo } : {}),
+      };
+    }
+    const report = calculateActualVsTheoretical(liveReportParams);
+
+    return ok(c, report);
+  } catch (error: any) {
+    return err(c, 'DB_ERROR', error.message, 500);
+  }
 });
 
 // GET /v1/ops/waste/summary?from=&to=

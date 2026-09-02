@@ -1,11 +1,23 @@
 @echo off
 setlocal enabledelayedexpansion
 
-title CulinaryOS — 1-Click Installation & Profile Setup
+title CulinaryOS — Turnkey 1-Click Windows Installation & Setup
 
 echo ========================================================================
-echo        CulinaryOS — Windows 1-Click Installer & Profile Setup
+echo        CulinaryOS — Turnkey Windows Workstation Installer
 echo ========================================================================
+echo.
+
+:: Check if PowerShell is available to run full turnkey installer
+where powershell >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [INFO] Launching CulinaryOS Turnkey PowerShell Installer...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install-windows-turnkey.ps1"
+    exit /b %errorlevel%
+)
+
+:: Fallback Native Command Prompt Installer
+echo [INFO] Running native fallback installation...
 echo.
 
 :: 1. Profile Selection Menu
@@ -47,7 +59,7 @@ if %errorlevel% neq 0 (
     where winget >nul 2>nul
     if !errorlevel! equ 0 (
         echo [INFO] Installing Node.js LTS automatically via Windows Package Manager...
-        winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+        winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements --silent
         echo [SUCCESS] Node.js installed!
     ) else (
         echo [INFO] Opening official Node.js installer...
@@ -72,16 +84,13 @@ if not exist ".env" (
     )
 )
 
-:: Write profile to .env
 findstr /v "INSTALL_PROFILE=" .env > .env.tmp 2>nul
 echo INSTALL_PROFILE=%INSTALL_PROFILE%>> .env.tmp
 move /y .env.tmp .env >nul
 
 :: 5. Install Node modules
-if not exist "node_modules" (
-    echo [INFO] Installing monorepo dependencies (1-2 minutes)...
-    call pnpm install
-)
+echo [INFO] Installing monorepo dependencies...
+call pnpm install
 
 :: 6. Pre-build core UI and engines
 echo [INFO] Building core calculation & UI engines...
@@ -91,7 +100,21 @@ call pnpm --filter @culinaryos/ui build
 
 :: 7. Create Desktop Shortcut
 echo [INFO] Creating Desktop shortcut 'CulinaryOS' on your Desktop...
-powershell -ExecutionPolicy Bypass -File "%~dp0scripts\create-desktop-shortcut.ps1"
+where powershell >nul 2>nul
+if %errorlevel% equ 0 (
+    powershell -ExecutionPolicy Bypass -File "%~dp0scripts\create-desktop-shortcut.ps1"
+)
+
+:: 8. Configure Firewall
+where netsh >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [INFO] Configuring Windows Firewall rules for ports 3000, 5172-5180, 5188...
+    netsh advfirewall firewall add rule name="CulinaryOS Local Restaurant Network" dir=in action=allow protocol=TCP localport=3000,5172,5173,5174,5175,5176,5177,5180,5188 profile=private,domain >nul 2>&1
+)
+
+:: 9. Run Diagnostics Preflight
+echo [INFO] Running diagnostics preflight...
+call pnpm doctor
 
 echo.
 echo ========================================================================

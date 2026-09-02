@@ -30,13 +30,13 @@ export function summarizeWaste(entries: WasteEntry[]): WasteSummary {
     totalGrams += e.quantity;
     totalCost  += cost;
 
-    byReason[e.reason] ??= { grams: 0, cost: 0 };
-    byReason[e.reason].grams += e.quantity;
-    byReason[e.reason].cost  += cost;
+    const r = byReason[e.reason] ?? (byReason[e.reason] = { grams: 0, cost: 0 });
+    r.grams += e.quantity;
+    r.cost  += cost;
 
-    byIngredient[e.ingredient] ??= { grams: 0, cost: 0 };
-    byIngredient[e.ingredient].grams += e.quantity;
-    byIngredient[e.ingredient].cost  += cost;
+    const ing = byIngredient[e.ingredient] ?? (byIngredient[e.ingredient] = { grams: 0, cost: 0 });
+    ing.grams += e.quantity;
+    ing.cost  += cost;
   }
 
   const topWastedIngredients = Object.entries(byIngredient)
@@ -57,3 +57,5 @@ export function wastePct(totalWasteCost: number, totalFoodCost: number): number 
   if (totalFoodCost === 0) return 0;
   return Math.round((totalWasteCost / totalFoodCost) * 10_000) / 100;
 }
+
+export * from './auto-waste.js';

@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@culinaryos/shared": "workspace:*",
+    "@culinaryos/food-cost-engine": "workspace:*",
+    "@culinaryos/waste-engine": "workspace:*",
+    "@culinaryos/labor-engine": "workspace:*",
     "@culinaryos/event-bus": "workspace:*",
     "@culinaryos/config": "workspace:*",
     "@culinaryos/db": "workspace:*",

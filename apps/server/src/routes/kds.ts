@@ -15,6 +15,10 @@ import {
   bumpMockTicket,
   fireMockTicket,
   getMockTickets,
+  getMock86Items,
+  setMock86Count,
+  toggleMock86,
+  holdMockTicket,
 } from '../lib/mock-kitchen.js';
 import type { Env } from '../types.js';
 
@@ -149,6 +153,243 @@ kdsRoutes.patch('/tickets/:id/fire', async (c) => {
   if (updateErr) return err(c, 'DB_ERROR', updateErr.message, 500);
 
   return ok(c, { ticketId: id, status: 'fired', firedAt: now });
+});
+
+// PATCH /v1/kds/tickets/:id/hold
+kdsRoutes.patch('/tickets/:id/hold', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  if (!supabase) {
+    const ticket = holdMockTicket(id);
+    if (!ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+    return ok(c, { ticketId: id, status: 'queued', courseHoldStatus: 'held' });
+  }
+
+  const { data: ticket, error: ticketErr } = await supabase
+    .from('kitchen_tickets')
+    .select('id, course_hold_status')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (ticketErr || !ticket) return err(c, 'NOT_FOUND', `Ticket ${id} not found`, 404);
+
+  const { error: updateErr } = await supabase
+    .from('kitchen_tickets')
+    .update({ course_hold_status: 'held', status: 'queued' })
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
+
+  if (updateErr) return err(c, 'DB_ERROR', updateErr.message, 500);
+
+  return ok(c, { ticketId: id, status: 'queued', courseHoldStatus: 'held' });
+});
+
+// PATCH /v1/kds/tickets/:id/fire-course (fires all course tickets for an order)
+kdsRoutes.patch('/tickets/:id/fire-course', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
+  const courseNumber = Number(body.courseNumber || 2);
+
+  if (!supabase) {
+    const tickets = getMockTickets().filter(
+      (t) => (t.id === id || t.order_id === id) && t.course_number === courseNumber
+    );
+    for (const t of tickets) {
+      t.course_hold_status = 'fired';
+      t.status = 'fired';
+      t.fired_at = new Date().toISOString();
+    }
+    return ok(c, { firedCount: tickets.length, courseNumber });
+  }
+
+  const now = new Date().toISOString();
+  const { data: updated, error } = await supabase
+    .from('kitchen_tickets')
+    .update({ course_hold_status: 'fired', status: 'fired', fired_at: now })
+    .eq('tenant_id', tenantId)
+    .eq('order_id', id)
+    .eq('course_number', courseNumber)
+    .select('id');
+
+  if (error) return err(c, 'DB_ERROR', error.message, 500);
+  return ok(c, { firedCount: updated?.length ?? 0, courseNumber });
+});
+
+// GET /v1/kds/86-items (Live 86 Inventory items & countdowns)
+kdsRoutes.get('/86-items', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+
+  if (!supabase) {
+    return ok(c, getMock86Items());
+  }
+
+  const { data, error } = await supabase
+    .from('menu_items')
+    .select('id, name, count_remaining, status, is_available, category, station')
+    .eq('tenant_id', tenantId)
+    .or('status.eq.86d,count_remaining.not.is.null,is_available.eq.false');
+
+  if (error) {
+    // Return mock fallback if column not yet migrated
+    return ok(c, getMock86Items());
+  }
+
+  const items = (data || []).map((m: any) => ({
+    id: m.id,
+    name: m.name,
+    countRemaining: m.count_remaining ?? null,
+    is86: m.status === '86d' || m.is_available === false || (m.count_remaining != null && m.count_remaining <= 0),
+    station: m.station,
+  }));
+
+  return ok(c, items);
+});
+
+// POST /v1/kds/86-items/:id/set-count (Sets active portion countdown)
+kdsRoutes.post('/86-items/:id/set-count', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json<{ count: number }>().catch(() => ({ count: 0 }));
+  const count = Math.max(0, Number(body.count) || 0);
+
+  if (!supabase) {
+    const item = setMock86Count(id, count);
+    return ok(c, item);
+  }
+
+  const is86 = count <= 0;
+  const { data, error } = await supabase
+    .from('menu_items')
+    .update({
+      count_remaining: count,
+      status: is86 ? '86d' : 'available',
+      is_available: !is86,
+    })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select()
+    .single();
+
+  if (error) {
+    const item = setMock86Count(id, count);
+    return ok(c, item);
+  }
+
+  return ok(c, {
+    id: data.id,
+    name: data.name,
+    countRemaining: data.count_remaining,
+    is86: data.status === '86d' || !data.is_available,
+  });
+});
+
+// POST /v1/kds/86-items/:id/toggle-86 (Toggles 86 lock)
+kdsRoutes.post('/86-items/:id/toggle-86', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  if (!supabase) {
+    const item = toggleMock86(id);
+    return ok(c, item);
+  }
+
+  const { data: existing } = await supabase
+    .from('menu_items')
+    .select('id, status, is_available')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  const isCurrently86 = existing?.status === '86d' || existing?.is_available === false;
+  const newStatus = isCurrently86 ? 'available' : '86d';
+  const newAvailable = isCurrently86;
+
+  const { data, error } = await supabase
+    .from('menu_items')
+    .update({
+      status: newStatus,
+      is_available: newAvailable,
+      count_remaining: isCurrently86 ? 10 : 0,
+    })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select()
+    .single();
+
+  if (error) {
+    const item = toggleMock86(id);
+    return ok(c, item);
+  }
+
+  return ok(c, {
+    id: data.id,
+    name: data.name,
+    countRemaining: data.count_remaining,
+    is86: data.status === '86d' || !data.is_available,
+  });
+});
+
+// GET /v1/kds/pacing (Course hold/fire pacing tracking & alerts)
+kdsRoutes.get('/pacing', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+
+  const tickets = supabase
+    ? (await supabase.from('kitchen_tickets').select('*, ticket_items(*)').eq('tenant_id', tenantId)).data || []
+    : getMockTickets();
+
+  const now = Date.now();
+  const pacingOrders: any[] = [];
+  const orderGroups = new Map<string, any[]>();
+
+  for (const t of tickets) {
+    const key = t.order_id || t.id;
+    if (!orderGroups.has(key)) orderGroups.set(key, []);
+    orderGroups.get(key)!.push(t);
+  }
+
+  for (const [orderId, orderTickets] of orderGroups.entries()) {
+    const c1 = orderTickets.find((t) => t.course_number === 1);
+    const c2 = orderTickets.find((t) => t.course_number === 2);
+    const c3 = orderTickets.find((t) => t.course_number === 3);
+
+    const c1FiredAt = c1?.fired_at ? new Date(c1.fired_at).getTime() : null;
+    const c1ElapsedSeconds = c1FiredAt ? Math.round((now - c1FiredAt) / 1000) : 0;
+
+    // Standard pacing: Course 2 should be fired 12-15 minutes (720-900s) after Course 1
+    const targetC2FireSeconds = 720;
+    const remainingToC2Seconds = Math.max(0, targetC2FireSeconds - c1ElapsedSeconds);
+
+    let pacingAlert: 'normal' | 'warning' | 'urgent' = 'normal';
+    if (c2 && c2.course_hold_status === 'held') {
+      if (c1ElapsedSeconds >= 900) pacingAlert = 'urgent'; // 15+ mins
+      else if (c1ElapsedSeconds >= 720) pacingAlert = 'warning'; // 12-15 mins
+    }
+
+    pacingOrders.push({
+      orderId,
+      tableNumber: c1?.table_number ?? null,
+      c1Status: c1?.status ?? 'none',
+      c1ElapsedSeconds,
+      c2Status: c2?.course_hold_status ?? (c2?.status || 'none'),
+      c2TicketId: c2?.id ?? null,
+      c3Status: c3?.course_hold_status ?? (c3?.status || 'none'),
+      c3TicketId: c3?.id ?? null,
+      targetC2FireSeconds,
+      remainingToC2Seconds,
+      pacingAlert,
+    });
+  }
+
+  return ok(c, pacingOrders);
 });
 
 // GET /v1/kds/stations/:id/analytics

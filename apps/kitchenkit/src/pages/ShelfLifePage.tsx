@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Plus, Trash2, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Clock, Plus, Trash2, AlertTriangle, AlertCircle, CheckCircle2, Printer } from 'lucide-react';
 import {
   useInventoryBatches,
   useWasteLogs,
@@ -7,6 +7,8 @@ import {
   useDeleteInventoryBatch,
   useLogWaste
 } from '../hooks/useShelfLife';
+import AdhesiveLabelModal from '../components/prep/AdhesiveLabelModal';
+import type { PrepBatch } from '@culinaryos/prep-engine';
 
 export default function ShelfLifePage() {
   const { data: batches = [], isLoading: loadingBatches } = useInventoryBatches();
@@ -19,6 +21,8 @@ export default function ShelfLifePage() {
   // Modal states
   const [showAddBatch, setShowAddBatch] = useState(false);
   const [showLogWaste, setShowLogWaste] = useState(false);
+  const [showLabelModal, setShowLabelModal] = useState(false);
+  const [labelBatch, setLabelBatch] = useState<Partial<PrepBatch> | undefined>(undefined);
 
   // Batch Form
   const [ingName, setIngName] = useState('');
@@ -178,12 +182,32 @@ export default function ShelfLifePage() {
                     <td className="py-3 px-4 font-mono text-zinc-200">{batch.expiration_date}</td>
                     <td className="py-3 px-4">{getExpirationBadge(batch.expiration_date)}</td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => deleteBatchMutation.mutate(batch.id)}
-                        className="text-zinc-500 hover:text-red-400 p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => {
+                            setLabelBatch({
+                              recipeName: batch.ingredient_name,
+                              yieldQuantity: batch.quantity,
+                              yieldUnit: batch.unit,
+                              storageLocation: batch.storage_location,
+                              prepDate: batch.received_date,
+                              shelfLifeHours: 72,
+                            });
+                            setShowLabelModal(true);
+                          }}
+                          className="text-zinc-400 hover:text-amber-400 p-1"
+                          title="Print Adhesive Expiration Label"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteBatchMutation.mutate(batch.id)}
+                          className="text-zinc-500 hover:text-red-400 p-1"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -421,6 +445,17 @@ export default function ShelfLifePage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Adhesive Expiration Label Modal */}
+      {showLabelModal && (
+        <AdhesiveLabelModal
+          initialBatch={labelBatch}
+          onClose={() => {
+            setShowLabelModal(false);
+            setLabelBatch(undefined);
+          }}
+        />
       )}
     </div>
   );

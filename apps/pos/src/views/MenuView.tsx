@@ -14,10 +14,15 @@ import {
   X,
   Armchair,
   Users,
-  Card,
-  Badge,
-  Button,
+  ChevronRight,
+  Check,
 } from '@culinaryos/ui';
+import {
+  type ModifierGroup,
+  type Modifier,
+  calculateModifierGroupPrices,
+  flattenSelectedModifiers,
+} from '@culinaryos/shared';
 
 function getCategoryIcon(name: string) {
   const lower = name.toLowerCase();
@@ -42,6 +47,7 @@ export function MenuView() {
   const [itemNotes, setItemNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (isLoading) return (
     <div className="flex justify-center items-center h-full bg-background">
@@ -60,6 +66,26 @@ export function MenuView() {
     items = sections.find((s: any) => s.id === activeS)?.items ?? [];
   }
 
+  function initGroupDefaults(groups: ModifierGroup[], target: Record<string, any[]>) {
+    groups.forEach((g: any) => {
+      let defaultMods = g.modifiers?.filter((m: any) => m.is_default || m.isDefault) || [];
+      if (defaultMods.length === 0 && g.required && g.modifiers?.length > 0) {
+        defaultMods = [g.modifiers[0]];
+      }
+      target[g.id] = defaultMods;
+
+      // Check sub-modifiers
+      g.modifiers?.forEach((m: any) => {
+        if (m.nestedGroups && m.nestedGroups.length > 0) {
+          initGroupDefaults(m.nestedGroups, target);
+        }
+      });
+      if (g.nestedGroups && g.nestedGroups.length > 0) {
+        initGroupDefaults(g.nestedGroups, target);
+      }
+    });
+  }
+
   function openModifierModal(item: any) {
     if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
     
@@ -67,16 +93,10 @@ export function MenuView() {
       setModifyingItem(item);
       setItemNotes('');
       setQuantity(1);
+      setValidationError(null);
       
-      // Initialize defaults
       const defaults: Record<string, any[]> = {};
-      item.modifier_groups.forEach((g: any) => {
-        let defaultMods = g.modifiers?.filter((m: any) => m.is_default) || [];
-        if (defaultMods.length === 0 && g.required && g.modifiers?.length > 0) {
-          defaultMods = [g.modifiers[0]];
-        }
-        defaults[g.id] = defaultMods;
-      });
+      initGroupDefaults(item.modifier_groups, defaults);
       setSelectedModifiers(defaults);
     } else {
       // Add directly if no modifiers
@@ -93,10 +113,12 @@ export function MenuView() {
   }
 
   function handleSelectModifier(group: any, mod: any) {
+    setValidationError(null);
+    const maxSelections = group.max_selections ?? group.maxSelections ?? 1;
     const groupSelected = selectedModifiers[group.id] || [];
     const isAlreadySelected = groupSelected.find((m) => m.id === mod.id);
 
-    if (group.max_selections === 1) {
+    if (maxSelections === 1) {
       setSelectedModifiers({
         ...selectedModifiers,
         [group.id]: [mod],
@@ -108,34 +130,85 @@ export function MenuView() {
           [group.id]: groupSelected.filter((m) => m.id !== mod.id),
         });
       } else {
-        if (groupSelected.length < group.max_selections) {
+        if (groupSelected.length < maxSelections) {
           setSelectedModifiers({
             ...selectedModifiers,
             [group.id]: [...groupSelected, mod],
           });
         } else {
-          alert(`Maximum of ${group.max_selections} selections allowed for ${group.name}.`);
+          setValidationError(`Maximum of ${maxSelections} selections allowed for ${group.name}.`);
         }
       }
     }
   }
 
+  // Calculate live item price including nested modifiers and free allowances
+  function calculateModifiersTotal(groups: ModifierGroup[]): number {
+    let total = 0;
+    for (const group of groups) {
+      const selectedMods = selectedModifiers[group.id] || [];
+      const selectedIds = selectedMods.map((m: any) => m.id);
+      const priced = calculateModifierGroupPrices(group, selectedIds);
+      for (const p of priced) {
+        total += p.effectivePriceCents;
+      }
+
+      for (const mod of selectedMods) {
+        if (mod.nestedGroups && mod.nestedGroups.length > 0) {
+          total += calculateModifiersTotal(mod.nestedGroups);
+        }
+      }
+      if (group.nestedGroups && group.nestedGroups.length > 0) {
+        total += calculateModifiersTotal(group.nestedGroups);
+      }
+    }
+    return total;
+  }
+
   function submitModifiers() {
     const finalModifiers: Record<string, any[]> = { ...selectedModifiers };
-    for (const g of modifyingItem.modifier_groups) {
+    const groups: ModifierGroup[] = modifyingItem.modifier_groups ?? [];
+
+    for (const g of groups) {
       const selected = finalModifiers[g.id] || [];
-      if (g.required && selected.length < (g.min_selections ?? 1)) {
-        if (g.modifiers && g.modifiers.length > 0) {
-          finalModifiers[g.id] = [g.modifiers[0]];
+      const minRequired = g.required ? (g.minSelections ?? (g as any).min_selections ?? 1) : 0;
+      if (selected.length < minRequired) {
+        setValidationError(`Group "${g.name}" requires at least ${minRequired} selection(s).`);
+        return;
+      }
+    }
+
+    const flatMods: any[] = [];
+
+    function collectFlatModifiers(groupList: ModifierGroup[], prefix = '') {
+      for (const g of groupList) {
+        const selected = finalModifiers[g.id] || [];
+        const selectedIds = selected.map((m) => m.id);
+        const priced = calculateModifierGroupPrices(g, selectedIds);
+
+        for (let i = 0; i < selected.length; i++) {
+          const mod = selected[i];
+          const p = priced[i];
+          const fullName = prefix ? `${prefix} ↳ ${mod.name}` : mod.name;
+
+          flatMods.push({
+            modifier_id: mod.id,
+            name: fullName,
+            price_adjustment: p.effectivePriceCents,
+          });
+
+          if (mod.nestedGroups && mod.nestedGroups.length > 0) {
+            collectFlatModifiers(mod.nestedGroups, mod.name);
+          }
+        }
+
+        if (g.nestedGroups && g.nestedGroups.length > 0) {
+          collectFlatModifiers(g.nestedGroups, prefix);
         }
       }
     }
 
-    const flatMods = (Object.values(finalModifiers).flat() as any[]).map((m) => ({
-      modifier_id: m.id,
-      name: m.name,
-      price_adjustment: m.price_adjustment ?? m.price_adjustment_cents ?? 0,
-    }));
+    collectFlatModifiers(groups);
 
     addItem({
       order_id: activeOrderId!,
@@ -151,6 +224,105 @@ export function MenuView() {
 
     setModifyingItem(null);
   }
+
+  // Recursive Modifier Group Card Renderer
+  function renderModifierGroups(groups: ModifierGroup[], depth = 0) {
+    return groups.map((group: any) => {
+      const groupSelected = selectedModifiers[group.id] || [];
+      const isSingle = (group.max_selections ?? group.maxSelections) === 1;
+      const maxSelections = group.max_selections ?? group.maxSelections ?? 1;
+      const freeQuantity = group.free_quantity ?? group.freeQuantity ?? 0;
+
+      // Price calculation
+      const priced = calculateModifierGroupPrices(group, groupSelected.map((m: any) => m.id));
+      const pricedMap = new Map<string, { effectivePriceCents: number; isFree: boolean }>();
+      priced.forEach((p) => pricedMap.set(p.modifierId, { effectivePriceCents: p.effectivePriceCents, isFree: p.isFree }));
+
+      return (
+        <div
+          key={group.id}
+          className={`space-y-2 p-3.5 rounded-2xl border transition-all ${
+            depth > 0
+              ? 'bg-amber-50/50 border-amber-300/80 ml-3 shadow-xs'
+              : 'bg-muted/40 border-border'
+          }`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1.5">
+              {depth > 0 && <ChevronRight className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+              <span className="text-xs font-black text-foreground uppercase tracking-wider">
+                {group.name} {group.required && <span className="text-destructive">*</span>}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {freeQuantity > 0 && (
+                <span className="text-[10px] font-black text-emerald-600 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                  {freeQuantity} Free
+                </span>
+              )}
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {isSingle ? 'Choose 1' : `Up to ${maxSelections}`}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {group.modifiers?.map((mod: any) => {
+              const isSelected = !!groupSelected.find((m: any) => m.id === mod.id);
+              const originalAdj = mod.price_adjustment ?? mod.price_adjustment_cents ?? mod.priceAdjustment ?? 0;
+              const calculated = pricedMap.get(mod.id);
+              const effectiveAdj = isSelected ? (calculated?.effectivePriceCents ?? originalAdj) : originalAdj;
+              const isFreeAllowance = isSelected ? (calculated?.isFree && originalAdj > 0) : false;
+
+              return (
+                <div key={mod.id} className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectModifier(group, mod)}
+                    className={`min-h-[54px] p-3 rounded-xl text-left border font-bold text-xs transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.01]'
+                        : 'border-border bg-card text-foreground hover:border-foreground/40 active:scale-95'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="truncate">{mod.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-background" />}
+                    </div>
+                    <span className="text-[10px] font-mono opacity-90">
+                      {isFreeAllowance ? (
+                        <span className="text-emerald-400 font-extrabold uppercase">Free ($0.00)</span>
+                      ) : effectiveAdj > 0 ? (
+                        `+$${(effectiveAdj / 100).toFixed(2)}`
+                      ) : (
+                        'Included'
+                      )}
+                    </span>
+                  </button>
+
+                  {/* Render Nested Modifier Groups */}
+                  {isSelected && mod.nestedGroups && mod.nestedGroups.length > 0 && (
+                    <div className="pl-2 pt-1 animate-fadeIn">
+                      {renderModifierGroups(mod.nestedGroups, depth + 1)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {group.nestedGroups && group.nestedGroups.length > 0 && (
+            <div className="pt-2">
+              {renderModifierGroups(group.nestedGroups, depth + 1)}
+            </div>
+          )}
+        </div>
+      );
+    });
+  }
+
+  const currentModPrice = modifyingItem ? calculateModifiersTotal(modifyingItem.modifier_groups ?? []) : 0;
+  const currentTotalItemPrice = modifyingItem ? (modifyingItem.price + currentModPrice) * quantity : 0;
 
   return (
     <div className="flex h-full bg-background relative overflow-hidden">
@@ -304,57 +476,20 @@ export function MenuView() {
                 <h3 className="text-lg font-black text-foreground uppercase">{modifyingItem.name}</h3>
                 <p className="text-sm font-mono font-bold text-muted-foreground mt-0.5">
                   ${(modifyingItem.price / 100).toFixed(2)} Base Price
+                  {currentModPrice > 0 && ` + $${(currentModPrice / 100).toFixed(2)} Modifiers`}
                 </p>
               </div>
               <button
                 onClick={() => setModifyingItem(null)}
-                className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground font-bold flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground font-bold flex items-center justify-center active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modifier Groups */}
+            {/* Modifier Groups Tree */}
             <div className="space-y-4 max-h-72 overflow-y-auto pr-2">
-              {modifyingItem.modifier_groups?.map((group: any) => {
-                const groupSelected = selectedModifiers[group.id] || [];
-                return (
-                  <div key={group.id} className="space-y-2 bg-muted/40 p-3.5 rounded-2xl border border-border">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-black text-foreground uppercase tracking-wider">
-                        {group.name} {group.required && <span className="text-destructive">*</span>}
-                      </span>
-                      <span className="text-[10px] font-bold text-muted-foreground">
-                        {group.max_selections === 1 ? 'Choose 1' : `Up to ${group.max_selections}`}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {group.modifiers?.map((mod: any) => {
-                        const isSelected = !!groupSelected.find((m) => m.id === mod.id);
-                        const priceAdj = mod.price_adjustment ?? mod.price_adjustment_cents ?? 0;
-                        return (
-                          <button
-                            key={mod.id}
-                            type="button"
-                            onClick={() => handleSelectModifier(group, mod)}
-                            className={`p-3 rounded-xl text-left border font-bold text-xs transition-all flex flex-col justify-between h-16 ${
-                              isSelected
-                                ? 'border-foreground bg-foreground text-background shadow-xs'
-                                : 'border-border bg-card text-foreground hover:border-foreground/40'
-                            }`}
-                          >
-                            <span className="truncate">{mod.name}</span>
-                            <span className="text-[10px] font-mono opacity-90">
-                              {priceAdj > 0 ? `+$${(priceAdj / 100).toFixed(2)}` : 'Included'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+              {renderModifierGroups(modifyingItem.modifier_groups ?? [])}
 
               {/* Special Instructions */}
               <div className="space-y-1.5">
@@ -367,6 +502,14 @@ export function MenuView() {
                   className="w-full bg-muted/40 border border-border focus:border-foreground focus:bg-card rounded-xl p-3 text-xs text-foreground font-semibold outline-none shadow-inner"
                 />
               </div>
+
+              {/* Validation Error Banner */}
+              {validationError && (
+                <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-xs font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+                  <span>{validationError}</span>
+                </div>
+              )}
             </div>
 
             {/* Modal Actions */}
@@ -375,7 +518,7 @@ export function MenuView() {
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs"
+                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs active:scale-95"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -383,7 +526,7 @@ export function MenuView() {
                 <button
                   type="button"
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs"
+                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -392,11 +535,10 @@ export function MenuView() {
               <button
                 type="button"
                 onClick={submitModifiers}
-                className="flex-1 bg-foreground hover:bg-foreground/90 text-background font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
+                className="flex-1 bg-foreground hover:bg-foreground/90 text-background font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-between px-4"
               >
-                <span>Add to Ticket</span>
-                <span>•</span>
-                <span>Seat {activeSeat > 0 ? activeSeat : 'Shared'}</span>
+                <span>Add to Ticket (Seat {activeSeat > 0 ? activeSeat : 'Shared'})</span>
+                <span className="font-mono text-sm">${(currentTotalItemPrice / 100).toFixed(2)}</span>
               </button>
             </div>
           </div>

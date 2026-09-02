@@ -12,7 +12,15 @@ import {
   TrendingUp,
   CulinaryHeader,
 } from '@culinaryos/ui';
-import { apiHeaders, getApiBase, getTenantId, loadLocalSettings, saveLocalSettings, applyDisplaySettingsToDOM } from '@culinaryos/shared';
+import {
+  apiHeaders,
+  getApiBase,
+  getTenantId,
+  loadLocalSettings,
+  saveLocalSettings,
+  applyDisplaySettingsToDOM,
+  type SupportedLanguage,
+} from '@culinaryos/shared';
 import { useRealtimeTickets, bumpDemoTicket, fireDemoTicket } from '../hooks/useRealtimeTickets';
 import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
 import { CourseHoldBanner }       from '../components/CourseHoldBanner';
@@ -42,6 +50,10 @@ export function Station() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [displaySettings, setDisplaySettings]     = useState(loadLocalSettings().display);
   const [showApps, setShowApps]                   = useState(false);
+  const [language, setLanguage]                   = useState<SupportedLanguage>('en');
+  const [show86Modal, setShow86Modal]             = useState(false);
+  const [items86, setItems86]                     = useState<any[]>([]);
+  const [pacingData, setPacingData]               = useState<any[]>([]);
 
   const appModules = [
     { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },
@@ -75,6 +87,56 @@ export function Station() {
     const interval = setInterval(fetchAnalytics, 30_000);
     return () => { mounted = false; clearInterval(interval); };
   }, [stationId]);
+
+  // Fetch 86 items and pacing data
+  const fetch86Items = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/v1/kds/86-items`, { headers: apiHeaders(TENANT_ID) });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.data) setItems86(json.data);
+    } catch {}
+  }, []);
+
+  const fetchPacingData = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/v1/kds/pacing`, { headers: apiHeaders(TENANT_ID) });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.data) setPacingData(json.data);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetch86Items();
+    fetchPacingData();
+    const interval = setInterval(() => {
+      fetch86Items();
+      fetchPacingData();
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [fetch86Items, fetchPacingData]);
+
+  const handleToggle86 = async (id: string) => {
+    try {
+      await fetch(`${API}/v1/kds/86-items/${id}/toggle-86`, {
+        method: 'POST',
+        headers: apiHeaders(TENANT_ID),
+      });
+      fetch86Items();
+    } catch {}
+  };
+
+  const handleSet86Count = async (id: string, count: number) => {
+    try {
+      await fetch(`${API}/v1/kds/86-items/${id}/set-count`, {
+        method: 'POST',
+        headers: { ...apiHeaders(TENANT_ID), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count }),
+      });
+      fetch86Items();
+    } catch {}
+  };
 
   // Bump a ticket via REST — only mutate local state on success
   const handleBump = useCallback(async (ticketId: string) => {
@@ -205,8 +267,39 @@ export function Station() {
           })}
         </nav>
 
-        {/* Right: Display Settings, Apps & Status */}
+        {/* Right: Language, 86 Board, Display Settings, Apps & Status */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Dual-Language Culinary Translation Selector */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            {(['en', 'es', 'fr'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase transition ${
+                  language === lang
+                    ? 'bg-[#0f172a] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-950'
+                }`}
+                title={`Switch kitchen display to ${lang === 'en' ? 'English' : lang === 'es' ? 'Spanish (Español)' : 'French (Français)'}`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+
+          {/* 86 Live Inventory Countdowns Button */}
+          <button
+            onClick={() => setShow86Modal(true)}
+            className="flex items-center gap-1.5 bg-red-50 border border-red-200 hover:bg-red-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-red-700 shadow-xs cursor-pointer transition-colors"
+            title="Live 86 Inventory Countdowns"
+          >
+            <span className="material-symbols-outlined text-[15px] text-red-600">inventory_2</span>
+            <span className="hidden sm:inline">86 Board</span>
+            <span className="px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-mono font-bold">
+              {items86.filter((i) => i.is86 || i.countRemaining != null).length}
+            </span>
+          </button>
+
           <button
             onClick={() => setShowSettingsModal(true)}
             className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-xs cursor-pointer transition-colors"
@@ -333,6 +426,31 @@ export function Station() {
       {/* Course fired flash banner */}
       <CourseHoldBanner event={courseEvent} />
 
+      {/* Multi-Course Pacing Alert Bar */}
+      {pacingData.some((p) => p.pacingAlert !== 'normal' && p.c2Status === 'held') && (
+        <section className="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider animate-pulse shrink-0 shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🚨</span>
+            <span>
+              Multi-Course Pacing Alert: {pacingData.filter((p) => p.pacingAlert !== 'normal' && p.c2Status === 'held').length} course(s) exceed 12m threshold!
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {pacingData
+              .filter((p) => p.pacingAlert !== 'normal' && p.c2Status === 'held' && p.c2TicketId)
+              .map((p) => (
+                <button
+                  key={p.orderId}
+                  onClick={() => handleFireCourse(p.c2TicketId)}
+                  className="px-3 py-1 bg-white text-red-700 hover:bg-red-50 rounded-lg text-xs font-black shadow-xs cursor-pointer transition"
+                >
+                  ⚡ Fire Course 2 (Table {p.tableNumber || p.orderId.slice(-4)})
+                </button>
+              ))}
+          </div>
+        </section>
+      )}
+
       {/* Expo Pass Real-Time Station Status Bar */}
       {isExpoPass && (
         <section className="bg-white border-b border-[#e5e7eb] px-6 py-2 flex items-center justify-between shadow-2xs shrink-0">
@@ -392,7 +510,13 @@ export function Station() {
           </div>
         )}
         {tickets.map((t) => (
-          <TicketCard key={t.id} ticket={t} onBump={handleBump} onFire={handleFireCourse} />
+          <TicketCard
+            key={t.id}
+            ticket={t}
+            language={language}
+            onBump={handleBump}
+            onFire={handleFireCourse}
+          />
         ))}
       </main>
 
@@ -505,6 +629,89 @@ export function Station() {
                 className="px-4 py-2 bg-[#0f172a] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs"
               >
                 Close Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 86 Inventory Countdown Management Modal */}
+      {show86Modal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 text-slate-900 animate-slideIn max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[22px] text-red-600">inventory_2</span>
+                <div>
+                  <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-wider">
+                    Kitchen 86 & Countdown Board
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Live portion decrementing & automatic 86 status lock.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShow86Modal(false)}
+                className="text-[#9ca3af] hover:text-[#0f172a] transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {items86.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition"
+                >
+                  <div>
+                    <span className="font-bold text-xs text-slate-900 block">{item.name}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wide">
+                      Station: {item.station || 'Hot Line'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+                      <button
+                        onClick={() => handleSet86Count(item.id, Math.max(0, (item.countRemaining ?? 0) - 1))}
+                        className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100 rounded"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center font-mono font-bold text-xs">
+                        {item.countRemaining != null ? item.countRemaining : '∞'}
+                      </span>
+                      <button
+                        onClick={() => handleSet86Count(item.id, (item.countRemaining ?? 0) + 1)}
+                        className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100 rounded"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggle86(item.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition ${
+                        item.is86
+                          ? 'bg-red-600 text-white shadow-xs'
+                          : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                      }`}
+                    >
+                      {item.is86 ? "86'D" : 'AVAILABLE'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShow86Modal(false)}
+                className="px-4 py-2 bg-[#0f172a] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs"
+              >
+                Done
               </button>
             </div>
           </div>

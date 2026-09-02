@@ -54,3 +54,5 @@ export function calcVariance(theoretical: number, actual: number): VarianceResul
   const status      = absV >= 5 ? 'alert' : absV >= 2 ? 'warn' : 'ok';
   return { theoretical, actual, variance, variancePct, status };
 }
+
+export * from './variance.js';

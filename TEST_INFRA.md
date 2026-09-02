@@ -1,60 +1,55 @@
 # E2E Test Infra: CulinaryOS
 
 ## Test Philosophy
-- **Opaque-Box & Requirement-Driven**: Tests are derived strictly from `ORIGINAL_REQUEST.md` and `PROJECT.md § Feature Inventory` user requirements, exercising the system via public APIs, domain engine interfaces, and simulated user interactions.
-- **Methodology**: Category-Partition (Tier 1 Equivalence Classes) + Boundary Value Analysis (Tier 2 Extrema) + Pairwise Combinatorial Testing (Tier 3 Cross-Feature Interactions) + Real-World Workload Simulation (Tier 4 Realistic Operations).
-- **Zero Flakiness**: All async operations use deterministic mock storage or in-memory API stores where live Supabase is absent.
+- Opaque-box, requirement-driven. No dependency on implementation internals.
+- Methodology: Category-Partition + Boundary Value Analysis (BVA) + Pairwise Combinatorial Testing + Real-World Workload Testing.
+- 4-Tier Test Architecture exercising all 26 feature definitions (F1.1 through F4.5).
 
----
-
-## Feature Inventory & Test Matrix
-
-| # | Feature Domain | Tier 1 (Happy Path) | Tier 2 (Boundary & Corner) | Tier 3 (Cross-Feature) | Tier 4 (Real-World) |
-|---|----------------|:-------------------:|:--------------------------:|:----------------------:|:-------------------:|
-| F1 | Pure Ratio Engine (Tree scaling, portions, baker %, conversions, formatting) | ≥5 tests | ≥5 tests | Pairwise | Dinner Rush / Banquet |
-| F2 | Recipe Food Costing, Variances, & Waste Analysis | ≥5 tests | ≥5 tests | Pairwise | EOD Reconciliation |
-| F3 | Mise en Place & Shift Prep Planning | ≥5 tests | ≥5 tests | Pairwise | Banquet Service |
-| F4 | Terminal PIN Authentication & Access Control | ≥5 tests | ≥5 tests | Pairwise | Dinner Rush |
-| F5 | POS Order Firing & Multi-Course Routing | ≥5 tests | ≥5 tests | Pairwise | Dinner Rush / Banquet |
-| F6 | Closed-Loop Inventory Deduction & Par Alerts | ≥5 tests | ≥5 tests | Pairwise | EOD / PO Loop |
-| F7 | Automated Purchase Orders & Receiving Lifecycle | ≥5 tests | ≥5 tests | Pairwise | PO Fulfillment Loop |
-| F8 | Operational Waste, Plate Economics & Loyalty APIs | ≥5 tests | ≥5 tests | Pairwise | EOD Reconciliation |
-| F9 | Offline LocalStorage Sync & Transaction Replay | ≥5 tests | ≥5 tests | Pairwise | Offline Replay |
-| F10| MCP Tool Suite (Live & Mock Tool Handlers) | ≥5 tests | ≥5 tests | Pairwise | Multi-surface Ops |
-
----
+## Feature Inventory & Coverage Mapping
+| # | Feature | Source | Tier 1 (>=5) | Tier 2 (>=5) | Tier 3 (Pairwise) |
+|---|---------|--------|:------------:|:------------:|:-----------------:|
+| F1.1 | Hierarchical Modifiers | ORIGINAL_REQUEST §R1 | 5 | 5 | ✓ |
+| F1.2 | 2D/3D Floor Map Operations | ORIGINAL_REQUEST §R1 | 5 | 5 | ✓ |
+| F1.3 | Daypart / Happy Hour Pricing | ORIGINAL_REQUEST §R1 | 5 | 5 | ✓ |
+| F1.4 | 3-Mode Tableside QR | ORIGINAL_REQUEST §R1 | 5 | 5 | ✓ |
+| F2.1 | Live 86 Countdowns | ORIGINAL_REQUEST §R2 | 5 | 5 | ✓ |
+| F2.2 | Multi-Course Hold/Fire Pacing | ORIGINAL_REQUEST §R2 | 5 | 5 | ✓ |
+| F2.3 | Per-Station Dual Translation | ORIGINAL_REQUEST §R2 | 5 | 5 | ✓ |
+| F2.4 | 1-Click Waste & Food Cost Variance | ORIGINAL_REQUEST §R2 | 5 | 5 | ✓ |
+| F2.5 | Batch Prep Scaling & Labels | ORIGINAL_REQUEST §R2 | 5 | 5 | ✓ |
+| F3.1 | Manager PIN Gatekeeper | ORIGINAL_REQUEST §R3 | 5 | 5 | ✓ |
+| F3.2 | Post-Send Void Auto-Waste | ORIGINAL_REQUEST §R3 | 5 | 5 | ✓ |
+| F3.3 | Multi-Rate Tax Engine | ORIGINAL_REQUEST §R3 | 5 | 5 | ✓ |
+| F3.4 | Role-Weighted Tip Pooling | ORIGINAL_REQUEST §R3 | 5 | 5 | ✓ |
+| F3.5 | Automated EOD Z-Report | ORIGINAL_REQUEST §R3 | 5 | 5 | ✓ |
+| F4.1 | Turnkey Windows Installer | ORIGINAL_REQUEST §R4 | 5 | 5 | ✓ |
+| F4.2 | System Tray Background Daemon | ORIGINAL_REQUEST §R4 | 5 | 5 | ✓ |
+| F4.3 | Automated Diagnostics Preflight | ORIGINAL_REQUEST §R4 | 5 | 5 | ✓ |
+| F4.4 | Port Conflict Self-Healing | ORIGINAL_REQUEST §R4 | 5 | 5 | ✓ |
+| F4.5 | Local QR & mDNS Discovery | ORIGINAL_REQUEST §R4 | 5 | 5 | ✓ |
 
 ## Test Architecture
-
-- **Runner**: `node ./scripts/run-all-tests.cjs`
-- **Execution Engine**: `tsx` with custom `test-hook.cjs` assertion environment.
-- **Test File Organization**:
-  - `tests/e2e/tier1-ratio-engine.test.ts`
-  - `tests/e2e/tier1-pos-kds-order.test.ts`
-  - `tests/e2e/tier1-inventory-pantry.test.ts`
-  - `tests/e2e/tier1-ops-loyalty-mcp.test.ts`
-  - `tests/e2e/tier2-boundaries-corner-cases.test.ts`
-  - `tests/e2e/tier3-cross-feature-combinations.test.ts`
-  - `tests/e2e/tier4-real-world-scenarios.test.ts`
-
----
+- **Test Runner**: Node test runner integrated into `scripts/run-all-tests.cjs` and `turbo.json`.
+- **Pass/Fail Semantics**: Deterministic exit code 0 on all test passes; non-zero on assertion failure.
+- **Directory Layout**:
+  - `tests/e2e/tier1-features/`: Granular unit and functional tests per feature (>=5 per feature).
+  - `tests/e2e/tier2-boundaries/`: Corner cases, zero counts, negative quantities, boundary timestamps, deep nesting limits.
+  - `tests/e2e/tier3-pairwise/`: Cross-feature interaction (e.g., Happy Hour Pricing + Hierarchical Modifiers + 86 Decrement + Multi-Rate Tax).
+  - `tests/e2e/tier4-scenarios/`: End-to-end full service lifecycle workloads.
 
 ## Real-World Application Scenarios (Tier 4)
+| # | Scenario | Features Exercised | Complexity |
+|---|----------|--------------------|------------|
+| 1 | High-Volume Saturday Night Dinner Rush | F1.1, F1.2, F2.1, F2.2, F2.3, F3.1 | High |
+| 2 | Happy Hour Shift Transition & Tableside QR Ordering | F1.3, F1.4, F2.1, F3.3 | High |
+| 3 | Large Banquet Table Merge, Split Bill & Manager Comps | F1.2, F3.1, F3.2, F3.3, F3.4 | High |
+| 4 | Morning Prep Batch Scaling, Adhesive Label Printing & Waste Tracking | F2.4, F2.5, F3.2 | Medium |
+| 5 | End-of-Day Shift Closeout, Cash Reconciliation, Tip Distribution & Z-Report | F3.3, F3.4, F3.5 | High |
+| 6 | Zero-Tech Storefront Deployment, Tray Supervision & LAN Handheld Pairing | F4.1, F4.2, F4.3, F4.4, F4.5 | Medium |
 
-| # | Scenario | Features Exercised | Target Metric |
-|---|----------|--------------------|---------------|
-| 1 | Full Dinner Rush Simulation | F4, F5, F6, F1, F8 | 20+ concurrent tickets, 100% station routing, 0 race conditions |
-| 2 | End-of-Day Financial & Inventory Reconciliation | F2, F6, F7, F8 | Accurate theoretical vs actual variance, waste ledger reconciliation |
-| 3 | Multi-Course Multi-Station Banquet Service | F1, F3, F5, F6 | Recursive batch scaling, 3-course synchronized holding/firing |
-| 4 | Offline POS Disconnect & Batch Sync Replay | F4, F5, F9, F6 | Zero duplicate orders, full ledger deduplication on replay |
-| 5 | Automated Reorder & PO Receiving Fulfillment | F6, F7, F8 | Stock drop -> Par alert -> Auto-generate PO -> Receive stock -> Par restored |
-
----
-
-## Minimum Thresholds & Pass Criteria
-- **Tier 1 (Feature Coverage)**: ≥40 test cases (≥5 per core feature domain).
-- **Tier 2 (Boundary & Corner)**: ≥40 test cases (empty strings, zero prices, negative values, NaN, overflow, inverted ranges).
-- **Tier 3 (Cross-Feature Combinations)**: ≥15 pairwise test cases validating complete multi-step event chains.
-- **Tier 4 (Real-World Scenarios)**: ≥5 comprehensive multi-module end-to-end integration scenarios.
-- **Total Test Count**: ≥100 rigorous test cases across `tests/e2e/`.
-- **Exit Criteria**: `node ./scripts/run-all-tests.cjs` exits with code 0 with all legacy (29) + all new E2E tests passing.
+## Coverage Thresholds
+- **Tier 1 (Feature Coverage)**: 19 features × 5 = 95 test assertions minimum.
+- **Tier 2 (Boundary & Corner Cases)**: 19 features × 5 = 95 test assertions minimum.
+- **Tier 3 (Cross-Feature Combinations)**: 19 pairwise interaction scenarios minimum.
+- **Tier 4 (Real-World Workloads)**: 6 comprehensive end-to-end workflow suites.
+- **Total Suite**: 215+ discrete assertions covering 100% of R1-R4 requirements.

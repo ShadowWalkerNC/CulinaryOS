@@ -1,8 +1,35 @@
 // CulinaryOS — Thermal Receipt Printer & ESC/POS Engine
 // Supports 80mm (48 col) & 58mm (32 col) thermal receipt printers across WebUSB, Web Bluetooth, Web Serial, Network TCP, and Browser Spooler.
 
+import type { ZReport } from './types/reports.js';
+import { translateCulinaryText, type SupportedLanguage } from './translation.js';
+
 export type PrinterPaperWidth = '80mm' | '58mm';
 export type PrinterTransportType = 'auto' | 'usb' | 'bluetooth' | 'serial' | 'network' | 'browser';
+
+export interface KitchenChitItem {
+  name: string;
+  quantity: number;
+  modifiers?: string[];
+  notes?: string;
+  station?: string;
+  course?: number;
+}
+
+export interface KitchenTicketPayload {
+  restaurantName?: string;
+  ticketId: string;
+  orderId: string;
+  tableNumber?: string | number;
+  serverName?: string;
+  station?: string;
+  stationName?: string;
+  courseNumber?: number;
+  priority?: 'normal' | 'rush' | 'allergy';
+  timestamp: string | Date;
+  items: KitchenChitItem[];
+  notes?: string;
+}
 
 export interface ReceiptItem {
   name: string;
@@ -450,5 +477,368 @@ export class EscPosEncoder {
     this.kickDrawer();
 
     return this.getBuffer();
+  }
+
+  /**
+   * Encodes a complete End-of-Day Z-Report into ESC/POS bytes.
+   */
+  public encodeZReport(report: ZReport, restaurantName = 'The Golden Fork', config?: Partial<PrinterConfig>): Uint8Array {
+    const columns = config?.paperWidth === '58mm' ? 32 : (config?.columns || 48);
+
+    this.init();
+
+    // 1. Header
+    this.align('center');
+    this.bold(true);
+    this.doubleSize(true);
+    this.line('END OF DAY Z-REPORT');
+    this.doubleSize(false);
+    this.line(restaurantName.toUpperCase());
+    this.bold(false);
+    this.line(`REPORT NO: ${report.zReportNumber}`);
+    this.line(`DATE: ${report.date} | STATUS: ${report.status.toUpperCase()}`);
+    if (report.closedBy) {
+      this.line(`CLOSED BY: ${report.closedBy.displayName} (${report.closedBy.role.toUpperCase()})`);
+    }
+    this.divider('=', columns);
+
+    // 2. Financial Summary
+    this.align('left');
+    this.bold(true);
+    this.line('FINANCIAL RECONCILIATION');
+    this.bold(false);
+    this.divider('-', columns);
+    this.row('Gross Sales:', `$${(report.financials.grossSalesCents / 100).toFixed(2)}`, columns);
+    this.row('Comps / Discounts:', `-$${(report.financials.discountsCompsCents / 100).toFixed(2)}`, columns);
+    this.row('Voids Total:', `-$${(report.financials.voidsTotalCents / 100).toFixed(2)}`, columns);
+    this.row('Net Sales:', `$${(report.financials.netSalesCents / 100).toFixed(2)}`, columns);
+    this.row('Total Tax Collected:', `$${(report.financials.taxTotalCents / 100).toFixed(2)}`, columns);
+    this.divider('-', columns);
+    this.bold(true);
+    this.row('TOTAL REVENUE:', `$${(report.financials.totalRevenueCents / 100).toFixed(2)}`, columns);
+    this.bold(false);
+    this.row('Total Orders / Checks:', `${report.financials.totalOrdersCount}`, columns);
+    this.row('Average Check:', `$${(report.financials.averageCheckCents / 100).toFixed(2)}`, columns);
+    this.divider('=', columns);
+
+    // 3. Multi-Rate Tax Summary
+    this.bold(true);
+    this.line('TAX BREAKDOWN (MULTI-RATE)');
+    this.bold(false);
+    this.divider('-', columns);
+    const pf = report.taxBreakdown.breakdown.preparedFood;
+    const alc = report.taxBreakdown.breakdown.alcohol;
+    const ex = report.taxBreakdown.breakdown.exempt;
+    this.row(`Prep Food (${pf.ratePercent}%):`, `$${(pf.taxAmountCents / 100).toFixed(2)} ($${(pf.taxableSalesCents / 100).toFixed(2)})`, columns);
+    this.row(`Alcohol (${alc.ratePercent}%):`, `$${(alc.taxAmountCents / 100).toFixed(2)} ($${(alc.taxableSalesCents / 100).toFixed(2)})`, columns);
+    this.row(`Exempt (0%):`, `$0.00 ($${(ex.taxableSalesCents / 100).toFixed(2)})`, columns);
+    this.row('Effective Tax Rate:', `${report.taxBreakdown.effectiveTaxRatePercent.toFixed(2)}%`, columns);
+    this.divider('=', columns);
+
+    // 4. Tender Summary
+    this.bold(true);
+    this.line('TENDER & PAYMENT SUMMARY');
+    this.bold(false);
+    this.divider('-', columns);
+    this.row(`Credit Card (${report.tenderBreakdown.creditCard.transactionCount}):`, `$${(report.tenderBreakdown.creditCard.totalCents / 100).toFixed(2)}`, columns);
+    this.row(`Cash Tender (${report.tenderBreakdown.cash.transactionCount}):`, `$${(report.tenderBreakdown.cash.totalCents / 100).toFixed(2)}`, columns);
+    this.row(`Gift Cards (${report.tenderBreakdown.giftCard.transactionCount}):`, `$${(report.tenderBreakdown.giftCard.totalCents / 100).toFixed(2)}`, columns);
+    this.row(`Comps (${report.tenderBreakdown.comp.transactionCount}):`, `$${(report.tenderBreakdown.comp.totalCents / 100).toFixed(2)}`, columns);
+    this.row('Total Tips Recorded:', `$${(report.tenderBreakdown.totalTipsCents / 100).toFixed(2)}`, columns);
+    this.divider('=', columns);
+
+    // 5. Cash Drawer Audit
+    this.bold(true);
+    this.line('CASH DRAWER AUDIT & FLOAT');
+    this.bold(false);
+    this.divider('-', columns);
+    this.row('Opening Float:', `$${(report.cashReconciliation.openingFloatCents / 100).toFixed(2)}`, columns);
+    this.row('Cash Collected:', `$${(report.cashReconciliation.cashSalesCents / 100).toFixed(2)}`, columns);
+    this.row('Paid In / (Paid Out):', `$${((report.cashReconciliation.paidInCents - report.cashReconciliation.paidOutCents) / 100).toFixed(2)}`, columns);
+    this.row('Expected In Drawer:', `$${(report.cashReconciliation.expectedInDrawerCents / 100).toFixed(2)}`, columns);
+    this.row('Actual Counted Cash:', `$${(report.cashReconciliation.actualCountedCents / 100).toFixed(2)}`, columns);
+    this.bold(true);
+    const os = report.cashReconciliation.overShortCents;
+    const osStr = os === 0 ? '$0.00 (EXACT)' : os > 0 ? `+$${(os / 100).toFixed(2)} (OVER)` : `-$${(Math.abs(os) / 100).toFixed(2)} (SHORT)`;
+    this.row('OVER / SHORT VARIANCE:', osStr, columns);
+    this.bold(false);
+    this.divider('=', columns);
+
+    // 6. Tip Pool Distribution
+    if (report.tipPoolSummary && report.tipPoolSummary.staffPayouts?.length > 0) {
+      this.bold(true);
+      this.line(`TIP POOL (${report.tipPoolSummary.method.toUpperCase()} - $${(report.tipPoolSummary.poolTotalCents / 100).toFixed(2)})`);
+      this.bold(false);
+      this.divider('-', columns);
+      report.tipPoolSummary.staffPayouts.forEach((sp) => {
+        const name = sp.staffName || sp.staffId;
+        this.row(`${name} (${sp.role}, ${sp.hours}h):`, `$${(sp.payoutCents / 100).toFixed(2)} ($${(sp.effectiveHourlyTipRateCents / 100).toFixed(2)}/h)`, columns);
+      });
+      this.divider('=', columns);
+    }
+
+    // 7. Footer
+    this.align('center');
+    this.line('IMMUTABLE SHIFT AUDIT TRAIL SEALS LEDGER');
+    this.line('CulinaryOS Accounting Security');
+    this.feed(3);
+    this.cut(true);
+
+    return this.getBuffer();
+  }
+
+  /**
+   * Generates a plain-text thermal-formatted string of the Z-Report.
+   */
+  public generateZReportFormattedText(report: ZReport, restaurantName = 'The Golden Fork', columns = 48): string {
+    const formatRow = (left: string, right: string) => {
+      const spaceCount = Math.max(1, columns - left.length - right.length);
+      return left + ' '.repeat(spaceCount) + right;
+    };
+
+    const lines: string[] = [
+      'END OF DAY Z-REPORT'.padStart(Math.floor((columns + 19) / 2)),
+      restaurantName.toUpperCase().padStart(Math.floor((columns + restaurantName.length) / 2)),
+      `REPORT NO: ${report.zReportNumber}`.padStart(Math.floor((columns + 11 + report.zReportNumber.length) / 2)),
+      `DATE: ${report.date} | STATUS: ${report.status.toUpperCase()}`,
+      report.closedBy ? `CLOSED BY: ${report.closedBy.displayName} (${report.closedBy.role.toUpperCase()})` : '',
+      '='.repeat(columns),
+      'FINANCIAL RECONCILIATION',
+      '-'.repeat(columns),
+      formatRow('Gross Sales:', `$${(report.financials.grossSalesCents / 100).toFixed(2)}`),
+      formatRow('Comps / Discounts:', `-$${(report.financials.discountsCompsCents / 100).toFixed(2)}`),
+      formatRow('Voids Total:', `-$${(report.financials.voidsTotalCents / 100).toFixed(2)}`),
+      formatRow('Net Sales:', `$${(report.financials.netSalesCents / 100).toFixed(2)}`),
+      formatRow('Total Tax Collected:', `$${(report.financials.taxTotalCents / 100).toFixed(2)}`),
+      '-'.repeat(columns),
+      formatRow('TOTAL REVENUE:', `$${(report.financials.totalRevenueCents / 100).toFixed(2)}`),
+      formatRow('Total Orders / Checks:', `${report.financials.totalOrdersCount}`),
+      formatRow('Average Check:', `$${(report.financials.averageCheckCents / 100).toFixed(2)}`),
+      '='.repeat(columns),
+      'TAX BREAKDOWN (MULTI-RATE)',
+      '-'.repeat(columns),
+      formatRow(`Prep Food (${report.taxBreakdown.breakdown.preparedFood.ratePercent}%):`, `$${(report.taxBreakdown.breakdown.preparedFood.taxAmountCents / 100).toFixed(2)}`),
+      formatRow(`Alcohol (${report.taxBreakdown.breakdown.alcohol.ratePercent}%):`, `$${(report.taxBreakdown.breakdown.alcohol.taxAmountCents / 100).toFixed(2)}`),
+      formatRow(`Exempt (0%):`, `$0.00`),
+      formatRow('Effective Tax Rate:', `${report.taxBreakdown.effectiveTaxRatePercent.toFixed(2)}%`),
+      '='.repeat(columns),
+      'TENDER & PAYMENT SUMMARY',
+      '-'.repeat(columns),
+      formatRow(`Credit Card (${report.tenderBreakdown.creditCard.transactionCount}):`, `$${(report.tenderBreakdown.creditCard.totalCents / 100).toFixed(2)}`),
+      formatRow(`Cash Tender (${report.tenderBreakdown.cash.transactionCount}):`, `$${(report.tenderBreakdown.cash.totalCents / 100).toFixed(2)}`),
+      formatRow(`Gift Cards (${report.tenderBreakdown.giftCard.transactionCount}):`, `$${(report.tenderBreakdown.giftCard.totalCents / 100).toFixed(2)}`),
+      formatRow(`Comps (${report.tenderBreakdown.comp.transactionCount}):`, `$${(report.tenderBreakdown.comp.totalCents / 100).toFixed(2)}`),
+      formatRow('Total Tips Recorded:', `$${(report.tenderBreakdown.totalTipsCents / 100).toFixed(2)}`),
+      '='.repeat(columns),
+      'CASH DRAWER AUDIT & FLOAT',
+      '-'.repeat(columns),
+      formatRow('Opening Float:', `$${(report.cashReconciliation.openingFloatCents / 100).toFixed(2)}`),
+      formatRow('Cash Collected:', `$${(report.cashReconciliation.cashSalesCents / 100).toFixed(2)}`),
+      formatRow('Expected In Drawer:', `$${(report.cashReconciliation.expectedInDrawerCents / 100).toFixed(2)}`),
+      formatRow('Actual Counted Cash:', `$${(report.cashReconciliation.actualCountedCents / 100).toFixed(2)}`),
+      formatRow('OVER / SHORT VARIANCE:', report.cashReconciliation.overShortCents === 0 ? '$0.00 (EXACT)' : report.cashReconciliation.overShortCents > 0 ? `+$${(report.cashReconciliation.overShortCents / 100).toFixed(2)} (OVER)` : `-$${(Math.abs(report.cashReconciliation.overShortCents) / 100).toFixed(2)} (SHORT)`),
+      '='.repeat(columns),
+      'IMMUTABLE SHIFT AUDIT TRAIL SEALS LEDGER',
+      'CulinaryOS Accounting Security',
+    ];
+
+    return lines.filter(Boolean).join('\n');
+  }
+
+  /**
+   * Encodes a bilingual kitchen ticket chit for BOH line cooks into ESC/POS bytes.
+   * Renders primary translated dish name in bold/double height with original English subtitle.
+   */
+  public encodeKitchenChit(
+    payload: KitchenTicketPayload,
+    config?: Partial<PrinterConfig>,
+    targetLanguage: SupportedLanguage = 'en'
+  ): Uint8Array {
+    const columns = config?.paperWidth === '58mm' ? 32 : (config?.columns || 48);
+    const dateStr = typeof payload.timestamp === 'string'
+      ? new Date(payload.timestamp).toLocaleTimeString()
+      : payload.timestamp.toLocaleTimeString();
+
+    this.init();
+
+    // 1. Station & Table Header
+    this.align('center');
+    const stationLabel = payload.stationName || payload.station || 'KITCHEN';
+    const transStation = targetLanguage !== 'en'
+      ? translateCulinaryText(stationLabel, targetLanguage).translated
+      : stationLabel;
+
+    this.bold(true);
+    this.doubleSize(true);
+    this.line(`** ${transStation.toUpperCase()} **`);
+    if (targetLanguage !== 'en' && transStation.toLowerCase() !== stationLabel.toLowerCase()) {
+      this.doubleSize(false);
+      this.line(`(${stationLabel.toUpperCase()})`);
+      this.doubleSize(true);
+    }
+    this.doubleSize(false);
+
+    if (payload.priority === 'allergy' || payload.priority === 'rush') {
+      this.invert(true);
+      this.line(` *** ${payload.priority.toUpperCase()} PRIORITY *** `);
+      this.invert(false);
+    }
+
+    this.divider('=', columns);
+
+    // 2. Ticket Metadata
+    this.align('left');
+    this.bold(true);
+    this.doubleHeight(true);
+    this.row(
+      `TABLE: ${payload.tableNumber ?? 'TAKEAWAY'}`,
+      `TICKET #${payload.ticketId.slice(-6).toUpperCase()}`,
+      columns
+    );
+    this.doubleHeight(false);
+    this.bold(false);
+
+    const courseLabel = payload.courseNumber ? `Course ${payload.courseNumber}` : 'Standard';
+    const transCourse = targetLanguage === 'es' && payload.courseNumber
+      ? `Tiempo ${payload.courseNumber}`
+      : targetLanguage === 'fr' && payload.courseNumber
+        ? `Service ${payload.courseNumber}`
+        : courseLabel;
+
+    this.row(
+      `TIME: ${dateStr}`,
+      `SERVER: ${payload.serverName ?? 'Server'}`,
+      columns
+    );
+    this.row(`COURSE: ${transCourse.toUpperCase()}`, `ORDER: ${payload.orderId.slice(-6).toUpperCase()}`, columns);
+    this.divider('=', columns);
+
+    // 3. Items with Bilingual Translation
+    payload.items.forEach((item) => {
+      const transName = translateCulinaryText(item.name, targetLanguage);
+      const isTranslated = targetLanguage !== 'en' && transName.translated.toLowerCase() !== item.name.toLowerCase();
+
+      this.bold(true);
+      this.doubleHeight(true);
+      const qtyPrefix = `${item.quantity}x `;
+      this.line(`${qtyPrefix}${isTranslated ? transName.translated : item.name}`);
+      this.doubleHeight(false);
+
+      if (isTranslated) {
+        this.bold(false);
+        this.line(`   (${item.name})`);
+      }
+      this.bold(false);
+
+      // Modifiers
+      if (item.modifiers && item.modifiers.length > 0) {
+        item.modifiers.forEach((mod) => {
+          const transMod = translateCulinaryText(mod, targetLanguage);
+          const isModTrans = targetLanguage !== 'en' && transMod.translated.toLowerCase() !== mod.toLowerCase();
+          const isAllergy = /allerg/i.test(mod) || /sin\s+/i.test(transMod.translated) || /no\s+/i.test(mod);
+
+          if (isAllergy) {
+            this.bold(true);
+            this.line(`   >> ${transMod.translated}${isModTrans ? ` (${mod})` : ''}`);
+            this.bold(false);
+          } else {
+            this.line(`   + ${transMod.translated}${isModTrans ? ` (${mod})` : ''}`);
+          }
+        });
+      }
+
+      if (item.notes) {
+        this.bold(true);
+        this.line(`   * NOTE: ${item.notes}`);
+        this.bold(false);
+      }
+
+      this.feed(1);
+    });
+
+    if (payload.notes) {
+      this.divider('-', columns);
+      this.bold(true);
+      this.line(`TICKET NOTES: ${payload.notes}`);
+      this.bold(false);
+    }
+
+    this.divider('=', columns);
+    this.feed(3);
+    this.cut(true);
+
+    return this.getBuffer();
+  }
+
+  /**
+   * Generates formatted text of a bilingual kitchen chit for preview or spooler.
+   */
+  public generateKitchenChitText(
+    payload: KitchenTicketPayload,
+    columns = 48,
+    targetLanguage: SupportedLanguage = 'en'
+  ): string {
+    const formatRow = (left: string, right: string) => {
+      const spaceCount = Math.max(1, columns - left.length - right.length);
+      return left + ' '.repeat(spaceCount) + right;
+    };
+
+    const stationLabel = payload.stationName || payload.station || 'KITCHEN';
+    const transStation = targetLanguage !== 'en'
+      ? translateCulinaryText(stationLabel, targetLanguage).translated
+      : stationLabel;
+
+    const dateStr = typeof payload.timestamp === 'string'
+      ? new Date(payload.timestamp).toLocaleTimeString()
+      : payload.timestamp.toLocaleTimeString();
+
+    const courseLabel = payload.courseNumber ? `COURSE ${payload.courseNumber}` : 'STANDARD';
+    const transCourse = targetLanguage === 'es' && payload.courseNumber
+      ? `TIEMPO ${payload.courseNumber}`
+      : targetLanguage === 'fr' && payload.courseNumber
+        ? `SERVICE ${payload.courseNumber}`
+        : courseLabel;
+
+    const lines: string[] = [
+      `[ ${transStation.toUpperCase()} ]`.padStart(Math.floor((columns + transStation.length + 4) / 2)),
+      targetLanguage !== 'en' && transStation.toLowerCase() !== stationLabel.toLowerCase()
+        ? `(${stationLabel.toUpperCase()})`.padStart(Math.floor((columns + stationLabel.length + 2) / 2))
+        : '',
+      payload.priority && payload.priority !== 'normal'
+        ? `*** ${payload.priority.toUpperCase()} PRIORITY ***`.padStart(Math.floor((columns + 24) / 2))
+        : '',
+      '='.repeat(columns),
+      formatRow(`TABLE: ${payload.tableNumber ?? 'TAKEAWAY'}`, `TICKET #${payload.ticketId.slice(-6).toUpperCase()}`),
+      formatRow(`TIME: ${dateStr}`, `SERVER: ${payload.serverName ?? 'Server'}`),
+      formatRow(`COURSE: ${transCourse}`, `ORDER: ${payload.orderId.slice(-6).toUpperCase()}`),
+      '='.repeat(columns),
+    ];
+
+    payload.items.forEach((item) => {
+      const transName = translateCulinaryText(item.name, targetLanguage);
+      const isTranslated = targetLanguage !== 'en' && transName.translated.toLowerCase() !== item.name.toLowerCase();
+      lines.push(`${item.quantity}x ${isTranslated ? transName.translated : item.name}`);
+      if (isTranslated) {
+        lines.push(`   (${item.name})`);
+      }
+      if (item.modifiers) {
+        item.modifiers.forEach((mod) => {
+          const transMod = translateCulinaryText(mod, targetLanguage);
+          const isModTrans = targetLanguage !== 'en' && transMod.translated.toLowerCase() !== mod.toLowerCase();
+          lines.push(`   + ${transMod.translated}${isModTrans ? ` (${mod})` : ''}`);
+        });
+      }
+      if (item.notes) {
+        lines.push(`   * NOTE: ${item.notes}`);
+      }
+    });
+
+    if (payload.notes) {
+      lines.push('-'.repeat(columns));
+      lines.push(`TICKET NOTES: ${payload.notes}`);
+    }
+
+    lines.push('='.repeat(columns));
+    return lines.filter(Boolean).join('\n');
   }
 }

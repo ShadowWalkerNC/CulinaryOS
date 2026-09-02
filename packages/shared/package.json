@@ -13,7 +13,11 @@
     "./course-engine": "./src/course-engine.ts",
     "./mappers": "./src/mappers.ts",
     "./stations": "./src/stations.ts",
-    "./api-client": "./src/api-client.ts"
+    "./api-client": "./src/api-client.ts",
+    "./modifiers": "./src/modifiers.ts",
+    "./pricing": "./src/pricing.ts",
+    "./translation": "./src/translation.ts",
+    "./printer": "./src/printer.ts"
   },
   "scripts": {
     "build": "tsc",

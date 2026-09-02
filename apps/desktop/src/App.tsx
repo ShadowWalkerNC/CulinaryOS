@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { DiagnosticsModal } from './components/DiagnosticsModal';
+import { PairingModal } from './components/PairingModal';
 
 interface SurfaceTab {
   id: string;
@@ -24,6 +26,8 @@ export function App() {
   const [activeTab, setActiveTab] = useState<string>('pos');
   const [isKiosk, setIsKiosk] = useState<boolean>(false);
   const [pinUser] = useState<string>('Server #1234');
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
+  const [isPairingOpen, setIsPairingOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,6 +39,14 @@ export function App() {
       if (e.key === 'F6') { e.preventDefault(); setActiveTab('ops'); }
       if (e.key === 'F7') { e.preventDefault(); setActiveTab('marketing'); }
       if (e.key === 'F11') { e.preventDefault(); setIsKiosk((k) => !k); }
+      if (e.key === 'F9' || (e.altKey && e.key.toLowerCase() === 'd')) {
+        e.preventDefault();
+        setIsDiagnosticsOpen((d) => !d);
+      }
+      if (e.key === 'F10' || (e.altKey && e.key.toLowerCase() === 'q')) {
+        e.preventDefault();
+        setIsPairingOpen((p) => !p);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -92,8 +104,28 @@ export function App() {
           })}
         </nav>
 
-        {/* Right Status Controls */}
+        {/* Right Status & Tools Controls */}
         <div className="flex items-center gap-2 text-xs shrink-0">
+          {/* LAN QR Pairing Button */}
+          <button
+            onClick={() => setIsPairingOpen(true)}
+            title="Mobile & Tablet QR Pairing (F10)"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px]"
+          >
+            <span className="material-symbols-outlined text-[15px] text-orange-400">qr_code_2</span>
+            <span className="hidden lg:inline">Pair Mobile</span>
+          </button>
+
+          {/* Diagnostics Button */}
+          <button
+            onClick={() => setIsDiagnosticsOpen(true)}
+            title="System Diagnostics & Preflight (F9)"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px]"
+          >
+            <span className="material-symbols-outlined text-[15px] text-emerald-400">health_and_safety</span>
+            <span className="hidden lg:inline">Diagnostics</span>
+          </button>
+
           {/* Active PIN Staff Session */}
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -130,6 +162,18 @@ export function App() {
           title={activeSurface.name}
         />
       </main>
+
+      {/* Diagnostics Modal Drawer */}
+      <DiagnosticsModal
+        isOpen={isDiagnosticsOpen}
+        onClose={() => setIsDiagnosticsOpen(false)}
+      />
+
+      {/* LAN QR Pairing Modal */}
+      <PairingModal
+        isOpen={isPairingOpen}
+        onClose={() => setIsPairingOpen(false)}
+      />
     </div>
   );
 }

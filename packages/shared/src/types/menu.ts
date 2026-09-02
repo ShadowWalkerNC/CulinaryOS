@@ -49,16 +49,35 @@ export type Allergen =
 
 export interface ModifierGroup {
   id: string;
+  menuItemId?: string;
+  parentModifierId?: string;
   name: string;              // 'Temperature', 'Add-ons', 'Sides'
   required: boolean;
   minSelections: number;
   maxSelections: number;
+  freeQuantity?: number;     // First N selections in group are free ($0)
+  nestedGroups?: ModifierGroup[];
   modifiers: Modifier[];
 }
 
 export interface Modifier {
   id: string;
+  modifierGroupId?: string;
   name: string;
   priceAdjustment: number;   // cents
+  priceAdjustmentCents?: number; // cents alias
   isDefault: boolean;
+  nestedGroups?: ModifierGroup[]; // nested groups when this modifier is picked
 }
+
+export interface SelectedModifier {
+  id: string;
+  modifierGroupId: string;
+  parentModifierId?: string;
+  name: string;
+  priceAdjustmentCents: number;
+  effectivePriceCents: number;
+  subModifiers?: SelectedModifier[];
+  depth?: number;
+}
+

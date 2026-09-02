@@ -153,6 +153,87 @@ export function createMockTicketsFromOrder(input: {
   return created;
 }
 
+export interface Mock86Item {
+  id: string;
+  name: string;
+  countRemaining: number | null;
+  is86: boolean;
+  station?: string;
+}
+
+const INITIAL_86: Mock86Item[] = [
+  { id: 'm-1', name: 'Prime Ribeye Steak', countRemaining: 8, is86: false, station: 'grill' },
+  { id: 'm-2', name: 'Atlantic Salmon Fillet', countRemaining: 5, is86: false, station: 'grill' },
+  { id: 'm-3', name: 'Smash Burger Double', countRemaining: null, is86: false, station: 'grill' },
+  { id: 'm-4', name: 'Catch of the Day (Halibut)', countRemaining: 0, is86: true, station: 'grill' },
+  { id: 'm-5', name: 'Truffle Pasta', countRemaining: 3, is86: false, station: 'hot' },
+  { id: 'm-6', name: 'Chocolate Lava Cake', countRemaining: 4, is86: false, station: 'pastry' },
+];
+
+let mock86Items: Mock86Item[] = [...INITIAL_86];
+
+export function getMock86Items(): Mock86Item[] {
+  return mock86Items;
+}
+
+export function setMock86Count(idOrName: string, count: number): Mock86Item | null {
+  const item = mock86Items.find(
+    (i) => i.id === idOrName || i.name.toLowerCase() === idOrName.toLowerCase()
+  );
+  if (!item) {
+    const newItem: Mock86Item = {
+      id: idOrName.startsWith('m-') ? idOrName : `m-${Date.now().toString().slice(-4)}`,
+      name: idOrName,
+      countRemaining: Math.max(0, count),
+      is86: count <= 0,
+    };
+    mock86Items.push(newItem);
+    return newItem;
+  }
+  item.countRemaining = Math.max(0, count);
+  item.is86 = count <= 0;
+  return item;
+}
+
+export function toggleMock86(idOrName: string): Mock86Item | null {
+  const item = mock86Items.find(
+    (i) => i.id === idOrName || i.name.toLowerCase() === idOrName.toLowerCase()
+  );
+  if (!item) {
+    const newItem: Mock86Item = {
+      id: idOrName.startsWith('m-') ? idOrName : `m-${Date.now().toString().slice(-4)}`,
+      name: idOrName,
+      countRemaining: 0,
+      is86: true,
+    };
+    mock86Items.push(newItem);
+    return newItem;
+  }
+  item.is86 = !item.is86;
+  if (item.is86) {
+    item.countRemaining = 0;
+  } else if (item.countRemaining === 0) {
+    item.countRemaining = 10;
+  }
+  return item;
+}
+
+export function decrementMock86(nameOrId: string, quantity = 1): { item: Mock86Item | null; is86: boolean } {
+  const item = mock86Items.find(
+    (i) => i.id === nameOrId || i.name.toLowerCase() === nameOrId.toLowerCase()
+  );
+  if (!item) return { item: null, is86: false };
+
+  if (item.countRemaining !== null) {
+    item.countRemaining = Math.max(0, item.countRemaining - quantity);
+    if (item.countRemaining <= 0) {
+      item.countRemaining = 0;
+      item.is86 = true;
+    }
+  }
+  return { item, is86: item.is86 };
+}
+
 export function bumpMockTicket(id: string): MockKitchenTicket | null {
   const ticket = mockTickets.find((t) => t.id === id);
   if (!ticket) return null;
@@ -164,8 +245,16 @@ export function bumpMockTicket(id: string): MockKitchenTicket | null {
 export function fireMockTicket(id: string): MockKitchenTicket | null {
   const ticket = mockTickets.find((t) => t.id === id);
   if (!ticket) return null;
-  ticket.course_hold_status = 'fired';
   ticket.status = 'fired';
+  ticket.course_hold_status = 'fired';
   ticket.fired_at = new Date().toISOString();
+  return ticket;
+}
+
+export function holdMockTicket(id: string): MockKitchenTicket | null {
+  const ticket = mockTickets.find((t) => t.id === id);
+  if (!ticket) return null;
+  ticket.course_hold_status = 'held';
+  ticket.status = 'queued';
   return ticket;
 }

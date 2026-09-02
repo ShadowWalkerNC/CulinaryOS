@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
 import { interpolate } from '../interpolate.js';
 
 describe('interpolate', () => {

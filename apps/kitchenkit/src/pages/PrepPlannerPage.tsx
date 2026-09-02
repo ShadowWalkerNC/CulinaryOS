@@ -1,12 +1,15 @@
 import {
   ClipboardList, Plus, Loader2, Check, RefreshCw,
-  Save, CheckCheck, Pencil, Printer,
+  Save, CheckCheck, Pencil, Printer, Scale, Tag,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useShiftPrep, useParLevels, type DBParLevel } from '@/hooks/useParLevels';
 import { usePrepPlan, useSavePrepPlan, useTogglePrepItem, useCompletePrepPlan } from '@/hooks/usePrepPlans';
 import ParLevelModal from '@/components/prep/ParLevelModal';
 import StationExportModal from '@/components/prep/StationExportModal';
+import RecipeScalingModal from '@/components/prep/RecipeScalingModal';
+import AdhesiveLabelModal from '@/components/prep/AdhesiveLabelModal';
+import type { PrepBatch } from '@culinaryos/prep-engine';
 
 const SHIFTS = ['AM', 'PM', 'Brunch', 'Dinner'] as const;
 type Shift = typeof SHIFTS[number];
@@ -16,6 +19,10 @@ export default function PrepPlannerPage() {
   const [showAddItem, setShowAddItem]       = useState(false);
   const [editingParItem, setEditingParItem] = useState<DBParLevel | null>(null);
   const [showStationModal, setShowStationModal] = useState(false);
+  const [showScalingModal, setShowScalingModal] = useState(false);
+  const [scalingRecipeName, setScalingRecipeName] = useState('Sourdough Focaccia');
+  const [showLabelModal, setShowLabelModal] = useState(false);
+  const [labelBatch, setLabelBatch] = useState<Partial<PrepBatch> | undefined>(undefined);
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: parItems = [], isLoading: parLoading, error: parError, refetch } = useShiftPrep(shift, today);
@@ -47,6 +54,21 @@ export default function PrepPlannerPage() {
     if (par) setEditingParItem(par);
   }
 
+  function openScalingForIngredient(name: string) {
+    setScalingRecipeName(name);
+    setShowScalingModal(true);
+  }
+
+  function openLabelForIngredient(name: string, amount: number, unit: string) {
+    setLabelBatch({
+      recipeName: name,
+      yieldQuantity: amount,
+      yieldUnit: unit,
+      shelfLifeHours: 72,
+    });
+    setShowLabelModal(true);
+  }
+
   const hasSavedPlan  = !!savedPlan;
   const savedItems    = savedPlan?.items ?? [];
   const doneCount     = savedItems.filter((i) => i.is_done).length;
@@ -63,6 +85,13 @@ export default function PrepPlannerPage() {
           <p className="text-sm text-zinc-500 mt-0.5">{today}</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowScalingModal(true)}
+            className="btn-ghost flex items-center gap-1.5 text-sm"
+            title="Batch Recipe Scaling & Baker's Math"
+          >
+            <Scale size={15} /> Scale Recipe
+          </button>
           <button
             onClick={() => setShowStationModal(true)}
             className="btn-ghost flex items-center gap-1.5 text-sm"
@@ -227,14 +256,32 @@ export default function PrepPlannerPage() {
                           </span>
                         </label>
                         {!planCompleted && (
-                          <button
-                            onClick={() => openEditForIngredient(item.ingredient_name)}
-                            className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-brand-400 transition-all p-1 shrink-0"
-                            aria-label={`Edit par level for ${item.ingredient_name}`}
-                            title="Edit par level"
-                          >
-                            <Pencil size={13} />
-                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                            <button
+                              onClick={() => openScalingForIngredient(item.ingredient_name)}
+                              className="text-zinc-500 hover:text-amber-400 p-1"
+                              aria-label={`Scale recipe for ${item.ingredient_name}`}
+                              title="Scale recipe"
+                            >
+                              <Scale size={13} />
+                            </button>
+                            <button
+                              onClick={() => openLabelForIngredient(item.ingredient_name, item.prep_amount, item.unit)}
+                              className="text-zinc-500 hover:text-amber-400 p-1"
+                              aria-label={`Print label for ${item.ingredient_name}`}
+                              title="Print adhesive expiration label"
+                            >
+                              <Tag size={13} />
+                            </button>
+                            <button
+                              onClick={() => openEditForIngredient(item.ingredient_name)}
+                              className="text-zinc-500 hover:text-brand-400 p-1"
+                              aria-label={`Edit par level for ${item.ingredient_name}`}
+                              title="Edit par level"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -363,6 +410,25 @@ export default function PrepPlannerPage() {
           planCompleted={planCompleted}
           completedAt={savedPlan?.completed_at}
           onClose={() => setShowStationModal(false)}
+        />
+      )}
+
+      {/* Recipe Scaling modal */}
+      {showScalingModal && (
+        <RecipeScalingModal
+          initialRecipeName={scalingRecipeName}
+          onClose={() => setShowScalingModal(false)}
+        />
+      )}
+
+      {/* Adhesive Expiration Label modal */}
+      {showLabelModal && (
+        <AdhesiveLabelModal
+          initialBatch={labelBatch}
+          onClose={() => {
+            setShowLabelModal(false);
+            setLabelBatch(undefined);
+          }}
         />
       )}
     </div>

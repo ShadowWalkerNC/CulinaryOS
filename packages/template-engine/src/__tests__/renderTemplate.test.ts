@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
 import { renderTemplate } from '../renderTemplate.js';
 import type { ProjectSchema } from '@culinaryos/types';
 

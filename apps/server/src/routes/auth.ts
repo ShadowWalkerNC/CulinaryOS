@@ -11,6 +11,7 @@ import { adminSupabase } from '../middleware/supabase.js';
 import { ok, err, requireTenant } from '../middleware/auth.js';
 import { isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
 import { DEMO_STAFF, hashPin, verifyPin } from '../lib/pin.js';
+import { verifyManagerPinDirectly, getAuditLogs } from '../lib/audit.js';
 
 export const authRoutes = new Hono<Env>();
 
@@ -205,6 +206,56 @@ authRoutes.get('/me', requireTenant, async (c) => {
   });
 });
 
+/** Verify manager authorization PIN */
+export async function verifyManagerPinHelper(
+  pin: string,
+  tenantId: string
+): Promise<{ authorized: boolean; managerId?: string; managerName?: string; role: string }> {
+  const res = await verifyManagerPinDirectly(tenantId, pin);
+  if (res.authorized) {
+    const result: { authorized: boolean; managerId?: string; managerName?: string; role: string } = {
+      authorized: true,
+      role: res.role || 'manager',
+    };
+    if (res.managerId) result.managerId = res.managerId;
+    if (res.managerName) result.managerName = res.managerName;
+    return result;
+  }
+  return { authorized: false, role: 'none' };
+}
+
+
+authRoutes.post('/verify-manager-pin', async (c) => {
+  const body = await c.req.json<{ pin?: string; tenant_id?: string }>().catch(() => ({} as any));
+  const pin = String(body.pin ?? '').trim();
+  const tenantId = String(body.tenant_id ?? c.get('tenantId') ?? process.env.VITE_TENANT_ID ?? DEMO_TENANT).trim();
+
+  if (!pin) {
+    return err(c, 'VALIDATION_ERROR', 'pin is required', 422);
+  }
+
+  const result = await verifyManagerPinDirectly(tenantId, pin);
+  if (!result.authorized) {
+    return ok(c, { authorized: false, role: 'none', error: result.error ?? 'Unauthorized' });
+  }
+
+  return ok(c, {
+    authorized: true,
+    managerId: result.managerId,
+    managerName: result.managerName,
+    role: result.role,
+  });
+});
+
+// GET /v1/auth/audit-logs
+authRoutes.get('/audit-logs', requireTenant, async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId') || DEMO_TENANT;
+  const limit = parseInt(c.req.query('limit') || '50', 10);
+  const logs = await getAuditLogs(supabase, tenantId, limit);
+  return ok(c, logs);
+});
+
 /** Dev helper: hash a PIN the same way seed/staff_pins expects. */
 authRoutes.post('/hash-pin', async (c) => {
   if (process.env.NODE_ENV === 'production' && process.env.AUTH_RELAXED !== 'true') {
@@ -214,3 +265,4 @@ authRoutes.post('/hash-pin', async (c) => {
   if (!body.pin) return err(c, 'VALIDATION_ERROR', 'pin required', 422);
   return ok(c, { pin_hash: hashPin(String(body.pin)) });
 });
+

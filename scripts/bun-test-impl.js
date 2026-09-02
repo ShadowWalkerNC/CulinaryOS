@@ -131,6 +131,12 @@ export function expect(actual) {
       const tolerance = Math.pow(10, -precision) / 2;
       assert.ok(diff <= tolerance, `Expected ${actual} to be close to ${expected}`);
     },
+    toBeInstanceOf(expected) {
+      assert.ok(actual instanceof expected, `Expected ${actual} to be instance of ${expected}`);
+    },
+    toBeTypeOf(expected) {
+      assert.strictEqual(typeof actual, expected, `Expected typeof ${actual} to be ${expected}`);
+    },
     toThrow(expected) {
       assert.throws(() => {
         if (typeof actual === 'function') actual();
@@ -174,12 +180,26 @@ export function expect(actual) {
       const len = actual ? actual.length : undefined;
       assert.notStrictEqual(len, expected, `Expected length not ${expected}, got ${len}`);
     },
+    toBeInstanceOf(expected) {
+      assert.ok(!(actual instanceof expected), `Expected ${actual} not to be instance of ${expected}`);
+    },
+    toBeTypeOf(expected) {
+      assert.notStrictEqual(typeof actual, expected, `Expected typeof ${actual} NOT to be ${expected}`);
+    },
+    toThrow() {
+      assert.doesNotThrow(() => {
+        if (typeof actual === 'function') actual();
+      });
+    },
     toContain(expected) {
       if (Array.isArray(actual) || typeof actual === 'string') {
         assert.ok(!actual.includes(expected), `Expected ${JSON.stringify(actual)} NOT to contain ${expected}`);
       } else {
         assert.ok(false, 'actual is not array or string');
       }
+    },
+    toMatch(regex) {
+      assert.ok(!regex.test(actual), `Expected "${actual}" NOT to match ${regex}`);
     },
     toBeTruthy() {
       assert.ok(!Boolean(actual));
@@ -189,9 +209,17 @@ export function expect(actual) {
     }
   };
 
+  const resolves = Promise.resolve(actual).then((val) => expect(val));
+  const rejects = Promise.resolve(actual).then(
+    () => { throw new Error('Promise resolved but was expected to reject'); },
+    (err) => expect(err)
+  );
+
   return {
     ...matchers,
-    not: notMatchers
+    not: notMatchers,
+    resolves,
+    rejects,
   };
 }
 

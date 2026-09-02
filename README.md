@@ -60,19 +60,61 @@ All servers bind to `0.0.0.0` with dynamic LAN routing. Simply open `http://<YOU
 
 CulinaryOS is a **complete, MIT-licensed restaurant operating system** built as a TypeScript monorepo. It covers every surface of a modern food-service operation:
 
-- **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F6 hotkeys, PIN manager, theme customizer, and full-screen Kiosk mode.
+- **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F7 hotkeys, PIN manager, and full-screen Kiosk mode.
 - **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
-- **Kitchen Display System (`:5173`)** — real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode.
-- **Admin Back-Office (`:5174`)** — menu builder, 86ing, staff PINs, pantry par levels, purchase orders, and system customizer.
-- **KitchenKit & Prep Planner (`:5175`)** — Recipe formulas, yield calculations, batch sizing, and vendor purchase orders.
-- **Online Storefront (`:5176`)** — guest ordering with FDA Top 9 dietary filtering, allergen matrices, and cart checkout.
-- **CulinaryOps (`:5177`)** — Live food cost variance, kitchen waste logging, labor % tracking, and plate economics.
+- **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode.
+- **Admin Back-Office (`:5174`)** — Menu builder, 86ing, staff PINs, pantry par levels, purchase orders, and system settings.
+- **KitchenKit & Prep Planner (`:5175`)** — Recipe formulas, yield calculations, batch sizing, adhesive FIFO QR labels, and vendor POs.
+- **Online Storefront (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, and checkout.
+- **CulinaryOps (`:5177`)** — Actual vs theoretical food cost variance, kitchen waste logging, labor % tracking, and plate economics.
+- **Universal CLI Tool (`cli/`)** — Command-line interface to control any screen, order, ticket, recipe, or inventory level.
 - **RecipeOS Vault (`:5178`)** — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list.
 - **Android Mobile POS (`mobile/`)** — React Native + Expo companion app with offline SQLite cache.
-- **Unified Hono API (`:3000`)** — single source of truth for orders, inventory, ops, payments, and settings.
+- **Unified Hono API (`:3000`)** — Single source of truth for orders, inventory, ops, payments, and settings.
 - **MCP Agent Layer (`mcp/`)** — 9 specialized Model Context Protocol servers that let AI agents operate on live restaurant state.
 
 All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive** — every core operation works identically with or without an Anthropic API key.
+
+---
+
+## 🛠️ Universal CLI Tool (`culinary`)
+
+CulinaryOS includes a full-featured CLI to control every surface, order, ticket, and table in the system:
+
+```bash
+# Build the CLI tool
+pnpm --filter culinary-cli build
+
+# Front-of-House POS Operations
+culinary pos list                              # View active dining room orders
+culinary pos seat 4 --covers 4                 # Seat guests at Table 4
+culinary pos fire 4 "Burger" "Pizza"           # Ring up & fire items to kitchen
+culinary pos merge 5 4 6                       # Merge tables 4 & 6 into Table 5
+culinary pos void ord-1 item-2 "Overcooked" 5678 # Void post-send item with Manager PIN
+culinary pos pay ord-1 --method card           # Settle bill with card / tap
+
+# Back-of-House Kitchen Display Operations
+culinary kds list                              # View live kitchen tickets & aging
+culinary kds bump tkt-101 --station expo       # Bump completed ticket
+culinary kds fire-course ord-1 2               # Fire Course 2 (Entrees)
+culinary kds 86 "Ribeye" 4                     # Set 86 countdown: 4 remaining
+
+# Food Cost & Kitchen Operations
+culinary ops waste item-3 5.0 "Burnt"          # Log kitchen scrap & auto-calculate loss
+culinary ops food-cost                         # Actual vs theoretical food cost variance
+culinary ops labor                             # Shift labor hours & labor % report
+
+# KitchenKit Batch Prep & Adhesive Labels
+culinary prep scale "Pizza Dough" --factor 3.5 # Scale batch formula 3.5x
+culinary prep label "Marinara Sauce" --shelfLife 48 # Generate adhesive FIFO QR label
+culinary prep par                              # Low-stock pantry items & auto-draft PO
+
+# System Diagnostics & Device Discovery
+culinary system doctor                         # Port scan & health diagnostic
+culinary system heal                           # Auto-kill zombie conflicting processes
+culinary system tray                           # Launch Windows skillet tray daemon
+culinary system discover                       # Broadcast mDNS (culinaryos.local) & QR
+```
 
 ---
 

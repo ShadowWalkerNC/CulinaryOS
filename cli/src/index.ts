@@ -4,6 +4,11 @@ import chalk from 'chalk';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { posCommand } from './commands/pos';
+import { kdsCommand } from './commands/kds';
+import { opsCommand } from './commands/ops';
+import { prepCommand } from './commands/prep';
+import { systemCommand } from './commands/system';
 import { menuCommand } from './commands/menu';
 import { inventoryCommand } from './commands/inventory';
 import { ordersCommand } from './commands/orders';
@@ -16,8 +21,20 @@ program
   .name('culinary')
   .alias('culinaryos')
   .alias('create-culinaryos')
-  .description('CulinaryOS CLI — Turnkey restaurant OS installer, runner, and management tool')
+  .description('CulinaryOS Universal CLI & Remote Control Engine')
   .version('1.0.0');
+
+// Register Subsystem Commands
+program.addCommand(posCommand);
+program.addCommand(kdsCommand);
+program.addCommand(opsCommand);
+program.addCommand(prepCommand);
+program.addCommand(systemCommand);
+program.addCommand(menuCommand);
+program.addCommand(inventoryCommand);
+program.addCommand(ordersCommand);
+program.addCommand(reportCommand);
+program.addCommand(tenantCommand);
 
 // 1. Init & Turnkey Provisioning Command
 program
@@ -88,43 +105,4 @@ program
     });
   });
 
-// 3. Preflight Health & Doctor Command
-program
-  .command('doctor')
-  .description('Run system health, port, and configuration preflight checks')
-  .action(() => {
-    console.log(chalk.bold.hex('#F97316')('\n🩺 CulinaryOS System Doctor & Diagnostic'));
-    console.log(chalk.gray('Checking runtime environment and configuration readiness...\n'));
-
-    const nodeMajor = parseInt((process.versions.node || '18').split('.')[0] || '18', 10);
-    const checks = [
-      { name: 'Node.js Runtime (>= 18.0.0)', pass: nodeMajor >= 18 },
-      { name: 'Root Configuration (.env)', pass: fs.existsSync(path.resolve(process.cwd(), '.env')) },
-      { name: 'Package Workspace (Turborepo)', pass: fs.existsSync(path.resolve(process.cwd(), 'turbo.json')) },
-      { name: 'Unified API Kernel (apps/server)', pass: fs.existsSync(path.resolve(process.cwd(), 'apps/server')) },
-      { name: 'POS Client (apps/pos)', pass: fs.existsSync(path.resolve(process.cwd(), 'apps/pos')) },
-      { name: 'KDS Client (apps/kds)', pass: fs.existsSync(path.resolve(process.cwd(), 'apps/kds')) },
-      { name: 'Admin Client (apps/admin)', pass: fs.existsSync(path.resolve(process.cwd(), 'apps/admin')) },
-      { name: 'Online Storefront (apps/web)', pass: fs.existsSync(path.resolve(process.cwd(), 'apps/web')) },
-    ];
-
-    for (const c of checks) {
-      if (c.pass) {
-        console.log(chalk.green(`  ✔ ${c.name}`));
-      } else {
-        console.log(chalk.yellow(`  ⚠ ${c.name} (Check setup)`));
-      }
-    }
-
-    console.log(chalk.bold.green('\n✔ Ready for execution in zero-dependency demo or live Supabase mode.\n'));
-  });
-
-// Core API Management Subcommands
-program.addCommand(menuCommand);
-program.addCommand(inventoryCommand);
-program.addCommand(ordersCommand);
-program.addCommand(tenantCommand);
-program.addCommand(reportCommand);
-
 program.parse(process.argv);
-

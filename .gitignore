@@ -28,3 +28,7 @@ Thumbs.db
 # Android (mobile/recipeos uses its own .gitignore)
 *.apk
 *.aab
+
+# Logs and Agent Scratch
+*.log
+.agents/

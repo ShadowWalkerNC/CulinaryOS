@@ -1,75 +1,78 @@
-# BRIEFING — 2026-08-02T12:30:46Z
+# BRIEFING — 2026-09-01T20:05:40Z
 
 ## Mission
-Orchestrate the re-architecture, stabilization, multi-tenant security hardening, monorepo alignment, MCP extension platform integration (CulinaryOps, KitchenKit, Plated, Post-Pilot, RecipeOS), and build validation of CulinaryOS.
+Orchestrate the full implementation and verification of CulinaryOS R1-R4 requirements (Front-of-House, Back-of-House, Void/Security/Accounting Ledger, Zero-Tech Installer & Tray Engine) through structured multi-agent decomposition and verification.
 
 ## 🔒 My Identity
-- Archetype: Project Orchestrator
+- Archetype: teamwork_preview_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
 - Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator
-- Original parent: 9143ee42-97b9-410c-adf5-c1ea77ad7f5c
-- Original parent conversation ID: 9143ee42-97b9-410c-adf5-c1ea77ad7f5c
+- Original parent: parent
+- Original parent conversation ID: f7c0cc0f-937e-4bfc-ae03-31307499a7ee
 
 ## 🔒 My Workflow
-- **Pattern**: Project
+- **Pattern**: Project Orchestration (Survey -> Decompose & Dual Track -> Iteration Loop -> Verification)
 - **Scope document**: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\PROJECT.md
-1. **Decompose**: Decompose requirements into 5 core milestones (R1-R5) + E2E Testing / Forensic Audit track.
-2. **Dispatch & Execute**: Direct (iteration loop: Explorer -> Worker -> Reviewer -> Challenger -> Forensic Auditor per milestone).
-3. **On failure**: Retry -> Replace -> Skip -> Redistribute -> Redesign.
-4. **Succession**: Track spawn count, spawn successor at 16 spawns.
+1. **Decompose**: Survey completed (3 reports aggregated). PROJECT.md and TEST_INFRA.md created.
+2. **Dispatch & Execute**:
+   - Implementation Track: M1 (R1 - FOH), M2 (R2 - BOH), M3 (R3 - Security & Ledger), M4 (R4 - Installer & Tray) dispatched concurrently with segregated file boundaries.
+   - E2E Testing Track: test_writer_track dispatched to author Tiers 1-4 suites and publish TEST_READY.md.
+3. **On failure**:
+   - Retry -> Replace -> Skip -> Redistribute -> Redesign
+4. **Succession**: Track spawns up to threshold 16.
 - **Work items**:
-  1. Milestone 1: Monorepo Alignment & Package Contracts (R2) [done]
-  2. Milestone 2: Turborepo & Dev Environment Stability (R5) [remediation in-progress]
-  3. Milestone 3: Multi-Tenant Security & Database Isolation (R3) [done]
-  4. Milestone 4: POS & KDS Real-Time Architecture & State Synchronization (R1) [done]
-  5. Milestone 5: MCP Extension Platform & External Integrations (R4) [remediation in-progress]
-  6. Milestone 6: Monorepo E2E Verification & Forensic Integrity Audit [REMEDIATION ACTIVE — AUDIT VETO ENFORCED]
-- **Current phase**: 6
-- **Current focus**: Enforced Forensic Audit Veto (11 test suite failures due to Node ESM module resolution). Dispatched Remediation Explorer (`2fc54646-18bf-4b6b-9eb6-d3ae7d974afd`) to investigate tsx loader and relative module export specifiers.
+  1. Survey & Architecture Specification [done]
+  2. E2E Testing Suite (Tiers 1-4) [in-progress]
+  3. Milestone 1: Front-of-House Dining & Service Engines (R1) [in-progress]
+  4. Milestone 2: Back-of-House Kitchen & Prep Engines (R2) [in-progress]
+  5. Milestone 3: Security, Void Governance & Accounting Ledger (R3) [in-progress]
+  6. Milestone 4: Turnkey Zero-Tech Installer & System Tray Engine (R4) [in-progress]
+  7. Milestone 5: Full E2E Integration & Adversarial Verification [pending]
+- **Current phase**: 2B (Implementation & Testing Track Execution)
+- **Current focus**: Parallel execution of M1, M2, M3, M4, and E2E Test Suite Authoring
 
 ## 🔒 Key Constraints
-- NEVER write, modify, or create source code files directly.
-- NEVER run build/test commands yourself — require workers to do so.
-- Multi-tenant isolation is MANDATORY — all DB queries must be tenant-scoped.
-- Forensic Auditor audit is a BINARY VETO.
-- Spawn fresh subagents; never reuse after handoff.
-- All MCP tools and external integrations must follow `extension_template/` contract.
+- Dispatch-only orchestrator: Never write application source code directly.
+- Never run build/test commands directly — workers must execute and report.
+- Mandatory Forensic Auditor check on all completed milestones.
+- Keep BRIEFING.md and progress.md updated.
 
 ## Current Parent
-- Conversation ID: 9143ee42-97b9-410c-adf5-c1ea77ad7f5c
-- Updated: 2026-08-02T12:30:46Z
+- Conversation ID: f7c0cc0f-937e-4bfc-ae03-31307499a7ee
+- Updated: 2026-09-01T20:00:09Z
 
 ## Key Decisions Made
-- Organized work into 6 milestones prioritizing contract standardization and build stability (M1, M2) before multi-tenant DB security (M3), real-time POS/KDS state sync (M4), MCP & External Extension Integration (M5), and end-to-end audit (M6).
-- Audit Veto Enforced: Forensic Auditor reported INTEGRITY VIOLATION due to 11 test suite failures in `node ./scripts/run-all-tests.cjs`. Milestone 6 cannot advance until all 23/23 test suites pass cleanly.
-- Dispatched Remediation Explorer (`2fc54646-18bf-4b6b-9eb6-d3ae7d974afd`) to analyze loader/module specifier resolution root causes.
+- Initialized Project Pattern with dual-track architecture (Implementation + E2E Testing).
+- Survey completed by explorer_survey_1, explorer_survey_2, and spec_miner_survey_3.
+- Created PROJECT.md and TEST_INFRA.md with complete 26-feature inventory.
+- Dispatched E2E Test Track and M1-M4 implementation workers with non-overlapping write boundaries.
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| Explorer 1 | teamwork_preview_explorer | Monorepo & Integration Architecture Audit | completed | 0a30e482-5cd8-4843-a224-3bcedd893c90 |
-| Worker 1 | teamwork_preview_worker | Monorepo Build & Test Suite Verification | completed | 202f1f97-ef00-4291-b8b4-0b8f772f03fe |
-| Reviewer | teamwork_preview_reviewer | Codebase Alignment & Contract Verification | completed (REQUEST_CHANGES) | 7637b5dd-07c9-4dad-8995-3fd557847b37 |
-| Remediation Worker | teamwork_preview_worker | Extension Manifests & Turborepo Test Script Fix | in-progress | d28b53bb-a1d4-4d03-963c-3b87fe1b9233 |
-| Forensic Auditor | teamwork_preview_auditor | Full System Forensic Integrity Audit | completed (INTEGRITY_VIOLATION) | 2c1b4b10-d8ca-441a-86ca-62e0b7245904 |
-| Remediation Explorer | teamwork_preview_explorer | Audit Failure Module Resolution Analysis | in-progress | 2fc54646-18bf-4b6b-9eb6-d3ae7d974afd |
+| explorer_survey_1 | teamwork_preview_explorer | Survey FOH (R1) & BOH (R2) | completed | a5541d32-46c3-4cc5-9171-397020f329c7 |
+| explorer_survey_2 | teamwork_preview_explorer | Survey Security/Ledger (R3) & Installer (R4) | completed | 546d5ec4-0e1f-469f-aaa0-99d6a82ebc66 |
+| spec_miner_survey_3 | teamwork_preview_spec_miner | Comprehensive Feature/Spec Mining | completed | 71ff5441-96d9-4408-a084-239649ed32d4 |
+| test_writer_track | teamwork_preview_test_writer | E2E 4-Tier Test Suite & TEST_READY.md | in-progress | c9a3d274-c658-479f-8327-a1a7d02c0ddd |
+| worker_m1_foh | teamwork_preview_worker | M1: FOH Dining & Service Engines (R1) | in-progress | d583134a-95f9-4666-b4f8-2c80e8db256b |
+| worker_m2_boh | teamwork_preview_worker | M2: BOH Kitchen & Prep Engines (R2) | in-progress | 0152bd1a-4793-4bd9-9f06-9b5704762b37 |
+| worker_m3_security | teamwork_preview_worker | M3: Security, Void & Accounting Ledger (R3) | in-progress | 1945b4ff-5ee9-462d-8eab-1d336317e9a9 |
+| worker_m4_installer | teamwork_preview_worker | M4: Turnkey Installer & Tray Engine (R4) | in-progress | d0cdffea-a4e7-487d-8894-2b4cc2c40174 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 6 / 16
-- Pending subagents: d28b53bb-a1d4-4d03-963c-3b87fe1b9233, 2fc54646-18bf-4b6b-9eb6-d3ae7d974afd
+- Spawn count: 8 / 16
+- Pending subagents: c9a3d274-c658-479f-8327-a1a7d02c0ddd, d583134a-95f9-4666-b4f8-2c80e8db256b, 0152bd1a-4793-4bd9-9f06-9b5704762b37, 1945b4ff-5ee9-462d-8eab-1d336317e9a9, d0cdffea-a4e7-487d-8894-2b4cc2c40174
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: task-35 (*/10 * * * *)
+- Heartbeat cron: task-9 (every 10m)
 - Safety timer: none
 
 ## Artifact Index
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\PROJECT.md — Project architecture and milestone index
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\progress.md — Execution tracking
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\plan.md — Detailed milestone plan
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\ORIGINAL_REQUEST.md — Original user request log
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\teamwork_preview_explorer_full_2\handoff.md — Explorer report
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\teamwork_preview_reviewer_full_2\handoff.md — Reviewer report
-- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\teamwork_preview_auditor_full_2\audit.md — Forensic Auditor report
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\ORIGINAL_REQUEST.md — Authoritative User Request
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\PROJECT.md — Global Project Specification & Milestone Tracker
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\TEST_INFRA.md — E2E Test Suite Specification
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\progress.md — Progress & Liveness
+- c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\orchestrator\BRIEFING.md — Context & Identity

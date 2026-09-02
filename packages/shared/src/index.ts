@@ -10,3 +10,7 @@ export * from './secrets.js';
 export * from './dietary.js';
 export * from './printer.js';
 export * from './settings.js';
+export * from './tax.js';
+export * from './modifiers.js';
+export * from './pricing.js';
+export * from './translation.js';

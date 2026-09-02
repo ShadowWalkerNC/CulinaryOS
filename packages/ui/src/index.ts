@@ -135,9 +135,16 @@ export {
   Building,
   Zap,
   Palette,
+  ShieldAlert,
+  KeyRound,
+  FileText,
+  AlertTriangle,
+  Coins,
+  Scale,
   Table as TableIcon,
   Badge as BadgeIcon,
 } from 'lucide-react';
+
 
 // Legacy / stitch components compatibility
 export * from './CulinaryHeader';

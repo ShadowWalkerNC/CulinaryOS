@@ -372,27 +372,132 @@ export function useFireOrder() {
 
 export function useVoidOrder() {
   const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
-    mutationFn: async ({ orderId, reason }: { orderId: string; reason?: string }) => {
-      if (!supabase) {
-        const orders = getMockOrders();
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          order.status = 'voided';
-          order.voided_at = new Date().toISOString();
-          order.void_reason = reason;
-          saveMockOrders(orders);
-        }
-        return;
-      }
-      const { error } = await supabase
-        .from('pos_orders')
-        .update({ status: 'voided', voided_at: new Date().toISOString(), void_reason: reason })
-        .eq('id', orderId);
-      if (error) throw error;
+    mutationFn: async ({
+      orderId,
+      managerPin,
+      reasonCode,
+      reason,
+      isCooked,
+      notes,
+    }: {
+      orderId: string;
+      managerPin?: string;
+      reasonCode?: string;
+      reason?: string;
+      isCooked?: boolean;
+      notes?: string;
+    }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/orders/${orderId}/void`, {
+        method: 'PATCH',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify({
+          managerPin,
+          reasonCode: reasonCode || reason,
+          reason: reasonCode || reason,
+          isCooked,
+          notes,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Void failed');
+      return body?.data ?? body;
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['orders'] });
+      qc.invalidateQueries({ queryKey: ['order', vars.orderId] });
+    },
+  });
+}
+
+export function useVoidLineItem() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      itemId,
+      managerPin,
+      reasonCode,
+      reason,
+      isCooked,
+      notes,
+    }: {
+      orderId: string;
+      itemId: string;
+      managerPin?: string;
+      reasonCode?: string;
+      reason?: string;
+      isCooked?: boolean;
+      notes?: string;
+    }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/orders/${orderId}/items/${itemId}/void`, {
+        method: 'PATCH',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify({
+          managerPin,
+          reasonCode: reasonCode || reason,
+          reason: reasonCode || reason,
+          isCooked,
+          notes,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Item void failed');
+      return body?.data ?? body;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+      qc.invalidateQueries({ queryKey: ['order', vars.orderId] });
+    },
+  });
+}
+
+export function useOpenDrawer() {
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async ({
+      managerPin,
+      reason,
+      notes,
+    }: {
+      managerPin: string;
+      reason?: string;
+      notes?: string;
+    }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/orders/drawer/open`, {
+        method: 'POST',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify({
+          managerPin,
+          reason,
+          notes,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Drawer open failed');
+      return body?.data ?? body;
+    },
+  });
+}
+
+export function useVerifyManagerPin() {
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async (pin: string) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/auth/verify-manager-pin`, {
+        method: 'POST',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify({ pin, tenant_id: tenantId }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'PIN verification failed');
+      return body?.data ?? body;
     },
   });
 }
@@ -423,4 +528,106 @@ export function useApplyDiscount() {
     },
   });
 }
+
+// ---- TABLE OPERATIONS (MERGE, SPLIT, TRANSFER, ASSISTANCE) ----
+export function useMergeTables() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async (payload: { sourceTableIds: string[]; targetTableId: string; managerPin?: string }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/tables/merge`, {
+        method: 'POST',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Table merge failed');
+      return body?.data ?? body;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+export function useSplitOrder() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async (payload: { orderId: string; splitType?: 'seat' | 'items' | 'custom'; partitions: { seatNumber?: number; itemIds: string[]; guestLabel?: string }[] }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/orders/${payload.orderId}/split`, {
+        method: 'POST',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Order split failed');
+      return body?.data ?? body;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+export function useTransferTable() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async (payload: { tableId: string; fromServerId: string; toServerId: string; toServerName?: string; managerPin: string }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/tables/transfer`, {
+        method: 'POST',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Server transfer failed');
+      return body?.data ?? body;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+export function useActiveAssistance() {
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useQuery({
+    queryKey: ['tables', 'assistance', tenantId],
+    queryFn: async () => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/tables/assistance/active`, {
+        headers: apiHeaders(tenantId),
+      });
+      if (!res.ok) return [];
+      const body = await res.json().catch(() => ({}));
+      return body?.data ?? [];
+    },
+    refetchInterval: 5_000,
+  });
+}
+
+export function useDismissAssistance() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/tables/assistance/${notificationId}/dismiss`, {
+        method: 'PATCH',
+        headers: apiHeaders(tenantId),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Dismiss failed');
+      return body;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tables', 'assistance'] });
+    },
+  });
+}
+
 

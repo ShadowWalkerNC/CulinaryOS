@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
 import { generateQrDataUrl, generateQrBuffer } from '../qr.js';
 
 const TEST_URL = 'https://rustyfork.plated.app';

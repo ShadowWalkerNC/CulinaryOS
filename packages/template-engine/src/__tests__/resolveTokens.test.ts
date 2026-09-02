@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
 import { resolveTokens } from '../resolveTokens.js';
 import type { ProjectSchema } from '@culinaryos/types';
 

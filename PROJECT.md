@@ -1,153 +1,171 @@
-# Project: CulinaryOS Consolidation
+# Project: CulinaryOS Complete Engine Implementation & Zero-Tech Packaging
 
 ## Architecture
-CulinaryOS is an AI-native, modular, forkable restaurant operating system ("the Linux of restaurant tech") consolidating POS, KDS, inventory, recipe scaling, operational analytics, automated loyalty marketing, and AI agent tools under an MIT open-source license.
+CulinaryOS is an AI-native, multi-tenant restaurant operating system monorepo orchestrated via pnpm workspaces and Turborepo. It powers Front-of-House (POS, Storefront, Tableside QR), Back-of-House (KDS, KitchenKit Prep Planner, Shelf-Life Manager), Operations (CulinaryOps food costing, waste logging, labor/tips), Security & Ledger (Manager PIN gatekeeper, Multi-Rate Tax, EOD Z-Report), and a Turnkey Zero-Tech System Tray & Network Discovery Engine.
 
-### Monorepo Workspaces & Package Boundaries
-- `apps/server`: Unified Hono API (POS orders, KDS queue, pantry inventory, ops/waste, plate economics, PIN auth, demo mock kitchen hub).
-- `apps/pos`: Fast touch-screen POS terminal (React + Vite + Tailwind + shadcn/ui + Three.js 3D spatial floor map).
-- `apps/kds`: Real-time Kitchen Display System (React + Vite + Station Routing + Multi-Course Holding/Firing + Aging Timers).
-- `apps/admin`: Back-office management portal (React + Vite + Menu management, Staff PINs, Pantry stock, Waste analytics, Recipe viewing).
-- `apps/web`: Public online ordering storefront (React + Vite + Dietary filtering, Menu browsing, Cart, Checkout).
-- `packages/ratio-engine`: Pure, zero-dependency culinary mathematical engine (sub-recipe trees, portion scaling, baker's percentages, density unit conversions, food costing, variance analysis, waste summarization, shift prep planning).
-- `packages/db`: Supabase client and TypeScript database schema definitions matching migrations V1–V14.
-- `packages/event-bus`: Domain event broker, binary protocol, realtime bridge, and event handlers (`pos:order:created`, `pos:menu:item-sold`, `kds:ticket:bumped`, `kds:course:fired`).
-- `packages/shared`: Cross-cutting domain models, FDA Top 9 dietary engine, course engine, station routing matrix, offline transaction queue, and types.
-- `packages/ui`: Canonical **shadcn/ui** design system (`components.json`, Radix UI primitives, Three.js 3D WebGL dining room visualizer).
-- `packages/auth`: JWT verification, PIN auth logic, role-based access control (`managerGate`).
-- `packages/config`: Shared environment variable validation and constants.
-- `mcp/`: MCP tool servers (`culinaryos-mcp`, `culinaryops-hub-live`, `recipe-server`, `inventory-server`, `kds-server`, `pos-server`, `post-pilot-server`, `prep-server`).
-- `extensions/`: First-party extension manifests for modular platform extensibility.
-
----
+```
+                    ┌──────────────────────────────────────────────┐
+                    │               CulinaryOS API                 │
+                    │         (apps/server - Hono HTTP/WS)         │
+                    └──────┬───────────────┬────────────────┬──────┘
+                           │               │                │
+             ┌─────────────┴──┐    ┌───────┴──────┐   ┌─────┴───────────────┐
+             │ FOH Interfaces │    │ BOH Systems  │   │ Ops, Sec & Ledger   │
+             │  • apps/pos    │    │  • apps/kds  │   │  • apps/ops         │
+             │  • apps/web    │    │  • kitchenkit│   │  • apps/admin       │
+             └────────────────┘    └──────────────┘   └─────────────────────┘
+                           │               │                │
+  ┌────────────────────────┴───────────────┴────────────────┴───────────────────────┐
+  │ Shared Core Engines (packages/)                                                 │
+  │ • shared (pricing, modifier, translation, contracts, printer ESC/POS)           │
+  │ • prep-engine (batch scaling, 2"x1" / 2"x2" adhesive thermal expiration labels) │
+  │ • food-cost-engine (actual-vs-theoretical cost variance analysis)               │
+  │ • waste-engine (1-click scrap & auto-void debiting)                             │
+  │ • labor-engine (role-weighted & hours-based tip pooling)                        │
+  │ • pdf-tools (QR pairing, printable table tents, thermal chits)                  │
+  └─────────────────────────────────────────────────────────────────────────────────┘
+                                   │
+  ┌────────────────────────────────┴────────────────────────────────────────────────┐
+  │ Turnkey Zero-Tech Runtime & Installer (scripts/ & apps/desktop)                 │
+  │ • install-windows-turnkey.ps1, Install-CulinaryOS.bat                           │
+  │ • scripts/tray-manager.ts (System Tray Daemon, Silent Boot, Port Self-Heal)     │
+  │ • scripts/mdns-qr-discovery.ts (mDNS culinaryos.local, LAN Pairing QR)          │
+  └─────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ## Feature Inventory
-
-Every feature discovered in the Survey and Enhancement phases is mapped to an implementation milestone below:
-
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Sub-Recipe Tree Scaling | Recursive formula scaling for nested doughs, sauces, bases | M1 | RecipeOS/KitchenKit |
-| 2 | Tree Flattening & Aggregation | Flattens hierarchical scaled recipe tree into consolidated raw ingredients | M1 | KitchenKit ratio-engine |
-| 3 | Baker's Percentages & Total Weight | Calculates baker's percentage (base = 100%) and scales from total weight | M1 | KitchenKit/CulinaryOS |
-| 4 | Density-Based Unit Conversions | Bidirectional grams <-> cups for flour, sugar, butter, salt, rice, oats | M1 | RecipeOS ratio-engine |
-| 5 | Smart Decimal Portion Formatting | Formats scaled quantities (integers -> whole, >=1 -> 1dp, <1 -> 2dp) | M1 | RecipeOS ratio-engine |
-| 6 | Recipe Food Costing & Target % | Computes cost per serving, total cost, food cost % and status (good/watch/high) | M1 | CulinaryOps food-cost-engine |
-| 7 | Actual vs Theoretical Cost Variance | Computes dollar and percentage variance with ok (<2%), warn (2-5%), alert (>=5%) | M1 | CulinaryOps food-cost-engine |
-| 8 | Waste Summarization & Top Offenders | Aggregates waste weight, dollar loss, reason breakdown, top wasted items | M1 | CulinaryOps waste-engine |
-| 9 | Shift Prep & Mise en Place Planning | Evaluates par shortfall by shift and generates station prep task lists | M1 | KitchenKit prep-engine |
-| 10 | Batch Requirement Projection | Calculates total batch weight needed for target covers with buffer factor | M1 | KitchenKit prep-engine |
-| 11 | V1–V14 Database TypeScript Types | Complete schema types for tenants, orders, tickets, pantry, waste, economics | M1 | Database migrations |
-| 12 | Closed-Loop POS Order Deduction | Resolves menu_item_recipes to constituent ingredients and decrements pantry stock | M2 | Event spine & pantry.ts |
-| 13 | Demo Mode In-Memory Pantry Decrement | Firing orders in mock mode decrements mockPantry and logs plate economics | M2 | apps/server orders & pantry |
-| 14 | Dynamic Par Level Alerts | Identifies low-stock and out-of-stock items in live and demo mode | M2 | /v1/pantry/alerts |
-| 15 | Automated Purchase Order Generation | Automatically generates draft POs with calculated reorder quantities | M2 | /v1/pantry/purchase-orders/auto-generate |
-| 16 | Supplier PO Lifecycle | Approval, dispatch (send), and stock receiving with pantry ledger logging | M2 | /v1/pantry/purchase-orders/* |
-| 17 | Food Waste Logging Endpoint | POST /v1/ops/waste logs waste events, costs, and auto-records ledger adjustments | M2 | apps/server ops.ts |
-| 18 | Waste Analytics Summary API | GET /v1/ops/waste/summary aggregates waste trends and top financial loss items | M2 | apps/server ops.ts |
-| 19 | Plate Economics API | GET /v1/ops/plate-economics retrieves theoretical food cost vs sale price history | M2 | apps/server ops.ts |
-| 20 | Loyalty & Marketing API | /v1/ops/loyalty points balance adjustment and postcard coupon generation | M2 | apps/server ops.ts |
-| 21 | Multi-Course Holding Engine | Holds Course 2+ upon order send while immediately firing Course 1 | M2 | shared course-engine |
-| 22 | Manual & Direct Course Firing | POST /v1/orders/:id/fire-course and PATCH /v1/kds/tickets/:id/fire | M2 | apps/server orders & kds |
-| 23 | KDS Station Routing & Expo Pass | Line station filtering (grill, cold, fry, bar) vs full Expo Pass view | M2 | apps/kds & stations.ts |
-| 24 | Ticket Aging Alerts & Bump Workflows | Real-time aging color transitions (<5m green, 5-10m amber, >10m red) and auto-advance | M2 | apps/kds & kds-ticket-bumped |
-| 25 | Terminal PIN Authentication | Instant demo PIN login (1234/5678) and live salted scrypt staff authentication | M2 | /v1/auth/pin-login |
-| 26 | Offline LocalStorage Sync Queue | Client queueing of POS transaction deltas and sync replay on reconnect | M2 | shared offline-sync.ts |
-| 27 | Admin Tailwind & PostCSS Config | Enables utility styling and unified theme compilation in apps/admin | M3 | apps/admin build setup |
-| 28 | Admin CulinaryHeader Integration | Standardizes Universal Header across Menu, Staff, and Pantry admin pages | M3 | apps/admin pages |
-| 29 | POS & Admin Theme Token Standardization | Refactors hardcoded arbitrary hex classes to @culinaryos/ui design tokens | M3 | apps/pos & apps/admin |
-| 30 | Cross-Surface Visual Harmony | Cohesive branding across POS (:5172), KDS (:5173), Admin (:5174), Web (:5176) | M3 | @culinaryos/ui |
-| 31 | Consolidated MCP Tool Suite | 8 MCP servers operating against consolidated ratio engine and /v1/ops/* routes | M4 | mcp/ |
-| 32 | Open-Source MIT Licensing | Standardizes "license": "MIT" in all package.json manifests and SPDX headers | M4 | monorepo packaging |
-| 33 | Turborepo Pipeline & Script Polish | Cleans up recursive test script and ensures clean build & typecheck | M4 | turbo.json & package.json |
-| 34 | Comprehensive 4-Tier E2E Test Suite | Requirement-driven test suite covering all features, boundaries, combinations | E2E Track | ORIGINAL_REQUEST |
-| 35 | Adversarial Coverage Hardening | White-box stress testing and edge-case bug hunting | M5 (Phase 2) | Quality Assurance |
-| 36 | Multi-Tender Payment Methods | Stripe Elements, Contactless Tap to Pay (Apple/Google Pay), QR Scan, Cash change math | M6 | apps/pos checkout |
-| 37 | Canonical shadcn/ui Component Suite | Radix UI primitives, `components.json`, Button, Card, Badge, Dialog, Tabs, Table, Select | M7 | packages/ui |
-| 38 | Three.js 3D Dining Floor Map | Interactive WebGL 3D spatial floor map with real-time status glow halos & orbit navigation | M7 | packages/ui FloorMap3D |
-| 39 | FDA Top 9 Dietary & Allergen Engine | FDA FASTER Act Top 9 allergens, cross-contact matrix, safe substitution suggestions | M8 | packages/shared dietary.ts |
-| 40 | AI Operations Manager & Consultant | Executive Chef / GM operational auditor, daily questions generator, pnpm ops:audit | M8 | scripts/ & docs/ |
-| 41 | Turnkey 1-Command Quickstart & Simulation | Quickstart launcher, Sean's 5-minute guide, and live dinner rush simulator | M9 | scripts/quickstart.ts & simulate-service.ts |
-| 42 | Square Developer API Equivalence & Converter | Direct API equivalence mapping and Square catalog converter utility | M9 | docs/ & scripts/import-square-catalog.ts |
-
----
+| F1.1 | Hierarchical Modifiers | Multi-level nested modifier selection with min/max rules and included/free allowances | M1 | ORIGINAL_REQUEST §R1 |
+| F1.2 | 2D/3D Floor Map Operations | Drag-and-drop table merging, seat/bill splitting, server shift reassignment | M1 | ORIGINAL_REQUEST §R1 |
+| F1.3 | Daypart & Happy Hour Pricing | Automated time/day-scheduled price adjustments with time-range validation | M1 | ORIGINAL_REQUEST §R1 |
+| F1.4 | 3-Mode Tableside QR | View-only, Pay-at-Table with split bill, and Self-Ordering with Assistance Buzzer | M1 | ORIGINAL_REQUEST §R1 |
+| F2.1 | Live 86 Countdowns | Real-time portion decrementing on order send and automatic 86 status lock at 0 | M2 | ORIGINAL_REQUEST §R2 |
+| F2.2 | Multi-Course Hold/Fire Pacing | Course staging with pacing countdown timers, warning alerts, and 1-click fire | M2 | ORIGINAL_REQUEST §R2 |
+| F2.3 | Per-Station Dual Translation | Bilingual kitchen ticket and ESC/POS thermal chit translation (EN/ES/FR) | M2 | ORIGINAL_REQUEST §R2 |
+| F2.4 | 1-Click Waste & Variance | Quick-tap scrap logging linked directly to actual-vs-theoretical food cost variance | M2 | ORIGINAL_REQUEST §R2 |
+| F2.5 | Batch Prep Scaling & Labels | Baker's percentage prep scaling with 2"x1" & 2"x2" adhesive thermal expiration labels | M2 | ORIGINAL_REQUEST §R2 |
+| F3.1 | Manager PIN Gatekeeper | Authorization gate for post-send voids, comps, drawer opens with reason tracking | M3 | ORIGINAL_REQUEST §R3 |
+| F3.2 | Post-Send Void Auto-Waste | Automatic inventory reduction and waste event generation on post-send item voids | M3 | ORIGINAL_REQUEST §R3 |
+| F3.3 | Multi-Rate Tax Engine | Categorized tax calculations for prepared food, alcoholic beverages, and exemptions | M3 | ORIGINAL_REQUEST §R3 |
+| F3.4 | Role-Weighted Tip Pooling | Tip distribution calculations supporting hours-worked and role percentage splits | M3 | ORIGINAL_REQUEST §R3 |
+| F3.5 | Automated EOD Z-Report | Shift reconciliation, cash float audit (over/short), and immutable daily closeout | M3 | ORIGINAL_REQUEST §R3 |
+| F4.1 | Turnkey Windows Installer | Zero-tech 1-click setup script provisioning Node, dependencies, firewall, shortcuts | M4 | ORIGINAL_REQUEST §R4 |
+| F4.2 | System Tray Background Daemon | Silent background supervisor managing API, POS, KDS, Desktop with tray controls | M4 | ORIGINAL_REQUEST §R4 |
+| F4.3 | Automated Diagnostics Preflight | 1-click system health check verifying Node, ports, disk, DB, and network reachability | M4 | ORIGINAL_REQUEST §R4 |
+| F4.4 | Port Conflict Self-Healing | Automated detection and termination of zombie processes locking ports 3000/5172-5180 | M4 | ORIGINAL_REQUEST §R4 |
+| F4.5 | Local QR & mDNS Discovery | mDNS broadcasting (`culinaryos.local`) and terminal LAN QR pairing generation | M4 | ORIGINAL_REQUEST §R4 |
+| F5.1 | Full 4-Tier E2E Test Suite | Automated test verification across all 26 feature definitions (Tiers 1-4) | M5 / Test Track | ORIGINAL_REQUEST Acceptance |
+| F5.2 | Adversarial Hardening | White-box stress testing, boundary fuzzing, race-condition and audit verification | M5 | System Prompt |
 
 ## Milestones
-
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| E2E | E2E Testing Track | Requirement-driven 4-tier opaque-box test suite publishing TEST_READY.md | none | COMPLETE |
-| M1 | Ratio Engine & DB Types | Consolidate mathematical models into @culinaryos/ratio-engine & sync @culinaryos/db types | none | COMPLETE |
-| M2 | Closed-Loop Event Spine & Ops | Closed-loop recipe pantry deduction (live + demo), ops endpoints, loyalty & par alerts | M1 | COMPLETE |
-| M3 | UI Design Tokens & Admin Portal | Configure Tailwind in admin, mount CulinaryHeader on all pages, standardize tokens | none | COMPLETE |
-| M4 | MCP Servers, Licensing & Build | Unify MCP tool suite with ratio engine, standardize MIT licenses, clean build pipelines | M1, M2 | COMPLETE |
-| M5 | Final Milestone: E2E Pass & Hardening | Phase 1: 100% Pass of Tiers 1-4 E2E tests. Phase 2: Adversarial coverage hardening (Tier 5) | E2E, M1, M2, M3, M4 | COMPLETE |
-| M6 | Production Readiness & Deployment | Contactless Tap/Scan to pay, ErrorBoundary recovery, Docker & Vercel deployment guides, pnpm doctor preflight | M5 | COMPLETE |
-| M7 | Modern UI & Three.js 3D Floor Plan | Full canonical shadcn/ui component system, Radix UI primitives, Three.js 3D spatial floor visualizer | M6 | COMPLETE |
-| M8 | Operations Consultant & Dietary Engine | FDA Top 9 dietary & allergen engine, AI Operations Manager agent, daily audit cron task | M7 | COMPLETE |
-| M9 | Turnkey Quickstart & Square Integration | One-command launcher, live service simulator, Square API mapping & catalog converter | M8 | COMPLETE |
-
----
+| M1 | Front-of-House Dining & Service Engines | F1.1 (Hierarchical Modifiers), F1.2 (Floor Operations), F1.3 (Daypart Pricing), F1.4 (3-Mode Tableside QR) | None | IN_PROGRESS |
+| M2 | Back-of-House Kitchen & Prep Engines | F2.1 (Live 86 Decrement), F2.2 (Course Pacing Timers), F2.3 (Dual Translation), F2.4 (1-Click Waste & Variance), F2.5 (Batch Prep & Adhesive Labels) | None | IN_PROGRESS |
+| M3 | Security, Void Governance & Accounting Ledger | F3.1 (Manager PIN Gates), F3.2 (Void Auto-Waste), F3.3 (Multi-Rate Tax), F3.4 (Tip Pooling), F3.5 (Automated EOD Z-Report) | None | IN_PROGRESS |
+| M4 | Turnkey Zero-Tech Installer & System Tray Engine | F4.1 (Turnkey Installer), F4.2 (Tray Daemon), F4.3 (Diagnostics Preflight), F4.4 (Port Self-Healing), F4.5 (mDNS & Local QR Discovery) | None | IN_PROGRESS |
+| M5 | Full E2E Integration & Adversarial Verification | F5.1 (Tiers 1-4 Test Pass), F5.2 (Adversarial Coverage Hardening, Static Typecheck & Build Gate) | M1, M2, M3, M4 | PLANNED |
 
 ## Interface Contracts
 
-### 1. `@culinaryos/ratio-engine`
-- `scaleRecipeTree(recipe: RecipeBlueprint, targetYield: number): ScaledRecipeTreeResult`
-- `flattenScaledTree(tree: ScaledRecipeTreeResult): Record<string, ScaledIngredientSummary>`
-- `scaleByServings<T extends { amount: number }>(items: T[], baseServings: number, targetServings: number): T[]`
-- `calculateRatio(ingredientWeight: number, baseWeight: number): number`
-- `totalFormulaWeight(recipe: RecipeBlueprint, targetBaseWeight: number): number`
-- `formatAmount(value: number): string`
-- `gramsToCups(grams: number, ingredient: string): number | null`
-- `cupsToGrams(cups: number, ingredient: string): number | null`
-- `computeRecipeCost(ingredients: Array<{ id: string; name: string; quantity: number; unitCost: number }>, servings: number, menuPrice: number): RecipeCostAnalysis`
-- `calculateCostVariance(theoretical: number, actual: number): CostVarianceResult`
-- `summarizeWaste(entries: WasteLogEntry[]): WasteSummaryReport`
-- `calculateWastePercentage(totalWasteCost: number, totalFoodCost: number): number`
-- `generateShiftPrepPlan(items: InventoryStockItem[], shift: 'morning' | 'evening' | 'prep', date: string): ShiftPrepPlan`
-- `projectBatchRequirement(portionWeight: number, covers: number, wasteFactor?: number): number`
+### 1. Hierarchical Modifiers (`packages/shared/src/types/menu.ts` & `apps/server/src/routes/orders.ts`)
+- **Schema Extension**:
+  - `ModifierGroup`: `{ id: string, menuItemId?: string, parentModifierId?: string, name: string, minSelections: number, maxSelections: number, freeQuantity: number, required: boolean, nestedGroups?: ModifierGroup[] }`
+  - `SelectedModifier`: `{ id: string, modifierGroupId: string, parentModifierId?: string, name: string, priceAdjustmentCents: number, effectivePriceCents: number, subModifiers?: SelectedModifier[] }`
+- **Pricing Calculation**: First `freeQuantity` selections in a group cost $0; remaining selections incur `priceAdjustmentCents`.
 
-### 2. `@culinaryos/shared/dietary`
-- `FDA_TOP_9_ALLERGENS`: Array of FDA FASTER Act Top 9 allergens
-- `ALLERGEN_REGISTRY`: Detailed allergen metadata, aliases, cross-contact vectors
-- `normalizeAllergen(input: string): string`
-- `evaluateDietaryProfile(allergens: string[], ingredients: string[], cookingMethods?: object): DietaryClassification`
-- `ALLERGEN_SUBSTITUTIONS`: Pre-mapped culinary alternatives
+### 2. Table Operations (`apps/server/src/routes/tables.ts`)
+- `POST /v1/tables/merge`: `{ sourceTableIds: string[], targetTableId: string, managerPin?: string }` ➔ `{ success: true, targetTableId: string, mergedOrderId: string }`
+- `POST /v1/orders/:id/split`: `{ splitType: 'seat' | 'items' | 'custom', partitions: { seatNumber?: number, itemIds: string[] }[] }` ➔ `{ newOrderIds: string[] }`
+- `POST /v1/tables/transfer`: `{ tableId: string, fromServerId: string, toServerId: string, managerPin: string }` ➔ `{ success: true }`
+- `POST /v1/tables/:id/assistance`: `{ tableId: string, type: 'server' | 'water' | 'bill', note?: string }` ➔ `{ notificationId: string, timestamp: string }`
 
-### 3. POS Order Fire -> Recipe Resolution -> Pantry Deduction
-- Route: `POST /v1/pantry/deduct-order`
-- In: `{ orderId: string, items: Array<{ menuItemId: string, recipeId?: string, quantity: number }> }`
-- Out: `{ success: true, deductedIngredients: Array<{ id: string, name: string, quantity: number, unit: string }>, plateEconomicsLogged: boolean }`
+### 3. Daypart Pricing (`packages/shared/src/pricing.ts` & `apps/server/src/routes/dayparts.ts`)
+- `DaypartSchedule`: `{ id: string, name: string, daysOfWeek: number[], startTime: string, endTime: string, adjustmentType: 'percent' | 'fixed_cents' | 'override_cents', value: number }`
+- `resolveEffectivePrice(basePriceCents: number, schedules: DaypartSchedule[], atTime?: Date): number`
 
----
+### 4. Back-of-House 86 & Course Pacing (`apps/server/src/routes/orders.ts` & `apps/server/src/routes/kds.ts`)
+- `PATCH /v1/orders/:id/send`: Atomically decrements `menu_items.count_remaining`. If `count_remaining <= 0`, sets `status = '86d'` and broadcasts real-time 86 alert.
+- `CoursePacing`: `{ courseNumber: number, holdStatus: 'held' | 'firing' | 'fired', targetFireTime?: string, pacingDurationMinutes: number }`
+- `PATCH /v1/kds/tickets/:id/fire-course`: `{ courseNumber: number }` ➔ sets `holdStatus = 'fired'`, updates `fired_at = now()`.
+
+### 5. Dual Translation (`packages/shared/src/translation.ts`)
+- `translateTicket(ticket: KitchenTicket, targetLanguage: 'es' | 'fr' | 'en'): TranslatedKitchenTicket`
+- Formats KDS cards and ESC/POS thermal printer chits with primary translated name + original subtitle.
+
+### 6. 1-Click Waste & Food Cost Variance (`apps/server/src/routes/ops.ts`)
+- `POST /v1/ops/waste/quick`: `{ ingredientId?: string, menuItemId?: string, quantity: number, unit: string, reason: 'dropped' | 'burned' | 'spoiled' | 'overportion' | 'void_cooked', staffPin: string }`
+- `GET /v1/ops/food-cost/variance`: Returns theoretical food cost vs actual ingredient depletion + waste loss percentage.
+
+### 7. Adhesive Expiration Labels (`packages/prep-engine/src/labels.ts`)
+- `formatAdhesiveLabel(batch: PrepBatch, format: '2x1' | '2x2'): AdhesiveLabelPayload`
+- Returns printable thermal bitmap / ESC/POS commands with item name, prep date/time, use-by date/time, cook initials, batch #, allergen warnings, QR code.
+
+### 8. Manager PIN Security & Void Waste Ledger (`apps/server/src/routes/auth.ts` & `orders.ts`)
+- `POST /v1/auth/verify-manager-pin`: `{ pin: string }` ➔ `{ authorized: boolean, managerId?: string, role: string }`
+- `PATCH /v1/orders/:id/items/:itemId/void`: `{ managerPin: string, reasonCode: 'customer_change' | 'kitchen_error' | 'damaged' | 'spill', isCooked: boolean }` ➔ Voids line item, records audit trail, and if `isCooked === true`, auto-creates `waste_events` record.
+
+### 9. Multi-Rate Tax & Tip Pooling EOD Z-Report (`packages/labor-engine` & `apps/server/src/routes/reports.ts`)
+- `TaxRates`: `{ preparedFoodRate: number, alcoholRate: number, taxExemptRate: 0 }`
+- `TipPoolDistribution`: `{ method: 'hours_worked' | 'role_weighted', poolTotalCents: number, roles: { role: string, weight: number }[], staffHours: { staffId: string, role: string, hours: number }[] }`
+- `GET /v1/reports/z-report`: Full end-of-day reconciliation: total gross sales, category breakdown, tax summary, tip distribution, cash drawer over/short.
+- `POST /v1/reports/z-report/close`: Atomically seals the shift and writes immutable Z-Report ledger record.
+
+### 10. Turnkey Installer & Tray Daemon (`scripts/` & `apps/desktop`)
+- `scripts/install-windows-turnkey.ps1` / `Install-CulinaryOS.bat`: One-click setup.
+- `scripts/tray-manager.ts`: Runs background tray daemon, handles port self-healing, launches `apps/desktop` workstation, displays LAN pairing QR.
+- `scripts/mdns-qr-discovery.ts`: mDNS broadcast on `culinaryos.local` and terminal QR display.
 
 ## Code Layout
-
 ```
-CulinaryOS/
-├── apps/
-│   ├── server/          ← Unified Hono API (orders, KDS, pantry, ops, payments, mock-kitchen)
-│   ├── pos/             ← POS terminal (React / Vite / Tailwind / shadcn / Three.js 3D)
-│   ├── kds/             ← Kitchen Display client (React / Vite / Station routing)
-│   ├── admin/           ← Admin / pantry portal (React / Vite / Tailwind / shadcn)
-│   └── web/             ← Online ordering storefront (React / Vite / Dietary filtering)
-├── packages/
-│   ├── ratio-engine/    ← Pure culinary mathematical engine & models
-│   ├── db/              ← Database schema types (V1–V14) & Supabase client
-│   ├── event-bus/       ← Event broker, binary protocol, handlers
-│   ├── shared/          ← Cross-cutting types, stations, course-engine, offline-sync, dietary
-│   ├── ui/              ← Canonical shadcn/ui design system, Radix UI primitives, Three.js 3D
-│   ├── auth/            ← PIN auth, JWT verification, managerGate
-│   └── config/          ← Monorepo configuration constants
-├── mcp/                 ← 8 MCP tool servers for AI agent operations
-├── extensions/          ← First-party extension manifests
-├── extension_template/  ← Public contract for third-party extensions
-├── tests/               ← Integration & E2E test suites (33 test files, 115+ tests)
-└── scripts/
-    ├── run-all-tests.cjs       ← Canonical test runner executing all suites
-    ├── quickstart.ts           ← Turnkey one-command startup launcher
-    ├── simulate-service.ts     ← Live restaurant dinner rush simulator
-    ├── import-square-catalog.ts← Square catalog to CulinaryOS menu converter
-    ├── daily-ops-consultant.ts ← Daily operations audit & operational question generator
-    └── doctor.ts               ← Preflight production readiness diagnostics
-```
+apps/
+  server/src/
+    routes/
+      auth.ts          # Manager PIN verification & staff authentication
+      orders.ts        # Order lifecycles, nested modifiers, atomic 86 decrement, post-send void auto-waste
+      tables.ts        # Table merge, split, server transfer, assistance buzzer
+      dayparts.ts      # Scheduled daypart/happy hour pricing
+      kds.ts           # Course pacing, dual-language ticket formatting, station routing
+      ops.ts           # Quick-tap waste logging, theoretical vs actual food cost variance
+      reports.ts       # Multi-rate tax, tip pool distribution, immutable EOD Z-Report
+    lib/
+      pin.ts           # Scrypt / timing-safe PIN verification
+      mock-kitchen.ts  # Offline demo state for kitchen tickets & inventory
+  pos/src/
+    views/
+      TablesView.tsx   # 2D/3D floor map with table merge, split, and transfer modals
+      MenuView.tsx     # Nested hierarchical modifier selection modal
+      OrderView.tsx    # Manager PIN protected void & comp modal with reason capture
+      ReportsView.tsx  # Interactive EOD Z-Report view with cash reconciliation
+  kds/src/
+    components/
+      TicketCard.tsx   # Multi-course pacing timers, dual-language card rendering, 1-tap waste
+  web/src/
+    pages/
+      TablesidePage.tsx# 3-Mode Tableside QR experience (/table/:slug/:tableNumber)
+  kitchenkit/src/
+    pages/
+      PrepPlannerPage.tsx # Batch prep scaling & 2"x1" / 2"x2" adhesive expiration label generator
+  ops/src/
+    pages/
+      FoodCostPage.tsx # Actual-vs-Theoretical food cost variance dashboard
+packages/
+  shared/src/
+    types/             # Hierarchical modifiers, table operations, pricing schedules, Z-Reports
+    pricing.ts         # Daypart pricing engine
+    modifiers.ts       # Nested modifier tree & free quantity calculator
+    translation.ts     # Culinary translation dictionary (EN/ES/FR)
+    printer.ts         # ESC/POS adhesive label & Z-Report thermal printing
+  prep-engine/src/     # Prep batch scaling & adhesive label formatting
+  waste-engine/src/    # Scrap aggregation & auto-waste debiting
+  food-cost-engine/src/# Actual-vs-theoretical variance formulas
+  labor-engine/src/    # Role-weighted & hours-worked tip pooling
+scripts/
+  install-windows-turnkey.ps1 # Turnkey Windows installer script
+  Install-CulinaryOS.bat      # 1-click batch launcher
+  tray-manager.ts             # System tray background supervisor & port self-healer
+  mdns-qr-discovery.ts        # mDNS culinaryos.local advertising & LAN QR pairing
+  run-all-tests.cjs           # Universal test suite runner
+tests/
+  e2e/                        # Comprehensive Tiers 1-4 Opaque-Box Test Suites

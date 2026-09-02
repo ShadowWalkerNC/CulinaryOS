@@ -12,8 +12,11 @@
 
 import { Hono } from 'hono';
 import { handleIncomingEvent } from '@culinaryos/event-bus';
+import { calculateVoidWaste, isPostSendStatus } from '@culinaryos/waste-engine';
+import { calculateMultiRateTax } from '@culinaryos/shared';
 import { requireTenant, ok, err } from '../middleware/auth.js';
-import { createMockTicketsFromOrder } from '../lib/mock-kitchen.js';
+import { createMockTicketsFromOrder, decrementMock86 } from '../lib/mock-kitchen.js';
+import { verifyManagerPinDirectly, logAuditTrail } from '../lib/audit.js';
 import type { Env } from '../types.js';
 
 export const ordersRoutes = new Hono<Env>();
@@ -171,9 +174,18 @@ ordersRoutes.post('/:id/items', async (c) => {
 
     order.items = order.items || [];
     order.items.push(newItem);
-    order.subtotal = order.items.reduce((s: number, i: any) => s + i.line_total, 0);
-    order.tax = Math.round(order.subtotal * 0.1);
-    order.total = order.subtotal + order.tax;
+    const activeItems = order.items.filter((i: any) => !i.is_voided);
+    const taxResult = calculateMultiRateTax(
+      activeItems.map((i: any) => ({
+        name: i.name,
+        station: i.station,
+        category: i.category,
+        lineTotalCents: i.line_total,
+      }))
+    );
+    order.subtotal = taxResult.subtotalCents;
+    order.tax = taxResult.totalTaxCents;
+    order.total = taxResult.totalCents;
 
     return ok(c, newItem, 201);
   }
@@ -197,19 +209,28 @@ ordersRoutes.post('/:id/items', async (c) => {
 
   if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
 
-  // Update order subtotal and total
+  // Update order subtotal and multi-rate tax
   const { data: items } = await supabase
     .from('pos_order_line_items')
-    .select('line_total')
-    .eq('order_id', id);
+    .select('name, station, line_total, is_voided')
+    .eq('order_id', id)
+    .neq('is_voided', true);
 
-  const subtotal = items?.reduce((sum, item) => sum + item.line_total, 0) ?? 0;
-  const tax = Math.round(subtotal * 0.1);
-  const total = subtotal + tax;
+  const taxResult = calculateMultiRateTax(
+    (items ?? []).map((i: any) => ({
+      name: i.name,
+      station: i.station,
+      lineTotalCents: i.line_total,
+    }))
+  );
 
   await supabase
     .from('pos_orders')
-    .update({ subtotal, tax, total })
+    .update({
+      subtotal: taxResult.subtotalCents,
+      tax: taxResult.totalTaxCents,
+      total: taxResult.totalCents,
+    })
     .eq('id', id)
     .eq('tenant_id', tenantId);
 
@@ -297,6 +318,8 @@ ordersRoutes.patch('/:id/send', async (c) => {
           modifiers: li.modifiers ?? [],
           notes: li.notes ?? null,
           recipe_id: li.recipeId,
+          unit_price: li.unitPrice ?? li.unit_price ?? 0,
+          line_total: (li.unitPrice ?? li.unit_price ?? 0) * (li.quantity ?? 1),
         })),
       };
       mockOrders.push(order);
@@ -313,6 +336,16 @@ ordersRoutes.patch('/:id/send', async (c) => {
     order.status = 'sent';
     order.fired_at = new Date().toISOString();
 
+    // Live 86 Inventory Countdown decrementing
+    const decrements = (order.items ?? []).map((li: any) => {
+      const { item, is86 } = decrementMock86(li.name, li.quantity || 1);
+      return {
+        itemName: li.name,
+        countRemaining: item?.countRemaining ?? null,
+        is86,
+      };
+    });
+
     const items = mapLineItemsToEventPayload(order.items ?? []);
     const tickets = createMockTicketsFromOrder({
       tenantId,
@@ -322,7 +355,7 @@ ordersRoutes.patch('/:id/send', async (c) => {
     });
 
     console.log(`[mock event-bus] pos:order:created → ${tickets.length} kitchen ticket(s) for ${id}`);
-    return ok(c, { orderId: id, status: 'sent', ticketCount: tickets.length });
+    return ok(c, { orderId: id, status: 'sent', ticketCount: tickets.length, decrements });
   }
 
   const { data: order, error: orderErr } = await supabase
@@ -342,6 +375,40 @@ ordersRoutes.patch('/:id/send', async (c) => {
     .eq('id', id)
     .eq('tenant_id', tenantId);
 
+  // Supabase 86 decrementing
+  const decrements: any[] = [];
+  for (const item of order.items || []) {
+    if (item.menu_item_id) {
+      const { data: mItem } = await supabase
+        .from('menu_items')
+        .select('id, name, count_remaining, status')
+        .eq('id', item.menu_item_id)
+        .eq('tenant_id', tenantId)
+        .single();
+
+      if (mItem && mItem.count_remaining !== null) {
+        const newCount = Math.max(0, mItem.count_remaining - (item.quantity || 1));
+        const is86 = newCount <= 0;
+        await supabase
+          .from('menu_items')
+          .update({
+            count_remaining: newCount,
+            status: is86 ? '86d' : mItem.status,
+            is_available: !is86,
+          })
+          .eq('id', item.menu_item_id)
+          .eq('tenant_id', tenantId);
+
+        decrements.push({
+          menuItemId: item.menu_item_id,
+          itemName: mItem.name,
+          countRemaining: newCount,
+          is86,
+        });
+      }
+    }
+  }
+
   const items = mapLineItemsToEventPayload(order.items ?? []);
   await emitOrderCreated({
     tenantId,
@@ -352,7 +419,7 @@ ordersRoutes.patch('/:id/send', async (c) => {
     items,
   });
 
-  return ok(c, { orderId: id, status: 'sent' });
+  return ok(c, { orderId: id, status: 'sent', decrements });
 });
 
 // POST /v1/orders/:id/fire-course
@@ -437,22 +504,120 @@ ordersRoutes.post('/:id/fire-course', async (c) => {
 
 // PATCH /v1/orders/:id/void
 ordersRoutes.patch('/:id/void', async (c) => {
-  const supabase  = c.get('supabase');
-  const tenantId  = c.get('tenantId');
-  const { id }    = c.req.param();
-  const body      = await c.req.json().catch(() => ({}));
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
 
+  let order: any = null;
   if (!supabase) {
-    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
-    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    order = mockOrders.find((o) => o.id === id && o.tenant_id === tenantId);
+  } else {
+    const { data, error } = await supabase
+      .from('pos_orders')
+      .select('*, items:pos_order_line_items(*)')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .single();
+    if (error || !data) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    order = data;
+  }
+
+  if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+
+  // Security Gate: Check if order is post-send
+  const postSend = isPostSendStatus(order.status);
+  let managerInfo: { managerId: string; managerName: string } = { managerId: 'system', managerName: 'Manager' };
+
+  if (postSend) {
+    const pin = String(body.managerPin || body.pin || '').trim();
+    if (!pin) {
+      return err(c, 'MANAGER_PIN_REQUIRED', 'Manager PIN is required to void an order that was sent to the kitchen', 403);
+    }
+    const authResult = await verifyManagerPinDirectly(tenantId, pin);
+    if (!authResult.authorized) {
+      return err(c, 'FORBIDDEN', authResult.error || 'Invalid manager authorization PIN', 403);
+    }
+    managerInfo = {
+      managerId: authResult.managerId || 'manager',
+      managerName: authResult.managerName || 'Manager',
+    };
+  }
+
+  const reasonCode = body.reasonCode || body.reason || 'customer_change';
+  const isCooked = body.isCooked !== undefined ? Boolean(body.isCooked) : postSend;
+
+  // Automated Waste Debiting on Post-Send Voids (F3.2)
+  if (isCooked && order.items && order.items.length > 0) {
+    const activeItems = order.items.filter((i: any) => !i.is_voided);
+    for (const item of activeItems) {
+      const wasteEvents = calculateVoidWaste(
+        {
+          itemName: item.name,
+          quantity: item.quantity || 1,
+          unitPriceCents: item.unit_price || item.unitPrice || 0,
+          reasonCode,
+          isCooked: true,
+          notes: body.notes,
+        },
+        tenantId,
+        {
+          orderId: id,
+          lineItemId: item.id,
+          createdBy: managerInfo.managerId,
+        }
+      );
+
+      if (supabase && wasteEvents.length > 0) {
+        try {
+          await supabase.from('waste_events').insert(
+            wasteEvents.map((w: any) => ({
+              id: w.id,
+              tenant_id: w.tenantId,
+              ingredient: w.ingredient,
+              quantity_grams: w.quantityGrams,
+              cost_per_gram: w.costPerGram,
+              waste_cost: w.wasteCost,
+              reason: w.reason,
+              notes: w.notes,
+              log_date: w.logDate,
+              created_at: w.createdAt,
+            }))
+          );
+        } catch (e) {
+          // Non-blocking DB write
+        }
+      }
+    }
+  }
+
+  // Audit trail logging
+  if (postSend) {
+    await logAuditTrail(supabase, {
+      tenantId,
+      managerId: managerInfo.managerId,
+      managerName: managerInfo.managerName,
+      action: 'post_send_void',
+      targetType: 'order',
+      targetId: id,
+      reasonCode,
+      reasonDescription: `Voided order ${id} (status was ${order.status})`,
+      amountCents: order.total || order.subtotal || 0,
+      notes: body.notes,
+    });
+  }
+
+  const now = new Date().toISOString();
+  if (!supabase) {
     order.status = 'voided';
-    order.void_reason = body.reason ?? null;
+    order.void_reason = reasonCode;
+    order.voided_at = now;
     return ok(c, order);
   }
 
   const { data, error } = await supabase
     .from('pos_orders')
-    .update({ status: 'voided', void_reason: body.reason ?? null })
+    .update({ status: 'voided', void_reason: reasonCode, voided_at: now })
     .eq('id', id)
     .eq('tenant_id', tenantId)
     .select()
@@ -472,42 +637,347 @@ ordersRoutes.patch('/:id/void', async (c) => {
 
 // PATCH /v1/orders/:id/items/:itemId/void
 ordersRoutes.patch('/:id/items/:itemId/void', async (c) => {
-  const supabase   = c.get('supabase');
-  const tenantId   = c.get('tenantId');
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
   const { id, itemId } = c.req.param();
-  const body       = await c.req.json().catch(() => ({}));
+  const body = await c.req.json().catch(() => ({}));
+
+  let order: any = null;
+  let item: any = null;
 
   if (!supabase) {
-    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    order = mockOrders.find((o) => o.id === id && o.tenant_id === tenantId);
     if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
-    const item = order.items?.find((i: any) => i.id === itemId);
+    item = order.items?.find((i: any) => i.id === itemId);
     if (!item) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
-    item.is_voided = true;
-    item.void_reason = body.reason ?? null;
-    return ok(c, item);
+  } else {
+    const { data: parent, error: parentErr } = await supabase
+      .from('pos_orders')
+      .select('*, items:pos_order_line_items(*)')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .single();
+
+    if (parentErr || !parent) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    order = parent;
+    item = parent.items?.find((i: any) => i.id === itemId);
+    if (!item) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
   }
 
-  // Verify parent order belongs to tenant before voiding line item
-  const { data: parent, error: parentErr } = await supabase
-    .from('pos_orders')
-    .select('id')
-    .eq('id', id)
-    .eq('tenant_id', tenantId)
-    .single();
+  const postSend = isPostSendStatus(order.status);
+  let managerInfo: { managerId: string; managerName: string } = { managerId: 'system', managerName: 'Manager' };
 
-  if (parentErr || !parent) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+  if (postSend) {
+    const pin = String(body.managerPin || body.pin || '').trim();
+    if (!pin) {
+      return err(c, 'MANAGER_PIN_REQUIRED', 'Manager PIN is required to void a line item on a sent order', 403);
+    }
+    const authResult = await verifyManagerPinDirectly(tenantId, pin);
+    if (!authResult.authorized) {
+      return err(c, 'FORBIDDEN', authResult.error || 'Invalid manager authorization PIN', 403);
+    }
+    managerInfo = {
+      managerId: authResult.managerId || 'manager',
+      managerName: authResult.managerName || 'Manager',
+    };
+  }
 
-  const { data, error } = await supabase
+  const reasonCode = body.reasonCode || body.reason || 'kitchen_error';
+  const isCooked = body.isCooked !== undefined ? Boolean(body.isCooked) : postSend;
+
+  // Automated Waste Debiting (F3.2)
+  if (isCooked) {
+    const wasteEvents = calculateVoidWaste(
+      {
+        itemName: item.name,
+        quantity: item.quantity || 1,
+        unitPriceCents: item.unit_price || item.unitPrice || 0,
+        reasonCode,
+        isCooked: true,
+        notes: body.notes,
+      },
+      tenantId,
+      {
+        orderId: id,
+        lineItemId: itemId,
+        createdBy: managerInfo.managerId,
+      }
+    );
+
+    if (supabase && wasteEvents.length > 0) {
+      try {
+        await supabase.from('waste_events').insert(
+          wasteEvents.map((w: any) => ({
+            id: w.id,
+            tenant_id: w.tenantId,
+            ingredient: w.ingredient,
+            quantity_grams: w.quantityGrams,
+            cost_per_gram: w.costPerGram,
+            waste_cost: w.wasteCost,
+            reason: w.reason,
+            notes: w.notes,
+            log_date: w.logDate,
+            created_at: w.createdAt,
+          }))
+        );
+      } catch (e) {
+        // Non-blocking
+      }
+    }
+  }
+
+  // Audit trail logging
+  if (postSend) {
+    await logAuditTrail(supabase, {
+      tenantId,
+      managerId: managerInfo.managerId,
+      managerName: managerInfo.managerName,
+      action: 'item_void',
+      targetType: 'line_item',
+      targetId: itemId,
+      reasonCode,
+      reasonDescription: `Voided item "${item.name}" (order ${id})`,
+      amountCents: item.line_total || (item.unit_price * (item.quantity || 1)),
+      notes: body.notes,
+    });
+  }
+
+  if (!supabase) {
+    item.is_voided = true;
+    item.void_reason = reasonCode;
+
+    // Recalculate order subtotal and multi-rate tax
+    const activeItems = (order.items || []).filter((i: any) => !i.is_voided);
+    const taxResult = calculateMultiRateTax(
+      activeItems.map((i: any) => ({
+        name: i.name,
+        station: i.station,
+        category: i.category,
+        lineTotalCents: i.line_total || ((i.unit_price ?? i.unitPrice ?? 0) * (i.quantity || 1)),
+      }))
+    );
+    order.subtotal = taxResult.subtotalCents;
+    order.tax = taxResult.totalTaxCents;
+    order.total = taxResult.totalCents;
+
+    return ok(c, { item, orderTotals: { subtotal: order.subtotal, tax: order.tax, total: order.total } });
+  }
+
+  const { data: updatedItem, error: itemErr } = await supabase
     .from('pos_order_line_items')
-    .update({ is_voided: true, void_reason: body.reason ?? null })
+    .update({ is_voided: true, void_reason: reasonCode })
     .eq('id', itemId)
     .eq('order_id', id)
     .eq('tenant_id', tenantId)
     .select()
     .single();
 
-  if (error) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
-  return ok(c, data);
+  if (itemErr || !updatedItem) return err(c, 'NOT_FOUND', `Item ${itemId} not found`, 404);
+
+  // Recalculate order totals in Supabase
+  const { data: remainingItems } = await supabase
+    .from('pos_order_line_items')
+    .select('name, station, line_total, is_voided')
+    .eq('order_id', id)
+    .eq('tenant_id', tenantId)
+    .neq('is_voided', true);
+
+  const taxResult = calculateMultiRateTax(
+    (remainingItems ?? []).map((i: any) => ({
+      name: i.name,
+      station: i.station,
+      lineTotalCents: i.line_total,
+    }))
+  );
+
+  await supabase
+    .from('pos_orders')
+    .update({
+      subtotal: taxResult.subtotalCents,
+      tax: taxResult.totalTaxCents,
+      total: taxResult.totalCents,
+    })
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
+
+  return ok(c, {
+    item: updatedItem,
+    orderTotals: {
+      subtotal: taxResult.subtotalCents,
+      tax: taxResult.totalTaxCents,
+      total: taxResult.totalCents,
+    },
+  });
+});
+
+// POST /v1/orders/drawer/open  (Manual Cash Drawer Pop with Manager Authorization Gate)
+ordersRoutes.post('/drawer/open', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json<{ managerPin?: string; pin?: string; reason?: string; notes?: string }>().catch(() => ({} as any));
+
+  const pin = String(body.managerPin || body.pin || '').trim();
+  if (!pin) {
+    return err(c, 'MANAGER_PIN_REQUIRED', 'Manager PIN is required to open cash drawer', 403);
+  }
+
+  const authResult = await verifyManagerPinDirectly(tenantId, pin);
+  if (!authResult.authorized) {
+    return err(c, 'FORBIDDEN', authResult.error || 'Invalid manager authorization PIN', 403);
+  }
+
+  const reason = body.reason || 'no_sale_open';
+  await logAuditTrail(supabase, {
+    tenantId,
+    managerId: authResult.managerId || 'manager',
+    managerName: authResult.managerName || 'Manager',
+    action: 'drawer_open',
+    targetType: 'drawer',
+    reasonCode: reason,
+    reasonDescription: 'Manual Cash Drawer Open / No-Sale Override',
+    notes: body.notes,
+  });
+
+  return ok(c, {
+    success: true,
+    authorized: true,
+    openedAt: new Date().toISOString(),
+    managerId: authResult.managerId,
+    managerName: authResult.managerName,
+    reason,
+  });
+});
+
+// POST /v1/orders/:id/split
+ordersRoutes.post('/:id/split', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json<{
+    splitType?: 'seat' | 'items' | 'custom';
+    partitions?: {
+      seatNumber?: number;
+      itemIds: string[];
+      guestLabel?: string;
+    }[];
+  }>().catch(() => ({} as any));
+
+  const partitions = Array.isArray(body.partitions) ? body.partitions : [];
+  if (partitions.length < 2) {
+    return err(c, 'VALIDATION_ERROR', 'At least 2 split partitions are required', 422);
+  }
+
+  const allItemIds = partitions.flatMap((p: any) => p.itemIds || []);
+  if (allItemIds.length === 0) {
+    return err(c, 'VALIDATION_ERROR', 'At least one item must be assigned to partitions', 422);
+  }
+
+  if (!supabase) {
+    const newOrderIds = partitions.map((_: any, idx: number) => `${id}-split-${idx + 1}`);
+    const partitionResults = partitions.map((p: any, idx: number) => {
+      const subtotal = (p.itemIds.length || 1) * 1500;
+      const tax = Math.round(subtotal * 0.1);
+      return {
+        orderId: newOrderIds[idx],
+        subtotal,
+        tax,
+        total: subtotal + tax,
+        itemCount: p.itemIds.length,
+        seatNumber: p.seatNumber,
+        guestLabel: p.guestLabel,
+      };
+    });
+
+    return ok(c, {
+      success: true,
+      originalOrderId: id,
+      newOrderIds,
+      partitions: partitionResults,
+    });
+  }
+
+  try {
+    const { data: originalOrder, error: orderErr } = await supabase
+      .from('pos_orders')
+      .select('*, items:pos_order_line_items(*)')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .single();
+
+    if (orderErr || !originalOrder) {
+      return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    }
+
+    const newOrderIds: string[] = [];
+    const partitionResults: any[] = [];
+
+    for (let i = 0; i < partitions.length; i++) {
+      const partition = partitions[i];
+      const partitionItems = (originalOrder.items ?? []).filter((item: any) =>
+        partition.itemIds.includes(item.id)
+      );
+
+      const subtotal = partitionItems.reduce((sum: number, it: any) => sum + (it.line_total || 0), 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+
+      const { data: newOrder, error: createErr } = await supabase
+        .from('pos_orders')
+        .insert({
+          tenant_id: tenantId,
+          table_number: originalOrder.table_number,
+          cover_count: 1,
+          server_name: originalOrder.server_name,
+          status: originalOrder.status,
+          subtotal,
+          tax,
+          total,
+          notes: `Split Check ${i + 1}/${partitions.length} from ${id}`,
+        })
+        .select()
+        .single();
+
+      if (createErr || !newOrder) {
+        return err(c, 'DB_ERROR', createErr?.message || 'Failed creating split check', 500);
+      }
+
+      newOrderIds.push(newOrder.id);
+
+      if (partition.itemIds.length > 0) {
+        await supabase
+          .from('pos_order_line_items')
+          .update({ order_id: newOrder.id, seat_number: partition.seatNumber ?? 1 })
+          .in('id', partition.itemIds)
+          .eq('tenant_id', tenantId);
+      }
+
+      partitionResults.push({
+        orderId: newOrder.id,
+        subtotal,
+        tax,
+        total,
+        itemCount: partitionItems.length,
+        seatNumber: partition.seatNumber,
+        guestLabel: partition.guestLabel,
+      });
+    }
+
+    await supabase
+      .from('pos_orders')
+      .update({ status: 'split' })
+      .eq('id', id)
+      .eq('tenant_id', tenantId);
+
+    return ok(c, {
+      success: true,
+      originalOrderId: id,
+      newOrderIds,
+      partitions: partitionResults,
+    });
+  } catch (error: any) {
+    return err(c, 'INTERNAL_ERROR', error.message || 'Order split failed', 500);
+  }
 });
 
 export default ordersRoutes;
+

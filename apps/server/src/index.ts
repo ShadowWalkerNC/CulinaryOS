@@ -31,9 +31,14 @@ import { settingsRoutes }      from './routes/settings';
 import { squareRoutes }        from './routes/integrations/square';
 import { toastRoutes }         from './routes/integrations/toast';
 import { talentPublicRoutes, talentAdminRoutes } from './routes/talent';
+import { tablesRoutes }        from './routes/tables';
+import { daypartsRoutes }      from './routes/dayparts';
 import type { Env }            from './types';
 
-const app = new Hono<Env>();
+
+
+
+export const app = new Hono<Env>();
 
 // ---- Global middleware ----
 
@@ -113,6 +118,8 @@ app.route('/v1/menu',     menuRoutes);
 app.route('/v1/payments', paymentsRoutes);
 app.route('/v1/pos',      posSyncRoutes);
 app.route('/v1/online-orders', onlineOrdersRoutes);
+app.route('/v1/tables',   tablesRoutes);
+app.route('/v1/dayparts', daypartsRoutes);
 
 // Stripe webhook — no tenant middleware (signature-verified)
 app.route('/v1/webhooks/stripe', stripeWebhook);
@@ -145,6 +152,8 @@ const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
 startRealtimeBridge();
 
-serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
-  console.log(`[culinaryos-api] listening on http://${HOST}:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
+    console.log(`[culinaryos-api] listening on http://${HOST}:${PORT}`);
+  });
+}

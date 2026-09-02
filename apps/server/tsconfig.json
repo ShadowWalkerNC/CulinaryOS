@@ -6,10 +6,25 @@
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist",
-    "rootDir": "src"
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@culinaryos/shared": ["../../packages/shared/src/index.ts"],
+      "@culinaryos/food-cost-engine": ["../../packages/food-cost-engine/src/index.ts"],
+      "@culinaryos/waste-engine": ["../../packages/waste-engine/src/index.ts"],
+      "@culinaryos/labor-engine": ["../../packages/labor-engine/src/index.ts"],
+      "@culinaryos/event-bus": ["../../packages/event-bus/src/index.ts"],
+      "@culinaryos/config": ["../../packages/config/src/index.ts"],
+      "@culinaryos/db": ["../../packages/db/src/index.ts"],
+      "@culinaryos/auth": ["../../packages/auth/src/index.ts"]
+    }
   },
   "include": [
-    "src"
+    "src",
+    "../../packages/shared/src",
+    "../../packages/food-cost-engine/src",
+    "../../packages/waste-engine/src",
+    "../../packages/labor-engine/src",
+    "../../packages/event-bus/src"
   ]
 }
