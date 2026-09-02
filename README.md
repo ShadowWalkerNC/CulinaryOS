@@ -6,12 +6,12 @@
 
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 32/32 Passing](https://img.shields.io/badge/Tests-32%2F32%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
-[![Typecheck: 37/37 Passing](https://img.shields.io/badge/Typecheck-37%2F37%20Passing-blue.svg)](./turbo.json)
+[![Tests: 100/100 Passing](https://img.shields.io/badge/Tests-100%2F100%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Typecheck: 42/42 Passing](https://img.shields.io/badge/Typecheck-42%2F42%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)](./CHANGELOG.md)
 
 <p align="center">
   <img src="docs/screenshots/floor_map_3d.png" alt="CulinaryOS 3D Spatial Floor Plan" width="49%" />
@@ -212,23 +212,27 @@ See [`docs/UI_THEME_CUSTOMIZER.md`](docs/UI_THEME_CUSTOMIZER.md) for direct CSS 
 | Package | Port / Target | Role |
 |---|---|---|
 | `apps/desktop` | `:5180` | **Desktop Workstation Hub** — Unified split-screen manager, F1–F6 hotkeys, theme switcher, kiosk mode |
-| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, pantry, payments, ops, settings, marketplace |
-| `apps/pos` | `:5172` | POS terminal (PIN login, 2D/3D floor map, ESC/POS hardware printer hub, live text scaling) |
-| `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, course hold/fire, TV 140% mode) |
-| `apps/admin` | `:5174` | Admin portal — menu editor, staff PINs, pantry par levels, system settings, **🎨 Appearance & Themes** |
+| `apps/marketing` | `:3001` | **CulinaryOS.io SaaS Portal** — Next.js 14 marketing, pricing matrix, trial signup, blog, and RecipeOS showcase |
+| `apps/server` | `:3000` | Unified Hono API — authentication, orders, KDS, reservations, pantry, payments, billing, ops, marketplace |
+| `apps/pos` | `:5172` | POS terminal (PIN login, 2D/3D floor map, ESC/POS hardware printer hub, live text scaling, PWA offline) |
+| `apps/kds` | `:5173` | Kitchen Display System (real-time tickets, station filters, course hold/fire, TV 140% mode, PWA offline) |
+| `apps/admin` | `:5174` | Admin portal — menu editor, staff PINs, custom role builder, pantry par levels, system settings, themes |
 | `apps/kitchenkit` | `:5175` | KitchenKit — Recipe catalog, station prep planner, par levels, vendor management, shelf life |
 | `apps/web` | `:5176` | Online ordering storefront (FDA Top 9 dietary filtering, cart customization, instant checkout) |
 | `apps/ops` | `:5177` | CulinaryOps — Real-time food cost analytics, waste logging, labor %, and vendor performance |
 | `apps/recipeos` | `:5178` | RecipeOS — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list |
 | `mobile/` | Android/iOS | React Native + Expo Mobile POS with offline SQLite cache |
+| `packages/sdk` | Shared | **@culinaryos/sdk** — Official TypeScript Client SDK for orders, KDS, reservations, billing, reports |
+| `packages/loyalty-engine` | Shared | Customer points, digital punch cards, gift card redemption, and dual-sided referral credits |
+| `packages/accounting-engine` | Shared | Double-entry General Ledger reconciliation, QuickBooks Online IIF, Xero CSV, and P&L metrics |
 | `packages/ui` | Shared | Centralized **shadcn/ui** design system, Three.js 3D canvas, and Universal Theme Engine |
 | `packages/shared` | Shared | Unified settings engine, dietary filter engine, printer driver, offline-sync delta engine |
 | `packages/ratio-engine` | Shared | Baker's percentage calculations, yield formulas, and batch scaling |
 | `packages/prep-engine` | Shared | Recipe prep task management and batch requirement calculations |
 | `packages/food-cost-engine` | Shared | Pure functions for actual vs theoretical food cost variance calculations |
 | `packages/waste-engine` | Shared | Kitchen waste summarization and top cost-leakage analysis |
-| `packages/labor-engine` | Shared | Shift labor hours, wage summaries, and labor cost percentage calculations |
-| `packages/pdf-tools` | Shared | Print-ready PDF menu export (`jspdf`) and table QR code generators |
+| `packages/labor-engine` | Shared | Shift labor hours, role-weighted tip pooling, and labor cost percentage calculations |
+| `packages/pdf-tools` | Shared | Print-ready PDF menu export, Z-Report financial closeout PDF, and QR code generators |
 | `packages/template-engine` | Shared | Multi-concept restaurant website and menu template token engine |
 | `packages/seo-tools` | Shared | Schema.org JSON-LD structured data generators for restaurant menus and locations |
 | `packages/asset-tools` | Shared | OpenGraph banner generator (`satori`), favicons, and palette extractors |

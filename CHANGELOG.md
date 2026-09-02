@@ -5,13 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [1.1.0] — 2026-09-02: Cloud SaaS Foundation, Developer Platform & Universal Ledger
 
-### Planned
-- Multi-tenant production hardening
-- Extension marketplace public launch
-- `pnpm lint` ESLint configuration across all packages
-- Bun test suite unification
+### Added
+- **CulinaryOS.io Next.js 14 Marketing Portal (`apps/marketing`):**
+  - High-conversion landing page, pricing tiers (Starter, Pro, Enterprise), interactive features matrix, blog, RecipeOS spotlight, and self-service trial onboarding.
+- **SaaS Stripe Billing & Customer Portal (`apps/server/src/routes/billing.ts`):**
+  - Self-service subscription checkout sessions, webhook handlers with signature validation, customer portal, and tenant-scoped trial provisioning.
+- **In-House Table Reservations Engine (`apps/server/src/routes/reservations.ts`):**
+  - Time-slot availability calculations, capacity limits, and table seating dispatch.
+- **Official TypeScript Client SDK (`packages/sdk`):**
+  - Published `@culinaryos/sdk` package with typed methods for orders, KDS, reservations, billing, and reports.
+- **Full Accounting & General Ledger Engine (`packages/accounting-engine`):**
+  - Double-entry Journal Entry generator for daily Z-Reports, QuickBooks Online IIF export, Xero CSV export, and restaurant P&L economic margin metrics.
+- **Customer Loyalty Engine (`packages/loyalty-engine`):**
+  - Points calculation, punch cards, gift card code generation and balance redemption, dual-sided referral credits, and VIP tiers.
+- **Print-Ready Z-Report PDF & CSV Ledger Stream (`packages/pdf-tools` & `apps/server`):**
+  - `GET /v1/reports/z-report/pdf` and `GET /v1/reports/export/csv`.
+- **Custom Staff Role Builder & GDPR Compliance (`apps/server/src/routes/admin.ts`):**
+  - Matrix permission configuration with 8 granular toggles and tenant-scoped right-to-erasure account data purge.
+- **OpenAPI 3.1.0 Spec & Mintlify Docs Configuration:**
+  - Added [`docs/openapi.yaml`](docs/openapi.yaml) and [`mint.json`](mint.json) for `docs.culinaryos.io`.
+- **Tablet & Handheld PWA Offline Precaching:**
+  - Converted POS and KDS apps to installable PWAs with Workbox service workers and web manifests.
 
 ---
 
