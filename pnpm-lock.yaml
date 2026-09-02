@@ -544,6 +544,9 @@ importers:
       '@culinaryos/labor-engine':
         specifier: workspace:*
         version: link:../../packages/labor-engine
+      '@culinaryos/pdf-tools':
+        specifier: workspace:^
+        version: link:../../packages/pdf-tools
       '@culinaryos/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -745,6 +748,15 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  packages/accounting-engine:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
+
   packages/asset-tools:
     dependencies:
       '@culinaryos/types':
@@ -873,6 +885,19 @@ importers:
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
+
+  packages/sdk:
+    dependencies:
+      '@culinaryos/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
 
   packages/seo-tools:
     dependencies:

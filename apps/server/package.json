@@ -18,27 +18,28 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@culinaryos/shared": "workspace:*",
-    "@culinaryos/food-cost-engine": "workspace:*",
-    "@culinaryos/waste-engine": "workspace:*",
-    "@culinaryos/labor-engine": "workspace:*",
-    "@culinaryos/event-bus": "workspace:*",
+    "@anthropic-ai/sdk": "^0.36.0",
+    "@culinaryos/auth": "workspace:*",
     "@culinaryos/config": "workspace:*",
     "@culinaryos/db": "workspace:*",
-    "@culinaryos/auth": "workspace:*",
-    "hono": "^4.4.0",
+    "@culinaryos/event-bus": "workspace:*",
+    "@culinaryos/food-cost-engine": "workspace:*",
+    "@culinaryos/labor-engine": "workspace:*",
+    "@culinaryos/pdf-tools": "workspace:^",
+    "@culinaryos/shared": "workspace:*",
+    "@culinaryos/waste-engine": "workspace:*",
     "@hono/node-server": "^1.12.0",
     "@supabase/supabase-js": "^2.43.0",
-    "uuid": "^10.0.0",
     "dotenv": "^16.4.5",
+    "hono": "^4.4.0",
     "stripe": "^15.12.0",
-    "@anthropic-ai/sdk": "^0.36.0"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
     "@types/node": "^20.0.0",
     "@types/uuid": "^10.0.0",
+    "bun-types": "latest",
     "tsx": "^4.0.0",
-    "bun-types": "latest"
+    "typescript": "^5.4.0"
   }
 }

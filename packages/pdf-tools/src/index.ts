@@ -8,3 +8,5 @@ export { generateMenuPdf }    from './menu-pdf.js';
 export type { MenuPdfOptions } from './menu-pdf.js';
 export { generateQrDataUrl, generateQrBuffer } from './qr.js';
 export type { QrOptions }      from './qr.js';
+export { generateZReportPdf }  from './zreport-pdf.js';
+export type { ZReportPdfOptions } from './zreport-pdf.js';

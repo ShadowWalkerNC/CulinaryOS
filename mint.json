@@ -1,0 +1,64 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "CulinaryOS Developer Platform",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#FF6B35",
+    "light": "#FF8A5B",
+    "dark": "#E63946"
+  },
+  "topbarLinks": [
+    {
+      "name": "Portal",
+      "url": "https://culinaryos.io"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "GitHub Monorepo",
+    "url": "https://github.com/ShadowWalkerNC/CulinaryOS"
+  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "quickstart",
+        "architecture",
+        "turnkey-installation"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api/overview",
+        "api/auth",
+        "api/orders",
+        "api/kds",
+        "api/reservations",
+        "api/reports"
+      ]
+    },
+    {
+      "group": "TypeScript Client SDK",
+      "pages": [
+        "sdk/installation",
+        "sdk/usage"
+      ]
+    },
+    {
+      "group": "MCP Servers & Extensions",
+      "pages": [
+        "mcp/overview",
+        "mcp/servers",
+        "extensions/building-extensions"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/ShadowWalkerNC/CulinaryOS",
+    "x": "https://twitter.com/culinaryos"
+  }
+}

@@ -1,0 +1,203 @@
+openapi: 3.1.0
+info:
+  title: CulinaryOS Restaurant Operating System API
+  description: >
+    Unified REST API for point of sale, kitchen display systems, inventory/pantry tracking,
+    reservations, and back-office accounting ledgers.
+  version: 1.0.0
+  contact:
+    name: CulinaryOS Platform Engineering
+    url: https://culinaryos.io
+    email: developers@culinaryos.io
+servers:
+  - url: http://localhost:3000
+    description: Local Workstation Development Node
+  - url: https://api.culinaryos.io
+    description: Production Cloud Edge Engine
+paths:
+  /v1/auth/pin-login:
+    post:
+      summary: Terminal Staff PIN Authentication
+      description: Validates 4-8 digit employee PIN against tenant staff roster and issues scoped session.
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+                  example: "5678"
+      responses:
+        '200':
+          description: Authentication successful
+        '422':
+          description: Invalid PIN format
+
+  /v1/orders:
+    get:
+      summary: List Active Floor Orders
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, sent, paid, voided]
+      responses:
+        '200':
+          description: List of orders matching criteria
+    post:
+      summary: Create New POS Order
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                table_number:
+                  type: string
+                guest_count:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '201':
+          description: Order created successfully
+
+  /v1/orders/{id}/send:
+    patch:
+      summary: Fire Order to Kitchen Stations
+      description: Routes line items to station KDS feeds and decrements portion inventory.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order fired and tickets dispatched
+
+  /v1/kds/tickets:
+    get:
+      summary: Retrieve Live Kitchen Display Tickets
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: station
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [grill, fry, cold, bar, expo]
+      responses:
+        '200':
+          description: Active kitchen tickets with live timers
+
+  /v1/reservations:
+    get:
+      summary: Query Table Bookings
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Array of reservations
+    post:
+      summary: Book Table Reservation
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [guest_name, party_size, reserved_at]
+              properties:
+                guest_name:
+                  type: string
+                party_size:
+                  type: integer
+                reserved_at:
+                  type: string
+                  format: date-time
+                guest_phone:
+                  type: string
+                guest_email:
+                  type: string
+      responses:
+        '201':
+          description: Reservation confirmed
+
+  /v1/reports/z-report/close:
+    post:
+      summary: Close Shift and Seal Immutable Z-Report
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [managerPin]
+              properties:
+                managerPin:
+                  type: string
+                actualCashCountedCents:
+                  type: integer
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Z-Report sealed with tamper-evident audit signature

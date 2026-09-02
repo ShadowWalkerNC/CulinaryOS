@@ -1,0 +1,25 @@
+{
+  "name": "@culinaryos/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript & JavaScript Client SDK for the CulinaryOS Restaurant Operating System API.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@culinaryos/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

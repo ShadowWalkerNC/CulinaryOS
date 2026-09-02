@@ -9,6 +9,7 @@ import { calculateTipPool, type StaffHours, type RoleWeight, type TipPoolMethod 
 import type { ZReport, ZReportStatus, CategorySalesSummary, TenderBreakdown, CashDrawerReconciliation, VoidCompSummary } from '@culinaryos/shared';
 import { requireTenant, ok, err } from '../middleware/auth.js';
 import { verifyManagerPinDirectly, logAuditTrail } from '../lib/audit.js';
+import { generateZReportPdf } from '@culinaryos/pdf-tools';
 import type { Env } from '../types.js';
 
 export const reportsRoutes = new Hono<Env>();
@@ -639,4 +640,89 @@ reportsRoutes.post('/z-report/close', async (c) => {
   return ok(c, closedReport, 201);
 });
 
+// ============================================================
+// GET /v1/reports/z-report/pdf
+// Generates and streams print-ready Z-Report PDF
+// ============================================================
+reportsRoutes.get('/z-report/pdf', async (c) => {
+  const tenantId = c.get('tenantId') as string;
+  const date = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
+  const shiftId = c.req.query('shift_id') ?? 'all';
+
+  const key = `${tenantId}:${date}:${shiftId}`;
+  let report = closedZReports.get(key);
+
+  if (!report) {
+    // Generate live preview report if not already sealed
+    const supabase = c.get('supabase');
+    report = await computeZReportData({
+      supabase,
+      tenantId,
+      date,
+      shiftId,
+    });
+  }
+
+  const pdfBuffer = generateZReportPdf(report, {
+    restaurantName: 'CulinaryOS Dining Room',
+  });
+
+  return new Response(Buffer.from(pdfBuffer), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="ZReport-${date}.pdf"`,
+    },
+  });
+});
+
+// ============================================================
+// GET /v1/reports/export/csv
+// Generates downloadable CSV ledger of daily orders & sales
+// ============================================================
+reportsRoutes.get('/export/csv', async (c) => {
+  const tenantId = c.get('tenantId') as string;
+  const from = c.req.query('from') ?? new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]!;
+  const to = c.req.query('to') ?? new Date().toISOString().split('T')[0]!;
+  const supabase = c.get('supabase');
+
+  let rows: Array<{ id: string; created_at: string; total: number; status: string; table_number?: string }> = [];
+
+  if (supabase) {
+    const { data } = await supabase
+      .from('pos_orders')
+      .select('id, created_at, total, total_cents, status, table_number')
+      .eq('tenant_id', tenantId)
+      .gte('created_at', from)
+      .lte('created_at', to + 'T23:59:59Z')
+      .order('created_at', { ascending: false });
+    rows = (data ?? []).map(r => ({
+      id: r.id,
+      created_at: r.created_at,
+      total: (r.total_cents ?? r.total ?? 0) / 100,
+      status: r.status,
+      table_number: r.table_number || 'N/A',
+    }));
+  } else {
+    // Demo fallback rows
+    rows = [
+      { id: 'ord-demo-1', created_at: `${to}T18:30:00Z`, total: 45.50, status: 'paid', table_number: 'T1' },
+      { id: 'ord-demo-2', created_at: `${to}T19:15:00Z`, total: 82.00, status: 'paid', table_number: 'T3' },
+      { id: 'ord-demo-3', created_at: `${to}T20:00:00Z`, total: 34.25, status: 'paid', table_number: 'Bar-2' },
+    ];
+  }
+
+  const csvHeader = 'Order ID,Timestamp,Table,Status,Total ($)\n';
+  const csvBody = rows.map(r => `"${r.id}","${r.created_at}","${r.table_number}","${r.status}",${r.total.toFixed(2)}`).join('\n');
+
+  return new Response(csvHeader + csvBody, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="CulinaryOS-Ledger-${from}-to-${to}.csv"`,
+    },
+  });
+});
+
 export default reportsRoutes;
+

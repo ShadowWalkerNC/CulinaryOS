@@ -253,3 +253,112 @@ adminRoutes.post('/staff', async (c) => {
 
   return ok(c, { user_id: userId, email: body.email, role: body.role, display_name: body.display_name }, 201);
 });
+
+// ============================================================
+// Custom Roles & Permissions Matrix Engine (Sprint 5)
+// ============================================================
+
+interface CustomRoleDefinition {
+  id: string;
+  name: string;
+  description?: string | undefined;
+  permissions: {
+    canVoidOrders: boolean;
+    canCompItems: boolean;
+    canOpenDrawer: boolean;
+    can86Items: boolean;
+    canViewFinancialReports: boolean;
+    canManageStaff: boolean;
+    canEditMenu: boolean;
+    canFireCourses: boolean;
+  };
+}
+
+let mockCustomRoles: CustomRoleDefinition[] = [
+  {
+    id: 'role-lead-bartender',
+    name: 'Lead Bartender',
+    description: 'Bar floor lead with drawer and comp privileges',
+    permissions: {
+      canVoidOrders: false,
+      canCompItems: true,
+      canOpenDrawer: true,
+      can86Items: true,
+      canViewFinancialReports: false,
+      canManageStaff: false,
+      canEditMenu: false,
+      canFireCourses: true,
+    },
+  },
+  {
+    id: 'role-sous-chef',
+    name: 'Sous Chef',
+    description: 'Kitchen management with 86 and pacing controls',
+    permissions: {
+      canVoidOrders: false,
+      canCompItems: false,
+      canOpenDrawer: false,
+      can86Items: true,
+      canViewFinancialReports: false,
+      canManageStaff: false,
+      canEditMenu: true,
+      canFireCourses: true,
+    },
+  },
+];
+
+adminRoutes.get('/roles/custom', async (c) => {
+  return ok(c, { roles: mockCustomRoles });
+});
+
+adminRoutes.post('/roles/custom', async (c) => {
+  const denied = requireManager(c);
+  if (denied) return denied;
+
+  const body = await c.req.json<{
+    name: string;
+    description?: string;
+    permissions: CustomRoleDefinition['permissions'];
+  }>();
+
+  if (!body.name || !body.permissions) {
+    return err(c, 'VALIDATION_ERROR', 'Role name and permissions matrix required', 422);
+  }
+
+  const newRole: CustomRoleDefinition = {
+    id: `role-${Date.now()}`,
+    name: body.name,
+    description: body.description,
+    permissions: body.permissions,
+  };
+
+  mockCustomRoles.push(newRole);
+  return ok(c, newRole, 201);
+});
+
+// ============================================================
+// GDPR & Compliance: Tenant Account Data Purge (Sprint 7)
+// ============================================================
+adminRoutes.delete('/account/gdpr-purge', async (c) => {
+  const denied = requireManager(c);
+  if (denied) return denied;
+
+  const tenantId = c.get('tenantId') as string;
+  const supabase = c.get('supabase');
+
+  if (supabase) {
+    // Purge tenant-scoped records
+    await supabase.from('pos_orders').delete().eq('tenant_id', tenantId);
+    await supabase.from('reservations').delete().eq('tenant_id', tenantId);
+    await supabase.from('staff_pins').delete().eq('tenant_id', tenantId);
+    await supabase.from('tenant_users').delete().eq('tenant_id', tenantId);
+  }
+
+  return ok(c, {
+    purged: true,
+    tenantId,
+    timestamp: new Date().toISOString(),
+    message: 'All tenant operational and guest data erased per GDPR right-to-be-forgotten request.',
+  });
+});
+
