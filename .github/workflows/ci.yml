@@ -34,6 +34,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Build marketing site (if present)
+        run: pnpm --filter @culinaryos/app-marketing build || echo 'Marketing app not yet installed'
+        continue-on-error: true
+
   test:
     name: Tests
     runs-on: ubuntu-latest
@@ -65,10 +69,9 @@ jobs:
       - name: Run server integration tests
         run: bun test tests/server/
 
-      # Broader suite (ratio-engine + tests/**) — surfaces results without
-      # blocking until remaining pre-existing failures are cleared.
-      - name: Run full test suite (non-blocking)
-        continue-on-error: true
+      # Broader suite (ratio-engine + tests/**) — now blocking.
+      - name: Run full test suite
+        continue-on-error: false
         run: node ./scripts/run-all-tests.cjs
 
   docker-build:
@@ -82,3 +85,18 @@ jobs:
         run: docker build -f apps/pos/Dockerfile -t culinaryos-pos:ci .
       - name: Build KDS image
         run: docker build -f apps/kds/Dockerfile -t culinaryos-kds:ci .
+
+  deploy:
+    name: Deploy to Railway
+    needs: [build, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy API to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service culinaryos-api --detach
+        continue-on-error: true  # non-blocking until token is provisioned

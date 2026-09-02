@@ -10,27 +10,28 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@culinaryos/shared": "workspace:*",
     "@culinaryos/auth": "workspace:*",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
+    "@culinaryos/shared": "workspace:*",
     "@culinaryos/ui": "workspace:*",
+    "@stripe/react-stripe-js": "^2.7.0",
+    "@stripe/stripe-js": "^3.5.0",
     "@supabase/supabase-js": "^2.43.0",
     "@tanstack/react-query": "^5.40.0",
-    "zustand": "^4.5.0",
     "date-fns": "^3.6.0",
-    "@stripe/react-stripe-js": "^2.7.0",
-    "@stripe/stripe-js": "^3.5.0"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.19",
+    "picocolors": "^1.1.1",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.0",
     "typescript": "^5.4.0",
     "vite": "^5.2.0",
-    "tailwindcss": "^3.4.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "picocolors": "^1.1.1"
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

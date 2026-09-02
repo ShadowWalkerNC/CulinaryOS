@@ -33,6 +33,9 @@ import { toastRoutes }         from './routes/integrations/toast';
 import { talentPublicRoutes, talentAdminRoutes } from './routes/talent';
 import { tablesRoutes }        from './routes/tables';
 import { daypartsRoutes }      from './routes/dayparts';
+import { billingRoutes }       from './routes/billing';
+import { signupRoutes }        from './routes/signup';
+import { reservationRoutes }   from './routes/reservations';
 import type { Env }            from './types';
 
 
@@ -106,8 +109,11 @@ app.get('/internal/events', async (c) => {
   return c.json({ ok: true, data });
 });
 
-app.route('/v1/auth',     authRoutes);
-app.route('/v1/ops',      opsRoutes);
+app.route('/v1/auth',         authRoutes);
+app.route('/v1/auth',         signupRoutes);
+app.route('/v1/billing',      billingRoutes);
+app.route('/v1/reservations', reservationRoutes);
+app.route('/v1/ops',          opsRoutes);
 app.route('/v1/admin',    adminRoutes);
 app.route('/v1/kds',      kdsRoutes);
 app.route('/v1/pantry',   pantryRoutes);
