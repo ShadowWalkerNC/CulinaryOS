@@ -448,3 +448,92 @@ marketplaceRoutes.get('/themes', (c) => {
   });
 });
 
+// ============================================================
+// Sprint 3: Zero-Fee Developer Marketplace & Paid Verification
+// ============================================================
+
+interface MarketplaceVerificationRecord {
+  extensionId: string;
+  developerEmail: string;
+  verificationTier: 'community' | 'verified_partner' | 'enterprise_sla';
+  securityAuditStatus: 'passed' | 'pending' | 'review_required';
+  developerPayoutRate: 1.0; // 100% to developer
+  verifiedAt?: string;
+  badge: string;
+}
+
+let mockVerifications: Record<string, MarketplaceVerificationRecord> = {
+  'stripe-terminal': {
+    extensionId: 'stripe-terminal',
+    developerEmail: 'hardware@culinaryos.io',
+    verificationTier: 'enterprise_sla',
+    securityAuditStatus: 'passed',
+    developerPayoutRate: 1.0,
+    verifiedAt: new Date().toISOString(),
+    badge: '🛡️ Verified Enterprise SLA',
+  },
+  'recipe-vault': {
+    extensionId: 'recipe-vault',
+    developerEmail: 'community@recipeos.org',
+    verificationTier: 'verified_partner',
+    securityAuditStatus: 'passed',
+    developerPayoutRate: 1.0,
+    verifiedAt: new Date().toISOString(),
+    badge: '✅ Verified Partner Extension',
+  },
+};
+
+// ---- POST /v1/marketplace/extensions/submit ----
+marketplaceRoutes.post('/extensions/submit', async (c) => {
+  const body = await c.req.json<{
+    name: string;
+    developerEmail: string;
+    description: string;
+    entryPointUrl: string;
+    requestedTier?: 'community' | 'verified_partner' | 'enterprise_sla';
+  }>();
+
+  if (!body.name || !body.developerEmail || !body.entryPointUrl) {
+    return c.json({ ok: false, error: { message: 'name, developerEmail, entryPointUrl required' } }, 422);
+  }
+
+  const extensionId = body.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const tier = body.requestedTier ?? 'community';
+
+  const record: MarketplaceVerificationRecord = {
+    extensionId,
+    developerEmail: body.developerEmail,
+    verificationTier: tier,
+    securityAuditStatus: tier === 'community' ? 'passed' : 'pending',
+    developerPayoutRate: 1.0, // 0% platform fee, 100% to developer
+    badge: tier === 'enterprise_sla' ? '🛡️ Enterprise Verified' : tier === 'verified_partner' ? '✅ Verified Partner' : '📦 Community Open Extension',
+  };
+
+  mockVerifications[extensionId] = record;
+
+  return c.json({
+    ok: true,
+    data: {
+      extensionId,
+      record,
+      message: 'Extension registered in CulinaryOS Developer Marketplace. 100% developer revenue share enabled.',
+    },
+  }, 201);
+});
+
+// ---- GET /v1/marketplace/extensions/:id/verification ----
+marketplaceRoutes.get('/extensions/:id/verification', async (c) => {
+  const id = c.req.param('id');
+  const record = mockVerifications[id] ?? {
+    extensionId: id,
+    developerEmail: 'dev@example.com',
+    verificationTier: 'community',
+    securityAuditStatus: 'passed',
+    developerPayoutRate: 1.0,
+    badge: '📦 Community Extension',
+  };
+
+  return c.json({ ok: true, data: record });
+});
+
+

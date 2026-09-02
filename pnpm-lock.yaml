@@ -529,6 +529,9 @@ importers:
       '@culinaryos/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@culinaryos/commissary-engine':
+        specifier: workspace:^
+        version: link:../../packages/commissary-engine
       '@culinaryos/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -541,6 +544,9 @@ importers:
       '@culinaryos/food-cost-engine':
         specifier: workspace:*
         version: link:../../packages/food-cost-engine
+      '@culinaryos/forecast-engine':
+        specifier: workspace:^
+        version: link:../../packages/forecast-engine
       '@culinaryos/labor-engine':
         specifier: workspace:*
         version: link:../../packages/labor-engine
@@ -786,6 +792,15 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  packages/commissary-engine:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
+
   packages/config:
     devDependencies:
       typescript:
@@ -822,6 +837,15 @@ importers:
         version: 5.9.3
 
   packages/food-cost-engine:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
+
+  packages/forecast-engine:
     devDependencies:
       typescript:
         specifier: ^5.4.0

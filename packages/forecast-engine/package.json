@@ -1,0 +1,22 @@
+{
+  "name": "@culinaryos/forecast-engine",
+  "version": "0.1.0",
+  "description": "Predictive kitchen demand forecasting, rush bottleneck detection, and dynamic pantry par level recommendation.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

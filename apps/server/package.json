@@ -20,10 +20,12 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
     "@culinaryos/auth": "workspace:*",
+    "@culinaryos/commissary-engine": "workspace:^",
     "@culinaryos/config": "workspace:*",
     "@culinaryos/db": "workspace:*",
     "@culinaryos/event-bus": "workspace:*",
     "@culinaryos/food-cost-engine": "workspace:*",
+    "@culinaryos/forecast-engine": "workspace:^",
     "@culinaryos/labor-engine": "workspace:*",
     "@culinaryos/pdf-tools": "workspace:^",
     "@culinaryos/shared": "workspace:*",

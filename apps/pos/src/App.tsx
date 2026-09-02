@@ -10,6 +10,7 @@ import { RecallView }    from './views/RecallView';
 import { SettingsView }  from './views/SettingsView';
 import { TabsView }      from './views/TabsView';
 import { ReportsView }   from './views/ReportsView';
+import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp, Lock } from '@culinaryos/ui';
 
@@ -163,8 +164,19 @@ export function App() {
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">monitoring</span>
+            <span className="material-symbols-outlined text-[16px]">bar_chart</span>
             <span>Reports</span>
+          </button>
+          <button
+            onClick={() => setView('cfd')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              view === 'cfd'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">devices</span>
+            <span>CFD Guest Screen</span>
           </button>
           <button
             onClick={() => setView('settings')}
@@ -320,6 +332,7 @@ export function App() {
           {view === 'recall' && <RecallView />}
           {view === 'settings' && <SettingsView />}
           {view === 'reports' && <ReportsView />}
+          {view === 'cfd' && <CFDView />}
         </div>
       </div>
     </div>

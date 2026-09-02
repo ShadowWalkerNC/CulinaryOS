@@ -36,6 +36,8 @@ import { daypartsRoutes }      from './routes/dayparts';
 import { billingRoutes }       from './routes/billing';
 import { signupRoutes }        from './routes/signup';
 import { reservationRoutes }   from './routes/reservations';
+import { commissaryRoutes }    from './routes/commissary';
+import { autopilotRoutes }     from './routes/autopilot';
 import type { Env }            from './types';
 
 
@@ -113,6 +115,8 @@ app.route('/v1/auth',         authRoutes);
 app.route('/v1/auth',         signupRoutes);
 app.route('/v1/billing',      billingRoutes);
 app.route('/v1/reservations', reservationRoutes);
+app.route('/v1/commissary',   commissaryRoutes);
+app.route('/v1/autopilot',    autopilotRoutes);
 app.route('/v1/ops',          opsRoutes);
 app.route('/v1/admin',    adminRoutes);
 app.route('/v1/kds',      kdsRoutes);
