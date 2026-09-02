@@ -6,12 +6,12 @@
 
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 100/100 Passing](https://img.shields.io/badge/Tests-100%2F100%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
-[![Typecheck: 42/42 Passing](https://img.shields.io/badge/Typecheck-42%2F42%20Passing-blue.svg)](./turbo.json)
+[![Tests: 102/102 Passing](https://img.shields.io/badge/Tests-102%2F102%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Typecheck: 46/46 Passing](https://img.shields.io/badge/Typecheck-46%2F46%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](./CHANGELOG.md)
 
 <p align="center">
   <img src="docs/screenshots/floor_map_3d.png" alt="CulinaryOS 3D Spatial Floor Plan" width="49%" />
@@ -223,6 +223,8 @@ See [`docs/UI_THEME_CUSTOMIZER.md`](docs/UI_THEME_CUSTOMIZER.md) for direct CSS 
 | `apps/recipeos` | `:5178` | RecipeOS — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list |
 | `mobile/` | Android/iOS | React Native + Expo Mobile POS with offline SQLite cache |
 | `packages/sdk` | Shared | **@culinaryos/sdk** — Official TypeScript Client SDK for orders, KDS, reservations, billing, reports |
+| `packages/commissary-engine` | Shared | Multi-unit stock replenishment, central production batching, and franchise royalty ledgers |
+| `packages/forecast-engine` | Shared | Predictive kitchen demand smoothing, bottleneck advisories, and adaptive safety-stock par levels |
 | `packages/loyalty-engine` | Shared | Customer points, digital punch cards, gift card redemption, and dual-sided referral credits |
 | `packages/accounting-engine` | Shared | Double-entry General Ledger reconciliation, QuickBooks Online IIF, Xero CSV, and P&L metrics |
 | `packages/ui` | Shared | Centralized **shadcn/ui** design system, Three.js 3D canvas, and Universal Theme Engine |

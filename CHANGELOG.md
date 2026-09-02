@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] — 2026-09-02: Enterprise Multi-Unit Commissary, AI Autopilot, Developer Marketplace & Universal CFD
+
+### Added
+- **Enterprise Multi-Unit & Commissary Hub (`@culinaryos/commissary-engine`):**
+  - Two-tier organization hierarchy migration (`V17__multi_unit_commissary.sql`) supporting enterprise brands, parent commissary facilities, and branch stores.
+  - Inter-store stock transfer requisition math, central commissary batch quota aggregation, structured ISO lot tracking codes, and consolidated franchise royalty ledgers.
+  - Endpoints: `POST /v1/commissary/transfers/request`, `PATCH /v1/commissary/transfers/:id/fulfill`, `PATCH /v1/commissary/transfers/:id/receive`, and `GET /v1/commissary/royalty-ledger`.
+- **AI Kitchen Autopilot & Predictive Operations (`@culinaryos/forecast-engine`):**
+  - Historical daypart demand smoothing with weather/surge multipliers and cook staffing recommendations.
+  - Real-time kitchen station queue depth evaluation emitting advisory bottleneck alerts and prep padding estimates (+10m/+20m).
+  - Adaptive safety-stock par level recommendations balancing usage velocity against supplier lead times.
+  - Endpoints: `GET /v1/autopilot/forecast`, `GET /v1/autopilot/bottleneck-advisory`, and `GET /v1/autopilot/par-suggestions`.
+- **Zero-Fee Developer Marketplace & Paid Verification (`apps/server/src/routes/marketplace.ts`):**
+  - 100% developer revenue share model for 3rd-party extensions.
+  - Developer registration endpoint (`POST /v1/marketplace/extensions/submit`) and verified security badge status inspection (`GET /v1/marketplace/extensions/:id/verification`).
+- **Universal Customer-Facing Display (CFD) (`apps/pos/src/views/CFDView.tsx`):**
+  - Responsive guest checkout screen operable on secondary monitors (HDMI/USB) or standalone Wi-Fi tablets.
+  - Real-time cart synchronization, interactive tip selection (15%, 18%, 20%, 25%, Custom), and Stripe Terminal contactless payment reader prompt.
+- **Turnkey Linux POS & KDS Appliance Builder (`scripts/build-appliance-image.sh`):**
+  - Shell installer generating high-availability Debian/Raspberry Pi appliance images with systemd auto-restart, Openbox kiosk auto-start, and mDNS discovery.
+
+---
+
 ## [1.1.0] — 2026-09-02: Cloud SaaS Foundation, Developer Platform & Universal Ledger
 
 ### Added
