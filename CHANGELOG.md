@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.1] — 2026-09-03: Live Pilot Hardening & Countertop Quick-Service Workflows
+
+### Added
+- **Open Item / Custom Price Workflow (`apps/pos/src/views/MenuView.tsx`):**
+  - Added `+ Open Item` modal directly on POS ordering canvas allowing servers and cashiers to ring up off-menu items, daily specials, and custom bakery items with custom pricing and station routing.
+- **Special Kitchen Instructions & Seat Re-assignment (`apps/pos/src/views/OrderView.tsx`):**
+  - Added 1-tap tag dialog on active checks to add allergy alerts (*"Gluten Allergy"*, *"Extra Crispy"*, *"Dressing on Side"*) and re-assign items to seats on the fly.
+- **Thermal Chit Formatting Hardening (`packages/shared/src/printer.ts` & `apps/pos/src/lib/hardware-printer.ts`):**
+  - Integrated bold item note formatting (`* NOTE: ...`) on physical ESC/POS printers and browser print slips.
+- **Manifest-Only Extension Quarantine (`extensions/experimental/` & `apps/server/src/routes/marketplace.ts`):**
+  - Quarantined incomplete/stub extension manifests into `extensions/experimental/` to keep operational POS/KDS screens clean and focused.
+
+---
+
 ## [1.2.0] — 2026-09-02: Enterprise Multi-Unit Commissary, AI Autopilot, Developer Marketplace & Universal CFD
 
 ### Added
