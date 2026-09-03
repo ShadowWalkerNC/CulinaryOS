@@ -366,6 +366,9 @@ export class HardwarePrinterService {
             const mods = item.modifiers && item.modifiers.length > 0
               ? item.modifiers.map((m) => `<div style="font-size: 10px; color: #666; padding-left: 10px;">+ ${m}</div>`).join('')
               : '';
+            const notesHtml = item.notes
+              ? `<div style="font-size: 10px; font-weight: bold; color: #b45309; padding-left: 10px; font-style: italic;">* NOTE: ${item.notes}</div>`
+              : '';
             return `
               <div style="margin-bottom: 4px;">
                 <div style="display: flex; justify-content: space-between; font-weight: bold;">
@@ -373,6 +376,7 @@ export class HardwarePrinterService {
                   <span>$${(item.totalCents / 100).toFixed(2)}</span>
                 </div>
                 ${mods}
+                ${notesHtml}
               </div>
             `;
           })
