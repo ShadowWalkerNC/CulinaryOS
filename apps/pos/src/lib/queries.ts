@@ -6,27 +6,29 @@ import { getMockOrders, saveMockOrders } from './mockDb';
 
 const MOCK_MENU = {
   id: 'demo-menu',
-  name: 'Dinner Menu',
+  name: 'Alley Katz & Half Baked Pilot Menu',
   sections: [
     {
       id: 'section-1',
-      name: 'Starters',
+      name: 'Starters & Bowls',
       sort_order: 1,
       items: [
         {
           id: 'item-1',
-          name: 'Truffle Hummus & Pita',
-          price: 950,
+          name: 'Maine Clam Chowder',
+          description: 'Traditional creamy New England chowder, tender ocean clams, smoked bacon & oyster crackers',
+          price: 900,
           status: 'available',
           station: 'cold',
-          allergens: ['gluten', 'sesame'],
+          allergens: ['dairy', 'seafood', 'gluten'],
           sort_order: 1,
           modifier_groups: []
         },
         {
           id: 'item-2',
-          name: 'Crispy Calamari',
-          price: 1400,
+          name: 'Crispy Point Judith Calamari',
+          description: 'Flash-fried cherry peppers, lemon wedge, house roasted garlic & spicy dipping aioli',
+          price: 1450,
           status: 'available',
           station: 'fry',
           allergens: ['gluten', 'seafood'],
@@ -39,8 +41,132 @@ const MOCK_MENU = {
               min_selections: 0,
               max_selections: 2,
               modifiers: [
-                { id: 'mod-sauce-1', name: 'Spicy Aioli', price_adjustment: 150, is_default: false },
-                { id: 'mod-sauce-2', name: 'Garlic Aioli', price_adjustment: 0, is_default: true }
+                { id: 'mod-sauce-1', name: 'Spicy Sambal Aioli', price_adjustment: 150, is_default: false },
+                { id: 'mod-sauce-2', name: 'Roasted Garlic Tartar', price_adjustment: 0, is_default: true }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'item-3',
+          name: 'Truffle Parmesan Hand-Cut Fries',
+          description: 'Double-cooked Maine russets, white truffle oil, shaved pecorino & rosemary aioli',
+          price: 850,
+          status: 'available',
+          station: 'fry',
+          allergens: ['dairy'],
+          sort_order: 3,
+          modifier_groups: []
+        }
+      ]
+    },
+    {
+      id: 'section-2',
+      name: 'Mains & Tavern Classics',
+      sort_order: 2,
+      items: [
+        {
+          id: 'item-4',
+          name: 'Alley Katz Classic Lobster Roll',
+          description: 'Chilled Maine claw & knuckle lobster meat, griddled brioche split-top bun, light lemon-mayo dressing or warm butter',
+          price: 2800,
+          status: 'available',
+          station: 'cold',
+          allergens: ['shellfish', 'dairy', 'gluten'],
+          sort_order: 1,
+          modifier_groups: [
+            {
+              id: 'group-lobster-style',
+              name: 'Preparation Style',
+              required: true,
+              min_selections: 1,
+              max_selections: 1,
+              modifiers: [
+                { id: 'mod-lob-1', name: 'Traditional Chilled w/ Herb Mayo', price_adjustment: 0, is_default: true },
+                { id: 'mod-lob-2', name: 'Warm Poached in Brown Butter', price_adjustment: 200, is_default: false }
+              ]
+            },
+            {
+              id: 'group-lob-side',
+              name: 'Choice of Side',
+              required: true,
+              min_selections: 1,
+              max_selections: 1,
+              modifiers: [
+                { id: 'mod-side-1', name: 'Hand-Cut Sea Salt Fries', price_adjustment: 0, is_default: true },
+                { id: 'mod-side-2', name: 'Cape Cod Salt & Vinegar Slaw', price_adjustment: 0, is_default: false },
+                { id: 'mod-side-3', name: 'Sub Clam Chowder Cup', price_adjustment: 450, is_default: false }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'item-5',
+          name: 'Crispy Haddock Fish & Chips',
+          description: 'Local Gulf of Maine haddock in crisp craft ale batter, fresh tartar, lemon, hand-cut fries',
+          price: 1950,
+          status: 'available',
+          station: 'fry',
+          allergens: ['fish', 'gluten'],
+          sort_order: 2,
+          modifier_groups: []
+        },
+        {
+          id: 'item-6',
+          name: 'Prime Smash Cheeseburger',
+          description: 'Two dry-aged 4oz beef patties, double Cabot cheddar, shaved red onion, dill pickle, secret sauce on toasted potato bun',
+          price: 1650,
+          status: 'available',
+          station: 'grill',
+          allergens: ['gluten', 'dairy'],
+          sort_order: 3,
+          modifier_groups: [
+            {
+              id: 'group-burger-temp',
+              name: 'Meat Temperature',
+              required: true,
+              min_selections: 1,
+              max_selections: 1,
+              modifiers: [
+                { id: 'mod-cook-1', name: 'Medium Rare (Juicy)', price_adjustment: 0, is_default: true },
+                { id: 'mod-cook-2', name: 'Medium (Standard)', price_adjustment: 0, is_default: false },
+                { id: 'mod-cook-3', name: 'Well Done (Crisp Edge)', price_adjustment: 0, is_default: false }
+              ]
+            },
+            {
+              id: 'group-burger-adds',
+              name: 'Burger Add-Ons',
+              required: false,
+              min_selections: 0,
+              max_selections: 3,
+              modifiers: [
+                { id: 'mod-b-1', name: 'Applewood Smoked Bacon', price_adjustment: 250, is_default: false },
+                { id: 'mod-b-2', name: 'Fried Farm Egg', price_adjustment: 200, is_default: false },
+                { id: 'mod-b-3', name: 'Gluten-Free Bun', price_adjustment: 150, is_default: false }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'item-7',
+          name: 'Wood-Fired Margherita Pizza',
+          description: 'Crushed San Marzano tomatoes, fresh mozzarella curd, torn organic basil, Sicilian olive oil',
+          price: 1650,
+          status: 'available',
+          station: 'grill',
+          allergens: ['gluten', 'dairy'],
+          sort_order: 4,
+          modifier_groups: [
+            {
+              id: 'group-toppings',
+              name: 'Pizza Toppings',
+              required: false,
+              min_selections: 0,
+              max_selections: 4,
+              modifiers: [
+                { id: 'mod-top-1', name: 'Prosciutto di Parma', price_adjustment: 400, is_default: false },
+                { id: 'mod-top-2', name: 'Roasted Wild Mushrooms', price_adjustment: 250, is_default: false },
+                { id: 'mod-top-3', name: 'Hot Honey Drizzle', price_adjustment: 150, is_default: false }
               ]
             }
           ]
@@ -48,52 +174,82 @@ const MOCK_MENU = {
       ]
     },
     {
-      id: 'section-2',
-      name: 'Mains',
-      sort_order: 2,
+      id: 'section-3',
+      name: 'Half Baked Bakery & Sweets',
+      sort_order: 3,
       items: [
         {
-          id: 'item-3',
-          name: 'Wood-Fired Margherita Pizza',
-          price: 1650,
+          id: 'item-8',
+          name: 'Warm Wild Maine Blueberry Hand Pie',
+          description: 'Flaky butter crust filled with sweet Rockland wild blueberries, turbinado sugar & vanilla glaze',
+          price: 650,
           status: 'available',
-          station: 'pizza',
+          station: 'cold',
           allergens: ['gluten', 'dairy'],
           sort_order: 1,
           modifier_groups: [
             {
-              id: 'group-toppings',
-              name: 'Add Toppings',
+              id: 'group-pie-cream',
+              name: 'A La Mode',
               required: false,
               min_selections: 0,
-              max_selections: 4,
+              max_selections: 1,
               modifiers: [
-                { id: 'mod-top-1', name: 'Prosciutto di Parma', price_adjustment: 400, is_default: false },
-                { id: 'mod-top-2', name: 'Wild Mushrooms', price_adjustment: 250, is_default: false },
-                { id: 'mod-top-3', name: 'Extra Mozzarella', price_adjustment: 200, is_default: false }
+                { id: 'mod-cream-1', name: 'Local Vanilla Bean Ice Cream', price_adjustment: 250, is_default: false },
+                { id: 'mod-cream-2', name: 'Fresh Whipped Cream', price_adjustment: 100, is_default: false }
               ]
             }
           ]
         },
         {
-          id: 'item-4',
-          name: 'Prime Bistro Burger',
-          price: 1850,
+          id: 'item-9',
+          name: 'Triple Chocolate Salted Brownie',
+          description: 'Valrhona dark chocolate fudge brownie topped with Maldon sea salt crystals',
+          price: 500,
           status: 'available',
-          station: 'grill',
-          allergens: ['gluten', 'dairy'],
+          station: 'cold',
+          allergens: ['gluten', 'dairy', 'eggs'],
+          sort_order: 2,
+          modifier_groups: []
+        }
+      ]
+    },
+    {
+      id: 'section-4',
+      name: 'Beer, Wine & Non-Alcoholic',
+      sort_order: 4,
+      items: [
+        {
+          id: 'item-10',
+          name: 'Masons Brewing Local IPA (16oz)',
+          description: 'Hazy New England IPA brewed in Brewer, ME — tropical hops, citrus zest, smooth body',
+          price: 800,
+          status: 'available',
+          station: 'bar',
+          allergens: ['gluten'],
+          sort_order: 1,
+          modifier_groups: []
+        },
+        {
+          id: 'item-11',
+          name: 'Maine Root Sodas (Bottled)',
+          description: 'Organic cane sugar craft soda from Portland, ME',
+          price: 400,
+          status: 'available',
+          station: 'bar',
+          allergens: [],
           sort_order: 2,
           modifier_groups: [
             {
-              id: 'group-cook',
-              name: 'Meat Preparation',
+              id: 'group-soda-flavor',
+              name: 'Soda Flavor',
               required: true,
               min_selections: 1,
               max_selections: 1,
               modifiers: [
-                { id: 'mod-cook-1', name: 'Medium Rare', price_adjustment: 0, is_default: true },
-                { id: 'mod-cook-2', name: 'Medium', price_adjustment: 0, is_default: false },
-                { id: 'mod-cook-3', name: 'Well Done', price_adjustment: 0, is_default: false }
+                { id: 'mod-s-1', name: 'Root Beer', price_adjustment: 0, is_default: true },
+                { id: 'mod-s-2', name: 'Blueberry Soda', price_adjustment: 0, is_default: false },
+                { id: 'mod-s-3', name: 'Spicy Ginger Brew', price_adjustment: 0, is_default: false }
               ]
             }
           ]

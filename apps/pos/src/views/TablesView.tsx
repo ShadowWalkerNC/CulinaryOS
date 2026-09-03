@@ -129,8 +129,8 @@ export function TablesView() {
   const setView = usePOSStore((s) => s.setView);
   const employee = usePOSStore((s) => s.employee);
 
-  // View Mode: 2D Grid vs 3D Spatial Floor Plan
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('3d');
+  // View Mode: 2D Grid (Default for fast touch tablets) vs 3D Spatial Floor Plan
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
 
   // Edit Layout Mode State
   const [editMode, setEditMode] = useState<boolean>(false);
