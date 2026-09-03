@@ -49,6 +49,13 @@ export function MenuView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Open Item / Custom Price State
+  const [showOpenItemModal, setShowOpenItemModal] = useState(false);
+  const [openItemName, setOpenItemName] = useState('');
+  const [openItemPriceDollars, setOpenItemPriceDollars] = useState('');
+  const [openItemStation, setOpenItemStation] = useState('expo');
+  const [openItemNotes, setOpenItemNotes] = useState('');
+
   if (isLoading) return (
     <div className="flex justify-center items-center h-full bg-background">
       <div className="w-10 h-10 border-3 border-foreground border-t-transparent rounded-full animate-spin" />
@@ -420,6 +427,22 @@ export function MenuView() {
               </button>
             )}
           </div>
+
+          {/* Quick Open Item / Custom Bakery Special Button */}
+          <button
+            onClick={() => {
+              if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
+              setOpenItemName('');
+              setOpenItemPriceDollars('');
+              setOpenItemNotes('');
+              setShowOpenItemModal(true);
+            }}
+            className="px-3.5 py-2 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
+            title="Ring up an off-menu item, daily special, or custom price"
+          >
+            <Plus className="w-4 h-4 text-slate-950" />
+            <span>+ Open Item</span>
+          </button>
         </div>
 
         {/* Menu Items Grid */}
@@ -539,6 +562,122 @@ export function MenuView() {
               >
                 <span>Add to Ticket (Seat {activeSeat > 0 ? activeSeat : 'Shared'})</span>
                 <span className="font-mono text-sm">${(currentTotalItemPrice / 100).toFixed(2)}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Open Item / Custom Price Modal */}
+      {showOpenItemModal && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-border text-foreground">
+            <div className="border-b border-border pb-3 flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-wider block">
+                  Quick Service / Off-Menu Special
+                </span>
+                <h3 className="text-base font-black text-foreground uppercase">Ring Open Custom Item</h3>
+              </div>
+              <button
+                onClick={() => setShowOpenItemModal(false)}
+                className="w-7 h-7 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground font-bold flex items-center justify-center"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">Item Description / Name</label>
+                <input
+                  type="text"
+                  value={openItemName}
+                  onChange={(e) => setOpenItemName(e.target.value)}
+                  placeholder="e.g. Daily Scone, Soup of the Day, Custom Salad..."
+                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">Price ($ USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={openItemPriceDollars}
+                  onChange={(e) => setOpenItemPriceDollars(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-sm font-mono font-black outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Prep Station</label>
+                  <select
+                    value={openItemStation}
+                    onChange={(e) => setOpenItemStation(e.target.value)}
+                    className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-2.5 text-xs font-semibold outline-none"
+                  >
+                    <option value="expo">Expo / Counter</option>
+                    <option value="grill">Grill</option>
+                    <option value="fry">Fryer</option>
+                    <option value="cold">Pantry / Salad</option>
+                    <option value="bar">Bar</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Seat Assign</label>
+                  <div className="p-2.5 rounded-xl bg-muted/40 border border-border text-xs font-bold text-foreground text-center">
+                    {activeSeat > 0 ? `Seat ${activeSeat}` : 'Shared'}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">Special Kitchen Notes</label>
+                <input
+                  type="text"
+                  value={openItemNotes}
+                  onChange={(e) => setOpenItemNotes(e.target.value)}
+                  placeholder="e.g. Extra hot, sauce on side, allergy alert..."
+                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowOpenItemModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const priceCents = Math.round(parseFloat(openItemPriceDollars || '0') * 100);
+                  if (!openItemName.trim()) { alert('Item name required'); return; }
+                  if (isNaN(priceCents) || priceCents <= 0) { alert('Valid price required'); return; }
+
+                  addItem({
+                    order_id: activeOrderId!,
+                    menu_item_id: `custom-${Date.now()}`,
+                    name: openItemName.trim(),
+                    quantity: 1,
+                    unit_price: priceCents,
+                    station: openItemStation,
+                    seat_number: activeSeat,
+                    notes: openItemNotes.trim() || undefined,
+                  });
+
+                  setShowOpenItemModal(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm"
+              >
+                Add Open Item
               </button>
             </div>
           </div>

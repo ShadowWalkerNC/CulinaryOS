@@ -47,6 +47,11 @@ export function OrderView() {
   const [pendingDiscount, setPendingDiscount] = useState<{ pct: number; flat: number } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Quick Kitchen Note & Seat Shift Modal State
+  const [editingItemNote, setEditingItemNote] = useState<any | null>(null);
+  const [customKitchenNote, setCustomKitchenNote] = useState('');
+  const [customItemSeat, setCustomItemSeat] = useState(1);
+
   function triggerToast(msg: string) {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -317,13 +322,26 @@ export function OrderView() {
                   ${((item.line_total || item.unit_price * (item.quantity || 1)) / 100).toFixed(2)}
                 </p>
                 {!item.is_voided && (
-                  <button
-                    onClick={() => initiateVoidItem(item.id)}
-                    title="Void line item"
-                    className="text-gray-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setEditingItemNote(item);
+                        setCustomKitchenNote(item.notes || '');
+                        setCustomItemSeat(item.seat_number || 1);
+                      }}
+                      title="Edit kitchen instructions or seat"
+                      className="text-gray-400 hover:text-amber-600 p-1 rounded hover:bg-amber-50 transition-colors"
+                    >
+                      <Tag className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => initiateVoidItem(item.id)}
+                      title="Void line item"
+                      className="text-gray-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -656,6 +674,82 @@ export function OrderView() {
                 className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-colors shadow-md"
               >
                 Authorize & Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Special Kitchen Notes & Seat Assignment Modal */}
+      {editingItemNote && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-200 text-slate-900">
+            <div className="border-b border-slate-100 pb-2.5 flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Special Instructions</span>
+                <h3 className="text-sm font-black text-slate-900 uppercase truncate max-w-[240px]">{editingItemNote.name}</h3>
+              </div>
+              <button
+                onClick={() => setEditingItemNote(null)}
+                className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">Kitchen Note / Allergy Alert</label>
+                <input
+                  type="text"
+                  value={customKitchenNote}
+                  onChange={(e) => setCustomKitchenNote(e.target.value)}
+                  placeholder="e.g. Extra crispy, dressing on side, gluten allergy..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-slate-900"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">Seat Number</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[1, 2, 3, 4, 0].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setCustomItemSeat(s)}
+                      className={`py-2 rounded-lg text-xs font-black transition-all ${
+                        customItemSeat === s
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {s > 0 ? `S${s}` : 'All'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingItemNote(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  editingItemNote.notes = customKitchenNote.trim() || undefined;
+                  editingItemNote.seat_number = customItemSeat;
+                  setEditingItemNote(null);
+                  triggerToast(`Updated instructions for ${editingItemNote.name}`);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-wider shadow-sm"
+              >
+                Save Notes
               </button>
             </div>
           </div>

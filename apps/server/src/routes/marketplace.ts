@@ -54,6 +54,7 @@ async function loadExtensions(): Promise<ExtensionManifest[]> {
     const results: ExtensionManifest[] = [];
     for (const d of dirs) {
       if (!d.isDirectory()) continue;
+      if (d.name === 'experimental' || d.name.startsWith('.')) continue; // Quarantine experimental/incomplete manifests
       const manifestPath = path.join(EXTENSIONS_DIR, d.name, 'culinaryos_extension.json');
       try {
         const raw = await readFile(manifestPath, 'utf8');
