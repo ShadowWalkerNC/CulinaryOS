@@ -13,6 +13,10 @@ import {
   type BakersRecipe,
   type StandardPrepRecipe,
 } from '@culinaryos/prep-engine';
+import {
+  evaluateDietaryProfile,
+  ALLERGEN_REGISTRY,
+} from '@culinaryos/shared';
 import AdhesiveLabelModal from './AdhesiveLabelModal';
 
 interface Props {
@@ -64,6 +68,12 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
 
   const scaledBakers = scaleRecipeByBakersPercentage(bakersRecipe, Number(targetFlourGrams) || 1000);
   const scaledYield = scaleRecipeByTargetYield(standardRecipe, Number(targetYield) || 1);
+
+  const currentIngredientNames = scaleMode === 'bakers'
+    ? bakersIngredients.map((i) => i.name)
+    : standardIngredients.map((i) => i.name);
+
+  const dietaryProfile = evaluateDietaryProfile([], currentIngredientNames);
 
   function handleAddBakersRow() {
     setBakersIngredients([...bakersIngredients, { name: 'New Ingredient', percentage: 5 }]);
@@ -314,6 +324,57 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
           </div>
         )}
 
+        {/* FDA FASTER Act Top 9 Allergen & Dietary Intelligence Box */}
+        <div className="bg-zinc-950/80 p-4 rounded-xl border border-zinc-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🛡️</span> FDA FASTER Act Top 9 Allergen & Dietary Intelligence
+            </span>
+            <div className="flex items-center gap-1.5">
+              {dietaryProfile.isVegan && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-green-500/20 text-green-300 border border-green-500/40">
+                  🌱 Vegan
+                </span>
+              )}
+              {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  🥗 Vegetarian
+                </span>
+              )}
+              {dietaryProfile.isGlutenFree && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  🌾 Gluten-Free
+                </span>
+              )}
+              {dietaryProfile.isDairyFree && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                  🥛 Dairy-Free
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-zinc-400 font-semibold">Detected Recipe Allergens:</span>
+            {dietaryProfile.matchedAllergens.length === 0 ? (
+              <span className="text-xs text-emerald-400 font-medium">None detected (Allergen-Safe)</span>
+            ) : (
+              dietaryProfile.matchedAllergens.map((algId) => {
+                const def = ALLERGEN_REGISTRY[algId];
+                return (
+                  <span
+                    key={algId}
+                    className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-red-950/60 text-red-300 rounded-lg border border-red-800"
+                  >
+                    <span>{def?.emoji ?? '⚠'}</span>
+                    <span>{def?.name ?? algId}</span>
+                  </span>
+                );
+              })
+            )}
+          </div>
+        </div>
+
         {/* Footer actions */}
         <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
           <div className="text-xs text-zinc-500">
@@ -346,6 +407,7 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
             yieldQuantity: scaleMode === 'bakers' ? Math.round(scaledBakers.totalBatchWeightGrams) : targetYield,
             yieldUnit: scaleMode === 'bakers' ? 'g' : yieldUnit,
             shelfLifeHours: 72,
+            allergens: dietaryProfile.matchedAllergens.map((id) => ALLERGEN_REGISTRY[id]?.name.split(' ')[0] ?? id),
           }}
           onClose={() => setShowLabelModal(false)}
         />

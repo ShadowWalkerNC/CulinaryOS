@@ -108,8 +108,6 @@ export function calculateMultiRateTax(
   let exemptCount = 0;
   let subtotalCents = 0;
 
-  const customCategories: Record<string, { sales: number; count: number; rate: number }> = {};
-
   for (const item of items) {
     const total = Math.max(0, Math.round(item.lineTotalCents || 0));
     subtotalCents += total;

@@ -2,7 +2,7 @@
 // CulinaryOS — Reports, Z-Report, and Accounting Ledger Types
 // ============================================================
 
-import type { TaxCalculationResult, TaxCategorySummary } from '../tax.js';
+import type { TaxCalculationResult } from '../tax.js';
 
 export type ZReportStatus = 'preview' | 'closed';
 

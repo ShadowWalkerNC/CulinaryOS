@@ -3,7 +3,6 @@
 // Scheduled time/day pricing rules with validation and price resolution
 // ============================================================
 
-import type { MenuItem } from './types/menu.js';
 
 export type PricingAdjustmentType = 'percent' | 'fixed_cents' | 'override_cents';
 
