@@ -1,9 +1,16 @@
-import { describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it } from 'bun:test';
 import { app } from '../../apps/server/src/index';
 
 const DEMO_TENANT = '00000000-0000-0000-0000-000000000001';
 
 describe('Table Operations & Assistance API (F1.2 & F1.4)', () => {
+  beforeAll(() => {
+    process.env.AUTH_RELAXED = 'true';
+    process.env.DEVICE_API_KEY = 'test-key-ci';
+    process.env.INTERNAL_API_KEY = 'test-key-ci';
+    process.env.SUPABASE_URL = 'https://your-project.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'your-service-role-key';
+  });
   it('1. POST /v1/tables/merge merges source tables into target table', async () => {
     const res = await app.request('/v1/tables/merge', {
       method: 'POST',

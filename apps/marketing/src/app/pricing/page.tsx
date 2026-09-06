@@ -40,6 +40,8 @@ const tiers = [
       'Everything in Starter',
       'KitchenKit (prep planning, par levels)',
       'CulinaryOps (food cost, waste, labor)',
+      'Multi-course pacing & 12m/15m line staging',
+      'Daily Operations Consultant & Coaching audit',
       'Multi-location management',
       'Advanced reporting & analytics',
       'Reservations module',

@@ -45,9 +45,19 @@ export function MenuView() {
   const [modifyingItem, setModifyingItem] = useState<any | null>(null);
   const [selectedModifiers, setSelectedModifiers] = useState<Record<string, any[]>>({});
   const [itemNotes, setItemNotes] = useState('');
+  const [itemCourse, setItemCourse] = useState<number>(1);
   const [quantity, setQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Auto Course Assignment based on section name / category
+  function getDefaultCourseNumber(sectionName?: string, itemName?: string): number {
+    const text = `${sectionName || ''} ${itemName || ''}`.toLowerCase();
+    if (text.includes('starter') || text.includes('app') || text.includes('soup') || text.includes('salad') || text.includes('chowder') || text.includes('fry') || text.includes('fries') || text.includes('calamari')) return 1;
+    if (text.includes('dessert') || text.includes('pie') || text.includes('cake') || text.includes('sweet') || text.includes('ice cream') || text.includes('brownie')) return 3;
+    if (text.includes('drink') || text.includes('beverage') || text.includes('beer') || text.includes('wine') || text.includes('soda') || text.includes('bar')) return 1;
+    return 2; // Default mains/entrees to Course 2
+  }
 
   // Open Item / Custom Price State
   const [showOpenItemModal, setShowOpenItemModal] = useState(false);
@@ -96,9 +106,13 @@ export function MenuView() {
   function openModifierModal(item: any) {
     if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
     
+    const currentSectionName = sections.find((s: any) => s.id === activeS)?.name;
+    const defaultCourse = getDefaultCourseNumber(currentSectionName, item.name);
+
     if (item.modifier_groups && item.modifier_groups.length > 0) {
       setModifyingItem(item);
       setItemNotes('');
+      setItemCourse(defaultCourse);
       setQuantity(1);
       setValidationError(null);
       
@@ -115,6 +129,7 @@ export function MenuView() {
         unit_price: item.price,
         station: item.station,
         seat_number: activeSeat,
+        course_number: defaultCourse,
       });
     }
   }
@@ -225,6 +240,7 @@ export function MenuView() {
       unit_price: modifyingItem.price,
       station: modifyingItem.station,
       seat_number: activeSeat,
+      course_number: itemCourse,
       notes: itemNotes.trim() || undefined,
       selectedModifiers: flatMods,
     });
@@ -450,40 +466,88 @@ export function MenuView() {
           {items
             .filter((i: any) => i.status !== '86d')
             .sort((a: any, b: any) => a.sort_order - b.sort_order)
-            .map((item: any) => (
-              <button
-                key={item.id}
-                onClick={() => openModifierModal(item)}
-                disabled={item.status === 'unavailable'}
-                className={`bg-card rounded-2xl p-4 text-left border border-border/80 hover:border-foreground/40 hover:shadow-md transition-all duration-150 flex flex-col justify-between min-h-[148px] active:scale-[0.98] shadow-xs group ${
-                  item.status === 'unavailable' ? 'opacity-40 cursor-not-allowed' : ''
-                }`}
-              >
-                <div>
-                  <div className="flex justify-between items-start gap-2">
-                    <p className="text-foreground font-extrabold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                      {item.name}
-                    </p>
-                    <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
-                      {activeSeat > 0 ? `S${activeSeat}` : 'Shared'}
-                    </span>
-                  </div>
-                  {item.description && (
-                    <p className="text-muted-foreground text-xs mt-1.5 leading-snug line-clamp-2">{item.description}</p>
-                  )}
-                </div>
+            .map((item: any) => {
+              const primaryGroup = item.modifier_groups?.[0];
+              const quickModifiers = primaryGroup?.modifiers?.slice(0, 3) ?? [];
 
-                <div className="flex justify-between items-center pt-2.5 border-t border-border/60 mt-2">
-                  <span className="text-foreground font-black font-mono text-sm">
-                    ${(item.price / 100).toFixed(2)}
-                  </span>
-                  <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground bg-muted/60 group-hover:bg-foreground group-hover:text-background px-2.5 py-1 rounded-lg transition-all flex items-center gap-1">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add</span>
-                  </span>
+              return (
+                <div
+                  key={item.id}
+                  className={`bg-card rounded-2xl p-4 text-left border border-border/80 hover:border-foreground/40 hover:shadow-md transition-all duration-150 flex flex-col justify-between min-h-[160px] shadow-xs group ${
+                    item.status === 'unavailable' ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => openModifierModal(item)}
+                    className="text-left w-full focus:outline-none"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <p className="text-foreground font-extrabold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </p>
+                      <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
+                        {activeSeat > 0 ? `S${activeSeat}` : 'Shared'}
+                      </span>
+                    </div>
+                    {item.description && (
+                      <p className="text-muted-foreground text-xs mt-1.5 leading-snug line-clamp-2">{item.description}</p>
+                    )}
+                  </button>
+
+                  {/* Inline Fast Modifier Chips (Toast Go / M3 Ergonomics) */}
+                  {quickModifiers.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-dashed border-border/70 flex flex-wrap gap-1">
+                      {quickModifiers.map((qm: any) => (
+                        <button
+                          key={qm.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!activeOrderId) { alert('No active order. Open table first.'); return; }
+                            addItem({
+                              order_id: activeOrderId,
+                              menu_item_id: item.id,
+                              name: `${item.name} (${qm.name})`,
+                              quantity: 1,
+                              unit_price: item.price + (qm.price_adjustment || 0),
+                              station: item.station,
+                              seat_number: activeSeat,
+                              selectedModifiers: [{
+                                modifier_id: qm.id,
+                                name: qm.name,
+                                price_adjustment: qm.price_adjustment || 0,
+                              }],
+                            });
+                          }}
+                          className="text-[10px] font-black px-2 py-1 rounded-lg bg-muted hover:bg-slate-900 hover:text-white text-foreground/80 border border-border/80 transition-all active:scale-95 flex items-center gap-1"
+                          title={`Quick add ${item.name} with ${qm.name}`}
+                        >
+                          <span>{qm.name}</span>
+                          {qm.price_adjustment > 0 && (
+                            <span className="font-mono text-muted-foreground">+${(qm.price_adjustment / 100).toFixed(2)}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2.5 border-t border-border/60 mt-2">
+                    <span className="text-foreground font-black font-mono text-sm">
+                      ${(item.price / 100).toFixed(2)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openModifierModal(item)}
+                      className="text-xs font-bold text-muted-foreground group-hover:text-foreground bg-muted/60 group-hover:bg-foreground group-hover:text-background px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{item.modifier_groups?.length > 0 ? 'Customize' : 'Add'}</span>
+                    </button>
+                  </div>
                 </div>
-              </button>
-            ))}
+              );
+            })}
         </div>
       </main>
 
@@ -513,6 +577,34 @@ export function MenuView() {
             {/* Modifier Groups Tree */}
             <div className="space-y-4 max-h-72 overflow-y-auto pr-2">
               {renderModifierGroups(modifyingItem.modifier_groups ?? [])}
+
+              {/* Course Assignment Override */}
+              <div className="space-y-1.5 bg-muted/40 p-3 rounded-2xl border border-border">
+                <label className="text-[11px] font-black text-foreground uppercase tracking-wider block">
+                  Course Firing Schedule
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { num: 1, label: 'Course 1 (Apps/Drinks)' },
+                    { num: 2, label: 'Course 2 (Mains/Entrees)' },
+                    { num: 3, label: 'Course 3 (Desserts)' },
+                  ].map((c) => (
+                    <button
+                      key={c.num}
+                      type="button"
+                      onClick={() => setItemCourse(c.num)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-0.5 ${
+                        itemCourse === c.num
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-card text-foreground hover:bg-muted border border-border'
+                      }`}
+                    >
+                      <span>C{c.num}</span>
+                      <span className="text-[9px] opacity-75 font-normal">{c.num === 1 ? 'First' : c.num === 2 ? 'Main' : 'Sweet'}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Special Instructions */}
               <div className="space-y-1.5">

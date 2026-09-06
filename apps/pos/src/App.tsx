@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { usePOSStore } from './lib/store';
+import { useOrder } from './lib/queries';
 import { TablesView }   from './views/TablesView';
 import { OrderView }    from './views/OrderView';
 import { MenuView }     from './views/MenuView';
@@ -12,7 +13,21 @@ import { TabsView }      from './views/TabsView';
 import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
-import { Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp, Lock } from '@culinaryos/ui';
+import {
+  Grid,
+  X,
+  ExternalLink,
+  Tablet,
+  Tv,
+  Laptop,
+  ChefHat,
+  ShoppingBag,
+  TrendingUp,
+  Lock,
+  ShoppingCart,
+  Sheet,
+  SheetContent,
+} from '@culinaryos/ui';
 
 export function App() {
   const { view, setView, activeOrderId, setActiveOrder, employee, setEmployee } = usePOSStore();
@@ -51,6 +66,13 @@ export function App() {
       </div>
     );
   }
+
+  const { data: currentOrder } = useOrder(activeOrderId);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
+  const activeItems = (currentOrder?.items || []).filter((i: any) => !i.is_voided);
+  const itemCount = activeItems.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0);
+  const orderSubtotal = activeItems.reduce((sum: number, i: any) => sum + (i.line_total || 0), 0);
 
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn select-none">
@@ -252,39 +274,44 @@ export function App() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
               {appModules.map((m) => {
                 const Icon = m.icon;
                 return (
                   <a
                     key={m.id}
-                    href={`http://localhost:${m.port}`}
-                    onClick={() => setShowApps(false)}
-                    className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 ${
+                    href={`http://localhost:${m.port}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all ${
                       m.active
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-800'
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
                     }`}
                   >
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        m.active ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-xs'
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        m.active ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className={`text-xs font-bold truncate ${m.active ? 'text-white' : 'text-slate-950'}`}>
-                          {m.label}
-                        </p>
-                        {m.active && (
-                          <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-black uppercase">
-                            Active
-                          </span>
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black leading-tight">{m.label}</span>
+                        <span
+                          className={`text-[9px] font-mono px-1 rounded ${
+                            m.active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                          }`}
+                        >
+                          :{m.port}
+                        </span>
                       </div>
-                      <p className={`text-[10px] line-clamp-1 mt-0.5 ${m.active ? 'text-slate-200' : 'text-slate-500'}`}>
+                      <p
+                        className={`text-[11px] leading-tight truncate mt-0.5 ${
+                          m.active ? 'text-slate-300' : 'text-slate-500'
+                        }`}
+                      >
                         {m.desc}
                       </p>
                     </div>
@@ -314,17 +341,17 @@ export function App() {
         </div>
       )}
 
-      {/* Main Workspace Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Side: Persistent Receipt Panel (Only visible in Ticket Views: Menu, Checkout, Floor Map with Active Order) */}
+      {/* Main Workspace Layout — Dual-Pane on >=1024px, Single Canvas on <1024px */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left Side: Desktop Dual-Pane Receipt Panel (Hidden on screens < 1024px) */}
         {activeOrderId && (view === 'menu' || view === 'checkout') && (
-          <div className="w-80 border-r border-[#e5e7eb] bg-white flex flex-col h-full shrink-0">
+          <div className="hidden lg:flex w-80 xl:w-96 border-r border-[#e5e7eb] bg-white flex-col h-full shrink-0">
             <OrderView />
           </div>
         )}
 
         {/* Right Side: Active Workspace panel */}
-        <div className="flex-1 h-full overflow-hidden bg-[#f8f9fa]">
+        <div className="flex-1 h-full overflow-hidden bg-[#f8f9fa] pb-16 lg:pb-0">
           {view === 'dashboard' && <DashboardView />}
           {view === 'tables' && <TablesView />}
           {view === 'menu' && <MenuView />}
@@ -335,6 +362,78 @@ export function App() {
           {view === 'reports' && <ReportsView />}
           {view === 'cfd' && <CFDView />}
         </div>
+
+        {/* Mobile/Tablet Ergonomic Thumb-Zone Floating Cart Bar (< 1024px) */}
+        {activeOrderId && (view === 'menu' || view === 'checkout' || view === 'tables') && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 shadow-2xl flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileCartOpen(true)}
+              className="flex items-center gap-2.5 text-left active:scale-95 transition-transform"
+            >
+              <div className="relative w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
+                <ShoppingCart className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-black text-[10px] w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-900">
+                  {currentOrder?.table_number ? `Table ${currentOrder.table_number}` : 'Current Tab'}
+                </div>
+                <div className="text-[11px] text-slate-500 font-semibold font-mono">
+                  {itemCount} items • ${(orderSubtotal / 100).toFixed(2)}
+                </div>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileCartOpen(true)}
+                className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase tracking-wider active:scale-95 transition-all"
+              >
+                View Ticket
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('checkout')}
+                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                <span>Pay</span>
+                <span className="font-mono">${(orderSubtotal / 100).toFixed(2)}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Slide-Over Ticket Drawer */}
+        <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
+          <SheetContent side="bottom" className="p-0 h-[85vh] max-h-[85vh] flex flex-col rounded-t-3xl border-t border-slate-200 shadow-2xl">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 rounded-t-3xl">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                  <ShoppingCart className="w-4 h-4" />
+                </div>
+                <span className="font-black text-xs text-slate-950 uppercase tracking-wider">
+                  Live Ticket ({currentOrder?.table_number ? `Table ${currentOrder.table_number}` : 'Open Tab'})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileCartOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <OrderView />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );

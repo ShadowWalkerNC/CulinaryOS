@@ -1,0 +1,28 @@
+version: 1.0.0
+updated_at: '2026-09-06T18:42:00.932Z'
+files:
+  AGENTS.md:
+    path: AGENTS.md
+    sha256: bdbca4be17be91ba2fa35e50ea9c3182dfa873c4817daecf6cc498d0927bb972
+    created_at: '2026-09-06T18:42:00.915Z'
+    managed_by: devkit
+  CLAUDE.md:
+    path: CLAUDE.md
+    sha256: 0af970f112f55097de09950d8bcc9ede83e3c9ad71019b396619c8f45cfe66da
+    created_at: '2026-09-06T18:42:00.918Z'
+    managed_by: devkit
+  opencode.json:
+    path: opencode.json
+    sha256: d6e2d82a43275326fcccae2f87d3a00a7058ab3e964eed86b8f675c4bff32033
+    created_at: '2026-09-06T18:42:00.921Z'
+    managed_by: devkit
+  .cursor\rules\devkit.mdc:
+    path: .cursor\rules\devkit.mdc
+    sha256: c30ded570026e7e9f62062cd0d5677cd5730693369aaf073c6a8361f82037be0
+    created_at: '2026-09-06T18:42:00.929Z'
+    managed_by: devkit
+  GEMINI.md:
+    path: GEMINI.md
+    sha256: 0ba9526b7c57c3a07dbc79eb917c3b2cebf86945daa61e0fdcda2ec0c4f38ad0
+    created_at: '2026-09-06T18:42:00.932Z'
+    managed_by: devkit

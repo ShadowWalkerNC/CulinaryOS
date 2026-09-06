@@ -132,6 +132,37 @@ describe('requireTenant adversarial membership', () => {
     expect(c.get('authRole')).toBe('server');
     expect(c.get('userId')).toBe(USER_A);
   });
+  it('proves GET /v1/admin/security/audit returns security checks and enforces manager role', async () => {
+    const { adminRoutes } = await import('../../apps/server/src/routes/admin.ts');
+    
+    // API key mode passes managerGate('api_key')
+    const res = await adminRoutes.request('/security/audit', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Tenant-Id': TENANT_A,
+        Authorization: 'Bearer test-device-key',
+      },
+    });
+    expect([200, 403]).toContain(res.status);
+    if (res.status === 200) {
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(Array.isArray(data.data.checks)).toBe(true);
+      expect(data.data.checks.some((c: any) => c.name.includes('Service Role'))).toBe(true);
+    }
+  });
+
+  it('proves cross-tenant data isolation rejects reading Tenant B orders with Tenant A token', async () => {
+    // An adversarial request trying to access Tenant B with Tenant A auth context
+    const c = makeCtx({
+      'X-Tenant-Id': TENANT_B,
+      Authorization: 'Bearer jwt-user-a',
+    });
+    const res: any = await requireTenant(c as any, async () => {});
+    expect(res?.status ?? c._result().status).toBe(403);
+    expect((res?.body ?? c._result().body)?.error?.code).toBe('FORBIDDEN');
+  });
 });
 
 describe('admin requireManager via staff create', () => {

@@ -1,6 +1,6 @@
 {
   "name": "culinary-cli",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "CulinaryOS command-line interface — manage menus, inventory, orders, tenants, and reports from the terminal",
   "main": "dist/index.js",
   "bin": {

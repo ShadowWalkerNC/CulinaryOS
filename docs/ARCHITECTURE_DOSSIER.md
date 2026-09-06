@@ -118,7 +118,7 @@ The backend is built with **Hono** and mounted in `apps/server/src/index.ts`. Al
 |---|---|---|
 | `/v1/auth` | `auth.ts`, `signup.ts` | `POST /pin-login`, `POST /signup` (public onboarding & 14-day trial) |
 | `/v1/orders` | `orders.ts` | `POST /`, `GET /`, `GET /:id`, `PATCH /:id/send` (triggers KDS fire) |
-| `/v1/kds` | `kds.ts` | `GET /tickets`, `PATCH /tickets/:id/bump`, `POST /tickets/:id/hold-fire` |
+| `/v1/kds` | `kds.ts` | `GET /tickets`, `GET /pacing` (12m/15m alerts + ETag), `PATCH /tickets/:id/bump`, `POST /tickets/:id/hold-fire` |
 | `/v1/billing` | `billing.ts` | `POST /checkout` (Stripe subscription), `POST /webhook`, `POST /portal` |
 | `/v1/reservations` | `reservations.ts` | `POST /`, `GET /availability`, `PATCH /:id/status` (seat emit) |
 | `/v1/commissary` | `commissary.ts` | `POST /transfers/request`, `PATCH /transfers/:id/fulfill`, `GET /royalty-ledger` |
@@ -126,7 +126,7 @@ The backend is built with **Hono** and mounted in `apps/server/src/index.ts`. Al
 | `/v1/marketplace` | `marketplace.ts` | `GET /extensions`, `POST /extensions/submit`, `GET /extensions/:id/verification` |
 | `/v1/reports` | `reports.ts` | `GET /z-report`, `GET /z-report/pdf` (binary stream), `GET /export/csv` |
 | `/v1/admin` | `admin.ts` | `GET/POST /roles/custom` (permission builder), `DELETE /account/gdpr-purge` |
-| `/v1/tables` | `tables.ts` | `POST /merge`, `POST /split`, `POST /transfer` (PIN-gated), `POST /:id/assistance` |
+| `/v1/tables` | `tables.ts` | `POST /merge`, `POST /split`, `POST /transfer` (PIN-gated), `POST /:id/assistance` (15s debounce), `GET /assistance/active` (304 ETag) |
 | `/v1/dayparts` | `dayparts.ts` | `GET /active`, `POST /rules` (scheduled pricing overrides) |
 | `/v1/pos` | `pos-sync.ts` | `POST /sync-deltas` (offline transaction batch replay) |
 | `/v1/ops` | `ops.ts` | `POST /waste`, `GET /food-cost`, `GET /labor` |

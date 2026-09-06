@@ -9,6 +9,7 @@ import {
   useDismissAssistance,
 } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
+import { acquireTableSeatLock } from '@culinaryos/shared';
 import {
   FloorMap3D,
   type FloorTable3DData,
@@ -245,6 +246,21 @@ export function TablesView() {
 
   function handleStartOrder() {
     if (!selectedTable) return;
+
+    // Optimistic Table Seat Lock
+    const deviceId = localStorage.getItem('culinaryos_device_id') ?? 'terminal-pos-01';
+    const lockResult = acquireTableSeatLock(
+      selectedTable.id,
+      deviceId,
+      serverName,
+      120000 // 2 minute operational lease
+    );
+
+    if (!lockResult.success) {
+      alert(lockResult.error ?? 'Table is locked by another server');
+      return;
+    }
+
     createOrder(
       { table_number: selectedTable.number, cover_count: coverCount, server_name: serverName },
       {

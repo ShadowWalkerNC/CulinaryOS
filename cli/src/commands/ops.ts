@@ -82,3 +82,18 @@ opsCommand
       console.error(chalk.red(`\n✖ Error fetching labor data: ${err.message}\n`));
     }
   });
+
+// 4. Operations Consultant & Daily Coaching Audit
+opsCommand
+  .command('coach')
+  .description('Run operations consultant audit on speed-of-service, course pacing, and dietary safety')
+  .action(() => {
+    const { spawn } = require('node:child_process');
+    const child = spawn('npx', ['tsx', 'scripts/daily-ops-consultant.ts'], {
+      stdio: 'inherit',
+      shell: true,
+    });
+    child.on('error', (err: any) => {
+      console.error(chalk.red(`\n✖ Coaching audit failed: ${err.message}\n`));
+    });
+  });

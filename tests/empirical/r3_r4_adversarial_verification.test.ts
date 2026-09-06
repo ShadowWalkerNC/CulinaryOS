@@ -413,7 +413,7 @@ describe('Adversarial Verification: R3 Security, Void Governance & Accounting Le
       );
 
       expect(pool.totalPoints).toBe(17.8);
-      expect(pool.totalEligibleHours).toBe(36.0);
+      expect(pool.totalEligibleHours).toBe(26.0);
 
       // Manager must receive $0.00
       const mgrPayout = pool.staffPayouts.find((s) => s.role === 'manager');

@@ -26,3 +26,17 @@ tenantCommand
     const tenant: any = await apiPost('/api/tenants', { name: opts.name, email: opts.email, plan: opts.plan });
     console.log(chalk.green(`✔ Tenant created: ${tenant.id} — ${tenant.name} (${tenant.plan})`));
   });
+
+tenantCommand
+  .command('template <type>')
+  .description('Apply business template preset (food-truck | full-service)')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (type, opts) => {
+    try {
+      const res: any = await apiPost('/v1/settings/apply-template', { template: type }, opts.tenant);
+      console.log(chalk.bold.green(`\n✔ Applied "${type}" business template preset successfully!`));
+      console.log(chalk.gray(`  Zero schema branching: custom stations, tax rates, and touch target UI applied.\n`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Failed to apply template: ${err.message}\n`));
+    }
+  });

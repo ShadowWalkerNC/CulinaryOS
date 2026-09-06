@@ -10,7 +10,7 @@
 
 import { Hono } from 'hono';
 import { requireTenant, ok, err, escapeHtml } from '../middleware/auth.js';
-import { KDS_ACTIVE_STATUSES, resolveDbStations } from '@culinaryos/shared';
+import { KDS_ACTIVE_STATUSES, resolveDbStations, computePacingOverview } from '@culinaryos/shared';
 import {
   bumpMockTicket,
   fireMockTicket,
@@ -42,6 +42,18 @@ kdsRoutes.get('/tickets', async (c) => {
       list = list.filter((t) => allowed.includes(t.station) ||
         t.items?.some((i) => i.station != null && allowed.includes(i.station)));
     }
+
+    let hash = '';
+    for (const item of list) {
+      hash += `${item.id}-${item.status};`;
+    }
+    const etag = `W/"kds-t-${tenantId}-${station || 'all'}-${status || 'active'}-${list.length}-${hash.length}"`;
+    const clientIfNoneMatch = c.req.header('If-None-Match');
+    if (clientIfNoneMatch && clientIfNoneMatch === etag) {
+      return c.body(null, 304);
+    }
+    c.header('ETag', etag);
+    c.header('Cache-Control', 'private, no-cache');
     return ok(c, list);
   }
 
@@ -344,51 +356,26 @@ kdsRoutes.get('/pacing', async (c) => {
 
   const tickets = supabase
     ? (await supabase.from('kitchen_tickets').select('*, ticket_items(*)').eq('tenant_id', tenantId)).data || []
-    : getMockTickets();
+    : getMockTickets().filter((t) => t.tenant_id === tenantId || !t.tenant_id);
 
-  const now = Date.now();
-  const pacingOrders: any[] = [];
-  const orderGroups = new Map<string, any[]>();
-
+  // Compute a lightweight digest fingerprint of ticket IDs + fired/bumped status for ETag caching
+  let fingerprint = '';
   for (const t of tickets) {
-    const key = t.order_id || t.id;
-    if (!orderGroups.has(key)) orderGroups.set(key, []);
-    orderGroups.get(key)!.push(t);
+    fingerprint += `${t.id}:${t.status}:${t.course_hold_status || ''}:${t.fired_at || ''};`;
+  }
+  // Rough 30s bucket to allow time-based alert progression without thrashing ETag every second
+  const timeBucket = Math.floor(Date.now() / 30_000);
+  const etag = `W/"pacing-${tenantId}-${tickets.length}-${timeBucket}-${fingerprint.length}"`;
+
+  const clientIfNoneMatch = c.req.header('If-None-Match');
+  if (clientIfNoneMatch && clientIfNoneMatch === etag) {
+    return c.body(null, 304);
   }
 
-  for (const [orderId, orderTickets] of orderGroups.entries()) {
-    const c1 = orderTickets.find((t) => t.course_number === 1);
-    const c2 = orderTickets.find((t) => t.course_number === 2);
-    const c3 = orderTickets.find((t) => t.course_number === 3);
+  const pacingOrders = computePacingOverview(tickets);
 
-    const c1FiredAt = c1?.fired_at ? new Date(c1.fired_at).getTime() : null;
-    const c1ElapsedSeconds = c1FiredAt ? Math.round((now - c1FiredAt) / 1000) : 0;
-
-    // Standard pacing: Course 2 should be fired 12-15 minutes (720-900s) after Course 1
-    const targetC2FireSeconds = 720;
-    const remainingToC2Seconds = Math.max(0, targetC2FireSeconds - c1ElapsedSeconds);
-
-    let pacingAlert: 'normal' | 'warning' | 'urgent' = 'normal';
-    if (c2 && c2.course_hold_status === 'held') {
-      if (c1ElapsedSeconds >= 900) pacingAlert = 'urgent'; // 15+ mins
-      else if (c1ElapsedSeconds >= 720) pacingAlert = 'warning'; // 12-15 mins
-    }
-
-    pacingOrders.push({
-      orderId,
-      tableNumber: c1?.table_number ?? null,
-      c1Status: c1?.status ?? 'none',
-      c1ElapsedSeconds,
-      c2Status: c2?.course_hold_status ?? (c2?.status || 'none'),
-      c2TicketId: c2?.id ?? null,
-      c3Status: c3?.course_hold_status ?? (c3?.status || 'none'),
-      c3TicketId: c3?.id ?? null,
-      targetC2FireSeconds,
-      remainingToC2Seconds,
-      pacingAlert,
-    });
-  }
-
+  c.header('ETag', etag);
+  c.header('Cache-Control', 'private, no-cache');
   return ok(c, pacingOrders);
 });
 

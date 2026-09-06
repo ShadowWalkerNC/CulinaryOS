@@ -13,8 +13,8 @@ export const tablesRoutes = new Hono<Env>();
 
 tablesRoutes.use('*', requireTenant);
 
-// In-memory store for Demo/Mock mode table state & assistance buzzers
-interface StoredAssistance {
+// High-performance indexed in-memory store for Demo/Mock mode table state & assistance buzzers
+export interface StoredAssistance {
   id: string;
   tenantId: string;
   tableId: string;
@@ -25,7 +25,25 @@ interface StoredAssistance {
   status: 'active' | 'acknowledged' | 'resolved';
 }
 
-const mockAssistanceRequests: StoredAssistance[] = [];
+// Tenant-indexed storage: tenantId -> Map<id, StoredAssistance>
+const tenantAssistanceStore = new Map<string, Map<string, StoredAssistance>>();
+// Tenant version counter for lightweight ETag generation: tenantId -> version number
+const tenantAssistanceVersion = new Map<string, number>();
+
+function getTenantAssistanceMap(tenantId: string): Map<string, StoredAssistance> {
+  let map = tenantAssistanceStore.get(tenantId);
+  if (!map) {
+    map = new Map();
+    tenantAssistanceStore.set(tenantId, map);
+  }
+  return map;
+}
+
+function bumpTenantVersion(tenantId: string): number {
+  const next = (tenantAssistanceVersion.get(tenantId) || 0) + 1;
+  tenantAssistanceVersion.set(tenantId, next);
+  return next;
+}
 
 // Local mock tables if DB is offline
 const mockTableState: Record<string, {
@@ -209,6 +227,7 @@ tablesRoutes.post('/merge', async (c) => {
       success: true,
       targetTableId,
       mergedOrderId: targetOrder.id,
+      mergedSourceTableIds: sourceTableIds,
       mergedTableNumbers: allTableIds,
       combinedItemsCount: allItems?.length ?? 0,
       newTotalCents: total,
@@ -480,8 +499,40 @@ tablesRoutes.post('/:id/assistance', async (c) => {
 
   const tableNumber = String(body.tableNumber ?? id).trim();
   const type = body.type || 'server';
-  const notificationId = `ast-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const timestamp = new Date().toISOString();
+  const now = Date.now();
+
+  const map = getTenantAssistanceMap(tenantId);
+
+  // Debounce & deduplication check:
+  // If an active request of the exact same type was created for this table within 15 seconds,
+  // reuse the active request to avoid server thrashing and event storms.
+  for (const existing of map.values()) {
+    if (
+      existing.status === 'active' &&
+      (existing.tableId === id || existing.tableNumber === tableNumber) &&
+      existing.type === type
+    ) {
+      const ageMs = now - new Date(existing.timestamp).getTime();
+      if (ageMs < 15_000) {
+        return ok(
+          c,
+          {
+            notificationId: existing.id,
+            timestamp: existing.timestamp,
+            tableId: existing.tableId,
+            tableNumber: existing.tableNumber,
+            type: existing.type,
+            status: existing.status,
+            deduplicated: true,
+          },
+          200
+        );
+      }
+    }
+  }
+
+  const notificationId = `ast-${now}-${Math.floor(Math.random() * 1000)}`;
 
   const req: StoredAssistance = {
     id: notificationId,
@@ -494,7 +545,18 @@ tablesRoutes.post('/:id/assistance', async (c) => {
     status: 'active',
   };
 
-  mockAssistanceRequests.unshift(req);
+  map.set(notificationId, req);
+  bumpTenantVersion(tenantId);
+
+  // Auto-prune resolved entries older than 1 hour to keep memory lightweight
+  if (map.size > 200) {
+    const oneHourAgo = now - 3600_000;
+    for (const [key, val] of map.entries()) {
+      if (val.status !== 'active' && new Date(val.timestamp).getTime() < oneHourAgo) {
+        map.delete(key);
+      }
+    }
+  }
 
   // Broadcast buzzer notification to POS & KDS terminals
   await handleIncomingEvent({
@@ -526,7 +588,25 @@ tablesRoutes.post('/:id/assistance', async (c) => {
 // GET /v1/tables/assistance/active
 tablesRoutes.get('/assistance/active', async (c) => {
   const tenantId = c.get('tenantId');
-  const active = mockAssistanceRequests.filter((r) => r.tenantId === tenantId && r.status === 'active');
+  const version = tenantAssistanceVersion.get(tenantId) || 0;
+  const etag = `W/"ast-${tenantId}-${version}"`;
+
+  const clientIfNoneMatch = c.req.header('If-None-Match');
+  if (clientIfNoneMatch && clientIfNoneMatch === etag) {
+    return c.body(null, 304);
+  }
+
+  const map = getTenantAssistanceMap(tenantId);
+  const active: StoredAssistance[] = [];
+  for (const item of map.values()) {
+    if (item.status === 'active') {
+      active.push(item);
+    }
+  }
+
+  // Set ETag & Cache-Control for polling clients
+  c.header('ETag', etag);
+  c.header('Cache-Control', 'private, no-cache');
   return ok(c, active);
 });
 
@@ -534,9 +614,11 @@ tablesRoutes.get('/assistance/active', async (c) => {
 tablesRoutes.patch('/assistance/:notificationId/dismiss', async (c) => {
   const tenantId = c.get('tenantId');
   const { notificationId } = c.req.param();
-  const item = mockAssistanceRequests.find((r) => r.id === notificationId && r.tenantId === tenantId);
+  const map = getTenantAssistanceMap(tenantId);
+  const item = map.get(notificationId);
   if (item) {
     item.status = 'resolved';
+    bumpTenantVersion(tenantId);
   }
   return ok(c, { success: true, notificationId, status: 'resolved' });
 });

@@ -108,6 +108,23 @@
   /* — Typography — */
   --cos-font-sans:     'Inter', system-ui, -apple-system, sans-serif;
   --cos-font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+  /* — M3 Expressive State Layer Overlays & Touch Tokens — */
+  --state-hover-opacity:   0.08;
+  --state-focus-opacity:   0.12;
+  --state-press-opacity:   0.16;
+  --state-drag-opacity:    0.16;
+  --touch-target-min:      48px;
+  --touch-target-pointer:  44px;
+  --touch-target-gap:      8px;
+
+  /* — Perceptually Uniform Design Tokens (OKLCH Foundation) — */
+  --oklch-brand-primary:   oklch(0.25 0.05 260); /* Deep Navy */
+  --oklch-brand-accent:    oklch(0.68 0.18 45);  /* Warm Amber/Gold */
+  --oklch-brand-success:   oklch(0.62 0.19 145); /* Emerald Green */
+  --oklch-brand-danger:    oklch(0.58 0.22 25);  /* Crimson Red */
+  --oklch-surface-light:   oklch(0.98 0.005 260);
+  --oklch-surface-dark:    oklch(0.12 0.015 260);
 }
 
 .dark {

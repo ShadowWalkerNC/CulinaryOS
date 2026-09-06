@@ -51,6 +51,23 @@ export interface TipPoolSummary {
   remainderCents: number;
 }
 
+export const FLSA_EXCLUDED_ROLES = new Set([
+  'owner',
+  'general_manager',
+  'gm',
+  'manager',
+  'assistant_manager',
+  'agm',
+  'supervisor',
+  'shift_lead',
+  'shift_supervisor',
+]);
+
+/** Returns true if role is legally excluded from tip pools under FLSA */
+export function isFlsaExcluded(role: string): boolean {
+  return FLSA_EXCLUDED_ROLES.has(role.trim().toLowerCase().replace(/[\s-]+/g, '_'));
+}
+
 export const DEFAULT_ROLE_WEIGHTS: Record<string, number> = {
   server: 1.0,
   lead_server: 1.1,
@@ -65,8 +82,10 @@ export const DEFAULT_ROLE_WEIGHTS: Record<string, number> = {
   prep_cook: 0.2,
   dishwasher: 0.2,
   expo: 0.5,
-  manager: 0.0, // FLSA compliance: managers usually ineligible for employee tip pools
+  manager: 0.0, // FLSA compliance: managers legally excluded from employee tip pools
   shift_lead: 0.0,
+  supervisor: 0.0,
+  owner: 0.0,
 };
 
 /**
@@ -113,12 +132,15 @@ export function calculateTipPool(
     }
   }
 
-  // Compute point-hours for each staff member
+  // Compute point-hours for each staff member with hardcoded FLSA manager exclusions
   const intermediate = eligibleStaff.map((s) => {
-    const roleKey = s.role.toLowerCase();
+    const roleKey = s.role.toLowerCase().trim().replace(/[\s-]+/g, '_');
     let weight = 1.0;
 
-    if (method === 'hours_worked') {
+    // Hard FLSA legal gate: Owners, managers, and supervisors are strictly excluded (0.0 weight)
+    if (isFlsaExcluded(roleKey)) {
+      weight = 0.0;
+    } else if (method === 'hours_worked') {
       weight = 1.0;
     } else {
       if (customWeightsMap[roleKey] !== undefined) {
@@ -142,7 +164,7 @@ export function calculateTipPool(
   });
 
   const totalPoints = intermediate.reduce((sum, s) => sum + s.pointHours, 0);
-  const totalEligibleHours = intermediate.reduce((sum, s) => sum + s.hours, 0);
+  const totalEligibleHours = intermediate.reduce((sum, s) => (s.weight > 0 ? sum + s.hours : sum), 0);
 
   if (totalPoints === 0) {
     return {

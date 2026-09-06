@@ -1,12 +1,12 @@
 # CulinaryOS — Daily Operations Consultant Report
 
-**Audit Timestamp:** 2026-08-25T20:47:14.353Z
-**Operational Health Score:** `9.2 / 10.0` — **Rush-Ready (High Volume)**
+**Audit Timestamp:** 2026-09-05T23:06:56.175Z
+**Operational Health Score:** `9.3 / 10.0` — **Rush-Ready (High Volume)**
 
 ---
 
 ## 1. Executive Operational Summary
-The operations consultant evaluated **9** core operational checkpoints across FOH Touchscreen POS, BOH Kitchen Display (KDS), Dietary & Allergen Safety, and Pantry Unit Economics.
+The operations consultant evaluated **11** core operational checkpoints across FOH Touchscreen POS, BOH Kitchen Display (KDS), Dietary & Allergen Safety, and Pantry Unit Economics.
 
 | Domain | Operational Check | Status | Score | Findings |
 |---|---|---|---|---|
@@ -17,6 +17,8 @@ The operations consultant evaluated **9** core operational checkpoints across FO
 | FOH & POS | Tender & Split Check Options | ✅ PASS | 9.1/10 | Supports Card (Stripe Elements), Contactless Tap (Apple/Google Pay), QR Scan, Cash with change calculation, and Comp. |
 | BOH & KDS | Station Load Balancing | ✅ PASS | 9/10 | Items cleanly routed across Cold, Fry, Grill, and Pass stations. |
 | BOH & KDS | Course Holding & Fire Timers | ✅ PASS | 9.3/10 | Automated 12-minute course 2 hold with 1-touch chef manual fire override and amber/red aging thresholds. |
+| BOH & KDS | Course Pacing & Line Coordination | ✅ PASS | 9.6/10 | Real-time course pacing calculation with 12m target / 15m urgent alerts and zero-thrash ETag caching. |
+| FOH & Speed | Tableside Assistance & Runner Paging | ✅ PASS | 9.5/10 | Sub-millisecond assistance request ingestion with 15s debounce deduplication and 304 Not Modified polling. |
 | Pantry & Costing | Order Fire Inventory Decrement | ✅ PASS | 9.5/10 | pos:order:created automatically decrements ingredient stock grams via ratio-engine. |
 | Pantry & Costing | Stockout Par Level Alerts | ✅ PASS | 9.2/10 | Low-stock warnings fire when stock falls below reorder_at; PO draft state machine wired. |
 

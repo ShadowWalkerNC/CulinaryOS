@@ -223,6 +223,19 @@ export function Station() {
     total:    tickets.length,
   };
 
+  // Compute All-Day live item aggregates (e.g. 6 Burgers on Fire, 4 Pizzas)
+  const allDayCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    tickets.forEach((t) => {
+      if (t.courseHoldStatus === 'held' || t.status === 'bumped') return;
+      (t.items || []).forEach((item) => {
+        const name = item.name;
+        counts[name] = (counts[name] || 0) + (item.quantity || 1);
+      });
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [tickets]);
+
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden antialiased select-none">
       {/* Single Unified KDS Kitchen Navigation Header */}
@@ -252,13 +265,13 @@ export function Station() {
               <button
                 key={s.id}
                 onClick={() => navigate(`/station/${s.id}`)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-[#0f172a] text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-950 hover:bg-white/70'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
                 }`}
               >
-                <span className={`material-symbols-outlined text-[17px] ${isActive ? s.color : 'text-slate-500'}`}>
+                <span className={`material-symbols-outlined text-[16px] ${isActive ? 'text-white' : s.color}`}>
                   {s.icon}
                 </span>
                 <span>{s.label}</span>
@@ -267,37 +280,18 @@ export function Station() {
           })}
         </nav>
 
-        {/* Right: Language, 86 Board, Display Settings, Apps & Status */}
+        {/* Right: Quick Controls & Modals */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Dual-Language Culinary Translation Selector */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-            {(['en', 'es', 'fr'] as const).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase transition ${
-                  language === lang
-                    ? 'bg-[#0f172a] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-950'
-                }`}
-                title={`Switch kitchen display to ${lang === 'en' ? 'English' : lang === 'es' ? 'Spanish (Español)' : 'French (Français)'}`}
-              >
-                {lang}
-              </button>
-            ))}
-          </div>
-
-          {/* 86 Live Inventory Countdowns Button */}
           <button
-            onClick={() => setShow86Modal(true)}
-            className="flex items-center gap-1.5 bg-red-50 border border-red-200 hover:bg-red-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-red-700 shadow-xs cursor-pointer transition-colors"
-            title="Live 86 Inventory Countdowns"
+            onClick={() => {
+              fetch86Items();
+              setShow86Modal(true);
+            }}
+            className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 shadow-xs cursor-pointer transition-colors"
+            title="86 Item Manager"
           >
-            <span className="material-symbols-outlined text-[15px] text-red-600">inventory_2</span>
-            <span className="hidden sm:inline">86 Board</span>
-            <span className="px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-mono font-bold">
-              {items86.filter((i) => i.is86 || i.countRemaining != null).length}
-            </span>
+            <span className="material-symbols-outlined text-[15px]">block</span>
+            <span className="hidden md:inline">86 List</span>
           </button>
 
           <button
@@ -329,6 +323,29 @@ export function Station() {
           </div>
         </div>
       </header>
+
+      {/* Live All-Day Kitchen Batch Summary Bar (M3 Expressive / Toast Go Kitchen Aggregates) */}
+      {allDayCounts.length > 0 && (
+        <section className="bg-slate-900 text-white px-4 py-2 flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0 shadow-md border-b border-slate-800">
+          <div className="flex items-center gap-1.5 shrink-0 text-[11px] font-black uppercase tracking-wider text-amber-400">
+            <span className="material-symbols-outlined text-[15px]">local_fire_department</span>
+            <span>All-Day On Fire:</span>
+          </div>
+          <div className="flex items-center gap-2 flex-nowrap">
+            {allDayCounts.map(([name, count]) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 hover:border-amber-400/50 px-2.5 py-0.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors"
+              >
+                <span className="bg-amber-400 text-slate-950 font-mono font-black text-[11px] px-1.5 py-0.2 rounded">
+                  {count}
+                </span>
+                <span className="text-slate-200">{name}</span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* App Switcher Modal */}
       {showApps && (

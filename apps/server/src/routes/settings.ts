@@ -10,6 +10,7 @@ import {
   DEFAULT_SETTINGS,
   DEFAULT_KITCHEN_STATIONS,
   DEFAULT_ITEM_ROUTING_RULES,
+  getTemplatePreset,
   type CulinaryOSSettings,
   type KitchenStationConfig,
   type ItemRoutingRule,
@@ -115,6 +116,36 @@ settingsRoutes.post('/reset', async (c) => {
   };
   settingsCache.set(tenantId, resetSettings);
   return ok(c, resetSettings);
+});
+
+// POST /v1/settings/apply-template — Bootstrap or switch tenant business template (Stage 4)
+settingsRoutes.post('/apply-template', async (c) => {
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json<{ template?: 'food-truck' | 'full-service' }>().catch(() => ({ template: 'full-service' as const }));
+  const template = body.template || 'full-service';
+
+  if (template !== 'food-truck' && template !== 'full-service') {
+    return err(c, 'VALIDATION_ERROR', 'template must be "food-truck" or "full-service"', 422);
+  }
+
+  const preset = getTemplatePreset(template);
+  const current = getTenantSettings(tenantId);
+  const updated: CulinaryOSSettings = {
+    ...current,
+    ...preset,
+    tenantId,
+    company: { ...current.company, ...(preset.company || {}) },
+    display: { ...current.display, ...(preset.display || {}) },
+    stations: preset.stations || current.stations,
+    updatedAt: new Date().toISOString(),
+  };
+
+  settingsCache.set(tenantId, updated);
+  return ok(c, {
+    template,
+    settings: updated,
+    message: `Applied ${template} business template preset successfully without schema branching.`,
+  });
 });
 
 // ---- Delivery Zone & OpenStreetMap Free Geocoding Router ----

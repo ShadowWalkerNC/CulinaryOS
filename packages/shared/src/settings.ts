@@ -249,6 +249,101 @@ export const DEFAULT_SETTINGS: CulinaryOSSettings = {
   updatedAt: new Date().toISOString(),
 };
 
+/**
+ * Business Template Presets (Stage 4)
+ * Zero schema branching: presets are toggles and operational defaults applied to tenant settings.
+ */
+export const FOOD_TRUCK_SETTINGS_TEMPLATE: Partial<CulinaryOSSettings> = {
+  company: {
+    name: 'Rolling Kitchen Truck',
+    legalName: 'Rolling Kitchen LLC',
+    taxId: 'XX-XXXXXXX',
+    phone: '(555) 444-1212',
+    email: 'hello@rollingkitchen.food',
+    website: 'https://rollingkitchen.food',
+    address: {
+      street: '100 Food Truck Row',
+      city: 'Austin',
+      state: 'TX',
+      zip: '78701',
+      country: 'USA',
+    },
+    currencyCode: 'USD',
+    currencySymbol: '$',
+    currencyPosition: 'prefix',
+    taxRatePercent: 8.25,
+    preparedFoodTaxRatePercent: 8.25,
+    alcoholTaxRatePercent: 0,
+    gratuityPresets: [10, 15, 18, 20],
+    autoGratuityPartySize: 99, // Disabled for fast-casual
+    autoGratuityPercent: 0,
+    receiptHeader: 'Rolling Kitchen Truck · Street Tacos & Bowls',
+    receiptFooter: 'Follow @rollingkitchen on Instagram for daily location drops!',
+    guestWifiSsid: 'Truck-Customer-WiFi',
+  },
+  stations: [
+    {
+      id: 'pass',
+      name: 'Truck Window / Expo',
+      code: 'EXPO',
+      color: '#0f172a',
+      description: 'Single-rail order handoff window',
+      isExpoPass: true,
+      sortOrder: 1,
+    },
+    {
+      id: 'flat-top',
+      name: 'Flat Top Plancha',
+      code: 'GRILL',
+      color: '#ef4444',
+      description: 'Sear & taco line',
+      sortOrder: 2,
+    },
+    {
+      id: 'fryer',
+      name: 'Countertop Fryer',
+      code: 'FRY',
+      color: '#eab308',
+      description: 'Chips & churros',
+      sortOrder: 3,
+    },
+  ],
+  display: {
+    textSize: 'large',
+    textScalePercent: 110,
+    touchTargetPadding: 'expanded',
+    contrastMode: 'high-contrast-oled',
+    theme: 'dark',
+    kdsAlertSounds: true,
+    kdsWarningMinutes: 5,
+    kdsCriticalMinutes: 10,
+    receiptFontSize: 'normal',
+    table3dGraphicsFidelity: 'low', // Compact hardware
+    tableStatusGlowHalos: false,
+  },
+};
+
+export const FULL_SERVICE_SETTINGS_TEMPLATE: Partial<CulinaryOSSettings> = {
+  ...DEFAULT_SETTINGS,
+  company: {
+    ...DEFAULT_SETTINGS.company,
+    autoGratuityPartySize: 6,
+    autoGratuityPercent: 18,
+    gratuityPresets: [18, 20, 22, 25],
+  },
+  display: {
+    ...DEFAULT_SETTINGS.display,
+    textSize: 'standard',
+    textScalePercent: 100,
+    table3dGraphicsFidelity: 'high',
+    tableStatusGlowHalos: true,
+  },
+};
+
+export function getTemplatePreset(template: 'food-truck' | 'full-service'): Partial<CulinaryOSSettings> {
+  return template === 'food-truck' ? FOOD_TRUCK_SETTINGS_TEMPLATE : FULL_SERVICE_SETTINGS_TEMPLATE;
+}
+
 const STORAGE_KEY = 'culinaryos_settings_v1';
 
 export function loadLocalSettings(): CulinaryOSSettings {

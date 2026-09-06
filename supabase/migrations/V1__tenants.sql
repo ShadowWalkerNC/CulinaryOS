@@ -18,7 +18,7 @@ create table public.tenant_users (
   id         uuid primary key default uuid_generate_v4(),
   tenant_id  uuid not null references public.tenants(id) on delete cascade,
   user_id    uuid not null references auth.users(id) on delete cascade,
-  role       text not null default 'viewer' check (role in ('owner','manager','chef','server','viewer')),
+  role       text not null default 'viewer' check (role in ('owner','manager','chef','server','viewer','bartender','busser','food_runner','host','line_cook','prep_cook','dishwasher','barista','sommelier')),
   created_at timestamptz not null default now(),
   unique(tenant_id, user_id)
 );

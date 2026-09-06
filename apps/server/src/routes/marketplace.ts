@@ -12,13 +12,14 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import type { Env } from '../types';
+import type { Env } from '../types.js';
+import { requireTenant, ok, err } from '../middleware/auth.js';
 import {
   isLLMAvailable,
   generateOpsInsight,
   suggestPrepPlan,
   generateLoyaltyMessage,
-} from '../lib/llm';
+} from '../lib/llm.js';
 import { readdir, readFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -70,10 +71,26 @@ async function loadExtensions(): Promise<ExtensionManifest[]> {
   }
 }
 
-// ---- In-memory installed set (per process; production would use DB) ----
-// In live mode, this should be backed by a `tenant_extensions` table.
+// ---- In-memory installed set (per tenant; production would use DB tenant_extensions) ----
+const tenantInstalledExtensions = new Map<string, Set<string>>();
+const tenantCustomExtensions = new Map<string, ExtensionManifest[]>();
 
-const installedExtensions = new Set<string>();
+export function getTenantId(c: any): string {
+  return (c.get('tenantId') as string) || c.req.header('x-tenant-id') || '00000000-0000-0000-0000-000000000001';
+}
+
+export function getTenantInstalledSet(tenantId: string): Set<string> {
+  let set = tenantInstalledExtensions.get(tenantId);
+  if (!set) {
+    set = new Set<string>();
+    tenantInstalledExtensions.set(tenantId, set);
+  }
+  return set;
+}
+
+export function isMarketplaceAiEnabled(): boolean {
+  return process.env.ENABLE_AI_MARKETPLACE === 'true' || process.env.ENABLE_AI_AUTOPILOT === 'true';
+}
 
 // ---- Router ----
 
@@ -81,26 +98,36 @@ export const marketplaceRoutes = new Hono<Env>();
 
 /**
  * GET /v1/marketplace/extensions
- * Returns all available extension manifests with install status.
+ * Returns all available extension manifests with tenant-scoped install status.
  */
 marketplaceRoutes.get('/extensions', async (c) => {
-  const extensions = await loadExtensions();
-  const withStatus = extensions.map((ext) => ({
+  const tenantId = getTenantId(c);
+  const installed = getTenantInstalledSet(tenantId);
+  const baseExtensions = await loadExtensions();
+  const custom = tenantCustomExtensions.get(tenantId) || [];
+  const all = [...custom, ...baseExtensions];
+
+  const withStatus = all.map((ext) => ({
     ...ext,
-    installed: installedExtensions.has(ext.id),
-    llm_available: isLLMAvailable(),
+    installed: installed.has(ext.id),
+    tenant_id: tenantId,
+    llm_available: isLLMAvailable() && isMarketplaceAiEnabled(),
   }));
   return c.json({ ok: true, data: withStatus });
 });
 
 /**
  * GET /v1/marketplace/extensions/:id
- * Returns a single extension manifest.
+ * Returns a single extension manifest with tenant-scoped install status.
  */
 marketplaceRoutes.get('/extensions/:id', async (c) => {
-  const { id } = c.req.param();
-  const extensions = await loadExtensions();
-  const ext = extensions.find((e) => e.id === id);
+  const id = c.req.param('id');
+  if (!id) return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'ID required' } }, 400);
+  const tenantId = getTenantId(c);
+  const installed = getTenantInstalledSet(tenantId);
+  const baseExtensions = await loadExtensions();
+  const custom = tenantCustomExtensions.get(tenantId) || [];
+  const ext = [...custom, ...baseExtensions].find((e) => e.id === id);
   if (!ext) {
     return c.json(
       { ok: false, error: { code: 'NOT_FOUND', message: `Extension '${id}' not found.` } },
@@ -109,19 +136,22 @@ marketplaceRoutes.get('/extensions/:id', async (c) => {
   }
   return c.json({
     ok: true,
-    data: { ...ext, installed: installedExtensions.has(ext.id) },
+    data: { ...ext, installed: installed.has(ext.id), tenant_id: tenantId },
   });
 });
 
 /**
  * POST /v1/marketplace/extensions/:id/install
- * Marks an extension as installed for the current tenant session.
- * In production, this should persist to `tenant_extensions` with tenant scoping.
+ * Marks an extension as installed for the current tenant.
  */
-marketplaceRoutes.post('/extensions/:id/install', async (c) => {
-  const { id } = c.req.param();
-  const extensions = await loadExtensions();
-  const ext = extensions.find((e) => e.id === id);
+marketplaceRoutes.post('/extensions/:id/install', requireTenant, async (c) => {
+  const id = c.req.param('id');
+  if (!id) return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'ID required' } }, 400);
+  const tenantId = getTenantId(c);
+  const installed = getTenantInstalledSet(tenantId);
+  const baseExtensions = await loadExtensions();
+  const custom = tenantCustomExtensions.get(tenantId) || [];
+  const ext = [...custom, ...baseExtensions].find((e) => e.id === id);
   if (!ext) {
     return c.json(
       { ok: false, error: { code: 'NOT_FOUND', message: `Extension '${id}' not found.` } },
@@ -129,8 +159,8 @@ marketplaceRoutes.post('/extensions/:id/install', async (c) => {
     );
   }
 
-  installedExtensions.add(id);
-  console.log(`[marketplace] Extension installed: ${id}`);
+  installed.add(id);
+  console.log(`[marketplace] Extension '${id}' installed for tenant '${tenantId}'`);
 
   return c.json({
     ok: true,
@@ -138,6 +168,7 @@ marketplaceRoutes.post('/extensions/:id/install', async (c) => {
       id,
       name: ext.name,
       installed: true,
+      tenant_id: tenantId,
       installedAt: new Date().toISOString(),
     },
   });
@@ -145,47 +176,56 @@ marketplaceRoutes.post('/extensions/:id/install', async (c) => {
 
 /**
  * DELETE /v1/marketplace/extensions/:id/install
- * Uninstalls (removes) an extension.
+ * Uninstalls (removes) an extension for the current tenant.
  */
-marketplaceRoutes.delete('/extensions/:id/install', async (c) => {
-  const { id } = c.req.param();
-  if (!installedExtensions.has(id)) {
+marketplaceRoutes.delete('/extensions/:id/install', requireTenant, async (c) => {
+  const id = c.req.param('id');
+  if (!id) return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'ID required' } }, 400);
+  const tenantId = getTenantId(c);
+  const installed = getTenantInstalledSet(tenantId);
+  if (!installed.has(id)) {
     return c.json(
       { ok: false, error: { code: 'NOT_FOUND', message: `Extension '${id}' is not installed.` } },
       404
     );
   }
-  installedExtensions.delete(id);
-  return c.json({ ok: true, data: { id, installed: false } });
+  installed.delete(id);
+  return c.json({ ok: true, data: { id, installed: false, tenant_id: tenantId } });
 });
 
 /**
  * GET /v1/marketplace/extensions/:id/status
- * Returns install status for a specific extension.
+ * Returns install status for a specific extension for the current tenant.
  */
 marketplaceRoutes.get('/extensions/:id/status', async (c) => {
-  const { id } = c.req.param();
+  const id = c.req.param('id');
+  if (!id) return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'ID required' } }, 400);
+  const tenantId = getTenantId(c);
+  const installed = getTenantInstalledSet(tenantId);
   return c.json({
     ok: true,
     data: {
       id,
-      installed: installedExtensions.has(id),
-      llm_available: isLLMAvailable(),
+      installed: installed.has(id),
+      tenant_id: tenantId,
+      llm_available: isLLMAvailable() && isMarketplaceAiEnabled(),
     },
   });
 });
 
 /**
  * GET /v1/marketplace/ai/status
- * Returns whether the optional LLM layer is online.
+ * Returns whether the optional LLM layer is online and flag is enabled.
  */
 marketplaceRoutes.get('/ai/status', (c) => {
+  const enabled = isMarketplaceAiEnabled();
   return c.json({
     ok: true,
     data: {
-      llm_available: isLLMAvailable(),
-      provider: isLLMAvailable() ? 'anthropic' : null,
-      model: isLLMAvailable() ? 'claude-sonnet-4-5' : null,
+      llm_available: isLLMAvailable() && enabled,
+      feature_flag_enabled: enabled,
+      provider: (isLLMAvailable() && enabled) ? 'anthropic' : null,
+      model: (isLLMAvailable() && enabled) ? 'claude-sonnet-4-5' : null,
     },
   });
 });
@@ -193,9 +233,18 @@ marketplaceRoutes.get('/ai/status', (c) => {
 /**
  * POST /v1/marketplace/ai/ops-insight
  * Returns an AI-generated ops insight for shift metrics.
- * Gracefully degrades when LLM is unavailable.
+ * Gated behind Rule 6 feature flag.
  */
-marketplaceRoutes.post('/ai/ops-insight', async (c) => {
+marketplaceRoutes.post('/ai/ops-insight', requireTenant, async (c) => {
+  if (!isMarketplaceAiEnabled()) {
+    return err(
+      c,
+      'FEATURE_DISABLED',
+      'AI Marketplace insights are disabled by default. Enable with ENABLE_AI_MARKETPLACE=true.',
+      403
+    );
+  }
+
   const body = await c.req.json().catch(() => null) as {
     wastePercent?: number;
     avgTicketTime?: number;
@@ -232,9 +281,18 @@ marketplaceRoutes.post('/ai/ops-insight', async (c) => {
 /**
  * POST /v1/marketplace/ai/prep-plan
  * Returns an AI-generated daily prep plan suggestion.
- * Gracefully degrades when LLM is unavailable.
+ * Gated behind Rule 6 feature flag.
  */
-marketplaceRoutes.post('/ai/prep-plan', async (c) => {
+marketplaceRoutes.post('/ai/prep-plan', requireTenant, async (c) => {
+  if (!isMarketplaceAiEnabled()) {
+    return err(
+      c,
+      'FEATURE_DISABLED',
+      'AI Marketplace prep suggestions are disabled by default. Enable with ENABLE_AI_MARKETPLACE=true.',
+      403
+    );
+  }
+
   const body = await c.req.json().catch(() => null) as {
     menuItems?: string[];
     projectedCovers?: number;
@@ -269,9 +327,18 @@ marketplaceRoutes.post('/ai/prep-plan', async (c) => {
 /**
  * POST /v1/marketplace/ai/loyalty-message
  * Returns an AI-generated loyalty postcard message.
- * Gracefully degrades when LLM is unavailable.
+ * Gated behind Rule 6 feature flag.
  */
-marketplaceRoutes.post('/ai/loyalty-message', async (c) => {
+marketplaceRoutes.post('/ai/loyalty-message', requireTenant, async (c) => {
+  if (!isMarketplaceAiEnabled()) {
+    return err(
+      c,
+      'FEATURE_DISABLED',
+      'AI Marketplace marketing messages are disabled by default. Enable with ENABLE_AI_MARKETPLACE=true.',
+      403
+    );
+  }
+
   const body = await c.req.json().catch(() => null) as {
     restaurantName?: string;
     specialOffer?: string;
@@ -357,7 +424,8 @@ let customRegisteredExtensions: ExtensionManifest[] = [
  * POST /v1/marketplace/extensions/custom
  * Allows developers and operators to register custom tools / extensions.
  */
-marketplaceRoutes.post('/extensions/custom', async (c) => {
+marketplaceRoutes.post('/extensions/custom', requireTenant, async (c) => {
+  const tenantId = getTenantId(c);
   const body = await c.req.json().catch(() => null) as Partial<ExtensionManifest> | null;
   if (!body || !body.name || !body.category) {
     return c.json({ ok: false, error: { code: 'VALIDATION_ERROR', message: 'Tool Name and Category are required.' } }, 422);
@@ -380,14 +448,18 @@ marketplaceRoutes.post('/extensions/custom', async (c) => {
     installed: true,
   };
 
-  customRegisteredExtensions.unshift(newExt);
-  installedExtensions.add(id);
+  const customList = tenantCustomExtensions.get(tenantId) || [];
+  customList.unshift(newExt);
+  tenantCustomExtensions.set(tenantId, customList);
+
+  getTenantInstalledSet(tenantId).add(id);
 
   return c.json({
     ok: true,
     data: {
       message: `Custom tool "${newExt.name}" registered and activated successfully!`,
       extension: newExt,
+      tenant_id: tenantId,
     },
   }, 201);
 });

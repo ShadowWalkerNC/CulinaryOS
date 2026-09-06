@@ -243,6 +243,79 @@ Manually fire a held course ticket.
 
 ---
 
+### `GET /v1/kds/pacing`
+
+Fetch multi-course pacing tracking, Course 1 elapsed times, and Course 2 held fire urgency alerts (`normal`, `warning` at 12m, `urgent` at 15m). Supports conditional `If-None-Match` caching returning `304 Not Modified`.
+
+**Headers:** `If-None-Match: <etag>` (optional)
+
+**Response (200):**
+```json
+{
+  "ok": true,
+  "data": [
+    {
+      "orderId": "o-101",
+      "tableNumber": "4",
+      "c1Status": "cooking",
+      "c1ElapsedSeconds": 750,
+      "c2Status": "held",
+      "c2TicketId": "t-102",
+      "targetC2FireSeconds": 720,
+      "remainingToC2Seconds": 0,
+      "pacingAlert": "warning"
+    }
+  ]
+}
+```
+
+---
+
+## Tables & Assistance Routes
+
+### `POST /v1/tables/:id/assistance`
+
+Submit a tableside guest buzzer request (water, server, bill, help). Automatically debounces and deduplicates requests within a 15-second window.
+
+**Request Body:**
+```json
+{
+  "tableNumber": "T4",
+  "type": "water",
+  "note": "Refill please"
+}
+```
+
+**Response (201 or 200 if deduplicated):**
+```json
+{
+  "ok": true,
+  "data": {
+    "notificationId": "ast-1788649695691-719",
+    "tableId": "T4",
+    "tableNumber": "T4",
+    "type": "water",
+    "status": "active"
+  }
+}
+```
+
+---
+
+### `GET /v1/tables/assistance/active`
+
+List all currently unresolved assistance buzzers for the tenant. Supports conditional `If-None-Match` returning `304 Not Modified` to prevent terminal polling overhead.
+
+**Headers:** `If-None-Match: <etag>` (optional)
+
+---
+
+### `PATCH /v1/tables/assistance/:notificationId/dismiss`
+
+Acknowledge and dismiss an active buzzer request from POS or runner screen.
+
+---
+
 ## Pantry Routes
 
 ### `GET /v1/pantry`
@@ -485,22 +558,23 @@ List all available extensions.
 
 ### `POST /v1/marketplace/extensions/:id/install`
 
-Install an extension for the current tenant session.
+Install an extension for the current tenant. Scoped per-tenant (`X-Tenant-Id`).
 
 ---
 
 ### `GET /v1/marketplace/ai/status`
 
-Check whether the AI layer is available.
+Check whether the AI layer is available and enabled via Rule 6 feature flags (`ENABLE_AI_MARKETPLACE=true`).
 
 **Response (200):**
 ```json
 {
   "ok": true,
   "data": {
-    "available": true,
-    "model": "claude-opus-4-5",
-    "note": "AI is additive — all core operations function without this layer."
+    "llm_available": true,
+    "feature_flag_enabled": true,
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-5"
   }
 }
 ```
@@ -509,15 +583,39 @@ Check whether the AI layer is available.
 
 ### `POST /v1/marketplace/ai/ops-insight`
 
-Generate an AI shift performance analysis. Requires `ANTHROPIC_API_KEY`. Falls back to plain metric summary if unavailable.
+Generate an AI shift performance analysis. Gated behind Rule 6 feature flag (`ENABLE_AI_MARKETPLACE=true`) and requires `X-Tenant-Id`.
 
-### `POST /v1/marketplace/ai/prep-plan`
+---
 
-Generate an AI morning prep checklist. Falls back to cover count + low stock list if unavailable.
+## Payments & Stripe Terminal Hub
 
-### `POST /v1/marketplace/ai/loyalty-message`
+All payment write operations enforce non-negotiable **Rule 3 payment idempotency** via `Idempotency-Key` or `X-Request-Id` headers (or deterministic fallback hashes) to prevent double-charging:
 
-Generate AI loyalty postcard copy. Falls back to template message if unavailable.
+- `POST /v1/payments/checkout` — Online/tableside PaymentIntent creation with integer cents and idempotency key.
+- `POST /v1/payments/terminal/connection-token` — Stripe Terminal smart reader connection token (WisePOS E / S700).
+- `POST /v1/payments/terminal/create-intent` — Card-present in-person terminal intent with idempotency key.
+- `POST /v1/payments/terminal/process` — Finalize terminal payment and record tender.
+- `POST /v1/payments/refund` — Full or partial refund with integer cents and idempotency key.
+
+---
+
+## Multi-Unit Commissary & Stock Transfer Routes
+
+- `GET /v1/commissary/transfers` — List incoming/outgoing location stock transfers.
+- `POST /v1/commissary/transfers/request` — Place replenishment transfer order against central kitchen.
+- `PATCH /v1/commissary/transfers/:id/fulfill` — Fulfill transfer and assign ISO batch lot codes (`LOT-YYYYMMDD-PROD-XXXX`).
+- `PATCH /v1/commissary/transfers/:id/receive` — Accept transfer batch lots into active store pantry.
+- `GET /v1/commissary/royalty-ledger` — Brand-wide multi-unit franchise royalty consolidation ledger.
+
+---
+
+## AI Kitchen Autopilot Routes (Rule 6 Compliant)
+
+- `GET /v1/autopilot/status` — Inspect `ENABLE_AI_AUTOPILOT` flag status.
+- `GET /v1/autopilot/token-dashboard` — Per-tenant token audit & cost monitoring from `ai_prompt_log`.
+- `GET /v1/autopilot/forecast` — Predictive order demand smoothing and revenue projection.
+- `GET /v1/autopilot/bottleneck-advisory` — Cook line queue load factor and prep padding suggestions.
+- `GET /v1/autopilot/par-suggestions` — Dynamic lead-time and safety-stock par level recommendations.
 
 ---
 
@@ -527,11 +625,10 @@ Generate AI loyalty postcard copy. Falls back to template message if unavailable
 
 ```json
 {
-  "service": "culinaryos-server",
+  "service": "culinaryos-api",
   "status": "healthy",
-  "version": "1.0.0",
-  "supabase": "connected",
+  "version": "1.2.1",
   "uptime": 3600,
-  "checkedAt": "2026-08-26T12:00:00Z"
+  "checkedAt": "2026-09-05T22:00:00Z"
 }
 ```

@@ -407,6 +407,7 @@ export function useAddLineItem() {
             unit_price: finalUnitPrice,
             station: item.station,
             seat_number: item.seat_number ?? 1,
+            course_number: item.course_number ?? 1,
             notes: item.notes || null,
             modifiers: item.selectedModifiers || []
           };
@@ -432,7 +433,8 @@ export function useAddLineItem() {
           line_total,
           station: item.station,
           notes: item.notes,
-          seat_number: item.seat_number ?? 1
+          seat_number: item.seat_number ?? 1,
+          course_number: item.course_number ?? 1,
         })
         .select()
         .single();
@@ -521,6 +523,30 @@ export function useFireOrder() {
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['order', id] });
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+export function useFireCourseByOrder() {
+  const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
+  return useMutation({
+    mutationFn: async ({ orderId, courseNumber }: { orderId: string; courseNumber: number }) => {
+      const API = getApiBase();
+      const res = await fetch(`${API}/v1/kds/tickets/${orderId}/fire-course`, {
+        method: 'PATCH',
+        headers: apiHeaders(tenantId),
+        body: JSON.stringify({ courseNumber }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error?.message ?? `Failed to fire Course ${courseNumber}`);
+      }
+      return res.json();
+    },
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: ['order', orderId] });
       qc.invalidateQueries({ queryKey: ['orders'] });
     },
   });

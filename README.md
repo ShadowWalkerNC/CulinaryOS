@@ -6,12 +6,12 @@
 
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 102/102 Passing](https://img.shields.io/badge/Tests-102%2F102%20Passing-brightgreen.svg)](./scripts/run-all-tests.cjs)
+[![Tests: 106 Passing](https://img.shields.io/badge/Tests-106%20Passing-brightgreen.svg)](./tests/)
 [![Typecheck: 46/46 Passing](https://img.shields.io/badge/Typecheck-46%2F46%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.2.1-orange.svg)](./CHANGELOG.md)
 
 <p align="center">
   <img src="docs/screenshots/floor_map_3d.png" alt="CulinaryOS 3D Spatial Floor Plan" width="49%" />
@@ -62,24 +62,24 @@ CulinaryOS is a **complete, MIT-licensed restaurant operating system** built as 
 
 - **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F7 hotkeys, PIN manager, and full-screen Kiosk mode.
 - **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
-- **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode.
-- **Admin Back-Office (`:5174`)** — Menu builder, 86ing, staff PINs, pantry par levels, purchase orders, and system settings.
+- **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode, sub-second course pacing, and 304 Not Modified polling.
+- **Admin Back-Office (`:5174`)** — Menu builder, 86ing, staff PINs, pantry par levels, purchase orders, business templates, and system settings.
 - **KitchenKit & Prep Planner (`:5175`)** — Recipe formulas, yield calculations, batch sizing, adhesive FIFO QR labels, and vendor POs.
-- **Online Storefront (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, and checkout.
-- **CulinaryOps (`:5177`)** — Actual vs theoretical food cost variance, kitchen waste logging, labor % tracking, and plate economics.
-- **Universal CLI Tool (`cli/`)** — Command-line interface to control any screen, order, ticket, recipe, or inventory level.
+- **Online Storefront (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, buzzer requests, and checkout.
+- **CulinaryOps (`:5177`)** — Actual vs theoretical food cost variance, kitchen waste logging, labor % tracking, and daily ops coaching.
+- **Universal CLI Tool (`cli/`)** — Command-line interface across all 18 operational subsystems (100% terminal parity).
 - **RecipeOS Vault (`:5178`)** — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list.
 - **Android Mobile POS (`mobile/`)** — React Native + Expo companion app with offline SQLite cache.
 - **Unified Hono API (`:3000`)** — Single source of truth for orders, inventory, ops, payments, and settings.
 - **MCP Agent Layer (`mcp/`)** — 9 specialized Model Context Protocol servers that let AI agents operate on live restaurant state.
 
-All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive** — every core operation works identically with or without an Anthropic API key.
+All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive and off by default** — every core operation works identically without external AI APIs.
 
 ---
 
 ## 🛠️ Universal CLI Tool (`culinary`)
 
-CulinaryOS includes a full-featured CLI to control every surface, order, ticket, and table in the system:
+CulinaryOS includes a full-featured CLI offering **100% parity across all 18 operational subsystems**:
 
 ```bash
 # Build the CLI tool
@@ -93,24 +93,41 @@ culinary pos merge 5 4 6                       # Merge tables 4 & 6 into Table 5
 culinary pos void ord-1 item-2 "Overcooked" 5678 # Void post-send item with Manager PIN
 culinary pos pay ord-1 --method card           # Settle bill with card / tap
 
-# Back-of-House Kitchen Display Operations
+# Back-of-House Kitchen Display & Pacing
 culinary kds list                              # View live kitchen tickets & aging
 culinary kds bump tkt-101 --station expo       # Bump completed ticket
 culinary kds fire-course ord-1 2               # Fire Course 2 (Entrees)
 culinary kds 86 "Ribeye" 4                     # Set 86 countdown: 4 remaining
+culinary kds pacing                            # Monitor course pacing, C2 hold times & alerts
 
-# Food Cost & Kitchen Operations
+# Food Cost, Labor & Operations Coaching
 culinary ops waste item-3 5.0 "Burnt"          # Log kitchen scrap & auto-calculate loss
 culinary ops food-cost                         # Actual vs theoretical food cost variance
 culinary ops labor                             # Shift labor hours & labor % report
+culinary ops coach                             # Run operations coaching & bottleneck audit
 
-# KitchenKit Batch Prep & Adhesive Labels
-culinary prep scale "Pizza Dough" --factor 3.5 # Scale batch formula 3.5x
-culinary prep label "Marinara Sauce" --shelfLife 48 # Generate adhesive FIFO QR label
-culinary prep par                              # Low-stock pantry items & auto-draft PO
+# Reservations, Talent, Billing & Pantry Parity
+culinary reservations list                     # View dining room table reservations
+culinary talent staff                          # View staff roster, roles & active clock-ins
+culinary billing status                        # Inspect Stripe Connect & subscription status
+culinary pantry stock                          # Real-time pantry stock grams & par levels
+culinary tabs list                             # View active bar and dining tabs
 
-# System Diagnostics & Device Discovery
+# Multi-Unit Commissary, AI Kitchen Autopilot & Dynamic Dayparts
+culinary commissary transfers                  # View incoming/outgoing stock transfers
+culinary commissary request "Patties" 100      # Place central replenishment order
+culinary commissary royalty                    # Brand-wide franchise royalty ledger
+culinary autopilot status                      # Verify Rule 6 AI feature flag state
+culinary autopilot forecast --daypart dinner   # Predictive rush covers & revenue forecast
+culinary autopilot tokens                      # Inspect ai_prompt_log token burn & cost
+culinary dayparts list                         # View scheduled daypart & happy hour rules
+culinary dayparts active                       # View currently effective pricing window
+
+# System Diagnostics, Security & Hardware Certification
 culinary system doctor                         # Port scan & health diagnostic
+culinary system doctor security                # Audit RLS, webhook signatures & manager gates
+culinary system hardware --action kick-drawer  # Test 24V RJ12 cash drawer kick
+culinary system hardware --action test-page    # Print ESC/POS printer alignment diagnostic
 culinary system heal                           # Auto-kill zombie conflicting processes
 culinary system tray                           # Launch Windows skillet tray daemon
 culinary system discover                       # Broadcast mDNS (culinaryos.local) & QR

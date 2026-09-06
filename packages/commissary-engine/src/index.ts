@@ -183,3 +183,57 @@ export function calculateFranchiseRoyaltyLedger(input: {
     stores,
   };
 }
+
+export interface TransferPackingSlip {
+  transferOrderId: string;
+  sourceCommissaryName: string;
+  destinationStoreId: string;
+  destinationStoreName: string;
+  dispatchTimestamp: string;
+  items: Array<{
+    ingredientId: string;
+    name: string;
+    quantityShipped: number;
+    unit: string;
+    lotCode: string;
+  }>;
+  totalUnitsShipped: number;
+  driverNotes?: string | undefined;
+  status: 'draft' | 'dispatched' | 'in_transit' | 'received';
+}
+
+/**
+ * Generates an auditable shipping and replenishment packing slip for distribution logistics.
+ */
+export function generateTransferPackingSlip(input: {
+  transferOrderId: string;
+  sourceCommissaryName: string;
+  destinationStoreId: string;
+  destinationStoreName: string;
+  items: StoreStockRequestItem[];
+  driverNotes?: string | undefined;
+}): TransferPackingSlip {
+  const dispatchDate = new Date();
+  const packedItems = input.items.map((it) => ({
+    ingredientId: it.ingredientId,
+    name: it.name,
+    quantityShipped: it.quantityRequested,
+    unit: it.unit,
+    lotCode: generateCommissaryLotCode(it.name, dispatchDate),
+  }));
+
+  const totalUnits = packedItems.reduce((s, i) => s + i.quantityShipped, 0);
+
+  return {
+    transferOrderId: input.transferOrderId,
+    sourceCommissaryName: input.sourceCommissaryName,
+    destinationStoreId: input.destinationStoreId,
+    destinationStoreName: input.destinationStoreName,
+    dispatchTimestamp: dispatchDate.toISOString(),
+    items: packedItems,
+    totalUnitsShipped: totalUnits,
+    ...(input.driverNotes !== undefined ? { driverNotes: input.driverNotes } : {}),
+    status: 'dispatched',
+  };
+}
+

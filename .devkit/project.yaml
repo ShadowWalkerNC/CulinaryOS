@@ -1,0 +1,24 @@
+name: CulinaryOS
+version: 1.0.0
+profile: dev-master
+token_budget:
+  instructions: 6000
+  mcp_schemas: 2000
+  max_skills: 3
+packages:
+  tools:
+    - rg
+    - fd
+    - git
+    - just
+    - opencode
+    - armada
+    - cursor
+    - gitleaks
+  skills:
+    - accidental-data-loss-prevention
+    - mcp-dispatch
+    - ui-design-system
+  mcps:
+    - memory
+    - sequential-thinking

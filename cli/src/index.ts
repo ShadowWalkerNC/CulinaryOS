@@ -14,6 +14,14 @@ import { inventoryCommand } from './commands/inventory';
 import { ordersCommand } from './commands/orders';
 import { tenantCommand } from './commands/tenant';
 import { reportCommand } from './commands/report';
+import { reservationsCommand } from './commands/reservations';
+import { talentCommand } from './commands/talent';
+import { billingCommand } from './commands/billing';
+import { pantryCommand } from './commands/pantry';
+import { tabsCommand } from './commands/tabs';
+import { commissaryCommand } from './commands/commissary';
+import { autopilotCommand } from './commands/autopilot';
+import { daypartsCommand } from './commands/dayparts';
 
 const program = new Command();
 
@@ -22,7 +30,7 @@ program
   .alias('culinaryos')
   .alias('create-culinaryos')
   .description('CulinaryOS Universal CLI & Remote Control Engine')
-  .version('1.0.0');
+  .version('1.2.1');
 
 // Register Subsystem Commands
 program.addCommand(posCommand);
@@ -35,6 +43,14 @@ program.addCommand(inventoryCommand);
 program.addCommand(ordersCommand);
 program.addCommand(reportCommand);
 program.addCommand(tenantCommand);
+program.addCommand(reservationsCommand);
+program.addCommand(talentCommand);
+program.addCommand(billingCommand);
+program.addCommand(pantryCommand);
+program.addCommand(tabsCommand);
+program.addCommand(commissaryCommand);
+program.addCommand(autopilotCommand);
+program.addCommand(daypartsCommand);
 
 // 1. Init & Turnkey Provisioning Command
 program

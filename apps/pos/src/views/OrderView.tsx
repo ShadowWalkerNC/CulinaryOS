@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { useOrder, useFireOrder, useVoidOrder, useVoidLineItem, useApplyDiscount, useOpenDrawer, useVerifyManagerPin } from '../lib/queries';
+import {
+  useOrder,
+  useFireOrder,
+  useFireCourseByOrder,
+  useVoidOrder,
+  useVoidLineItem,
+  useApplyDiscount,
+  useOpenDrawer,
+  useVerifyManagerPin,
+} from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { calculateMultiRateTax } from '@culinaryos/shared';
 import {
@@ -24,6 +33,7 @@ export function OrderView() {
   const { activeOrderId, setView, setActiveOrder } = usePOSStore();
   const { data: order, isLoading } = useOrder(activeOrderId);
   const { mutate: fireOrder, isPending: firing } = useFireOrder();
+  const { mutate: fireCourse, isPending: firingCourse } = useFireCourseByOrder();
   const { mutate: voidOrder, isPending: voiding } = useVoidOrder();
   const { mutate: voidLineItem, isPending: voidingItem } = useVoidLineItem();
   const { mutate: applyDiscount } = useApplyDiscount();
@@ -301,6 +311,15 @@ export function OrderView() {
                   <span className="text-[9px] font-extrabold bg-[#f3f4f6] text-[#6b7280] px-1 py-0.2 rounded ml-1">
                     S{item.seat_number ?? 1}
                   </span>
+                  <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ml-1 ${
+                    (item.course_number || 1) === 1
+                      ? 'bg-blue-100 text-blue-800'
+                      : (item.course_number || 1) === 2
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    C{item.course_number || 1}
+                  </span>
                   {item.is_voided && (
                     <span className="text-[8px] font-black bg-rose-100 text-rose-800 px-1 rounded uppercase">
                       VOIDED ({item.void_reason || 'mistake'})
@@ -406,13 +425,45 @@ export function OrderView() {
           )}
 
           {['sent', 'in-progress', 'ready'].includes(order.status) && (
-            <button
-              onClick={() => setView('checkout')}
-              className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>PROCEED TO PAY</span>
-            </button>
+            <>
+              {/* Batch Course 2 / Course 3 Firing Triggers */}
+              {order.items?.some((i: any) => (i.course_number || 1) >= 2) && (
+                <div className="col-span-3 grid grid-cols-2 gap-2 mb-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fireCourse({ orderId: order.id, courseNumber: 2 });
+                      triggerToast('⚡ Course 2 (Mains) fired to kitchen!');
+                    }}
+                    disabled={firingCourse}
+                    className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>Fire Mains (C2)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fireCourse({ orderId: order.id, courseNumber: 3 });
+                      triggerToast('⚡ Course 3 (Desserts) fired to kitchen!');
+                    }}
+                    disabled={firingCourse}
+                    className="py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Fire Desserts (C3)</span>
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setView('checkout')}
+                className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>PROCEED TO PAY</span>
+              </button>
+            </>
           )}
 
           <button

@@ -72,3 +72,58 @@ describe('Cart item ID uniqueness', () => {
     expect(new Set(ids).size).toBe(100);
   });
 });
+
+// ─── Tableside Dynamic Bill Splitting & Pay-at-Table ────────────────────────────
+describe('Tableside Dynamic Bill Splitting', () => {
+  interface CheckItem {
+    id: string;
+    price: number;
+    quantity: number;
+    seat?: number;
+  }
+
+  function computeEqualSplit(items: CheckItem[], guestCount: number) {
+    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const perGuestSubtotal = Math.round(subtotal / Math.max(1, guestCount));
+    const tax = Math.round(perGuestSubtotal * 0.1);
+    return { perGuestSubtotal, tax, perGuestTotal: perGuestSubtotal + tax };
+  }
+
+  function computeSeatSplit(items: CheckItem[], seatNumber: number) {
+    const seatItems = items.filter((i) => i.seat === seatNumber);
+    const subtotal = seatItems.reduce((s, i) => s + i.price * i.quantity, 0);
+    const tax = Math.round(subtotal * 0.1);
+    return { subtotal, tax, total: subtotal + tax, itemCount: seatItems.length };
+  }
+
+  const sampleCheck: CheckItem[] = [
+    { id: 'it-1', price: 1200, quantity: 1, seat: 1 },
+    { id: 'it-2', price: 2400, quantity: 1, seat: 1 },
+    { id: 'it-3', price: 1800, quantity: 1, seat: 2 },
+    { id: 'it-4', price: 600, quantity: 2, seat: 2 },
+  ];
+
+  it('splits check evenly across N guests with tax', () => {
+    // Total subtotal = 1200 + 2400 + 1800 + 1200 = 6600 cents ($66.00)
+    const split3 = computeEqualSplit(sampleCheck, 3);
+    expect(split3.perGuestSubtotal).toBe(2200); // $22.00
+    expect(split3.tax).toBe(220);             // $2.20
+    expect(split3.perGuestTotal).toBe(2420);   // $24.20
+  });
+
+  it('splits check accurately by seat number', () => {
+    // Seat 1: 1200 + 2400 = 3600 cents ($36.00)
+    const seat1 = computeSeatSplit(sampleCheck, 1);
+    expect(seat1.subtotal).toBe(3600);
+    expect(seat1.tax).toBe(360);
+    expect(seat1.total).toBe(3960);
+    expect(seat1.itemCount).toBe(2);
+
+    // Seat 2: 1800 + 1200 = 3000 cents ($30.00)
+    const seat2 = computeSeatSplit(sampleCheck, 2);
+    expect(seat2.subtotal).toBe(3000);
+    expect(seat2.tax).toBe(300);
+    expect(seat2.total).toBe(3300);
+  });
+});
+

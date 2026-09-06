@@ -1,0 +1,41 @@
+version: 1.0.0
+generated_at: '2026-09-06T18:42:00.909Z'
+profile: dev-master
+tools:
+  rg:
+    version: latest
+    source: BurntSushi/ripgrep
+    binary: rg
+    resolvedPath: C:\Users\white\scoop\shims\rg.exe
+  fd:
+    version: latest
+    source: sharkdp/fd
+    binary: fd
+    resolvedPath: C:\Users\white\scoop\shims\fd.exe
+  just:
+    version: latest
+    source: casey/just
+    binary: just
+    resolvedPath: C:\Users\white\AppData\Local\Microsoft\WinGet\Links\just.exe
+  opencode:
+    version: latest
+    source: opencode-ai/opencode
+    binary: opencode
+    resolvedPath: C:\Users\white\AppData\Roaming\npm\opencode
+  armada:
+    version: latest
+    source: rafamacalaba/armada
+    binary: armada
+    resolvedPath: C:\Users\white\AppData\Roaming\npm\armada
+  cursor:
+    version: latest
+    source: getcursor/cursor
+    binary: cursor
+    resolvedPath: C:\Program Files\cursor\resources\app\bin\cursor
+  gitleaks:
+    version: latest
+    source: gitleaks/gitleaks
+    binary: gitleaks
+    resolvedPath: C:\Users\white\AppData\Local\Microsoft\WinGet\Links\gitleaks.exe
+skills: {}
+mcps: {}

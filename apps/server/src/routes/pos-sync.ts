@@ -15,7 +15,15 @@ interface OfflineDelta {
   id: string;
   tenant_id: string;
   order_id: string;
-  action: 'create_order' | 'add_line_item' | 'apply_discount' | 'finalize_payment' | 'void_order';
+  action:
+    | 'create_order'
+    | 'add_line_item'
+    | 'apply_discount'
+    | 'finalize_payment'
+    | 'void_order'
+    | 'lock_table'
+    | 'transfer_table'
+    | 'fire_course';
   payload: Record<string, any>;
   timestamp: string;
   synced?: boolean;
@@ -163,6 +171,37 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
               total: delta.payload?.total,
             })
             .eq('id', delta.order_id)
+            .eq('tenant_id', tenantId);
+          if (error) failures.push({ id: delta.id, error: error.message });
+          else confirmedIds.push(delta.id);
+          break;
+        }
+
+        case 'lock_table': {
+          // Edge lock synchronization
+          confirmedIds.push(delta.id);
+          break;
+        }
+
+        case 'transfer_table': {
+          const toServer = delta.payload?.toServerName ?? delta.payload?.to_server_name ?? 'Transferred';
+          const { error } = await supabase
+            .from('pos_orders')
+            .update({ server_name: toServer })
+            .eq('id', delta.order_id)
+            .eq('tenant_id', tenantId);
+          if (error) failures.push({ id: delta.id, error: error.message });
+          else confirmedIds.push(delta.id);
+          break;
+        }
+
+        case 'fire_course': {
+          const courseNum = delta.payload?.course_number ?? delta.payload?.courseNumber ?? 1;
+          const { error } = await supabase
+            .from('pos_order_line_items')
+            .update({ is_fired: true, fired_at: delta.timestamp })
+            .eq('order_id', delta.order_id)
+            .eq('course_number', courseNum)
             .eq('tenant_id', tenantId);
           if (error) failures.push({ id: delta.id, error: error.message });
           else confirmedIds.push(delta.id);

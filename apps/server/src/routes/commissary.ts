@@ -9,6 +9,7 @@ import {
   aggregateCommissaryProduction,
   generateCommissaryLotCode,
   calculateFranchiseRoyaltyLedger,
+  generateTransferPackingSlip,
 } from '@culinaryos/commissary-engine';
 import type { Env } from '../types.js';
 
@@ -91,6 +92,31 @@ commissaryRoutes.get('/transfers', async (c) => {
     (t) => t.toLocationId === tenantId || t.fromLocationId === tenantId
   );
   return ok(c, { transfers: matching });
+});
+
+// ---- Generate Transfer Packing Slip ----
+commissaryRoutes.get('/transfers/:id/packing-slip', async (c) => {
+  const id = c.req.param('id');
+  const transfer = mockTransfers.find((t) => t.id === id || t.orderNumber === id);
+  if (!transfer) return err(c, 'NOT_FOUND', 'Transfer order not found', 404);
+
+  const packingSlip = generateTransferPackingSlip({
+    transferOrderId: transfer.orderNumber,
+    sourceCommissaryName: 'Central Production Commissary Kitchen',
+    destinationStoreId: transfer.toLocationId,
+    destinationStoreName: 'The Golden Fork Flagship',
+    items: transfer.items.map((i, idx) => ({
+      ingredientId: `ing-${idx + 1}`,
+      name: i.itemName,
+      unit: i.unit,
+      quantityRequested: i.quantityRequested,
+      currentStoreStock: 0,
+      parLevel: i.quantityRequested * 2,
+    })),
+    driverNotes: 'Maintain cold-chain refrigeration below 38°F during transit.',
+  });
+
+  return ok(c, packingSlip);
 });
 
 // ---- Fulfill & Dispatch Batch Transfer (Commissary Manager) ----

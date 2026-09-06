@@ -18,13 +18,13 @@ const features = [
     icon: '📺',
     title: 'Kitchen Display (KDS)',
     description:
-      'Real-time kitchen tickets with course pacing, dual-language support, 86 countdowns, and 140% TV mode.',
+      'Real-time tickets with 12m/15m course pacing alerts, sub-second polling efficiency, dual-language support, 86 countdowns, and TV mode.',
   },
   {
     icon: '🛒',
-    title: 'Online Ordering',
+    title: 'Online Ordering & Tableside QR',
     description:
-      'Branded storefront with QR ordering, modifier logic, and direct-to-kitchen ticket routing. Zero commission.',
+      'Branded storefront with instant tableside buzzer requests, bill splitting, and direct-to-kitchen ticket routing. Zero commission.',
   },
   {
     icon: '🔪',
@@ -34,15 +34,15 @@ const features = [
   },
   {
     icon: '📊',
-    title: 'CulinaryOps (Food Cost)',
+    title: 'CulinaryOps (Food Cost & Coaching)',
     description:
-      'Automated food cost tracking, waste logging, Z-reports, labor analytics, and tip pooling built in.',
+      'Daily operations consultant audits, actual vs theoretical food cost, scrap waste, labor %, and FLSA tip pooling.',
   },
   {
     icon: '🤖',
     title: 'AI Layer',
     description:
-      'Claude-powered demand forecasting, waste prediction, recipe suggestions, and natural-language ops queries.',
+      'Claude-powered demand forecasting, waste prediction, and ops coaching — strictly additive and off by default.',
   },
 ];
 
@@ -54,8 +54,8 @@ const steps = [
   },
   {
     step: '02',
-    title: 'Configure Menu',
-    description: 'Import or build your menu with modifiers, categories, pricing rules, and allergen tags.',
+    title: 'Configure Menu & Templates',
+    description: 'Bootstrap from Food Truck or Full-Service presets, or import custom modifiers, categories, and allergens.',
   },
   {
     step: '03',
@@ -68,7 +68,7 @@ const platformFeatures = [
   { label: 'REST API', description: 'Full v1 API — every operation accessible programmatically.' },
   { label: 'TypeScript SDK', description: 'Type-safe client for custom integrations and extensions.' },
   { label: '9 MCP Servers', description: 'Model Context Protocol servers for AI-native operator tools.' },
-  { label: 'CLI', description: 'Operator CLI for scripting, migrations, and local control.' },
+  { label: 'Universal CLI', description: '100% terminal parity across all 15 operational subsystems.' },
 ];
 
 export default function HomePage() {

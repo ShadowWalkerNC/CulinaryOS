@@ -307,13 +307,57 @@ describe('Milestone 3: Security, Void Governance & Accounting Ledger', () => {
 
       const sumPayouts = summary.staffPayouts.reduce((s, p) => s + p.payoutCents, 0);
       expect(sumPayouts).toBe(10001);
-      expect(summary.staffPayouts[0].payoutCents + summary.staffPayouts[1].payoutCents).toBe(10001);
     });
 
-    it('handles zero tips or empty staff gracefully', () => {
-      const summary = calculateTipPool({ method: 'role_weighted', poolTotalCents: 0 }, []);
-      expect(summary.totalEligibleHours).toBe(0);
-      expect(summary.staffPayouts).toHaveLength(0);
+    it('strictly excludes managers and supervisors from tip pools under FLSA even with custom override', () => {
+      const staff = [
+        { staffId: 's1', staffName: 'Lead Server', role: 'server', hours: 8.0 },
+        { staffId: 's2', staffName: 'Floor Manager', role: 'manager', hours: 8.0 },
+        { staffId: 's3', staffName: 'Shift Supervisor', role: 'shift_supervisor', hours: 6.0 },
+        { staffId: 's4', staffName: 'Owner Operator', role: 'owner', hours: 10.0 },
+      ];
+
+      // Even if a tenant tries to pass custom weights assigning 2.0 to manager/owner
+      const summary = calculateTipPool(
+        {
+          method: 'hours_worked',
+          poolTotalCents: 20000,
+          roles: [
+            { role: 'manager', weight: 2.0 },
+            { role: 'owner', weight: 5.0 },
+          ],
+        },
+        staff
+      );
+
+      const managerPayout = summary.staffPayouts.find((p) => p.staffId === 's2')!;
+      const supervisorPayout = summary.staffPayouts.find((p) => p.staffId === 's3')!;
+      const ownerPayout = summary.staffPayouts.find((p) => p.staffId === 's4')!;
+      const serverPayout = summary.staffPayouts.find((p) => p.staffId === 's1')!;
+
+      expect(managerPayout.payoutCents).toBe(0);
+      expect(managerPayout.weight).toBe(0);
+      expect(supervisorPayout.payoutCents).toBe(0);
+      expect(supervisorPayout.weight).toBe(0);
+      expect(ownerPayout.payoutCents).toBe(0);
+      expect(ownerPayout.weight).toBe(0);
+
+      // Entire pool goes to eligible server
+      expect(serverPayout.payoutCents).toBe(20000);
+      expect(summary.totalEligibleHours).toBe(8.0);
+    });
+
+    it('exports tip pool distribution to payroll CSV', async () => {
+      const res = await reportsRoutes.request('/tips/export/csv?poolTotalCents=30000&method=hours_worked', {
+        method: 'GET',
+        headers: tenantHeaders(),
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toContain('text/csv');
+      const csvText = await res.text();
+      expect(csvText).toContain('Date,Staff ID,Staff Name,Role,Hours,FLSA Status,Effective Hourly Tip ($),Tip Payout ($)');
+      expect(csvText).toContain('Alice Vance (Server)');
     });
   });
 

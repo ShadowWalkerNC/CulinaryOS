@@ -4,7 +4,7 @@
 -- Subscriptions table (one per tenant)
 CREATE TABLE IF NOT EXISTS subscriptions (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id               UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  tenant_id               UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   stripe_customer_id      TEXT,
   stripe_subscription_id  TEXT UNIQUE,
   plan                    TEXT NOT NULL DEFAULT 'trial' CHECK (plan IN ('trial','starter','pro','enterprise')),
@@ -27,7 +27,7 @@ CREATE POLICY "service_role_all" ON subscriptions
 -- Reservations table
 CREATE TABLE IF NOT EXISTS reservations (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id       UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  tenant_id       UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   guest_name      TEXT NOT NULL,
   guest_phone     TEXT,
   guest_email     TEXT,

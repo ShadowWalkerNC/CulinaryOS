@@ -4,6 +4,7 @@ import {
   aggregateCommissaryProduction,
   generateCommissaryLotCode,
   calculateFranchiseRoyaltyLedger,
+  generateTransferPackingSlip,
 } from '../../packages/commissary-engine/src/index.js';
 
 describe('Commissary Engine & Multi-Unit Distribution', () => {
@@ -81,6 +82,43 @@ describe('Commissary Engine & Multi-Unit Distribution', () => {
       expect(ledger.totalRoyaltyDueCents).toBe(700000);
       expect(ledger.stores[0]?.royaltyDueCents).toBe(500000);
       expect(ledger.stores[1]?.royaltyDueCents).toBe(200000);
+    });
+  });
+
+  describe('Transfer Packing Slip Logistics Generation', () => {
+    it('generates an auditable shipping and replenishment packing slip with lot codes', () => {
+      const packingSlip = generateTransferPackingSlip({
+        transferOrderId: 'xfer-8812',
+        sourceCommissaryName: 'Central Prep Facility #1',
+        destinationStoreId: 'loc-01',
+        destinationStoreName: 'Downtown Flagship',
+        driverNotes: 'Keep chilled below 4C',
+        items: [
+          {
+            ingredientId: 'sauce-01',
+            name: 'Pizza Sauce Base',
+            unit: 'kg',
+            quantityRequested: 50,
+            currentStoreStock: 10,
+            parLevel: 60,
+          },
+          {
+            ingredientId: 'beef-01',
+            name: 'Dry-Aged Patties',
+            unit: 'kg',
+            quantityRequested: 40,
+            currentStoreStock: 5,
+            parLevel: 45,
+          },
+        ],
+      });
+
+      expect(packingSlip.transferOrderId).toBe('xfer-8812');
+      expect(packingSlip.status).toBe('dispatched');
+      expect(packingSlip.totalUnitsShipped).toBe(90);
+      expect(packingSlip.items.length).toBe(2);
+      expect(packingSlip.items[0]?.lotCode).toMatch(/^LOT-/);
+      expect(packingSlip.driverNotes).toBe('Keep chilled below 4C');
     });
   });
 });

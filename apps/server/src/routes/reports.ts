@@ -724,5 +724,39 @@ reportsRoutes.get('/export/csv', async (c) => {
   });
 });
 
+// ============================================================
+// GET /v1/reports/tips/export/csv
+// Generates downloadable payroll CSV for shift tip pool distribution
+// ============================================================
+reportsRoutes.get('/tips/export/csv', async (c) => {
+  const method = (c.req.query('method') as TipPoolMethod) || 'hours_worked';
+  const poolTotalCents = parseInt(c.req.query('poolTotalCents') ?? '0', 10);
+  const date = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
+
+  const summary = calculateTipPool(
+    {
+      method,
+      poolTotalCents: isNaN(poolTotalCents) ? 0 : poolTotalCents,
+    },
+    DEFAULT_SHIFT_STAFF
+  );
+
+  const csvHeader = 'Date,Staff ID,Staff Name,Role,Hours,FLSA Status,Effective Hourly Tip ($),Tip Payout ($)\n';
+  const csvBody = summary.staffPayouts.map((s) => {
+    const isExcluded = s.weight === 0;
+    const hourlyDollar = (s.effectiveHourlyTipRateCents / 100).toFixed(2);
+    const payoutDollar = (s.payoutCents / 100).toFixed(2);
+    return `"${date}","${s.staffId}","${s.staffName}","${s.role}",${s.hours},"${isExcluded ? 'EXCLUDED (FLSA)' : 'ELIGIBLE'}",${hourlyDollar},${payoutDollar}`;
+  }).join('\n');
+
+  return new Response(csvHeader + csvBody, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="CulinaryOS-Tip-Payroll-${date}.csv"`,
+    },
+  });
+});
+
 export default reportsRoutes;
 

@@ -17,26 +17,50 @@ ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "org_member_read" ON organizations
   FOR SELECT USING (
     id IN (
-      SELECT organization_id FROM restaurants WHERE id = my_tenant_id()
+      SELECT organization_id FROM public.tenants WHERE id = my_tenant_id()
     )
   );
 
 CREATE POLICY "service_role_orgs" ON organizations
   FOR ALL USING (current_setting('role') = 'service_role');
 
--- 2. Link Restaurants to Parent Organization
-ALTER TABLE restaurants
+-- 2. Link Tenants to Parent Organization & Provide Backward-Compatible View
+ALTER TABLE public.tenants
   ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS is_commissary BOOLEAN DEFAULT FALSE;
 
-CREATE INDEX IF NOT EXISTS idx_restaurants_organization ON restaurants(organization_id);
+CREATE INDEX IF NOT EXISTS idx_tenants_organization ON public.tenants(organization_id);
 
--- 3. Commissary Stock Transfer Orders (Branch Store <-> Central Kitchen)
+-- Backward-compatible alias view for legacy references
+CREATE OR REPLACE VIEW public.restaurants AS SELECT * FROM public.tenants;
+
+-- 3. Organization Enterprise Users (Brand-Wide Governance)
+CREATE TABLE IF NOT EXISTS public.organization_users (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role            TEXT NOT NULL CHECK (role IN ('brand_owner', 'regional_director', 'commissary_manager', 'franchise_auditor')),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(organization_id, user_id)
+);
+
+ALTER TABLE public.organization_users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "org_users_read_own" ON public.organization_users
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "service_role_org_users" ON public.organization_users
+  FOR ALL USING (current_setting('role') = 'service_role');
+
+CREATE INDEX IF NOT EXISTS idx_org_users_user ON public.organization_users(user_id);
+CREATE INDEX IF NOT EXISTS idx_org_users_org ON public.organization_users(organization_id);
+
+-- 4. Commissary Stock Transfer Orders (Branch Store <-> Central Kitchen)
 CREATE TABLE IF NOT EXISTS commissary_orders (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id         UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  from_location_id        UUID NOT NULL REFERENCES restaurants(id) ON DELETE RESTRICT,
-  to_location_id          UUID NOT NULL REFERENCES restaurants(id) ON DELETE RESTRICT,
+  from_location_id        UUID NOT NULL REFERENCES public.tenants(id) ON DELETE RESTRICT,
+  to_location_id          UUID NOT NULL REFERENCES public.tenants(id) ON DELETE RESTRICT,
   order_number            TEXT NOT NULL,
   status                  TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('draft','requested','approved','batching','shipped','delivered','cancelled')),
   total_cost_cents        BIGINT DEFAULT 0,

@@ -31,4 +31,7 @@ Thumbs.db
 
 # Logs and Agent Scratch
 *.log
+test_output.log
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 .agents/

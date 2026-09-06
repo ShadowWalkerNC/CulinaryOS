@@ -151,7 +151,7 @@ app.route('/v1/talent', talentAdminRoutes);
 app.get('/health', (c) => c.json({
   service:   'culinaryos-api',
   status:    'healthy',
-  version:   '0.1.0',
+  version:   '1.2.1',
   uptime:    Math.floor(process.uptime()),
   checkedAt: new Date().toISOString(),
 }));

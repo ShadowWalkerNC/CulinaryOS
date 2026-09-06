@@ -97,6 +97,11 @@ paymentsRoutes.post('/terminal/create-intent', async (c: Context) => {
   }
 
   try {
+    const idempotencyKey =
+      c.req.header('idempotency-key') ||
+      c.req.header('x-request-id') ||
+      `term_${tenantId}_${body.order_id}_${totalCents}`;
+
     const intent = await stripe().paymentIntents.create({
       amount: totalCents,
       currency: 'usd',
@@ -109,7 +114,7 @@ paymentsRoutes.post('/terminal/create-intent', async (c: Context) => {
         terminal_source: 'culinaryos_pos',
       },
       description: body.description || `Order ${body.order_id.slice(0, 8)}`,
-    });
+    }, { idempotencyKey });
 
     return ok(c, {
       payment_intent_id: intent.id,
@@ -312,12 +317,17 @@ paymentsRoutes.post('/checkout', async (c: Context) => {
     }, 201);
   }
 
+  const idempotencyKey =
+    c.req.header('idempotency-key') ||
+    c.req.header('x-request-id') ||
+    `checkout_${tenantId}_${body.order_id}_${chargeCents}`;
+
   const intent = await stripe().paymentIntents.create({
     amount:   chargeCents,
     currency: 'usd',
     automatic_payment_methods: { enabled: true },
     metadata: { tenant_id: tenantId, order_id: body.order_id },
-  });
+  }, { idempotencyKey });
 
   // Do not persist client_secret long-term — return once to client
   const { data: payment, error: payErr } = await supabase
@@ -442,10 +452,15 @@ paymentsRoutes.post('/refund', async (c: Context) => {
   }
 
   const refundAmount = body.amount_cents ?? payment.amount;
+  const idempotencyKey =
+    c.req.header('idempotency-key') ||
+    c.req.header('x-request-id') ||
+    `refund_${tenantId}_${payment.id}_${refundAmount}`;
+
   const refund = await stripe().refunds.create({
     payment_intent: payment.stripe_payment_intent_id!,
     amount:         refundAmount,
-  });
+  }, { idempotencyKey });
 
   await supabase
     .from('payments')

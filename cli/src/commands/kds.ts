@@ -93,3 +93,42 @@ kdsCommand
       console.error(chalk.red(`\n✖ 86 command failed: ${err.message}\n`));
     }
   });
+
+// 5. Course Pacing & Staging Monitor
+kdsCommand
+  .command('pacing')
+  .description('Monitor kitchen course pacing and Course 2 fire alerts across tables')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (opts) => {
+    try {
+      const res: any = await apiGet('/v1/kds/pacing', opts.tenant);
+      const orders: any[] = Array.isArray(res) ? res : res.data ?? [];
+      if (orders.length === 0) {
+        console.log(chalk.green('\n🍳 No active multi-course orders on the line.\n'));
+        return;
+      }
+      const rows = [
+        ['Order ID', 'Table', 'Course 1', 'C1 Elapsed', 'Course 2 Status', 'Pacing Alert'],
+        ...orders.map((o) => {
+          const alertChalk =
+            o.pacingAlert === 'urgent'
+              ? chalk.bold.red('URGENT (15m+)')
+              : o.pacingAlert === 'warning'
+                ? chalk.bold.yellow('WARNING (12m+)')
+                : chalk.green('NORMAL');
+          return [
+            o.orderId.slice(0, 8),
+            o.tableNumber ? `Table ${o.tableNumber}` : 'Walk-in',
+            o.c1Status.toUpperCase(),
+            `${Math.floor(o.c1ElapsedSeconds / 60)}m ${o.c1ElapsedSeconds % 60}s`,
+            o.c2Status.toUpperCase(),
+            alertChalk,
+          ];
+        }),
+      ];
+      console.log(chalk.bold.hex('#F97316')('\n⏱️ Kitchen Course Pacing & Running Monitor:'));
+      console.log(table(rows));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Error fetching course pacing: ${err.message}\n`));
+    }
+  });

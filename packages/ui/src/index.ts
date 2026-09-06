@@ -143,6 +143,9 @@ export {
   Scale,
   Table as TableIcon,
   Badge as BadgeIcon,
+  Home,
+  PanelBottom,
+  ShoppingCart,
 } from 'lucide-react';
 
 

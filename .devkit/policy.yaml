@@ -1,0 +1,28 @@
+version: 1.0.0
+description: Security and path containment policy for CulinaryOS
+filesystem:
+  path_containment: true
+  allow_external_read: false
+  symlink_traversal: deny
+commands:
+  mode: allowlist
+  allow:
+    - rg
+    - fd
+    - git
+    - gh
+    - just
+    - uv
+    - bun
+    - pnpm
+    - node
+    - python
+    - gitleaks
+    - jq
+    - opencode
+    - armada
+    - cursor
+secrets:
+  canary_detection: true
+  strip_env_in_logs: true
+  allow_in_prompts: false
