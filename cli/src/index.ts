@@ -22,6 +22,7 @@ import { tabsCommand } from './commands/tabs';
 import { commissaryCommand } from './commands/commissary';
 import { autopilotCommand } from './commands/autopilot';
 import { daypartsCommand } from './commands/dayparts';
+import { hardwareCommand } from './commands/hardware';
 
 const program = new Command();
 
@@ -51,6 +52,7 @@ program.addCommand(tabsCommand);
 program.addCommand(commissaryCommand);
 program.addCommand(autopilotCommand);
 program.addCommand(daypartsCommand);
+program.addCommand(hardwareCommand);
 
 // 1. Init & Turnkey Provisioning Command
 program
