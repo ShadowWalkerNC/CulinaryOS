@@ -33,11 +33,14 @@ export interface Order {
   tableNumber?: string;
   tableLabel?: string;
   coverCount?: number;
+  cover_count?: number;      // snake_case DB alias
   serverName?: string;
+  server_name?: string;      // snake_case DB alias
   status: OrderStatus;
   items: OrderLineItem[];
   notes?: string;
   totalAmount?: number;      // cents
+  total?: number;            // cents alias
   createdAt: string;
   updatedAt: string;
   firedAt?: string;

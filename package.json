@@ -75,6 +75,7 @@
     "@supabase/supabase-js": "^2.43.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.0",
+    "caniuse-lite": "^1.0.30001810",
     "dotenv": "^16.4.5",
     "pg": "^8.11.5",
     "picocolors": "^1.1.1",
@@ -86,5 +87,9 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@swc/helpers": "0.5.11",
+    "client-only": "^0.0.1"
   }
 }
