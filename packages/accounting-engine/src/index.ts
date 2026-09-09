@@ -219,3 +219,72 @@ export function calculateRestaurantPL(input: {
     operatingIncomeCents,
   };
 }
+
+/**
+ * Creates a balanced double-entry General Ledger journal entry for opening, closing,
+ * or declaring a cash drawer shift count against expected float/sales balance.
+ */
+export function createCashDrawerReconciliationJournalEntry(data: {
+  date: string;
+  referenceNumber: string; // e.g. "CASH-DECL-1788955020498"
+  drawerName?: string;
+  openingFloatCents: number;
+  expectedCents: number;
+  declaredCents: number;
+  discrepancyCents: number; // positive = overage, negative = shortage
+}): JournalEntry {
+  const lines: JournalEntryLine[] = [];
+  const drawerLabel = data.drawerName || 'Main Station Cash Drawer';
+
+  // 1. Record actual declared cash in drawer asset account
+  lines.push({
+    accountCode: '1010',
+    accountName: `Cash on Hand (${drawerLabel})`,
+    debitCents: data.declaredCents,
+    creditCents: 0,
+    description: `Physical count verified - ${data.referenceNumber}`,
+  });
+
+  // 2. Over / Short adjustment
+  if (data.discrepancyCents < 0) {
+    // Shortage is debit expense
+    lines.push({
+      accountCode: '6080',
+      accountName: 'Cash Drawer Over/Short Expense',
+      debitCents: Math.abs(data.discrepancyCents),
+      creditCents: 0,
+      description: `Count shortage variance - ${data.referenceNumber}`,
+    });
+  } else if (data.discrepancyCents > 0) {
+    // Overage is credit income
+    lines.push({
+      accountCode: '4080',
+      accountName: 'Cash Drawer Over/Short Income',
+      debitCents: 0,
+      creditCents: data.discrepancyCents,
+      description: `Count overage variance - ${data.referenceNumber}`,
+    });
+  }
+
+  // 3. Offset Expected Drawer Clearing Balance (credit to balance the books)
+  lines.push({
+    accountCode: '1015',
+    accountName: 'Cash Drawer Clearing & Float Control',
+    debitCents: 0,
+    creditCents: data.expectedCents,
+    description: `Expected shift register clearing - ${data.referenceNumber}`,
+  });
+
+  const totalDebitCents = lines.reduce((acc, l) => acc + l.debitCents, 0);
+  const totalCreditCents = lines.reduce((acc, l) => acc + l.creditCents, 0);
+
+  return {
+    entryDate: data.date,
+    reference: data.referenceNumber,
+    memo: `Cash Drawer Audit & Reconciliation ${data.referenceNumber} (${drawerLabel})`,
+    lines,
+    totalDebitCents,
+    totalCreditCents,
+    isBalanced: totalDebitCents === totalCreditCents,
+  };
+}

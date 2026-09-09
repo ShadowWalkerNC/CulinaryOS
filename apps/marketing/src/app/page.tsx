@@ -69,7 +69,7 @@ const platformFeatures = [
   { label: 'REST API', description: 'Full v1 API — every operation accessible programmatically.' },
   { label: 'TypeScript SDK', description: 'Type-safe client for custom integrations and extensions.' },
   { label: '9 MCP Servers', description: 'Model Context Protocol servers for AI-native operator tools.' },
-  { label: 'Universal CLI', description: '100% terminal parity across all 15 operational subsystems.' },
+  { label: 'Universal CLI', description: '100% terminal parity across all 18 operational subsystems.' },
 ];
 
 export default function HomePage() {
@@ -129,6 +129,35 @@ export default function HomePage() {
             <span className="text-white/70 font-semibold">6 countries</span>
             {' '}· 🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇧🇷
           </p>
+        </div>
+      </section>
+
+      {/* ─── DEMO VIDEO ─────────────────────────────────────────── */}
+      <section className="py-20 px-4 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
+        <div className="max-w-5xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-xs font-semibold text-brand-orange uppercase tracking-wider">
+            <span>Live Product Demo</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            See CulinaryOS in Action
+          </h2>
+          <p className="text-white/60 text-base max-w-xl mx-auto">
+            Watch end-to-end POS floor management, instant KDS kitchen dispatch, and physical drawer settlement.
+          </p>
+
+          <div className="relative rounded-3xl overflow-hidden border border-white/15 bg-black/60 shadow-2xl p-2 group">
+            <video
+              className="w-full rounded-2xl aspect-video object-cover"
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src="/videos/culinaryos_commercial_demo.webm" type="video/webm" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       </section>
 

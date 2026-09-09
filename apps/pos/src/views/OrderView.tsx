@@ -11,6 +11,7 @@ import {
 } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { calculateMultiRateTax } from '@culinaryos/shared';
+import { hardwarePrinter } from '../lib/hardware-printer';
 import {
   Button,
   Flame,
@@ -215,6 +216,7 @@ export function OrderView() {
           reason: reasonCode,
           notes: pinNotes,
         });
+        hardwarePrinter.kickCashDrawer().catch(() => {});
         setShowPinModal(false);
         triggerToast(`Cash drawer opened by ${auth.managerName || 'Manager'}`);
       } else if (pinAction === 'high_comp' && pendingDiscount) {
@@ -422,11 +424,19 @@ export function OrderView() {
         <div className="grid grid-cols-3 gap-2 pt-1">
           {order.status === 'open' && (
             <Button
-              onClick={() => fireOrder(order.id)}
+              onClick={() => {
+                fireOrder(order.id, {
+                  onSuccess: () => {
+                    triggerToast('🔥 Order sent to kitchen!');
+                    setActiveOrder(null);
+                    setView('tables');
+                  },
+                });
+              }}
               isLoading={firing}
-              disabled={!order.items?.length}
+              disabled={firing || !order.items?.length}
               variant="success"
-              className="col-span-3 py-3.5 h-auto uppercase tracking-wider gap-2"
+              className="col-span-3 min-h-[48px] py-3 uppercase tracking-wider gap-2"
             >
               <Flame className="w-4 h-4" />
               <span>SEND TO KITCHEN</span>
@@ -446,7 +456,7 @@ export function OrderView() {
                       triggerToast('⚡ Course 2 (Mains) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="py-2.5 px-3 h-auto uppercase tracking-wider gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950"
+                    className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm"
                   >
                     <Flame className="w-3.5 h-3.5" />
                     <span>Fire Mains (C2)</span>
@@ -459,7 +469,7 @@ export function OrderView() {
                       triggerToast('⚡ Course 3 (Desserts) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="py-2.5 px-3 h-auto uppercase tracking-wider gap-1.5 bg-rose-500 hover:bg-rose-600"
+                    className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-rose-500 hover:bg-rose-600 text-white shadow-sm"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Fire Desserts (C3)</span>
@@ -470,7 +480,7 @@ export function OrderView() {
               <Button
                 onClick={() => setView('checkout')}
                 variant="brand"
-                className="col-span-3 py-3.5 h-auto uppercase tracking-wider gap-2"
+                className="col-span-3 min-h-[48px] py-3 uppercase tracking-wider gap-2"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>PROCEED TO PAY</span>
@@ -482,7 +492,7 @@ export function OrderView() {
             variant="ghost"
             onClick={initiateVoidOrder}
             disabled={voiding}
-            className="bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-600 rounded-xl py-2.5 h-auto text-[11px] font-black uppercase border-2 border-rose-200 shadow-xs [&>span]:flex-col [&>span]:gap-1"
+            className="min-h-[48px] bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-600 rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-rose-200 shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <Trash2 className="w-4 h-4 text-rose-600" />
             <span>{isPostSend ? 'Void (PIN)' : 'Void'}</span>
@@ -491,7 +501,7 @@ export function OrderView() {
           <Button
             variant="ghost"
             onClick={() => setShowDiscountModal(true)}
-            className="bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 h-auto text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
+            className="min-h-[48px] bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <Tag className="w-4 h-4 text-slate-700" />
             <span>Promo</span>
@@ -500,7 +510,7 @@ export function OrderView() {
           <Button
             variant="ghost"
             onClick={() => setView('menu')}
-            className="bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 h-auto text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
+            className="min-h-[48px] bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <ClipboardList className="w-4 h-4 text-slate-700" />
             <span>Menu</span>

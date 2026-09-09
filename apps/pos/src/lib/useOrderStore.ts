@@ -9,7 +9,7 @@ import { usePOSStore } from './store';
 import { useRealtimeOrders, type Order } from '@culinaryos/shared';
 import { getMockOrders } from './mockDb';
 
-const ACTIVE_STATUSES = ['open', 'sent', 'in-progress', 'ready'];
+const ACTIVE_STATUSES = ['open', 'sent', 'in-progress', 'ready', 'served'];
 
 export function useOrderStore() {
   const tenantId = usePOSStore((s) => s.tenantId);
@@ -27,8 +27,10 @@ export function useOrderStore() {
         setOrders(getMockOrders().filter(o => ACTIVE_STATUSES.includes(o.status)));
       };
       window.addEventListener('mock-db-update', updateHandler);
+      window.addEventListener('culinaryos:order-status-changed', updateHandler);
       return () => {
         window.removeEventListener('mock-db-update', updateHandler);
+        window.removeEventListener('culinaryos:order-status-changed', updateHandler);
       };
     }
 

@@ -35,3 +35,39 @@ Provide a self-contained Windows installation package and background tray manage
 - [ ] Holding Course 2 keeps items off the active grill line until FIRE is triggered.
 - [ ] Waste events record dollar loss and update the food cost variance report.
 - [ ] Daily closeout computes multi-tier tax and generates a complete Z-Report summary.
+
+## 2026-09-09T00:44:31Z
+
+Simulate a full commercial restaurant company in daily operations, performing end-to-end multi-seat ordering, KDS station pacing, cash & Stripe tender with physical drawer pulse, and double-entry accounting reconciliation while logging any errors, benchmarking API & build latency, and updating marketing materials.
+
+Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS
+Integrity mode: development
+
+## Requirements
+
+### R1. Full Day-in-the-Life System Simulation
+- Execute hiring on `/v1/talent`, audit 40-hr FLSA overtime on `/v1/talent/labor/audit-overtime`, open drawer with float, fire multi-seat orders from POS to KDS, bump tickets, and complete cash & card checkouts.
+
+### R2. Bug & Error Capture Engine
+- Systematically capture, categorize, and log any runtime exceptions, unhandled Promise rejections, schema mismatches, or layout shifts across all 18 operational subsystems into `docs/audits/error_log.md`.
+
+### R3. Performance Benchmarks
+- Measure API latency (p50, p95) on core endpoints (`/v1/orders`, `/v1/kds/tickets`, `/v1/menu/public`, `/health`) and Turborepo cold/hot build times, recording results against SLA targets in `docs/benchmarks/perf_baseline.md`.
+
+### R4. Council Tradeoff Evaluation
+- Conduct a 4-voice Council review (Architect, Skeptic, Pragmatist, Critic) evaluating commercial pilot launch readiness, offline edge sync boundary risks, and marketing positioning against Toast/Square.
+
+## Acceptance Criteria
+
+### Simulation & Feature Coverage
+- [ ] 100% of the simulated daily workflow passes without unhandled exceptions or data loss.
+- [ ] All 110 automated tests remain green (`node ./scripts/run-all-tests.cjs`).
+- [ ] Full Turborepo typecheck across 47 packages passes with 0 errors.
+
+### Performance & Latency
+- [ ] Core API response latency p95 is under 150ms for local endpoints.
+- [ ] Turborepo incremental build takes less than 30s.
+
+### Audit & Documentation
+- [ ] `docs/audits/error_log.md` contains exact reproduction steps for any discovered bugs.
+- [ ] `docs/benchmarks/perf_baseline.md` is populated with empirical benchmark timings.

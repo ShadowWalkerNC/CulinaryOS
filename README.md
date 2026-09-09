@@ -6,8 +6,8 @@
 
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 106 Passing](https://img.shields.io/badge/Tests-106%20Passing-brightgreen.svg)](./tests/)
-[![Typecheck: 46/46 Passing](https://img.shields.io/badge/Typecheck-46%2F46%20Passing-blue.svg)](./turbo.json)
+[![Tests: 110 Passing](https://img.shields.io/badge/Tests-110%20Passing-brightgreen.svg)](./tests/)
+[![Typecheck: 47/47 Passing](https://img.shields.io/badge/Typecheck-47%2F47%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

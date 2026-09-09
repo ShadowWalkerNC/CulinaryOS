@@ -26,7 +26,7 @@ import {
 
 export function SettingsView() {
   const { setView } = usePOSStore();
-  const [activeTab, setActiveTab] = useState<'hardware' | 'store' | 'routing' | 'display'>('hardware');
+  const [activeTab, setActiveTab] = useState<'hardware' | 'pricing' | 'store' | 'routing' | 'display'>('hardware');
 
   // Shared Settings
   const [settings, setSettings] = useState<CulinaryOSSettings>(loadLocalSettings());
@@ -156,9 +156,10 @@ export function SettingsView() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-border pb-3 mb-6">
+      <div className="flex items-center gap-2 border-b border-border pb-3 mb-6 overflow-x-auto no-scrollbar">
         {[
           { id: 'hardware', label: 'Printers & Readers', icon: <Printer className="w-4 h-4" /> },
+          { id: 'pricing', label: 'Zero-Fee & Dual Pricing', icon: <CreditCard className="w-4 h-4 text-emerald-500" /> },
           { id: 'store', label: 'Company & Receipts', icon: <Wifi className="w-4 h-4" /> },
           { id: 'routing', label: 'Kitchen Routing', icon: <ChefHat className="w-4 h-4" /> },
           { id: 'display', label: 'Display & Text Sizing', icon: <Radio className="w-4 h-4" /> },
@@ -167,7 +168,7 @@ export function SettingsView() {
             key={tab.id}
             variant="ghost"
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 h-auto rounded-xl text-xs font-black uppercase tracking-wider gap-2 ${
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-foreground text-background shadow-xs hover:bg-foreground hover:text-background'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -433,7 +434,194 @@ export function SettingsView() {
         </div>
       )}
 
-      {/* 2. Store & Company Info */}
+      {/* 2. Zero-Fee & Dual Pricing Program */}
+      {activeTab === 'pricing' && (
+        <Card className="p-6 space-y-6 border-border bg-card shadow-xs animate-fadeIn max-w-4xl">
+          <div className="flex items-start justify-between border-b border-border pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-base font-black text-foreground uppercase tracking-wider">
+                  Zero-Fee Dual Pricing & Cash Discount Program
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Eliminate 100% of payment processing overhead. Pass fees transparently and offer compliant cash discounts.
+              </p>
+            </div>
+
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+              Square Killer Feature
+            </span>
+          </div>
+
+          {/* Program Mode Selection */}
+          <div className="space-y-3">
+            <label className="text-xs font-black uppercase text-foreground block">
+              1. Program Operating Mode
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[
+                {
+                  id: 'dual_pricing',
+                  label: 'Dual Pricing (Recommended)',
+                  desc: 'Displays Cash vs Card price side-by-side. 100% legal in all 50 states.',
+                },
+                {
+                  id: 'cash_discount',
+                  label: 'Cash Discount',
+                  desc: 'Prices reflect card total; instant percentage discount awarded on cash tender.',
+                },
+                {
+                  id: 'standard',
+                  label: 'Standard Processing',
+                  desc: 'Single price across all tenders; merchant absorbs 2.9% - 3.5% processing fees.',
+                },
+              ].map((m) => {
+                const isSelected = (settings.pricingProgram?.mode ?? 'dual_pricing') === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        pricingProgram: {
+                          ...(settings.pricingProgram || {
+                            mode: 'dual_pricing',
+                            programFeePercent: 3.8,
+                            debitCardExemption: true,
+                            showDualPricesOnMenu: true,
+                            showDualPricesOnCFD: true,
+                            disclosureText: '',
+                            baselineCompetitorRatePercent: 2.9,
+                            baselineFlatFeeCents: 30,
+                          }),
+                          mode: m.id as any,
+                        },
+                      })
+                    }
+                    className={`p-4 rounded-xl border text-left transition-all ${
+                      isSelected
+                        ? 'border-emerald-600 bg-emerald-50/40 text-emerald-950 shadow-xs ring-1 ring-emerald-600'
+                        : 'border-border bg-muted/20 hover:border-foreground/30 text-foreground'
+                    }`}
+                  >
+                    <span className="text-xs font-black block">{m.label}</span>
+                    <span className="text-[11px] text-muted-foreground block mt-1 leading-snug">
+                      {m.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Fee Percentage & Durbin Amendment Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border pt-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase text-foreground block">
+                Non-Cash Adjustment Rate (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="1.0"
+                max="4.0"
+                value={settings.pricingProgram?.programFeePercent ?? 3.8}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    pricingProgram: {
+                      ...(settings.pricingProgram || {
+                        mode: 'dual_pricing',
+                        programFeePercent: 3.8,
+                        debitCardExemption: true,
+                        showDualPricesOnMenu: true,
+                        showDualPricesOnCFD: true,
+                        disclosureText: '',
+                        baselineCompetitorRatePercent: 2.9,
+                        baselineFlatFeeCents: 30,
+                      }),
+                      programFeePercent: parseFloat(e.target.value || '3.8'),
+                    },
+                  })
+                }
+                className="w-full bg-muted/30 border border-border rounded-xl p-3 text-xs font-mono font-bold"
+              />
+              <p className="text-[10px] text-muted-foreground">Standard industry rate is 3.5% - 3.8% to cover all interchange & interchange plus fees.</p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase text-foreground block">
+                Legal Compliance & Signage
+              </label>
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/20 cursor-pointer hover:bg-muted/40">
+                <input
+                  type="checkbox"
+                  checked={settings.pricingProgram?.debitCardExemption ?? true}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      pricingProgram: {
+                        ...(settings.pricingProgram || {
+                          mode: 'dual_pricing',
+                          programFeePercent: 3.8,
+                          debitCardExemption: true,
+                          showDualPricesOnMenu: true,
+                          showDualPricesOnCFD: true,
+                          disclosureText: '',
+                          baselineCompetitorRatePercent: 2.9,
+                          baselineFlatFeeCents: 30,
+                        }),
+                        debitCardExemption: e.target.checked,
+                      },
+                    })
+                  }
+                  className="w-4 h-4 rounded accent-emerald-600"
+                />
+                <div>
+                  <span className="text-xs font-black text-foreground block">Debit Card Surcharge Exemption</span>
+                  <span className="text-[10px] text-muted-foreground">Automatically waives fee on debit cards to comply with Visa/Mastercard Durbin rules.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Disclosure text */}
+          <div className="space-y-1.5 border-t border-border pt-4">
+            <label className="text-xs font-black uppercase text-foreground block">
+              Customer-Facing Receipt & Screen Disclosure
+            </label>
+            <input
+              type="text"
+              value={settings.pricingProgram?.disclosureText ?? ''}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  pricingProgram: {
+                    ...(settings.pricingProgram || {
+                      mode: 'dual_pricing',
+                      programFeePercent: 3.8,
+                      debitCardExemption: true,
+                      showDualPricesOnMenu: true,
+                      showDualPricesOnCFD: true,
+                      disclosureText: '',
+                      baselineCompetitorRatePercent: 2.9,
+                      baselineFlatFeeCents: 30,
+                    }),
+                    disclosureText: e.target.value,
+                  },
+                })
+              }
+              placeholder="All listed prices reflect a 3.8% cash discount. Standard adjustment applies to card tenders."
+              className="w-full bg-muted/30 border border-border rounded-xl p-3 text-xs"
+            />
+          </div>
+        </Card>
+      )}
+
+      {/* 3. Company & Store Info */}
       {activeTab === 'store' && (
         <Card className="p-6 space-y-6 border-border bg-card shadow-xs animate-fadeIn max-w-4xl">
           <div className="border-b border-border pb-3">
