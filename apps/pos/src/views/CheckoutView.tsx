@@ -3,7 +3,7 @@ import { useOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue, ReceiptPayload } from '@culinaryos/shared';
+import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue, getPendingOfflineQueue, ReceiptPayload } from '@culinaryos/shared';
 import { hardwarePrinter } from '../lib/hardware-printer';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import {
@@ -13,6 +13,7 @@ import {
   Banknote,
   Gift,
   CheckCircle2,
+  Clock,
   Printer,
   Send,
   Check,
@@ -36,6 +37,10 @@ export function CheckoutView() {
   const [cashTendered, setCashTendered] = useState<string>('');
   const [processing, setProcessing] = useState(false);
   const [paid, setPaid] = useState(false);
+  // Offline payments are queued, never captured — the success screen must
+  // never claim "Transaction Approved" for a payment that hasn't been captured.
+  const [paymentQueued, setPaymentQueued] = useState(false);
+  const [queuedDeltaCount, setQueuedDeltaCount] = useState(0);
   const [receiptSent, setReceiptSent] = useState(false);
   const [receiptChoice, setReceiptChoice] = useState<'none' | 'email' | 'text' | null>(null);
   const [contactInput, setContactInput] = useState('');
@@ -114,6 +119,9 @@ export function CheckoutView() {
           mockDb.saveMockOrders(orders);
         }
         qc.invalidateQueries({ queryKey: ['orders'] });
+        // Offline: the payment is queued for later capture, NOT approved.
+        setPaymentQueued(true);
+        setQueuedDeltaCount(getPendingOfflineQueue().length);
         setPaid(true);
         return;
       }
@@ -213,14 +221,45 @@ export function CheckoutView() {
         <div className="flex-1 bg-white border border-[#e5e7eb] rounded-3xl p-8 text-center flex flex-col justify-between shadow-sm">
           <div className="space-y-6">
             <div className="space-y-3">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-200">
-                <CheckCircle2 className="w-9 h-9" />
-              </div>
-              <h2 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">
-                {selectedSeatFilter ? `Seat ${selectedSeatFilter} Paid` : 'Transaction Approved'}
-              </h2>
-              <p className="text-xs text-[#6b7280] font-bold">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+              {paymentQueued ? (
+                <>
+                  <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border-2 border-amber-300">
+                    <Clock className="w-9 h-9" />
+                  </div>
+                  <h2 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">
+                    Payment Queued
+                  </h2>
+                  <p className="text-xs text-amber-700 font-bold">
+                    Payment queued — will capture on reconnect. This charge is not complete.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-200">
+                    <CheckCircle2 className="w-9 h-9" />
+                  </div>
+                  <h2 className="text-xl font-black text-[#1f2937] uppercase tracking-wider">
+                    {selectedSeatFilter ? `Seat ${selectedSeatFilter} Paid` : 'Transaction Approved'}
+                  </h2>
+                  <p className="text-xs text-[#6b7280] font-bold">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+                </>
+              )}
             </div>
+
+            {paymentQueued && (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 max-w-md mx-auto text-left" role="status">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-800">
+                  Queued offline payment
+                </p>
+                <p className="text-sm font-bold text-amber-900 mt-1">
+                  ${(total / 100).toFixed(2)} via {method.toUpperCase()} — pending capture
+                </p>
+                <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                  {queuedDeltaCount} unsynced transaction{queuedDeltaCount === 1 ? '' : 's'} in the offline queue.
+                  No funds are captured until this device reconnects and syncs.
+                </p>
+              </div>
+            )}
 
             {method === 'cash' && cashAmount > 0 && (
               <div className="bg-[#f8f9fa] p-4 rounded-2xl border border-[#e5e7eb] max-w-xs mx-auto">
