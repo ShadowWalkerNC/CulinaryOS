@@ -50,16 +50,30 @@ export function App() {
   if (!employee) {
     return (
       <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn select-none">
-        <header className="bg-white border-b border-slate-200 px-4 h-13 flex items-center justify-between shadow-xs shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined filled text-[16px]">skillet</span>
+        <header className="bg-slate-900 border-b border-slate-800 px-6 h-16 flex items-center justify-between shadow-md shrink-0 text-white">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-sm">
+              <span className="material-symbols-outlined filled text-[20px]">skillet</span>
             </div>
-            <span className="font-black text-xs text-slate-950 uppercase tracking-wider">
-              CulinaryOS POS Terminal
-            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-sm text-white uppercase tracking-wider">
+                  The Golden Fork Bistro
+                </span>
+                <span className="text-[10px] font-mono bg-slate-800 text-orange-400 font-bold px-2 py-0.5 rounded border border-slate-700">
+                  Station #1 (Main FOH)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium">
+                CulinaryOS POS v1.2.1 • {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Register Online</span>
+            </div>
             <ConnectionStatus />
           </div>
         </header>
