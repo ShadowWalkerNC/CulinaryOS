@@ -99,9 +99,9 @@ export default function SignupPage() {
         </div>
 
         <p className="text-center text-sm text-white/30 mt-6">
-          Already have an account?{' '}
-          <a href="#" className="text-brand-orange hover:text-white transition-colors">
-            Sign in
+          Questions?{' '}
+          <a href="mailto:hello@culinaryos.io" className="text-brand-orange hover:text-white transition-colors">
+            Email us at hello@culinaryos.io
           </a>
         </p>
       </div>

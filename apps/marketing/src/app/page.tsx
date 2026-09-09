@@ -247,6 +247,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── ABOUT ──────────────────────────────────────────────── */}
+      <section id="about" className="py-24 px-4 bg-white/[0.02] border-y border-white/10 scroll-mt-16">
+        <div className="max-w-3xl mx-auto text-center">
+          <span className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-xs font-semibold uppercase tracking-widest mb-6">
+            About
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+            Built for the world&apos;s <span className="gradient-text">independent restaurants</span>
+          </h2>
+          <p className="text-white/55 text-lg leading-relaxed mb-4">
+            CulinaryOS is an open-core restaurant operating system in active development —
+            POS, kitchen display, online ordering, prep, and back-office ops on one platform,
+            with no hardware lock-in and no per-ticket commissions.
+          </p>
+          <p className="text-white/55 leading-relaxed mb-8">
+            The recipe layer, <Link href="/recipeos" className="text-green-400 hover:text-white transition-colors font-semibold">RecipeOS</Link>,
+            is MIT-licensed and free forever. Questions, pilot inquiries, or just want to talk
+            shop? We read every email.
+          </p>
+          <a
+            href="mailto:hello@culinaryos.io"
+            className="inline-block px-8 py-4 rounded-2xl glass border border-white/10 text-white font-semibold text-lg hover:bg-white/10 active:scale-95 transition-all"
+          >
+            hello@culinaryos.io
+          </a>
+        </div>
+      </section>
+
       {/* ─── FINAL CTA ─────────────────────────────────────────── */}
       <section className="py-24 px-4">
         <div className="max-w-3xl mx-auto text-center">

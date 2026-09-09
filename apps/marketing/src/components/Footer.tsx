@@ -6,13 +6,14 @@ const footerLinks = {
     { label: 'Pricing', href: '/pricing' },
     { label: 'RecipeOS', href: '/recipeos' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Changelog', href: '/blog' },
+    { label: 'Changelog', href: 'https://github.com/ShadowWalkerNC/CulinaryOS/releases', external: true },
   ],
   Company: [
     { label: 'About', href: '/#about' },
+    { label: 'Careers', href: '/careers' },
     { label: 'Docs', href: 'https://docs.culinaryos.io', external: true },
     { label: 'GitHub', href: 'https://github.com/ShadowWalkerNC/CulinaryOS', external: true },
-    { label: 'Discord', href: '#', external: true },
+    { label: 'Contact', href: 'mailto:hello@culinaryos.io', external: true },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy' },
@@ -42,16 +43,10 @@ export default function Footer() {
                 GitHub ↗
               </a>
               <a
-                href="#"
+                href="mailto:hello@culinaryos.io"
                 className="text-white/40 hover:text-white transition-colors text-sm"
               >
-                Twitter/X ↗
-              </a>
-              <a
-                href="#"
-                className="text-white/40 hover:text-white transition-colors text-sm"
-              >
-                Discord ↗
+                Contact ↗
               </a>
             </div>
           </div>
