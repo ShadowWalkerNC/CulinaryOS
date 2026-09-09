@@ -43,7 +43,7 @@ export default function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@restaurant.com"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-brand-orange/50 transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:border-brand-orange/50 transition-colors"
             />
           </div>
 
@@ -59,7 +59,7 @@ export default function SignupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-brand-orange/50 transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:border-brand-orange/50 transition-colors"
             />
           </div>
 
@@ -71,7 +71,7 @@ export default function SignupForm() {
             {loading ? 'Creating account…' : 'Start Free Trial'}
           </button>
 
-          <p className="text-xs text-center text-white/30">
+          <p className="text-xs text-center text-white/50">
             By signing up you agree to our{' '}
             <a href="/terms" className="underline hover:text-white/60 transition-colors">
               Terms of Service

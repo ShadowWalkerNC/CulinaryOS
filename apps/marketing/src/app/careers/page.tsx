@@ -44,7 +44,7 @@ export default function CareersPage() {
           </a>
         </div>
 
-        <p className="mt-10 text-sm text-white/30">
+        <p className="mt-10 text-sm text-white/50">
           When we do open roles, they&apos;ll be listed here — for real this time.
         </p>
       </div>

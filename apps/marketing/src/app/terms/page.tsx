@@ -15,7 +15,7 @@ export default function TermsPage() {
         <h1 className="text-4xl sm:text-5xl font-bold mb-3">
           Terms of <span className="gradient-text">Service</span>
         </h1>
-        <p className="text-sm text-white/40 mb-12 font-mono">Last updated: {updated}</p>
+        <p className="text-sm text-white/60 mb-12 font-mono">Last updated: {updated}</p>
 
         <div className="space-y-8 text-white/60 leading-relaxed">
           <p>

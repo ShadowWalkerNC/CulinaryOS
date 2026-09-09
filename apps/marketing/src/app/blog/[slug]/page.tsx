@@ -95,11 +95,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/60">
             {post.category}
           </span>
-          <span className="text-xs text-white/40">{post.date}</span>
-          <span className="text-xs text-white/40">·</span>
-          <span className="text-xs text-white/40">{post.readTime}</span>
-          <span className="text-xs text-white/40">·</span>
-          <span className="text-xs text-white/40">{post.author}</span>
+          <span className="text-xs text-white/60">{post.date}</span>
+          <span className="text-xs text-white/60">·</span>
+          <span className="text-xs text-white/60">{post.readTime}</span>
+          <span className="text-xs text-white/60">·</span>
+          <span className="text-xs text-white/60">{post.author}</span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-bold mb-10 leading-tight">{post.title}</h1>
@@ -111,7 +111,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </div>
 
         <div className="mt-14 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/40">Enjoying the blog? Get launch updates:</p>
+          <p className="text-sm text-white/60">Enjoying the blog? Get launch updates:</p>
           <Link
             href="/signup"
             className="px-6 py-3 rounded-xl gradient-bg text-white font-semibold hover:opacity-90 transition-opacity"

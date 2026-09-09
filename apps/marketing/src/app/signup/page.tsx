@@ -23,7 +23,7 @@ export default function SignupPage() {
 
         <SignupForm />
 
-        <p className="text-center text-sm text-white/30 mt-6">
+        <p className="text-center text-sm text-white/50 mt-6">
           Questions?{' '}
           <a href="mailto:hello@culinaryos.io" className="text-brand-orange hover:text-white transition-colors">
             Email us at hello@culinaryos.io

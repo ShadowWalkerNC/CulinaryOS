@@ -120,7 +120,7 @@ export default function DemoSection() {
         <div className="glass rounded-2xl border border-white/10 p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-bold text-lg">Point of Sale</h3>
-            <span className="text-xs font-mono text-white/40">draft key {draftKey.slice(0, 8)}…</span>
+            <span className="text-xs font-mono text-white/60">draft key {draftKey.slice(0, 8)}…</span>
           </div>
 
           <div className="space-y-3 mb-6">
@@ -130,7 +130,7 @@ export default function DemoSection() {
                 <div key={item.id} className="flex items-center justify-between gap-3 py-2">
                   <div>
                     <div className="text-sm font-medium">{item.name}</div>
-                    <div className="text-xs text-white/40">{formatCents(item.priceCents)}</div>
+                    <div className="text-xs text-white/60">{formatCents(item.priceCents)}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -183,7 +183,7 @@ export default function DemoSection() {
               'SEND TO KITCHEN'
             )}
           </button>
-          <p className="mt-3 text-xs text-white/30 text-center">
+          <p className="mt-3 text-xs text-white/50 text-center">
             {sending
               ? 'Submission in flight — the button stays disabled until it lands.'
               : 'Double-click all you want: in-flight guard + idempotency key = one ticket.'}
@@ -203,7 +203,7 @@ export default function DemoSection() {
           {tickets.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center text-center border border-dashed border-white/10 rounded-xl">
               <div className="text-4xl mb-3">🧾</div>
-              <p className="text-sm text-white/40 max-w-[220px]">
+              <p className="text-sm text-white/60 max-w-[220px]">
                 No tickets yet. Send one from the POS and it lands here instantly.
               </p>
             </div>
@@ -242,7 +242,7 @@ export default function DemoSection() {
                         </li>
                       ))}
                     </ul>
-                    <div className="text-[11px] font-mono text-white/25">
+                    <div className="text-[11px] font-mono text-white/60">
                       idem-key {ticket.key.slice(0, 8)}… · retries collapse to this ticket
                     </div>
                   </div>

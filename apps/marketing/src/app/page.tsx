@@ -124,7 +124,7 @@ export default function HomePage() {
       {/* ─── SOCIAL PROOF TICKER ───────────────────────────────── */}
       <section className="py-6 border-y border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-white/40 tracking-widest uppercase font-mono">
+          <p className="text-sm text-white/60 tracking-widest uppercase font-mono">
             Trusted by independent restaurants across{' '}
             <span className="text-white/70 font-semibold">6 countries</span>
             {' '}· 🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇧🇷
