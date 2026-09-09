@@ -417,7 +417,15 @@ export function OrderView() {
         <div className="grid grid-cols-3 gap-2 pt-1">
           {order.status === 'open' && (
             <button
-              onClick={() => fireOrder(order.id)}
+              onClick={() => {
+                fireOrder(order.id, {
+                  onSuccess: () => {
+                    triggerToast('🔥 Order sent to kitchen!');
+                    setActiveOrder(null);
+                    setView('tables');
+                  },
+                });
+              }}
               disabled={firing || !order.items?.length}
               className="col-span-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
             >

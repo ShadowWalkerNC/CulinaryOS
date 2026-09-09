@@ -68,6 +68,7 @@ const DEFAULT_FLOOR_TABLES: FloorTable[] = [
   { id: 'tbl-3', number: '3', label: 'T3', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'reserved' },
   { id: 'tbl-4', number: '4', label: 'T4', sectionId: 'main', sectionName: 'Main Dining', capacity: 6, shape: 'rectangle', defaultStatus: 'available' },
   { id: 'tbl-5', number: '5', label: 'T5', sectionId: 'main', sectionName: 'Main Dining', capacity: 8, shape: 'rectangle', defaultStatus: 'dirty' },
+  { id: 'tbl-12', number: '12', label: 'T12', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available' },
   { id: 'tbl-b1', number: 'B1', label: 'Booth 1', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
   { id: 'tbl-b2', number: 'B2', label: 'Booth 2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
 
