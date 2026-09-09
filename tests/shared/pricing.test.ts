@@ -5,6 +5,8 @@ import {
   resolveEffectivePrice,
   calculateMenuDaypartPrices,
   formatDaypartTimeWindow,
+  calculateDualPricing,
+  calculateCumulativeShiftSavings,
   type DaypartSchedule,
 } from '@culinaryos/shared';
 
@@ -139,5 +141,82 @@ describe('Automated Daypart & Happy Hour Pricing Engine (F1.3)', () => {
     const pricedMap = calculateMenuDaypartPrices(items, [happyHourSchedule], tuesday5PM);
     expect(pricedMap.get('it-1')?.effectivePriceCents).toBe(800); // 20% off
     expect(pricedMap.get('it-2')?.effectivePriceCents).toBe(2400); // unaffected
+  });
+
+  it('6. calculates zero-fee dual pricing and non-cash adjustment accurately', () => {
+    // Standard $10.00 base amount with default 3.8% program fee
+    const cardResult = calculateDualPricing({
+      amountCents: 1000,
+      method: 'card',
+      config: {
+        mode: 'dual_pricing',
+        programFeePercent: 3.8,
+        debitCardExemption: true,
+        showDualPricesOnMenu: true,
+        showDualPricesOnCFD: true,
+        disclosureText: 'Dual Pricing',
+        baselineCompetitorRatePercent: 2.9,
+        baselineFlatFeeCents: 30,
+      },
+    });
+
+    expect(cardResult.cashAmountCents).toBe(1000); // $10.00
+    expect(cardResult.adjustmentCents).toBe(38); // +$0.38
+    expect(cardResult.cardAmountCents).toBe(1038); // $10.38
+    expect(cardResult.savingsVsCompetitorCents).toBe(38);
+
+    // Cash payment keeps 100% of the bill and saves full competitor processing fee
+    const cashResult = calculateDualPricing({
+      amountCents: 1000,
+      method: 'cash',
+      config: {
+        mode: 'dual_pricing',
+        programFeePercent: 3.8,
+        debitCardExemption: true,
+        showDualPricesOnMenu: true,
+        showDualPricesOnCFD: true,
+        disclosureText: 'Dual Pricing',
+        baselineCompetitorRatePercent: 2.9,
+        baselineFlatFeeCents: 30,
+      },
+    });
+    expect(cashResult.cashAmountCents).toBe(1000);
+    expect(cashResult.adjustmentCents).toBe(38);
+    // Competitor fee saved on $10 cash: 2.9% ($0.29) + $0.30 flat = $0.59
+    expect(cashResult.savingsVsCompetitorCents).toBe(59);
+  });
+
+  it('7. exempts debit cards from non-cash adjustment when configured', () => {
+    const debitResult = calculateDualPricing({
+      amountCents: 2000,
+      method: 'card',
+      isDebit: true,
+      config: {
+        mode: 'dual_pricing',
+        programFeePercent: 3.8,
+        debitCardExemption: true,
+        showDualPricesOnMenu: true,
+        showDualPricesOnCFD: true,
+        disclosureText: 'Dual Pricing',
+        baselineCompetitorRatePercent: 2.9,
+        baselineFlatFeeCents: 30,
+      },
+    });
+    expect(debitResult.isDebitExempt).toBe(true);
+    expect(debitResult.adjustmentCents).toBe(0);
+    expect(debitResult.cardAmountCents).toBe(2000);
+  });
+
+  it('8. aggregates cumulative shift processing fee savings accurately', () => {
+    const orders = [
+      { totalCents: 1500, paymentMethod: 'cash' }, // $15 cash -> $0.44 + $0.30 = $0.74 saved
+      { totalCents: 2500, paymentMethod: 'card' }, // $25 card -> 3.8% = $0.95 surcharge saved
+      { totalCents: 5000, paymentMethod: 'cash' }, // $50 cash -> $1.45 + $0.30 = $1.75 saved
+    ];
+
+    const summary = calculateCumulativeShiftSavings({ orders });
+    expect(summary.cashOrdersCount).toBe(2);
+    expect(summary.cardOrdersCount).toBe(1);
+    expect(summary.totalSavedCents).toBe(74 + 95 + 175); // 344 cents ($3.44)
   });
 });

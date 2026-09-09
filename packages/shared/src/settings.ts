@@ -89,12 +89,37 @@ export interface DisplayAccessibilitySettings {
   tableStatusGlowHalos: boolean;
 }
 
+export type PricingProgramMode = 'standard' | 'dual_pricing' | 'cash_discount' | 'surcharge';
+
+export interface PricingProgramConfig {
+  mode: PricingProgramMode;
+  programFeePercent: number; // e.g. 3.8 (for 3.8%)
+  debitCardExemption: boolean; // default true: Visa/Mastercard Durbin amendment compliance
+  showDualPricesOnMenu: boolean;
+  showDualPricesOnCFD: boolean;
+  disclosureText: string;
+  baselineCompetitorRatePercent: number; // e.g. 2.9 (Square/Toast benchmark for savings ticker)
+  baselineFlatFeeCents: number; // e.g. 30 (Square/Toast benchmark per transaction)
+}
+
+export const DEFAULT_PRICING_PROGRAM: PricingProgramConfig = {
+  mode: 'dual_pricing',
+  programFeePercent: 3.8,
+  debitCardExemption: true,
+  showDualPricesOnMenu: true,
+  showDualPricesOnCFD: true,
+  disclosureText: 'All listed prices reflect an instant 3.8% cash discount. Standard non-cash adjustment applies to electronic card payments.',
+  baselineCompetitorRatePercent: 2.9,
+  baselineFlatFeeCents: 30,
+};
+
 export interface CulinaryOSSettings {
   tenantId: string;
   company: RestaurantCompanyInfo;
   stations: KitchenStationConfig[];
   routingRules: ItemRoutingRule[];
   display: DisplayAccessibilitySettings;
+  pricingProgram?: PricingProgramConfig;
   updatedAt: string;
 }
 
@@ -246,6 +271,7 @@ export const DEFAULT_SETTINGS: CulinaryOSSettings = {
     table3dGraphicsFidelity: 'high',
     tableStatusGlowHalos: true,
   },
+  pricingProgram: DEFAULT_PRICING_PROGRAM,
   updatedAt: new Date().toISOString(),
 };
 

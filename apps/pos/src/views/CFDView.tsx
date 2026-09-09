@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOrderStore } from '../lib/useOrderStore';
 import { usePOSStore } from '../lib/store';
+import { calculateDualPricing, loadLocalSettings } from '@culinaryos/shared';
 
 export function CFDView() {
   const { activeOrderId } = usePOSStore();
@@ -20,7 +21,14 @@ export function CFDView() {
     ? Math.round(subtotalCents * (selectedTip / 100))
     : customTipDollars ? Math.round(parseFloat(customTipDollars) * 100) : 0;
 
-  const totalCents = subtotalCents + taxCents + tipCents;
+  const baseTotalCents = subtotalCents + taxCents + tipCents;
+  const settings = loadLocalSettings();
+  const pricingConfig = settings.pricingProgram;
+
+  const dualPricing = calculateDualPricing({
+    amountCents: baseTotalCents,
+    config: pricingConfig,
+  });
 
   // Listen for simulated cross-window postMessage from primary register
   useEffect(() => {
@@ -108,10 +116,26 @@ export function CFDView() {
                 <span>${(tipCents / 100).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-black text-white pt-2 border-t border-white/5">
-              <span>Total Due</span>
-              <span className="text-orange-400">${(totalCents / 100).toFixed(2)}</span>
-            </div>
+            {pricingConfig?.mode !== 'standard' ? (
+              <div className="pt-2 border-t border-dashed border-white/10 space-y-2">
+                <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl text-emerald-400 font-bold">
+                  <span className="flex items-center gap-1.5 text-xs">💵 Cash Price (3.8% Discount)</span>
+                  <span className="text-base font-black font-mono">${(dualPricing.cashAmountCents / 100).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-zinc-300 font-bold">
+                  <span className="flex items-center gap-1.5 text-xs">💳 Card Price</span>
+                  <span className="text-base font-black font-mono">${(dualPricing.cardAmountCents / 100).toFixed(2)}</span>
+                </div>
+                <p className="text-[10px] text-zinc-500 italic text-center">
+                  {pricingConfig?.disclosureText || 'All listed prices reflect an instant 3.8% cash discount. Standard adjustment applies to card payments.'}
+                </p>
+              </div>
+            ) : (
+              <div className="flex justify-between text-base font-black text-white pt-2 border-t border-white/5">
+                <span>Total Due</span>
+                <span className="text-orange-400">${(baseTotalCents / 100).toFixed(2)}</span>
+              </div>
+            )}
           </div>
         </div>
 

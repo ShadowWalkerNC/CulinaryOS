@@ -3,7 +3,15 @@ import { useOrder } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiHeaders, getApiBase, enqueueOfflineDelta, flushOfflineQueue, ReceiptPayload } from '@culinaryos/shared';
+import {
+  apiHeaders,
+  getApiBase,
+  enqueueOfflineDelta,
+  flushOfflineQueue,
+  ReceiptPayload,
+  calculateDualPricing,
+  loadLocalSettings,
+} from '@culinaryos/shared';
 import { hardwarePrinter } from '../lib/hardware-printer';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import {
@@ -71,7 +79,17 @@ export function CheckoutView() {
     tipAmount = Math.round(taxableSubtotal * (tipPercent / 100));
   }
   
-  const total = taxableSubtotal + tax + tipAmount;
+  const baseBillTotal = taxableSubtotal + tax + tipAmount;
+  const localSettings = loadLocalSettings();
+  const pricingConfig = localSettings.pricingProgram;
+
+  const dualPricing = calculateDualPricing({
+    amountCents: baseBillTotal,
+    method,
+    config: pricingConfig,
+  });
+
+  const total = method === 'cash' ? dualPricing.cashAmountCents : dualPricing.cardAmountCents;
   const cashAmount = parseFloat(cashTendered || '0') * 100;
   const changeDue = Math.max(0, cashAmount - total);
 
@@ -438,8 +456,22 @@ export function CheckoutView() {
           {tipAmount > 0 && (
             <div className="flex justify-between text-[#6b7280]"><span>Tip Amount</span><span className="font-mono">${(tipAmount/100).toFixed(2)}</span></div>
           )}
+
+          {pricingConfig?.mode !== 'standard' && (
+            <div className="pt-2 border-t border-dashed border-slate-200 space-y-1.5 font-bold">
+              <div className="flex justify-between text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+                <span className="flex items-center gap-1">💵 Cash Tender Price</span>
+                <span className="font-mono">${(dualPricing.cashAmountCents / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-slate-700 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
+                <span className="flex items-center gap-1">💳 Card Tender Price ({pricingConfig?.programFeePercent ?? 3.8}%)</span>
+                <span className="font-mono">${(dualPricing.cardAmountCents / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between text-[#1f2937] font-black text-sm border-t border-[#e5e7eb] pt-2.5 uppercase">
-            <span>Total Bill</span><span className="font-mono text-[#0f172a] text-base">${(total/100).toFixed(2)}</span>
+            <span>Tender Total ({method.toUpperCase()})</span><span className="font-mono text-[#0f172a] text-base">${(total/100).toFixed(2)}</span>
           </div>
         </div>
       </div>

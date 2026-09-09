@@ -4,6 +4,8 @@
 // ============================================================
 
 
+import type { PricingProgramConfig } from './settings.js';
+
 export type PricingAdjustmentType = 'percent' | 'fixed_cents' | 'override_cents';
 
 export interface DaypartSchedule {
@@ -245,3 +247,125 @@ export function formatDaypartTimeWindow(schedule: DaypartSchedule): string {
 
   return `${daysLabel} • ${formatTime(schedule.startTime)} – ${formatTime(schedule.endTime)}`;
 }
+
+// ============================================================
+// Zero-Fee Dual Pricing & Real-Time Cost Savings Engine
+// Compliant Cash Discounting, Non-Cash Adjustment & Savings Ticker
+// ============================================================
+
+export interface DualPricingResult {
+  baseAmountCents: number;
+  cashAmountCents: number;
+  cardAmountCents: number;
+  adjustmentCents: number;
+  isDebitExempt: boolean;
+  savingsVsCompetitorCents: number;
+  programMode: string;
+}
+
+/**
+ * Computes dual pricing (Cash Price vs Card Price) and non-cash adjustment based on
+ * program configuration and tender method.
+ *
+ * Mode behaviors:
+ * - 'standard': Cash = Card = Base amount. Zero adjustment.
+ * - 'dual_pricing': Card price includes program fee. Cash price is the base amount.
+ * - 'cash_discount': Card price is base amount. Cash price receives the discount.
+ * - 'surcharge': Card price receives surcharge (waived if debit card).
+ */
+export function calculateDualPricing(params: {
+  amountCents: number;
+  method?: string | undefined; // 'cash' | 'card' | 'tap' | 'scan' | 'debit'
+  isDebit?: boolean | undefined;
+  config?: PricingProgramConfig | undefined;
+}): DualPricingResult {
+  const { amountCents, method = 'card', isDebit = false, config } = params;
+  const programMode = config?.mode ?? 'dual_pricing';
+  const feePercent = config?.programFeePercent ?? 3.8;
+  const debitExempt = (config?.debitCardExemption ?? true) && isDebit;
+
+  if (amountCents <= 0 || programMode === 'standard') {
+    return {
+      baseAmountCents: amountCents,
+      cashAmountCents: amountCents,
+      cardAmountCents: amountCents,
+      adjustmentCents: 0,
+      isDebitExempt: false,
+      savingsVsCompetitorCents: 0,
+      programMode,
+    };
+  }
+
+  const adjustmentMultiplier = feePercent / 100;
+  let cashAmountCents = amountCents;
+  let cardAmountCents = amountCents;
+  let adjustmentCents = 0;
+
+  if (programMode === 'dual_pricing' || programMode === 'surcharge') {
+    cashAmountCents = amountCents;
+    if (debitExempt) {
+      cardAmountCents = amountCents;
+      adjustmentCents = 0;
+    } else {
+      adjustmentCents = Math.round(amountCents * adjustmentMultiplier);
+      cardAmountCents = amountCents + adjustmentCents;
+    }
+  } else if (programMode === 'cash_discount') {
+    cardAmountCents = amountCents;
+    const discountCents = Math.round(amountCents * adjustmentMultiplier);
+    cashAmountCents = Math.max(0, amountCents - discountCents);
+    adjustmentCents = method === 'cash' ? -discountCents : 0;
+  }
+
+  // Calculate fees saved vs competitor (e.g. Square 2.9% + $0.30)
+  const baselineRate = config?.baselineCompetitorRatePercent ?? 2.9;
+  const baselineFlat = config?.baselineFlatFeeCents ?? 30;
+  let savingsVsCompetitorCents = 0;
+
+  if (method === 'cash') {
+    // 100% of theoretical Square card fee saved on this cash transaction
+    savingsVsCompetitorCents = Math.round(cashAmountCents * (baselineRate / 100)) + baselineFlat;
+  } else if (!debitExempt && (programMode === 'dual_pricing' || programMode === 'surcharge')) {
+    // Non-cash adjustment covers the processing fee entirely -> operator pays $0 net
+    savingsVsCompetitorCents = adjustmentCents;
+  }
+
+  return {
+    baseAmountCents: amountCents,
+    cashAmountCents,
+    cardAmountCents,
+    adjustmentCents,
+    isDebitExempt: debitExempt,
+    savingsVsCompetitorCents,
+    programMode,
+  };
+}
+
+/**
+ * Calculates total cumulative processing fees kept/saved across a set of shift orders.
+ */
+export function calculateCumulativeShiftSavings(params: {
+  orders: Array<{ totalCents: number; paymentMethod?: string | undefined }>;
+  config?: PricingProgramConfig | undefined;
+}): { totalSavedCents: number; cashOrdersCount: number; cardOrdersCount: number } {
+  const { orders, config } = params;
+  let totalSavedCents = 0;
+  let cashOrdersCount = 0;
+  let cardOrdersCount = 0;
+
+  for (const order of orders) {
+    const isCash = order.paymentMethod === 'cash';
+    if (isCash) cashOrdersCount++;
+    else cardOrdersCount++;
+
+    const res = calculateDualPricing({
+      amountCents: order.totalCents,
+      method: order.paymentMethod,
+      config,
+    });
+    totalSavedCents += res.savingsVsCompetitorCents;
+  }
+
+  return { totalSavedCents, cashOrdersCount, cardOrdersCount };
+}
+

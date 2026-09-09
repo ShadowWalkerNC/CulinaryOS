@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { usePOSStore } from '../lib/store';
 import { useCreateOrder, useOpenOrders } from '../lib/queries';
 import { createZReportJournalEntry } from '@culinaryos/accounting-engine';
+import { loadLocalSettings, calculateCumulativeShiftSavings } from '@culinaryos/shared';
+import { getMockOrders } from '../lib/mockDb';
+import { Sparkles, TrendingUp, ShieldCheck } from '@culinaryos/ui';
 
 export function DashboardView() {
   const { employee, setEmployee, setView, setActiveOrder, drawerBalance, setDrawerBalance } = usePOSStore();
@@ -89,6 +92,40 @@ export function DashboardView() {
               <span className="font-mono text-[#1f2937] font-semibold">${expectedTotal.toFixed(2)}</span>
             </div>
           </div>
+
+          {/* Real-Time Processing Fees Saved Ticker (Square/Toast Killer) */}
+          {(() => {
+            const settings = loadLocalSettings();
+            const pricingConfig = settings.pricingProgram;
+            const completedOrders = getMockOrders().filter((o: any) => o.status === 'paid');
+            const savings = calculateCumulativeShiftSavings({
+              orders: completedOrders.map((o: any) => ({
+                totalCents: o.total || 0,
+                paymentMethod: o.payment_method || 'card',
+              })),
+              config: pricingConfig,
+            });
+
+            return (
+              <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/30 rounded-xl p-3.5 space-y-1.5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-600 animate-pulse" />
+                    <span>Fees Kept Today</span>
+                  </span>
+                  <span className="text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">
+                    vs Square (2.9%)
+                  </span>
+                </div>
+                <div className="text-2xl font-black font-mono text-emerald-700">
+                  ${(savings.totalSavedCents / 100).toFixed(2)}
+                </div>
+                <p className="text-[10px] text-emerald-900/80 font-medium leading-tight">
+                  100% of ticket revenue retained via Dual Pricing & cash discount flow.
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="space-y-2 pt-6 border-t border-[#e5e7eb]">
