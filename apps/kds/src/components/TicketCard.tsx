@@ -237,10 +237,12 @@ export function TicketCard({
 
                   <button
                     onClick={() => setScrapItemName(scrapItemName === item.name ? null : item.name)}
-                    className="opacity-0 group-hover:opacity-100 transition text-zinc-400 hover:text-red-600 p-1 text-[11px]"
-                    title="1-Click Kitchen Scrap / Waste Log"
+                    aria-label={`Log scrap for ${item.name}`}
+                    aria-expanded={scrapItemName === item.name}
+                    title="Log kitchen scrap / waste"
+                    className="min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl text-zinc-500 hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-[0.96] transition shrink-0"
                   >
-                    🗑
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
                   </button>
                 </div>
               </div>
@@ -256,7 +258,7 @@ export function TicketCard({
                       <button
                         key={r}
                         onClick={() => handleQuickScrapSubmit(item.name, r)}
-                        className="px-1.5 py-1 text-[9px] font-bold bg-zinc-800 hover:bg-red-600 text-zinc-200 hover:text-white rounded transition text-center"
+                        className="min-h-[48px] px-2 py-2 text-[11px] font-bold bg-zinc-800 hover:bg-red-600 active:bg-red-700 text-zinc-200 hover:text-white rounded-lg transition text-center leading-tight"
                       >
                         {r.replace('_', ' ')}
                       </button>

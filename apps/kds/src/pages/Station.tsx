@@ -234,6 +234,25 @@ export function Station() {
     });
   }, [recallKeepAlive, setTickets]);
 
+  // Quick scrap logging with tenant-aware headers (TicketCard falls back to a
+  // hardcoded direct API call when this is not provided)
+  const handleQuickScrap = useCallback(async (payload: {
+    ingredient: string;
+    itemName: string;
+    quantity: number;
+    reason: 'dropped' | 'burned' | 'spoiled' | 'overportion' | 'void_cooked';
+  }) => {
+    try {
+      await fetch(`${API}/v1/ops/waste/quick`, {
+        method: 'POST',
+        headers: { ...apiHeaders(TENANT_ID), 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // non-fatal — waste entry stays local-only until the next sync
+    }
+  }, []);
+
   // Hold a course via REST
   const handleHoldCourse = useCallback(async (ticketId: string) => {
     try {
@@ -611,6 +630,7 @@ export function Station() {
             language={language}
             onBump={handleBump}
             onFire={handleFireCourse}
+            onQuickScrap={handleQuickScrap}
           />
         ))}
       </main>
