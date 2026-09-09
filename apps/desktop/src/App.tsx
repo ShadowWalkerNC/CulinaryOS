@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@culinaryos/ui';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { PairingModal } from './components/PairingModal';
 
@@ -82,15 +83,17 @@ export function App() {
           {SURFACES.map((s) => {
             const isSelected = activeTab === s.id;
             return (
-              <button
+              <Button
                 key={s.id}
                 onClick={() => setActiveTab(s.id)}
                 title={s.description}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
+                variant={isSelected ? 'default' : 'ghost'}
+                size="sm"
+                className={
                   isSelected
-                    ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                }`}
+                    ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20 hover:bg-orange-700 uppercase tracking-wider'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 uppercase tracking-wider'
+                }
               >
                 <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
                 <span>{s.name}</span>
@@ -99,7 +102,7 @@ export function App() {
                 }`}>
                   {s.shortcut}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </nav>
@@ -107,24 +110,28 @@ export function App() {
         {/* Right Status & Tools Controls */}
         <div className="flex items-center gap-2 text-xs shrink-0">
           {/* LAN QR Pairing Button */}
-          <button
+          <Button
             onClick={() => setIsPairingOpen(true)}
             title="Mobile & Tablet QR Pairing (F10)"
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px]"
+            variant="secondary"
+            size="sm"
+            className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
           >
             <span className="material-symbols-outlined text-[15px] text-orange-400">qr_code_2</span>
             <span className="hidden lg:inline">Pair Mobile</span>
-          </button>
+          </Button>
 
           {/* Diagnostics Button */}
-          <button
+          <Button
             onClick={() => setIsDiagnosticsOpen(true)}
             title="System Diagnostics & Preflight (F9)"
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px]"
+            variant="secondary"
+            size="sm"
+            className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
           >
             <span className="material-symbols-outlined text-[15px] text-emerald-400">health_and_safety</span>
             <span className="hidden lg:inline">Diagnostics</span>
-          </button>
+          </Button>
 
           {/* Active PIN Staff Session */}
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
@@ -133,7 +140,7 @@ export function App() {
           </div>
 
           {/* Full-screen Kiosk Toggle */}
-          <button
+          <Button
             onClick={() => {
               if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
@@ -144,12 +151,14 @@ export function App() {
               }
             }}
             title="Toggle Kiosk Mode (F11)"
-            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center transition"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200"
           >
             <span className="material-symbols-outlined text-[16px]">
               {isKiosk ? 'fullscreen_exit' : 'fullscreen'}
             </span>
-          </button>
+          </Button>
         </div>
       </header>
 

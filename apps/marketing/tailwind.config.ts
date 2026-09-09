@@ -1,11 +1,14 @@
 import type { Config } from 'tailwindcss';
+import uiPreset from '../../packages/ui/tailwind.preset.js';
 
 const config: Config = {
+  presets: [uiPreset],
   darkMode: 'class',
   content: [
     './src/**/*.{ts,tsx}',
     './src/app/**/*.{ts,tsx}',
     './src/components/**/*.{ts,tsx}',
+    '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

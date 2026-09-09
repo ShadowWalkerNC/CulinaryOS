@@ -101,13 +101,14 @@ export function RecallView() {
             </div>
           ) : (
             orders.map((o) => (
-              <button
+              <Button
                 key={o.id}
+                variant="ghost"
                 onClick={() => setSelectedOrderId(o.id)}
-                className={`w-full text-left p-4 transition-all flex flex-col gap-1.5 ${
+                className={`w-full h-auto rounded-none p-4 text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:gap-1.5 ${
                   selectedOrderId === o.id
-                    ? 'bg-foreground text-background font-bold shadow-xs'
-                    : 'hover:bg-muted/60 text-foreground'
+                    ? 'bg-foreground text-background hover:bg-foreground hover:text-background font-bold shadow-xs'
+                    : 'text-foreground hover:bg-muted/60'
                 }`}
               >
                 <div className="flex justify-between items-center text-xs">
@@ -118,7 +119,7 @@ export function RecallView() {
                   <span>Table {o.table_number || 'Bar Tab'}</span>
                   <span className="uppercase font-bold tracking-wider">{o.status}</span>
                 </div>
-              </button>
+              </Button>
             ))
           )}
         </div>

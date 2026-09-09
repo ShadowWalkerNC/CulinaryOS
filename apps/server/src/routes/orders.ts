@@ -155,8 +155,12 @@ ordersRoutes.post('/:id/items', async (c) => {
     const order = mockOrders.find(o => o.id === id);
     if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
 
-    const price = body.unitPrice ?? 0;
-    const quantity = body.quantity ?? 1;
+    const rawPrice = Math.floor(Number(body.unitPrice) || 0);
+    if (rawPrice < 0) {
+      return err(c, 'VALIDATION_ERROR', 'unitPrice must be a non-negative integer (cents)', 422);
+    }
+    const price = rawPrice;
+    const quantity = Math.max(1, Math.floor(Number(body.quantity) || 1));
     const lineTotal = price * quantity;
 
     const newItem = {
@@ -190,12 +194,87 @@ ordersRoutes.post('/:id/items', async (c) => {
     return ok(c, newItem, 201);
   }
 
-  const isUuid = (val?: string) =>
-    typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  // ---- Money integrity: the server is the price authority. Every line item
+  // must reference a real menu item for this tenant. The expected unit price
+  // is the menu base price plus the DB-validated price adjustments of the
+  // modifiers the client selected (modifiers are resolved by ID from the
+  // database — a client can neither invent nor inflate them). A
+  // client-supplied unitPrice must equal the expected price (omitted →
+  // server-computed price is used). This closes price injection from POS
+  // clients, MCP agents, and integrations.
+  const menuItemId = body.menuItemId;
+  if (typeof menuItemId !== 'string' || !menuItemId.trim()) {
+    return err(c, 'VALIDATION_ERROR', 'menuItemId is required', 422);
+  }
+  const quantity = Math.max(1, Math.floor(Number(body.quantity) || 1));
 
-  let targetMenuItemId = body.menuItemId;
-  if (!isUuid(targetMenuItemId)) {
-    targetMenuItemId = '00000000-0000-0000-0000-0000000000c1';
+  const { data: menuItem, error: menuErr } = await supabase
+    .from('menu_items')
+    .select('id, price, is_available, status')
+    .eq('id', menuItemId)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (menuErr || !menuItem) {
+    return err(c, 'NOT_FOUND', 'Menu item not found for this tenant', 404);
+  }
+
+  const menuPrice = Math.max(0, Math.floor(Number(menuItem.price) || 0));
+
+  // Validate selected modifiers: each modifier_id must resolve to a real
+  // modifier belonging to one of this item's modifier groups. Sum the
+  // database price_adjustments (never the client-supplied ones).
+  const rawModifiers = Array.isArray(body.modifiers) ? body.modifiers : [];
+  const modifierIds = rawModifiers
+    .map((m: any) => m?.modifier_id)
+    .filter((v: any) => typeof v === 'string' && v.trim().length > 0);
+  let modifierTotal = 0;
+  if (modifierIds.length > 0) {
+    const { data: groups, error: groupErr } = await supabase
+      .from('modifier_groups')
+      .select('id')
+      .eq('menu_item_id', menuItemId);
+    if (groupErr) {
+      return err(c, 'INTERNAL_ERROR', 'Failed to validate modifiers', 500);
+    }
+    const groupIds = (groups ?? []).map((g: any) => g.id);
+    const { data: dbModifiers, error: modErr } = await supabase
+      .from('modifiers')
+      .select('id, price_adjustment')
+      .in('id', modifierIds)
+      .in('modifier_group_id', groupIds.length > 0 ? groupIds : ['00000000-0000-0000-0000-000000000000']);
+
+    if (modErr) {
+      return err(c, 'INTERNAL_ERROR', 'Failed to validate modifiers', 500);
+    }
+    const found = new Map(
+      (dbModifiers ?? []).map((m: any) => [m.id, Math.floor(Number(m.price_adjustment) || 0)])
+    );
+    for (const mid of modifierIds) {
+      if (!found.has(mid)) {
+        return err(c, 'VALIDATION_ERROR', `Unknown modifier for this menu item`, 422);
+      }
+      modifierTotal += found.get(mid) as number;
+    }
+  }
+
+  const expectedUnitPrice = Math.max(0, menuPrice + modifierTotal);
+  let unitPrice: number;
+  if (body.unitPrice === undefined || body.unitPrice === null) {
+    unitPrice = expectedUnitPrice;
+  } else {
+    unitPrice = Math.floor(Number(body.unitPrice));
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      return err(c, 'VALIDATION_ERROR', 'unitPrice must be a non-negative integer (cents)', 422);
+    }
+    if (unitPrice !== expectedUnitPrice) {
+      return err(
+        c,
+        'PRICE_MISMATCH',
+        `unitPrice (${unitPrice}) does not match the server-computed price (${expectedUnitPrice}) for this item with its modifiers. Prices are set server-side from the menu.`,
+        422
+      );
+    }
   }
 
   const { data, error } = await supabase
@@ -203,11 +282,11 @@ ordersRoutes.post('/:id/items', async (c) => {
     .insert({
       tenant_id:     tenantId,
       order_id:      id,
-      menu_item_id:  targetMenuItemId,
+      menu_item_id:  menuItemId,
       name:          body.name,
-      quantity:      body.quantity ?? 1,
-      unit_price:    body.unitPrice,
-      line_total:    body.unitPrice * (body.quantity ?? 1),
+      quantity,
+      unit_price:    unitPrice,
+      line_total:    unitPrice * quantity,
       station:       body.station ?? 'hot',
       course_number: body.courseNumber ?? 1,
       notes:         body.notes ?? null,

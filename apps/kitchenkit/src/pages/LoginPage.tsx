@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChefHat, Loader2, MailCheck } from 'lucide-react';
+import { ChefHat, MailCheck } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 import { signInWithMagicLink } from '@/lib/auth';
 
 type Stage = 'idle' | 'loading' | 'sent' | 'error';
@@ -45,12 +46,14 @@ export default function LoginPage() {
               We sent a magic link to <span className="text-zinc-200 font-medium">{email}</span>.
               Click it to sign in — no password needed.
             </p>
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={() => { setStage('idle'); setEmail(''); }}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-2"
+              className="mt-2 h-auto p-0 text-xs text-zinc-500 hover:text-zinc-300 hover:no-underline"
             >
               Use a different email
-            </button>
+            </Button>
           </div>
         ) : (
           /* ── Form state ── */
@@ -78,17 +81,15 @@ export default function LoginPage() {
               </p>
             )}
 
-            <button
+            <Button
               type="submit"
-              disabled={stage === 'loading' || !email.trim()}
-              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="brand"
+              isLoading={stage === 'loading'}
+              disabled={!email.trim()}
+              className="w-full bg-brand-600 hover:bg-brand-700"
             >
-              {stage === 'loading' ? (
-                <><Loader2 size={16} className="animate-spin" /> Sending...</>
-              ) : (
-                'Send magic link'
-              )}
-            </button>
+              Send magic link
+            </Button>
 
             <p className="text-xs text-zinc-600 text-center">
               No password required. We'll email you a one-click sign-in link.

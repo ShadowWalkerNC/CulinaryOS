@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import DemoSection from '@/components/DemoSection';
 
 export const metadata: Metadata = {
   title: 'CulinaryOS — AI-Native Restaurant Operating System',
@@ -115,8 +116,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── INTERACTIVE DEMO PLAYER ─────────────────────────────── */}
-      <section id="demo" className="py-20 px-4 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
+      {/* ─── INTERACTIVE DEMO ─────────────────────────────────── */}
+      <section id="demo" className="py-24 px-4 scroll-mt-16">
+        <DemoSection />
+      </section>
+
+      {/* ─── SOCIAL PROOF TICKER ───────────────────────────────── */}
+      <section className="py-6 border-y border-white/10 bg-white/[0.02] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-white/60 tracking-widest uppercase font-mono">
+            Trusted by independent restaurants across{' '}
+            <span className="text-white/70 font-semibold">6 countries</span>
+            {' '}· 🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇧🇷
+          </p>
+        </div>
+      </section>
+
+      {/* ─── DEMO VIDEO ─────────────────────────────────────────── */}
+      <section className="py-20 px-4 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
         <div className="max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-xs font-semibold text-brand-orange uppercase tracking-wider">
             <span>Live Product Demo</span>
@@ -256,6 +273,34 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ─── ABOUT ──────────────────────────────────────────────── */}
+      <section id="about" className="py-24 px-4 bg-white/[0.02] border-y border-white/10 scroll-mt-16">
+        <div className="max-w-3xl mx-auto text-center">
+          <span className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-xs font-semibold uppercase tracking-widest mb-6">
+            About
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+            Built for the world&apos;s <span className="gradient-text">independent restaurants</span>
+          </h2>
+          <p className="text-white/55 text-lg leading-relaxed mb-4">
+            CulinaryOS is an open-core restaurant operating system in active development —
+            POS, kitchen display, online ordering, prep, and back-office ops on one platform,
+            with no hardware lock-in and no per-ticket commissions.
+          </p>
+          <p className="text-white/55 leading-relaxed mb-8">
+            The recipe layer, <Link href="/recipeos" className="text-green-400 hover:text-white transition-colors font-semibold">RecipeOS</Link>,
+            is MIT-licensed and free forever. Questions, pilot inquiries, or just want to talk
+            shop? We read every email.
+          </p>
+          <a
+            href="mailto:hello@culinaryos.io"
+            className="inline-block px-8 py-4 rounded-2xl glass border border-white/10 text-white font-semibold text-lg hover:bg-white/10 active:scale-95 transition-all"
+          >
+            hello@culinaryos.io
+          </a>
         </div>
       </section>
 

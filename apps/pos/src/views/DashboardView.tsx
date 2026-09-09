@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { usePOSStore } from '../lib/store';
 import { useCreateOrder, useOpenOrders } from '../lib/queries';
+import { Button } from '@culinaryos/ui';
 import { createCashDrawerReconciliationJournalEntry } from '@culinaryos/accounting-engine';
 import { loadLocalSettings, calculateCumulativeShiftSavings } from '@culinaryos/shared';
 import { getMockOrders } from '../lib/mockDb';
@@ -185,12 +186,15 @@ export function DashboardView() {
               </span>
             )}
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setToast(null)}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+            className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8"
+            aria-label="Dismiss notification"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -222,13 +226,14 @@ export function DashboardView() {
                 <Layers className="w-3 h-3 text-slate-600" />
                 <span>Active Cash Drawer</span>
               </span>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowDrawerList(!showDrawerList)}
-                className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition flex items-center gap-0.5"
+                className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 hover:bg-transparent h-auto px-1 py-0.5 gap-0.5"
               >
                 <span>Switch</span>
                 <ChevronDown className="w-3 h-3" />
-              </button>
+              </Button>
             </div>
             <div>
               <div className="text-xs font-black text-slate-900 truncate">{activeDrawer.name}</div>
@@ -242,15 +247,16 @@ export function DashboardView() {
             {showDrawerList && (
               <div className="pt-2 border-t border-slate-200 space-y-1.5">
                 {drawers.map((dr) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={dr.id}
                     onClick={() => {
                       setActiveDrawerId(dr.id);
                       setShowDrawerList(false);
                     }}
-                    className={`w-full text-left p-2 rounded-lg text-xs flex items-center justify-between transition ${
+                    className={`w-full h-auto text-left p-2 rounded-lg text-xs justify-start gap-2 [&>span]:w-full [&>span]:justify-between ${
                       dr.id === activeDrawerId
-                        ? 'bg-slate-900 text-white font-bold'
+                        ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white font-bold'
                         : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-200'
                     }`}
                   >
@@ -261,7 +267,7 @@ export function DashboardView() {
                       </div>
                     </div>
                     <span className="font-mono font-bold">${(dr.currentBalanceCents / 100).toFixed(2)}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -313,33 +319,36 @@ export function DashboardView() {
 
         {/* Action Controls: Declare Drawer + Manager Day Controls */}
         <div className="space-y-2 pt-4 border-t border-[#e5e7eb]">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleOpenDeclareModal}
-            className="w-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-2.5 rounded-xl text-xs uppercase transition-colors border border-[#e5e7eb] flex items-center justify-center gap-1.5"
+            className="w-full uppercase"
           >
-            <DollarSign className="w-3.5 h-3.5 text-slate-700" />
+            <DollarSign className="w-3.5 h-3.5" />
             <span>Declare Cash Drawer</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => setShowDayModal(true)}
-            className={`w-full font-bold py-2.5 rounded-xl text-xs uppercase transition-colors border flex items-center justify-center gap-1.5 ${
+            className={`w-full uppercase gap-1.5 ${
               dayStatus === 'open'
-                ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
-                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-800 border-amber-300'
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-800 border-emerald-300'
             }`}
           >
             <Store className="w-3.5 h-3.5" />
             <span>{dayStatus === 'open' ? 'Manager: Close Day' : 'Manager: Open Day'}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => setEmployee(null)}
-            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-xs uppercase transition-colors flex items-center justify-center gap-1.5"
+            className="w-full uppercase bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-600 border-red-200"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Lock Screen</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -347,102 +356,102 @@ export function DashboardView() {
       <div className="flex-1 flex flex-col justify-between">
         <div className="grid grid-cols-2 gap-5 flex-1">
           {/* Quick Order */}
-          <button onClick={startQuickOrder}
-            className="bg-white hover:border-orange-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-orange-50/20">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  Quick Service
-                </span>
-                <span className="material-symbols-outlined text-slate-400 group-hover:text-orange-500 transition-colors">
-                  bolt
-                </span>
+            <Button variant="ghost" onClick={startQuickOrder}
+              className="bg-white hover:bg-white hover:border-orange-500/60 border-2 border-slate-200/90 rounded-2xl p-6 h-auto text-left shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-orange-50/20 [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                    Quick Service
+                  </span>
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-orange-500 transition-colors">
+                    bolt
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">Quick Order</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">Start an instant counter ticket or takeaway check without dining table assignments.</p>
               </div>
-              <h3 className="text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">Quick Order</h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">Start an instant counter ticket or takeaway check without dining table assignments.</p>
-            </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-orange-600">
-              <span>Start Counter Ticket</span>
-              <span className="font-mono">→</span>
-            </div>
-          </button>
-
-          {/* Table Service */}
-          <button onClick={() => setView('tables')}
-            className="bg-white hover:border-blue-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-blue-50/20">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  FOH Dining Floor
-                </span>
-                <span className="material-symbols-outlined text-slate-400 group-hover:text-blue-500 transition-colors">
-                  table_restaurant
-                </span>
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-orange-600">
+                <span>Start Counter Ticket</span>
+                <span className="font-mono">→</span>
               </div>
-              <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">Table Service</h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">Manage restaurant dining tables, active covers, multi-seat coursing, and real-time floor status.</p>
-            </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600">
-              <span>Open 2D/3D Floor Map</span>
-              <span className="font-mono">→</span>
-            </div>
-          </button>
+            </Button>
 
-          {/* Bar Tabs */}
-          <button onClick={() => setView('tabs')}
-            className="bg-white hover:border-purple-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-purple-50/20">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  Pub & Lounge
-                </span>
-                <span className="material-symbols-outlined text-slate-400 group-hover:text-purple-500 transition-colors">
-                  local_bar
-                </span>
+            {/* Table Service */}
+            <Button variant="ghost" onClick={() => setView('tables')}
+              className="bg-white hover:bg-white hover:border-blue-500/60 border-2 border-slate-200/90 rounded-2xl p-6 h-auto text-left shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-blue-50/20 [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                    FOH Dining Floor
+                  </span>
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-blue-500 transition-colors">
+                    table_restaurant
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">Table Service</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">Manage restaurant dining tables, active covers, multi-seat coursing, and real-time floor status.</p>
               </div>
-              <h3 className="text-xl font-black text-slate-900 group-hover:text-purple-600 transition-colors">Bar Tabs</h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">List active bar cards, pre-authorize checkout limits, and manage open guest tabs.</p>
-            </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-purple-600">
-              <span>Manage Bar Tabs</span>
-              <span className="font-mono">→</span>
-            </div>
-          </button>
-
-          {/* Recall Checks */}
-          <button onClick={() => setView('recall')}
-            className="bg-white hover:border-slate-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-slate-50/30">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  Audit History
-                </span>
-                <span className="material-symbols-outlined text-slate-400 group-hover:text-slate-600 transition-colors">
-                  history
-                </span>
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600">
+                <span>Open 2D/3D Floor Map</span>
+                <span className="font-mono">→</span>
               </div>
-              <h3 className="text-xl font-black text-slate-900 group-hover:text-slate-700 transition-colors">Recall Checks</h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">Retrieve previously closed checks, handle partial refunds, or reprint thermal guest receipts.</p>
-            </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-slate-700">
-              <span>Search Shift History</span>
-              <span className="font-mono">→</span>
-            </div>
-          </button>
-        </div>
+            </Button>
 
-        {/* Bottom Setup & Reports Bar */}
-        <div className="mt-5 flex gap-4">
-          <button onClick={() => setView('settings')}
-            className="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl py-3.5 text-xs font-black uppercase tracking-wider text-slate-800 hover:border-slate-900 text-center transition-all shadow-xs flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-slate-600">settings</span>
-            <span>Device Setup (Stripe / Thermal Printers)</span>
-          </button>
-          <button onClick={() => setView('reports')}
-            className="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl py-3.5 text-xs font-black uppercase tracking-wider text-slate-800 hover:border-slate-900 text-center transition-all shadow-xs flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-slate-600">bar_chart</span>
-            <span>Business Reports & Shift PM Mix</span>
-          </button>
+            {/* Bar Tabs */}
+            <Button variant="ghost" onClick={() => setView('tabs')}
+              className="bg-white hover:bg-white hover:border-purple-500/60 border-2 border-slate-200/90 rounded-2xl p-6 h-auto text-left shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-purple-50/20 [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                    Pub & Lounge
+                  </span>
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-purple-500 transition-colors">
+                    local_bar
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-purple-600 transition-colors">Bar Tabs</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">List active bar cards, pre-authorize checkout limits, and manage open guest tabs.</p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-purple-600">
+                <span>Manage Bar Tabs</span>
+                <span className="font-mono">→</span>
+              </div>
+            </Button>
+
+            {/* Recall Checks */}
+            <Button variant="ghost" onClick={() => setView('recall')}
+              className="bg-white hover:bg-white hover:border-slate-500/60 border-2 border-slate-200/90 rounded-2xl p-6 h-auto text-left shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-slate-50/30 [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                    Audit History
+                  </span>
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-slate-600 transition-colors">
+                    history
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-slate-700 transition-colors">Recall Checks</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">Retrieve previously closed checks, handle partial refunds, or reprint thermal guest receipts.</p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-slate-700">
+                <span>Search Shift History</span>
+                <span className="font-mono">→</span>
+              </div>
+            </Button>
+          </div>
+
+          {/* Bottom Setup & Reports Bar */}
+          <div className="mt-5 flex gap-4">
+            <Button variant="outline" onClick={() => setView('settings')}
+              className="flex-1 py-3.5 h-auto text-xs font-black uppercase tracking-wider text-slate-800 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-900">
+              <span className="material-symbols-outlined text-[18px] text-slate-600">settings</span>
+              <span>Device Setup (Stripe / Thermal Printers)</span>
+            </Button>
+            <Button variant="outline" onClick={() => setView('reports')}
+              className="flex-1 py-3.5 h-auto text-xs font-black uppercase tracking-wider text-slate-800 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-900">
+              <span className="material-symbols-outlined text-[18px] text-slate-600">bar_chart</span>
+              <span>Business Reports & Shift PM Mix</span>
+            </Button>
         </div>
       </div>
 
@@ -456,12 +465,15 @@ export function DashboardView() {
                 <h3 className="text-lg font-black text-slate-900 mt-0.5 uppercase">Declare Cash Drawer</h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">Physical bill count for <strong className="text-slate-800">{activeDrawer.name}</strong></p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowDeclare(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition"
+                className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 h-9 w-9"
+                aria-label="Close declare drawer modal"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Bill Inputs list with auto-select on click and zero placeholder */}
@@ -559,18 +571,10 @@ export function DashboardView() {
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => setShowDeclare(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl py-3 text-xs font-black uppercase transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveDeclaration}
-                className="flex-1 bg-slate-900 hover:bg-black active:scale-[0.98] text-white rounded-xl py-3 text-xs font-black uppercase tracking-wider shadow-md transition"
-              >
-                Save Audit & Log GL
-              </button>
+              <Button variant="secondary" onClick={() => setShowDeclare(false)}
+                className="flex-1 uppercase">Cancel</Button>
+              <Button variant="brand" onClick={handleSaveDeclaration}
+                className="flex-1 uppercase tracking-wider">Save Audit & Log GL</Button>
             </div>
           </div>
         </div>
@@ -588,12 +592,15 @@ export function DashboardView() {
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">Control daily register opening floats and station locking.</p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowDayModal(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition"
+                className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 h-9 w-9"
+                aria-label="Close day modal"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {dayStatus === 'open' ? (
@@ -646,20 +653,15 @@ export function DashboardView() {
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setShowDayModal(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl py-3 text-xs font-black uppercase transition"
-              >
-                Cancel
-              </button>
-              <button
+              <Button variant="secondary" onClick={() => setShowDayModal(false)}
+                className="flex-1 uppercase">Cancel</Button>
+              <Button
+                variant={dayStatus === 'open' ? 'warning' : 'success'}
                 onClick={handleToggleDay}
-                className={`flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider text-white shadow-md transition active:scale-[0.98] ${
-                  dayStatus === 'open' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'
-                }`}
+                className="flex-1 uppercase tracking-wider"
               >
                 {dayStatus === 'open' ? 'Confirm Close Day' : 'Confirm Open Day'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

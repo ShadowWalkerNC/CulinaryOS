@@ -73,9 +73,9 @@ export default function BlogPage() {
                 >
                   {post.category}
                 </span>
-                <span className="text-xs text-white/40">{post.date}</span>
-                <span className="text-xs text-white/40">·</span>
-                <span className="text-xs text-white/40">{post.readTime}</span>
+                <span className="text-xs text-white/60">{post.date}</span>
+                <span className="text-xs text-white/60">·</span>
+                <span className="text-xs text-white/60">{post.readTime}</span>
               </div>
 
               <h2 className="text-xl sm:text-2xl font-bold mb-3 hover:gradient-text transition-all cursor-pointer">
@@ -85,7 +85,7 @@ export default function BlogPage() {
               <p className="text-white/60 text-sm leading-relaxed mb-5">{post.excerpt}</p>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs text-white/40">{post.author}</span>
+                <span className="text-xs text-white/60">{post.author}</span>
                 <Link
                   href={`/blog/${post.slug}`}
                   className="text-sm text-brand-orange hover:text-white transition-colors font-semibold"
@@ -98,7 +98,7 @@ export default function BlogPage() {
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-sm text-white/30">More posts coming soon. Follow us on GitHub and Twitter/X for updates.</p>
+          <p className="text-sm text-white/50">More posts coming soon. Follow us on GitHub and Twitter/X for updates.</p>
         </div>
       </section>
     </>

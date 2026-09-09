@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 import { useUpdateRecipe, type DBRecipe, type UpdateRecipeInput } from '@/hooks/useRecipes';
 
 interface IngredientRow {
@@ -95,9 +96,9 @@ export default function EditRecipeModal({ recipe, onClose }: Props) {
             <h2 className="font-semibold text-zinc-100">Edit Recipe</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Changes replace all ingredients.</p>
           </div>
-          <button onClick={onClose} className="btn-ghost p-1.5" aria-label="Close">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="h-8 w-8 text-zinc-400 hover:bg-surface-card hover:text-zinc-100">
             <X size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* Body */}
@@ -157,10 +158,15 @@ export default function EditRecipeModal({ recipe, onClose }: Props) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-zinc-300">Ingredients *</label>
-                <button type="button" onClick={addRow}
-                  className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addRow}
+                  className="h-auto p-0 text-xs text-brand-400 hover:text-brand-300 hover:no-underline"
+                >
                   <Plus size={13} /> Add row
-                </button>
+                </Button>
               </div>
               <div className="space-y-2">
                 <div className="grid grid-cols-[1fr_100px_70px_32px] gap-2 text-xs text-zinc-600 px-1">
@@ -174,11 +180,16 @@ export default function EditRecipeModal({ recipe, onClose }: Props) {
                       className="input text-sm" placeholder="1.0" type="number" step="any" min="0" />
                     <input value={row.unit} onChange={(e) => updateRow(i, 'unit', e.target.value)}
                       className="input text-sm" placeholder="g" />
-                    <button type="button" onClick={() => removeRow(i)}
-                      className="flex items-center justify-center text-zinc-600 hover:text-red-400 transition-colors"
-                      aria-label="Remove ingredient">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRow(i)}
+                      aria-label="Remove ingredient"
+                      className="h-8 w-8 text-zinc-600 hover:bg-transparent hover:text-red-400"
+                    >
                       <Trash2 size={14} />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -193,14 +204,15 @@ export default function EditRecipeModal({ recipe, onClose }: Props) {
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-surface-border shrink-0 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="btn-ghost text-sm">Cancel</button>
-            <button type="submit" disabled={isPending}
-              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50">
-              {isPending
-                ? <><Loader2 size={14} className="animate-spin" /> Saving...</>
-                : 'Save Changes'
-              }
-            </button>
+            <Button type="button" variant="ghost" onClick={onClose} className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100">Cancel</Button>
+            <Button
+              type="submit"
+              variant="brand"
+              isLoading={isPending}
+              className="bg-brand-600 text-sm hover:bg-brand-700"
+            >
+              Save Changes
+            </Button>
           </div>
         </form>
       </div>

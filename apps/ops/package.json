@@ -11,15 +11,16 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@culinaryos/food-cost-engine": "workspace:*",
+    "@culinaryos/labor-engine": "workspace:*",
+    "@culinaryos/ui": "workspace:*",
+    "@culinaryos/waste-engine": "workspace:*",
     "@supabase/supabase-js": "^2.43.0",
     "@tanstack/react-query": "^5.40.0",
     "lucide-react": "^0.378.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-router-dom": "^6.23.0",
-    "@culinaryos/food-cost-engine": "workspace:*",
-    "@culinaryos/waste-engine": "workspace:*",
-    "@culinaryos/labor-engine": "workspace:*"
+    "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

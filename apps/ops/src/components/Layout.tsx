@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { Button } from '@culinaryos/ui';
 
 const NAV = [
   { to: '/',          label: '⚡ Dashboard' },
@@ -37,12 +38,13 @@ export default function Layout() {
           ))}
         </nav>
         <div className="px-3 py-4 border-t border-zinc-800">
-          <button
+          <Button
             onClick={() => supabase.auth.signOut()}
-            className="w-full text-left px-3 py-2 text-sm text-zinc-500 hover:text-zinc-300 rounded-lg hover:bg-zinc-800 transition-colors"
+            variant="ghost"
+            className="w-full justify-start rounded-lg px-3 py-2 text-sm font-normal text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
           >
             Sign out
-          </button>
+          </Button>
         </div>
       </aside>
 

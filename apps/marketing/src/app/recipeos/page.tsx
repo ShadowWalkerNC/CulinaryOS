@@ -59,7 +59,7 @@ export default function RecipeOSPage() {
           <p className="text-xl sm:text-2xl text-white/60 mb-4 font-light">
             The open-source recipe platform at the heart of CulinaryOS.
           </p>
-          <p className="text-white/40 text-base max-w-xl mx-auto mb-10">
+          <p className="text-white/60 text-base max-w-xl mx-auto mb-10">
             Recipe Vault, Pantry Integration, Scale Engine, and Prep Planner — free for every cook,
             restaurateur, and developer on the planet. Forever.
           </p>
@@ -89,7 +89,7 @@ export default function RecipeOSPage() {
           {stats.map((s) => (
             <div key={s.label}>
               <div className="text-4xl font-bold text-green-400 mb-1">{s.value}</div>
-              <div className="text-sm text-white/40">{s.label}</div>
+              <div className="text-sm text-white/60">{s.label}</div>
             </div>
           ))}
         </div>

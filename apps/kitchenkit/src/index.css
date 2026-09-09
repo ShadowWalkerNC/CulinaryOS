@@ -40,6 +40,29 @@
   }
 }
 
+/* ── @culinaryos/ui global theme guard ────────────────────────────────
+   Importing { Button } from '@culinaryos/ui' also pulls in the package's
+   culinary-theme.css, whose UNLAYERED html/body rules (light --cos-bg,
+   dark --cos-text, 14px root font-size) would otherwise beat our
+   @layer base styles (unlayered author CSS wins over layered) and flip
+   kitchenkit's dark theme. Re-assert dark values for the --cos-* tokens
+   the theme consumes, and pin the 16px rem base + dark color-scheme.
+   (Same pattern as apps/desktop/src/index.css.) */
+:root {
+  --cos-bg:            #0f0f11;
+  --cos-surface:       #18181b;
+  --cos-surface-2:     #0f0f11;
+  --cos-border:        #27272a;
+  --cos-border-strong: #3f3f46;
+  --cos-text:          #f4f4f5;
+  --cos-text-muted:    #a1a1aa;
+  --cos-text-dim:      #71717a;
+}
+html {
+  font-size: 16px;
+  color-scheme: dark;
+}
+
 /* Print styles for Station Prep Sheet and document isolation */
 @media print {
   @page {

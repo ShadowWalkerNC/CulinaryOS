@@ -6,13 +6,7 @@
 import type { Context, Next } from 'hono';
 import type { Env } from '../types.js';
 import { adminSupabase } from './supabase.js';
-import { isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
-
-function isAuthRelaxed(): boolean {
-  if (process.env.AUTH_RELAXED === 'true') return true;
-  // Demo / local without live Supabase — keep header-only tenant mode
-  return !isLiveSupabaseConfigured();
-}
+import { isDemoAuthAllowed, isPlaceholderSecret } from '../lib/secrets.js';
 
 function extractBearer(c: Context<Env>): string | null {
   const header = c.req.header('Authorization');
@@ -51,7 +45,8 @@ async function verifyTenantMembership(
  * Accepts:
  *   1. Bearer Supabase JWT + X-Tenant-Id (membership verified)
  *   2. Bearer INTERNAL_API_KEY or DEVICE_API_KEY + X-Tenant-Id (terminals / MCP)
- *   3. X-Tenant-Id only when AUTH_RELAXED or Supabase is not configured (local demo)
+ *   3. X-Tenant-Id only when AUTH_RELAXED=true or no live Supabase backend
+ *      is configured (local demo — serves mock data only, never live data)
  */
 export async function requireTenant(c: Context<Env>, next: Next) {
   const tenantId = c.req.header('X-Tenant-Id');
@@ -93,7 +88,7 @@ export async function requireTenant(c: Context<Env>, next: Next) {
   if (token) {
     const supabase = adminSupabase();
     if (!supabase) {
-      if (isAuthRelaxed()) {
+      if (isDemoAuthAllowed()) {
         c.set('authMode', 'relaxed');
         await next();
         return;
@@ -130,7 +125,7 @@ export async function requireTenant(c: Context<Env>, next: Next) {
     return;
   }
 
-  if (isAuthRelaxed()) {
+  if (isDemoAuthAllowed()) {
     c.set('authMode', 'relaxed');
     await next();
     return;
@@ -151,7 +146,9 @@ export async function requireTenant(c: Context<Env>, next: Next) {
 // Service-to-service API key auth
 export async function requireApiKey(c: Context<Env>, next: Next) {
   const key = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (!key || key !== process.env.INTERNAL_API_KEY) {
+  const expected = process.env.INTERNAL_API_KEY;
+  // Placeholder/empty keys never authenticate — fail closed.
+  if (!key || !expected || isPlaceholderSecret(expected) || key !== expected) {
     return c.json(
       { ok: false, error: { code: 'UNAUTHORIZED', message: 'Invalid or missing API key' } },
       401

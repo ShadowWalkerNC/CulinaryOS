@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Button,
   CreditCard,
   Radio,
   CheckCircle2,
@@ -167,12 +168,13 @@ export function IntegrationsPage() {
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
             <span className="text-[11px] text-slate-500 font-medium">Capture Mode: Automatic</span>
-            <button
+            <Button
+              variant="link"
+              className="h-auto px-0 py-0 text-slate-900"
               onClick={() => setStripeConnected(!stripeConnected)}
-              className="text-xs font-bold text-slate-900 hover:underline"
             >
               Configure Readers
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -197,12 +199,14 @@ export function IntegrationsPage() {
             <div className="space-y-2 text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
               <div className="flex justify-between items-center">
                 <span>Bi-directional 86 Sync:</span>
-                <button
+                <Button
                   onClick={() => setAuto86Sync(!auto86Sync)}
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${auto86Sync ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}`}
+                  variant={auto86Sync ? 'success' : 'secondary'}
+                  size="sm"
+                  className="h-auto rounded px-2 py-0.5 text-[10px]"
                 >
                   {auto86Sync ? 'Active' : 'Disabled'}
-                </button>
+                </Button>
               </div>
               <div className="flex justify-between">
                 <span>Webhook Route:</span>
@@ -222,14 +226,15 @@ export function IntegrationsPage() {
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex gap-2">
-            <button
+            <Button
               onClick={handleImportSquareCatalog}
-              disabled={importingSquare}
-              className="w-full py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+              isLoading={importingSquare}
+              variant="brand"
+              className="w-full uppercase tracking-wider"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${importingSquare ? 'animate-spin' : ''}`} />
+              <RefreshCw className="w-3.5 h-3.5" />
               <span>{importingSquare ? 'Importing...' : '1-Click Catalog Import'}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -274,14 +279,15 @@ export function IntegrationsPage() {
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex gap-2">
-            <button
+            <Button
               onClick={handleSyncToastMenu}
-              disabled={syncingToast}
-              className="w-full py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+              isLoading={syncingToast}
+              variant="outline"
+              className="w-full uppercase tracking-wider"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncingToast ? 'animate-spin' : ''}`} />
+              <RefreshCw className="w-3.5 h-3.5" />
               <span>{syncingToast ? 'Syncing...' : 'Sync Toast Menus'}</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

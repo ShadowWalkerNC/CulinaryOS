@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@culinaryos/ui';
 
 export interface CheckItem {
   category: string;
@@ -136,12 +137,14 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
             </div>
           </div>
 
-          <button
+          <Button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
           >
             <span className="material-symbols-outlined text-lg">close</span>
-          </button>
+          </Button>
         </div>
 
         {/* System Summary Banner */}
@@ -170,37 +173,43 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
         <div className="px-6 py-3 bg-slate-900/50 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             {categories.map((cat) => (
-              <button
+              <Button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider transition ${
+                variant={selectedCategory === cat ? 'default' : 'secondary'}
+                size="sm"
+                className={
                   selectedCategory === cat
-                    ? 'bg-orange-600 text-white shadow-md'
-                    : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
+                    ? 'bg-orange-600 text-white shadow-md hover:bg-orange-700 uppercase tracking-wider'
+                    : 'bg-slate-800 text-slate-400 hover:text-slate-200 uppercase tracking-wider'
+                }
               >
                 {cat}
-              </button>
+              </Button>
             ))}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={healPorts}
               disabled={healing}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-50"
+              variant="default"
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white"
             >
               <span className="material-symbols-outlined text-sm">healing</span>
               <span>{healing ? 'Healing...' : 'Auto-Heal Ports'}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={fetchDiagnostics}
               disabled={loading}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-50"
+              variant="secondary"
+              size="sm"
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200"
             >
               <span className="material-symbols-outlined text-sm">refresh</span>
               <span>{loading ? 'Testing...' : 'Re-Run Preflight'}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -280,12 +289,14 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
             <span className="font-bold text-amber-400">{report?.warnCount || 0} Warnings</span>,{' '}
             <span className="font-bold text-red-400">{report?.failCount || 0} Critical</span>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition"
+            variant="secondary"
+            size="sm"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       </div>
     </div>

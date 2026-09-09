@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOrderStore } from '../lib/useOrderStore';
 import { usePOSStore } from '../lib/store';
+import { Button } from '@culinaryos/ui';
 import { calculateDualPricing, loadLocalSettings } from '@culinaryos/shared';
 
 export function CFDView() {
@@ -147,49 +148,52 @@ export function CFDView() {
 
             <div className="grid grid-cols-4 gap-2.5 mt-5">
               {[15, 18, 20, 25].map((pct) => (
-                <button
+                <Button
                   key={pct}
+                  variant="ghost"
                   onClick={() => {
                     setSelectedTip(pct);
                     setCustomTipDollars('');
                   }}
-                  className={`p-3.5 rounded-xl border text-center transition-all ${
+                  className={`p-3.5 h-auto rounded-xl border text-center [&>span]:flex-col [&>span]:w-full [&>span]:gap-0.5 ${
                     selectedTip === pct
-                      ? 'bg-gradient-to-tr from-[#FF6B35] to-[#E63946] text-white border-orange-500 shadow-lg shadow-orange-500/25 font-black scale-105'
-                      : 'bg-white/5 hover:bg-white/10 text-zinc-300 border-white/10 font-bold'
+                      ? 'bg-gradient-to-tr from-[#FF6B35] to-[#E63946] text-white border-orange-500 shadow-lg shadow-orange-500/25 font-black scale-105 hover:text-white'
+                      : 'bg-white/5 hover:bg-white/10 text-zinc-300 border-white/10 font-bold hover:text-zinc-300'
                   }`}
                 >
                   <div className="text-base">{pct}%</div>
                   <div className="text-[10px] opacity-80 mt-0.5">
                     ${((subtotalCents * (pct / 100)) / 100).toFixed(2)}
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
 
             <div className="mt-3 flex gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSelectedTip(0);
                   setCustomTipDollars('');
                 }}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
+                className={`flex-1 py-2 h-auto rounded-lg text-xs font-bold ${
                   selectedTip === 0
-                    ? 'bg-zinc-800 text-white border-zinc-700'
+                    ? 'bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-800 hover:text-white'
                     : 'bg-transparent text-zinc-500 border-white/5 hover:text-zinc-300'
                 }`}
               >
                 No Tip
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSelectedTip(null);
                   setCustomTipDollars('5.00');
                 }}
-                className="flex-1 py-2 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10"
+                className="flex-1 py-2 h-auto rounded-lg text-xs font-bold bg-white/5 hover:bg-white/10 text-zinc-300 border-white/10"
               >
                 Custom Tip
-              </button>
+              </Button>
             </div>
           </div>
 

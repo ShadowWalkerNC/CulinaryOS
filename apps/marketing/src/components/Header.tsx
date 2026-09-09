@@ -22,7 +22,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold gradient-text">CulinaryOS</span>
-            <span className="hidden sm:inline text-xs text-white/40 font-mono">.io</span>
+            <span className="hidden sm:inline text-xs text-white/60 font-mono">.io</span>
           </Link>
 
           {/* Desktop Nav */}

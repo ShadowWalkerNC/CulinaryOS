@@ -20,6 +20,7 @@ import {
   Copy,
   Terminal,
   ShoppingBag,
+  Button,
 } from '@culinaryos/ui';
 
 interface DeviceRole {
@@ -287,19 +288,21 @@ export function LandingPage() {
             <span>Interactive POS & KDS Simulator</span>
           </a>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="lg"
             onClick={() => setQuickstartModal({
               title: 'Turnkey Local Restaurant Deployment',
               role: 'Hardware Thermal Printers, Cash Drawers & Kitchen TVs',
               description: 'Deploy CulinaryOS directly onto tablets, touch terminals, and mobile handhelds in your restaurant with zero cloud dependency. Run on standard hardware over local WiFi.',
               screenshot: '/screenshots/pos_menu_modern_cards.png',
             })}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-xs"
+            className="w-full sm:w-auto rounded-xl border-slate-300 bg-slate-100 px-5 text-xs font-bold uppercase tracking-wider text-slate-800 shadow-xs hover:bg-slate-200 hover:text-slate-800"
           >
             <Terminal className="w-4 h-4 text-slate-700" />
             <span>Hardware & Local Setup</span>
-          </button>
+          </Button>
 
           <a
             href="https://github.com/ShadowWalkerNC/CulinaryOS"
@@ -332,13 +335,14 @@ export function LandingPage() {
           {deviceRoles.map((d) => {
             const isActive = selectedDevice === d.id;
             return (
-              <button
+              <Button
                 key={d.id}
+                variant={isActive ? 'outline' : 'ghost'}
                 onClick={() => setSelectedDevice(d.id)}
-                className={`py-3 px-4 rounded-lg text-left transition-all flex items-center gap-3 ${
+                className={`h-auto w-full rounded-lg px-4 py-3 text-left [&>span]:w-full [&>span]:gap-3 ${
                   isActive
-                    ? 'bg-white text-slate-900 shadow-xs border border-slate-300'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'border-slate-300 bg-white text-slate-900 shadow-xs hover:bg-white hover:text-slate-900'
+                    : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-md flex items-center justify-center font-bold text-base ${isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'}`}>
@@ -348,7 +352,7 @@ export function LandingPage() {
                   <h4 className="text-xs font-bold uppercase tracking-wider">{d.name}</h4>
                   <span className="text-[10px] text-slate-500 font-mono">Port :{d.port}</span>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -412,8 +416,9 @@ export function LandingPage() {
                 </a>
               )}
 
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setQuickstartModal({
                   title: currentDevice.name,
                   port: currentDevice.port,
@@ -421,20 +426,21 @@ export function LandingPage() {
                   description: currentDevice.description,
                   screenshot: currentDevice.screenshot,
                 })}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-colors"
+                className="w-full sm:w-auto rounded-xl border-slate-300 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 shadow-xs hover:bg-slate-100 hover:text-slate-900"
               >
                 <Terminal className="w-4 h-4 text-slate-700" />
                 <span>Hardware & Launch Guide</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setModalImage({ src: currentDevice.screenshot, title: currentDevice.name })}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-200 hover:text-slate-700"
               >
                 <ZoomIn className="w-4 h-4" />
                 <span>View Full Screen</span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -532,40 +538,49 @@ export function LandingPage() {
                 <div className="flex items-center gap-1.5 text-xs">
                   <span className="text-slate-500 font-medium text-[11px]">Seat:</span>
                   {[1, 2, 3].map((s) => (
-                    <button
+                    <Button
                       key={s}
+                      variant={selectedSeat === s ? 'brand' : 'ghost'}
+                      size="sm"
                       onClick={() => setSelectedSeat(s)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${selectedSeat === s ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      className={`h-auto rounded-md px-2.5 py-1 text-xs font-bold ${
+                        selectedSeat === s
+                          ? ''
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-100 hover:text-slate-600'
+                      }`}
                     >
                       S{s}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
 
               {/* Quick Add Menu Buttons */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => handleAddItemToDemo({ name: 'Prime Bistro Burger', price: 18.50, station: 'Hot Grill' })}
-                  className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-400 text-left transition-all text-xs font-medium space-y-0.5"
+                  className="h-auto w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-left text-xs font-medium shadow-none hover:border-slate-400 hover:bg-white hover:text-current [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:gap-0 [&>span]:space-y-0.5"
                 >
                   <p className="text-slate-950 font-bold truncate">Prime Burger</p>
                   <p className="text-[10px] text-slate-500 font-mono">$18.50 · Grill</p>
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => handleAddItemToDemo({ name: 'Truffle Fries', price: 8.50, station: 'Fry Station' })}
-                  className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-400 text-left transition-all text-xs font-medium space-y-0.5"
+                  className="h-auto w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-left text-xs font-medium shadow-none hover:border-slate-400 hover:bg-white hover:text-current [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:gap-0 [&>span]:space-y-0.5"
                 >
                   <p className="text-slate-950 font-bold truncate">Truffle Fries</p>
                   <p className="text-[10px] text-slate-500 font-mono">$8.50 · Fryer</p>
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => handleAddItemToDemo({ name: 'Margherita Pizza', price: 16.50, station: 'Pizza Oven' })}
-                  className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-400 text-left transition-all text-xs font-medium space-y-0.5"
+                  className="h-auto w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-left text-xs font-medium shadow-none hover:border-slate-400 hover:bg-white hover:text-current [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:gap-0 [&>span]:space-y-0.5"
                 >
                   <p className="text-slate-950 font-bold truncate">Margherita</p>
                   <p className="text-[10px] text-slate-500 font-mono">$16.50 · Pizza</p>
-                </button>
+                </Button>
               </div>
 
               {/* Active Ticket List */}
@@ -580,9 +595,9 @@ export function LandingPage() {
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-slate-950 font-semibold">${it.price.toFixed(2)}</span>
-                        <button onClick={() => handleRemoveItem(idx)} className="text-slate-400 hover:text-red-600 p-1">
+                        <Button onClick={() => handleRemoveItem(idx)} variant="ghost" aria-label="Remove item" className="h-auto w-auto p-1 text-slate-400 hover:bg-transparent hover:text-red-600">
                           <X className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))
@@ -596,15 +611,17 @@ export function LandingPage() {
                 <span>Subtotal: ${(subtotal).toFixed(2)} · Tax: ${(tax).toFixed(2)}</span>
                 <span className="text-sm font-bold text-slate-950 font-mono">Total: ${(total).toFixed(2)}</span>
               </div>
-              <button
+              <Button
                 onClick={handleFireDemoOrder}
                 disabled={posTicket.length === 0}
-                className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all ${
+                variant={ticketFired ? 'ghost' : 'brand'}
+                size="lg"
+                className={`w-full rounded-xl py-3 text-xs font-bold uppercase tracking-wider shadow-xs ${
                   ticketFired
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-600 hover:text-white'
                     : posTicket.length === 0
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-slate-900 hover:bg-slate-800 text-white'
+                    ? 'bg-slate-200 text-slate-400 hover:bg-slate-200 hover:text-slate-400 disabled:opacity-100'
+                    : ''
                 }`}
               >
                 {ticketFired ? (
@@ -618,7 +635,7 @@ export function LandingPage() {
                     <span>Send to Kitchen (Fire Order)</span>
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -657,12 +674,14 @@ export function LandingPage() {
                     </ul>
                     <div className="flex justify-between items-center pt-2 border-t border-slate-800">
                       <span className="text-[10px] text-slate-400 font-medium">Server: {t.server}</span>
-                      <button
+                      <Button
                         onClick={() => handleBumpKdsTicket(t.id)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto rounded-lg bg-emerald-600 px-3 py-1.5 text-[10px] font-bold uppercase text-white hover:bg-emerald-500 hover:text-white"
                       >
                         Bump Ticket
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -954,12 +973,14 @@ export function LandingPage() {
                   <p className="text-xs font-medium text-slate-500">{quickstartModal.role}</p>
                 )}
               </div>
-              <button
+              <Button
                 onClick={() => setQuickstartModal(null)}
-                className="text-slate-400 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                variant="ghost"
+                aria-label="Close"
+                className="h-auto w-auto rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -975,10 +996,12 @@ export function LandingPage() {
                 <code className="text-emerald-400 text-[11px] sm:text-xs select-all overflow-x-auto break-all sm:break-normal">
                   git clone https://github.com/ShadowWalkerNC/CulinaryOS.git && cd CulinaryOS && pnpm quickstart
                 </code>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCopyQuickstart}
-                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-sans font-semibold shrink-0 flex items-center justify-center gap-1.5 transition-colors"
+                  className="h-auto shrink-0 rounded-lg bg-slate-800 px-3 py-2 font-sans text-[11px] font-semibold text-white hover:bg-slate-700 hover:text-white"
                 >
                   {copiedCommand ? (
                     <>
@@ -991,7 +1014,7 @@ export function LandingPage() {
                       <span>Copy Command</span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
                 On Windows run <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">quickstart.bat</code> · On macOS/Linux run <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">./quickstart.sh</code>.
@@ -1019,19 +1042,21 @@ export function LandingPage() {
                 <span>Try Online Storefront (Live on Vercel)</span>
               </a>
               {quickstartModal.screenshot && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="lg"
                   onClick={() => {
                     const sc = quickstartModal.screenshot!;
                     const t = quickstartModal.title;
                     setQuickstartModal(null);
                     setModalImage({ src: sc, title: t });
                   }}
-                  className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full sm:w-auto rounded-xl bg-slate-100 px-4 text-xs font-bold uppercase tracking-wider text-slate-800 hover:bg-slate-200 hover:text-slate-800"
                 >
                   <ZoomIn className="w-4 h-4 text-slate-600" />
                   <span>Inspect Screen</span>
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -1047,9 +1072,9 @@ export function LandingPage() {
           <div className="max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl p-3 sm:p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center px-2 py-1 border-b border-slate-200">
               <h4 className="font-bold text-xs sm:text-sm text-slate-950 uppercase tracking-wider truncate">{modalImage.title}</h4>
-              <button onClick={() => setModalImage(null)} className="text-xs font-medium text-slate-500 hover:text-black flex items-center gap-1 p-1">
+              <Button onClick={() => setModalImage(null)} variant="ghost" className="h-auto w-auto p-1 text-xs font-medium text-slate-500 hover:bg-transparent hover:text-black">
                 <X className="w-4 h-4" /> <span>Close</span>
-              </button>
+              </Button>
             </div>
             <img src={modalImage.src} alt={modalImage.title} className="w-full h-auto max-h-[75vh] object-contain rounded-xl" />
           </div>

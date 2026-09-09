@@ -6,13 +6,14 @@ const footerLinks = {
     { label: 'Pricing', href: '/pricing' },
     { label: 'RecipeOS', href: '/recipeos' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Changelog', href: '/blog' },
+    { label: 'Changelog', href: 'https://github.com/ShadowWalkerNC/CulinaryOS/releases', external: true },
   ],
   Company: [
     { label: 'About', href: '/#about' },
+    { label: 'Careers', href: '/careers' },
     { label: 'Docs', href: 'https://docs.culinaryos.io', external: true },
     { label: 'GitHub', href: 'https://github.com/ShadowWalkerNC/CulinaryOS', external: true },
-    { label: 'Discord', href: '#', external: true },
+    { label: 'Contact', href: 'mailto:hello@culinaryos.io', external: true },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy' },
@@ -37,21 +38,15 @@ export default function Footer() {
                 href="https://github.com/ShadowWalkerNC/CulinaryOS"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors text-sm"
+                className="text-white/60 hover:text-white transition-colors text-sm"
               >
                 GitHub ↗
               </a>
               <a
-                href="#"
-                className="text-white/40 hover:text-white transition-colors text-sm"
+                href="mailto:hello@culinaryos.io"
+                className="text-white/60 hover:text-white transition-colors text-sm"
               >
-                Twitter/X ↗
-              </a>
-              <a
-                href="#"
-                className="text-white/40 hover:text-white transition-colors text-sm"
-              >
-                Discord ↗
+                Contact ↗
               </a>
             </div>
           </div>
@@ -59,7 +54,7 @@ export default function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([group, links]) => (
             <div key={group}>
-              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-4">{group}</h3>
+              <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-4">{group}</h3>
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
@@ -85,10 +80,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/50">
             © {new Date().getFullYear()} CulinaryOS. Open source under MIT License.
           </p>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/50">
             Built for the world&apos;s independent restaurants. 🍽️
           </p>
         </div>

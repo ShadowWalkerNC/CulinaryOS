@@ -6,7 +6,7 @@ import { PantryPage } from './pages/Pantry';
 import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
-import { Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp } from '@culinaryos/ui';
+import { Button, Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp } from '@culinaryos/ui';
 
 export function App() {
   const [showApps, setShowApps] = useState(false);
@@ -75,19 +75,17 @@ export function App() {
 
         {/* Right: App Switcher & Server Status */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <button
+          <Button
             type="button"
             onClick={() => setShowApps(!showApps)}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
-              showApps
-                ? 'bg-[#0f172a] text-white border-[#0f172a]'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}
+            variant={showApps ? 'brand' : 'outline'}
+            size="sm"
+            className="rounded-xl"
             title="Switch Applications"
           >
             <Grid className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Apps</span>
-          </button>
+          </Button>
 
           <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -138,13 +136,15 @@ export function App() {
                   <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowApps(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -4,11 +4,19 @@ import type { Database } from './database.types';
 /**
  * Browser-side Supabase client.
  * Use in Client Components and TanStack Query hooks.
- * TODO: revert hardcoded credentials back to env vars once Render env is confirmed working
+ *
+ * Credentials come from environment ONLY. Hardcoded project credentials were
+ * removed (they were committed to the repo). If you deployed with them,
+ * rotate the anon key in the Supabase dashboard — it is in git history.
  */
 export function createClient() {
-  return createBrowserClient<any>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://sxbirnbwfaarkkorqsam.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'sb_publishable_-m-OLlNS-hCX_z44WqMnGw_D7i1HRH_'
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error(
+      '[recipeos] Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. ' +
+        'Set them in your deployment environment (see .env.example).'
+    );
+  }
+  return createBrowserClient<any>(url, key);
 }

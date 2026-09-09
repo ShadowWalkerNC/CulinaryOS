@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { pinLogin } from '@culinaryos/auth';
 import { getApiBase } from '@culinaryos/shared';
 import { usePOSStore } from '../lib/store';
-import { UserCheck, ShieldCheck, Lock } from '@culinaryos/ui';
+import { UserCheck, ShieldCheck, Lock, Button } from '@culinaryos/ui';
 
 export function StaffView() {
   const [pin, setPin] = useState('');
@@ -104,61 +104,67 @@ export function StaffView() {
 
         {/* Fast Helper Demo Buttons */}
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => void handleLogin('1234')}
-            className="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs"
+            className="flex-1 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800 gap-2"
           >
             <UserCheck className="w-4 h-4 text-blue-700" />
             <span>Server (1234)</span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={() => void handleLogin('5678')}
-            className="flex-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs"
+            className="flex-1 bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-800 gap-2"
           >
             <ShieldCheck className="w-4 h-4 text-purple-700" />
             <span>Manager (5678)</span>
-          </button>
+          </Button>
         </div>
 
         {/* Numeric Keypad */}
         <div className="grid grid-cols-3 gap-3">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-            <button
+            <Button
               key={num}
               type="button"
+              variant="outline"
               disabled={busy}
               onClick={() => handleKeyPress(num)}
-              className="bg-[#f9fafb] border-2 border-[#e5e7eb] hover:border-[#0f172a] hover:bg-white text-[#1f2937] text-2xl font-black h-16 rounded-2xl transition-all active:scale-95 disabled:opacity-50 shadow-xs flex items-center justify-center"
+              className="h-16 rounded-2xl text-2xl font-black"
             >
               {num}
-            </button>
+            </Button>
           ))}
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handleClear}
             disabled={busy}
-            className="bg-[#f9fafb] border-2 border-[#e5e7eb] hover:border-red-400 hover:bg-red-50 text-red-600 text-xs font-black h-16 rounded-2xl uppercase transition-all active:scale-95 shadow-xs flex items-center justify-center"
+            className="h-16 rounded-2xl text-xs font-black uppercase text-red-600 hover:text-red-600"
           >
             Clear
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             disabled={busy}
             onClick={() => handleKeyPress('0')}
-            className="bg-[#f9fafb] border-2 border-[#e5e7eb] hover:border-[#0f172a] hover:bg-white text-[#1f2937] text-2xl font-black h-16 rounded-2xl transition-all active:scale-95 shadow-xs flex items-center justify-center"
+            className="h-16 rounded-2xl text-2xl font-black"
           >
             0
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="brand"
             disabled={busy || pin.length < 4}
             onClick={() => void handleLogin()}
-            className="bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-black h-16 rounded-2xl uppercase transition-all active:scale-95 disabled:opacity-40 shadow-md flex items-center justify-center"
+            className="h-16 rounded-2xl text-xs font-black uppercase"
           >
             Unlock
-          </button>
+          </Button>
         </div>
       </div>
     </div>

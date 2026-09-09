@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 
 interface Props {
   children: ReactNode;
@@ -46,12 +47,13 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
             )}
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="brand"
                 onClick={this.handleReset}
-                className="btn-primary text-sm"
+                className="bg-brand-600 text-sm hover:bg-brand-700"
               >
                 Try again
-              </button>
+              </Button>
               <a href="/dashboard" className="btn-ghost text-sm">
                 Go to dashboard
               </a>

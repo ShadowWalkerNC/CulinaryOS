@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { MenuItem, CartModifier } from '../types';
 import { AllergenBadge } from './AllergenBadge';
-import { Plus, Check, Utensils, Sparkles, SlidersHorizontal } from '@culinaryos/ui';
+import { Button, Plus, Check, Utensils, Sparkles, SlidersHorizontal } from '@culinaryos/ui';
 
 interface Props {
   item: MenuItem;
@@ -113,25 +113,29 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
 
         {/* Quick Add or Customize Button */}
         {hasModifiers ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               onOpenModal(item);
             }}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#0f172a] text-slate-700 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs"
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-[#0f172a] hover:text-white [&>span]:gap-1.5"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Customize</span>
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleQuickAdd}
-            className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1 transition-all shadow-xs ${
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold shadow-xs [&>span]:gap-1 ${
               justAdded
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-100 hover:bg-[#0f172a] text-slate-700 hover:text-white'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-600 hover:text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-[#0f172a] hover:text-white'
             }`}
           >
             {justAdded ? (
@@ -145,7 +149,7 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
                 <span>Add</span>
               </>
             )}
-          </button>
+          </Button>
         )}
       </div>
     </div>

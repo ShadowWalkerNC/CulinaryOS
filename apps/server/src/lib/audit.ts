@@ -3,7 +3,7 @@
 // ============================================================
 
 import { adminSupabase } from '../middleware/supabase.js';
-import { isLiveSupabaseConfigured } from './secrets.js';
+import { isDemoAuthAllowed, isLiveSupabaseConfigured } from './secrets.js';
 import { DEMO_STAFF, verifyPin } from './pin.js';
 
 export interface AuditLogRecord {
@@ -152,12 +152,13 @@ export async function verifyManagerPinDirectly(
     return { authorized: false, error: 'PIN must be 4–8 digits' };
   }
 
-  // Demo fallback check
+  // Demo fallback check — only when demo auth is allowed (explicitly relaxed
+  // or local demo with no live backend). Never in live mode.
   const demoManager = DEMO_STAFF.find(
     (s) => s.pin === cleanPin && (s.role === 'manager' || (s.role as string) === 'owner')
   );
 
-  if ((process.env.AUTH_RELAXED === 'true' || !isLiveSupabaseConfigured()) && demoManager) {
+  if (isDemoAuthAllowed() && demoManager) {
     return {
       authorized: true,
       managerId: `demo-${demoManager.role}`,
@@ -204,20 +205,14 @@ export async function verifyManagerPinDirectly(
           }
         }
       } catch {
-        // Continue to demo manager fallback
+        // Live verification failed — do NOT fall through to demo credentials.
       }
     }
   }
 
-  // If PIN matched demo manager (5678)
-  if (demoManager) {
-    return {
-      authorized: true,
-      managerId: `demo-${demoManager.role}`,
-      managerName: demoManager.displayName,
-      role: demoManager.role,
-    };
-  }
+  // SECURITY: the hardcoded demo manager PIN (5678) must NEVER authorize in
+  // live mode. It is only honored via the isDemoAuthAllowed() branch above.
+  // Fall through to unauthorized.
 
   // Check if PIN matched a non-manager demo user (e.g. server 1234)
   const demoNonManager = DEMO_STAFF.find((s) => s.pin === cleanPin);

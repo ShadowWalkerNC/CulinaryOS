@@ -3,6 +3,7 @@ import { ArrowLeft, Scale, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-r
 import { useState } from 'react';
 import { useRecipe, toEngineRecipe, useDeleteRecipe } from '@/hooks/useRecipes';
 import { scaleRecipe } from '@culinaryos/ratio-engine';
+import { Button } from '@culinaryos/ui';
 import EditRecipeModal from '@/components/recipes/EditRecipeModal';
 
 export default function RecipeDetailPage() {
@@ -56,23 +57,24 @@ export default function RecipeDetailPage() {
           <ArrowLeft size={15} /> Recipes
         </Link>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowEdit(true)}
-            className="btn-ghost flex items-center gap-1.5 text-sm"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <Pencil size={14} /> Edit
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleDelete}
-            disabled={isDeleting}
-            className="btn-ghost flex items-center gap-1.5 text-sm text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-50"
+            isLoading={isDeleting}
+            className="text-sm text-zinc-500 hover:bg-transparent hover:text-red-400"
           >
-            {isDeleting
-              ? <Loader2 size={14} className="animate-spin" />
-              : <Trash2 size={14} />
-            }
+            <Trash2 size={14} />
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 

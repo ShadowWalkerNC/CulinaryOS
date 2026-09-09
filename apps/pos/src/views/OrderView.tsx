@@ -13,6 +13,7 @@ import { usePOSStore } from '../lib/store';
 import { calculateMultiRateTax } from '@culinaryos/shared';
 import { hardwarePrinter } from '../lib/hardware-printer';
 import {
+  Button,
   Flame,
   CreditCard,
   Trash2,
@@ -270,20 +271,22 @@ export function OrderView() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={initiateDrawerOpen}
             title="Pop Cash Drawer"
-            className="text-[10px] font-black text-[#475569] bg-white hover:bg-[#f1f5f9] border border-[#cbd5e1] px-2.5 py-1 rounded-lg uppercase flex items-center gap-1 transition-colors shadow-2xs"
+            className="text-[10px] font-black uppercase gap-1 h-7 px-2.5 py-1 rounded-lg"
           >
             <KeyRound className="w-3 h-3 text-amber-600" />
             <span>Drawer</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="link"
             onClick={() => setActiveOrder(null)}
-            className="text-[10px] font-black text-[#0f172a] hover:underline uppercase"
+            className="text-[10px] font-black uppercase h-auto px-1"
           >
             Close
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -344,24 +347,28 @@ export function OrderView() {
                 </p>
                 {!item.is_voided && (
                   <>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         setEditingItemNote(item);
                         setCustomKitchenNote(item.notes || '');
                         setCustomItemSeat(item.seat_number || 1);
                       }}
                       title="Edit kitchen instructions or seat"
-                      className="text-gray-400 hover:text-amber-600 p-1 rounded hover:bg-amber-50 transition-colors"
+                      className="h-7 w-7 rounded-lg"
                     >
                       <Tag className="w-3.5 h-3.5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => initiateVoidItem(item.id)}
                       title="Void line item"
-                      className="text-gray-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
+                      className="h-7 w-7 rounded-lg text-gray-400 hover:text-rose-600"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -416,7 +423,7 @@ export function OrderView() {
 
         <div className="grid grid-cols-3 gap-2 pt-1">
           {order.status === 'open' && (
-            <button
+            <Button
               onClick={() => {
                 fireOrder(order.id, {
                   onSuccess: () => {
@@ -426,12 +433,14 @@ export function OrderView() {
                   },
                 });
               }}
+              isLoading={firing}
               disabled={firing || !order.items?.length}
-              className="col-span-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
+              variant="success"
+              className="col-span-3 min-h-[48px] py-3 uppercase tracking-wider gap-2"
             >
               <Flame className="w-4 h-4" />
-              <span>{firing ? 'Sending to Kitchen...' : 'SEND TO KITCHEN'}</span>
-            </button>
+              <span>SEND TO KITCHEN</span>
+            </Button>
           )}
 
           {['sent', 'in-progress', 'ready'].includes(order.status) && (
@@ -439,67 +448,73 @@ export function OrderView() {
               {/* Batch Course 2 / Course 3 Firing Triggers */}
               {order.items?.some((i: any) => (i.course_number || 1) >= 2) && (
                 <div className="col-span-3 grid grid-cols-2 gap-2 mb-1">
-                  <button
+                  <Button
                     type="button"
+                    variant="warning"
                     onClick={() => {
                       fireCourse({ orderId: order.id, courseNumber: 2 });
                       triggerToast('⚡ Course 2 (Mains) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="min-h-[48px] py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-transform duration-75 ease-out active:scale-[0.97] disabled:opacity-50"
+                    className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm"
                   >
                     <Flame className="w-3.5 h-3.5" />
                     <span>Fire Mains (C2)</span>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="destructive"
                     onClick={() => {
                       fireCourse({ orderId: order.id, courseNumber: 3 });
                       triggerToast('⚡ Course 3 (Desserts) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="min-h-[48px] py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-transform duration-75 ease-out active:scale-[0.97] disabled:opacity-50"
+                    className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-rose-500 hover:bg-rose-600 text-white shadow-sm"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Fire Desserts (C3)</span>
-                  </button>
+                  </Button>
                 </div>
               )}
 
-              <button
+              <Button
                 onClick={() => setView('checkout')}
-                className="col-span-3 min-h-[48px] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
+                variant="brand"
+                className="col-span-3 min-h-[48px] py-3 uppercase tracking-wider gap-2"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>PROCEED TO PAY</span>
-              </button>
+              </Button>
             </>
           )}
 
-          <button
+          <Button
+            variant="ghost"
             onClick={initiateVoidOrder}
             disabled={voiding}
-            className="min-h-[48px] bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
+            className="min-h-[48px] bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-600 rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-rose-200 shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <Trash2 className="w-4 h-4 text-rose-600" />
             <span>{isPostSend ? 'Void (PIN)' : 'Void'}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowDiscountModal(true)}
-            className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
+            className="min-h-[48px] bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <Tag className="w-4 h-4 text-slate-700" />
             <span>Promo</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setView('menu')}
-            className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
+            className="min-h-[48px] bg-white hover:bg-blue-50 text-[#0f172a] hover:text-[#0f172a] rounded-xl py-2.5 text-[11px] font-black uppercase border-2 border-[#e5e7eb] shadow-xs [&>span]:flex-col [&>span]:gap-1"
           >
             <ClipboardList className="w-4 h-4 text-slate-700" />
             <span>Menu</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -514,51 +529,57 @@ export function OrderView() {
                 </span>
                 <h3 className="text-sm font-black text-[#1f2937] uppercase">Coupon Discounts</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowDiscountModal(false)}
-                className="text-xs font-bold text-[#9ca3af] hover:text-[#0f172a]"
+                aria-label="Close discount modal"
+                className="h-auto px-1 text-xs font-bold text-[#9ca3af] hover:text-[#0f172a]"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-2">
               <span className="text-[10px] font-black text-[#6b7280] uppercase block">Preset Promotions</span>
               <div className="grid grid-cols-1 gap-1.5">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => handleSetDiscount(10, 0)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] hover:text-inherit p-2.5 h-auto rounded-xl text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">10% Senior / Military Off</span>
                   <span className="text-[10px] font-black text-[#0f172a]">10% OFF</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => handleSetDiscount(0, 500)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] hover:text-inherit p-2.5 h-auto rounded-xl text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">$5.00 Off Coupon</span>
                   <span className="text-[10px] font-black text-[#0f172a]">-$5.00</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => handleSetDiscount(15, 0)}
-                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-[#f8f9fa] hover:bg-[#0f172a0d] border border-[#e5e7eb] hover:border-[#0f172a] hover:text-inherit p-2.5 h-auto rounded-xl text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center"
                 >
                   <span className="text-xs font-bold text-[#1f2937]">15% VIP Patron Discount</span>
                   <span className="text-[10px] font-black text-[#0f172a]">15% OFF</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => handleSetDiscount(25, 0)}
-                  className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 p-2.5 rounded-xl text-left flex justify-between items-center transition-colors"
+                  className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 hover:text-inherit p-2.5 h-auto rounded-xl text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center"
                 >
                   <span className="text-xs font-bold text-amber-900 flex items-center gap-1">
                     <Lock className="w-3 h-3 text-amber-700" />
                     <span>25% Manager Comp</span>
                   </span>
                   <span className="text-[10px] font-black text-amber-800">PIN REQ</span>
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -582,21 +603,23 @@ export function OrderView() {
                   className="w-full bg-[#f9fafb] border border-[#cbd5e1] rounded-lg p-2 text-xs font-mono"
                 />
               </div>
-              <button
+              <Button
+                variant="brand"
                 onClick={handleApplyCustomDiscount}
-                className="w-full bg-[#1f2937] text-white rounded-lg py-2 text-[10px] font-black uppercase tracking-wider"
+                className="w-full text-[10px] font-black uppercase tracking-wider"
               >
                 Apply Custom Promo
-              </button>
+              </Button>
             </div>
 
             <div className="border-t border-[#e5e7eb] pt-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => handleSetDiscount(0, 0)}
-                className="w-full bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 text-[10px] font-bold uppercase"
+                className="w-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-600 border-red-200 text-[10px] font-bold uppercase"
               >
                 Clear / Remove Discounts
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -626,12 +649,14 @@ export function OrderView() {
                   <p className="text-[10px] text-[#64748b] font-medium">Security Gatekeeper & Audit Ledger</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowPinModal(false)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700"
+                aria-label="Close authorization modal"
+                className="h-auto px-1 text-xs font-bold text-gray-400 hover:text-gray-700"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             {pinError && (
@@ -722,20 +747,22 @@ export function OrderView() {
 
             {/* Confirm & Cancel Buttons */}
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setShowPinModal(false)}
-                className="w-full bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#334155] font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-colors"
+                className="w-full uppercase tracking-wider"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="brand"
                 onClick={handleConfirmManagerPin}
-                className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-colors shadow-md"
+                className="w-full uppercase tracking-wider"
               >
                 Authorize & Log
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -750,12 +777,15 @@ export function OrderView() {
                 <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Special Instructions</span>
                 <h3 className="text-sm font-black text-slate-900 uppercase truncate max-w-[240px]">{editingItemNote.name}</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setEditingItemNote(null)}
-                className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"
+                aria-label="Close notes editor"
+                className="h-6 w-6 rounded-full"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3">
@@ -775,43 +805,46 @@ export function OrderView() {
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">Seat Number</label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[1, 2, 3, 4, 0].map((s) => (
-                    <button
+                    <Button
                       key={s}
                       type="button"
+                      variant="ghost"
                       onClick={() => setCustomItemSeat(s)}
-                      className={`py-2 rounded-lg text-xs font-black transition-all ${
+                      className={`py-2 h-auto rounded-lg text-xs font-black ${
                         customItemSeat === s
-                          ? 'bg-slate-900 text-white shadow-xs'
+                          ? 'bg-slate-900 text-white shadow-xs hover:bg-slate-900 hover:text-white'
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                       }`}
                     >
                       {s > 0 ? `S${s}` : 'All'}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setEditingItemNote(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                className="flex-1 py-2.5 h-auto"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="brand"
                 onClick={() => {
                   editingItemNote.notes = customKitchenNote.trim() || undefined;
                   editingItemNote.seat_number = customItemSeat;
                   setEditingItemNote(null);
                   triggerToast(`Updated instructions for ${editingItemNote.name}`);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-wider shadow-sm"
+                className="flex-1 py-2.5 h-auto uppercase tracking-wider"
               >
                 Save Notes
-              </button>
+              </Button>
             </div>
           </div>
         </div>

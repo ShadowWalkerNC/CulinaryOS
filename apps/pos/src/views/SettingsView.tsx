@@ -164,18 +164,19 @@ export function SettingsView() {
           { id: 'routing', label: 'Kitchen Routing', icon: <ChefHat className="w-4 h-4" /> },
           { id: 'display', label: 'Display & Text Sizing', icon: <Radio className="w-4 h-4" /> },
         ].map((tab) => (
-          <button
+          <Button
             key={tab.id}
+            variant="ghost"
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-foreground text-background shadow-xs'
+                ? 'bg-foreground text-background shadow-xs hover:bg-foreground hover:text-background'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -221,18 +222,19 @@ export function SettingsView() {
                 ].map((t) => {
                   const isSelected = printerConfig.transport === t.id;
                   return (
-                    <button
+                    <Button
                       key={t.id}
+                      variant="outline"
                       onClick={() => handleConfigChange('transport', t.id)}
-                      className={`p-3 rounded-xl border text-left font-bold text-xs transition-all flex items-center gap-2.5 ${
+                      className={`p-3 h-auto rounded-xl text-left font-bold text-xs gap-2.5 justify-start ${
                         isSelected
-                          ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.02]'
+                          ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.02] hover:bg-foreground hover:text-background'
                           : 'border-border bg-card text-foreground hover:border-foreground/30'
                       }`}
                     >
                       <span className={isSelected ? 'text-background' : 'text-primary'}>{t.icon}</span>
                       <span className="truncate">{t.name}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -281,28 +283,30 @@ export function SettingsView() {
                   Thermal Paper Width
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => handleConfigChange('paperWidth', '80mm')}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2.5 px-3 h-auto rounded-xl text-xs font-bold ${
                       printerConfig.paperWidth === '80mm'
-                        ? 'bg-foreground text-background border-foreground font-black shadow-xs'
+                        ? 'bg-foreground text-background border-foreground font-black shadow-xs hover:bg-foreground hover:text-background'
                         : 'bg-card border-border text-foreground hover:border-foreground/30'
                     }`}
                   >
                     80mm (48 Col Standard)
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => handleConfigChange('paperWidth', '58mm')}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2.5 px-3 h-auto rounded-xl text-xs font-bold ${
                       printerConfig.paperWidth === '58mm'
-                        ? 'bg-foreground text-background border-foreground font-black shadow-xs'
+                        ? 'bg-foreground text-background border-foreground font-black shadow-xs hover:bg-foreground hover:text-background'
                         : 'bg-card border-border text-foreground hover:border-foreground/30'
                     }`}
                   >
                     58mm (32 Col Compact)
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -407,13 +411,14 @@ export function SettingsView() {
 
             <div className="space-y-2">
               {READERS.map((r) => (
-                <button
+                <Button
                   key={r}
+                  variant="ghost"
                   onClick={() => setPairedReader(r)}
-                  className={`w-full text-left p-3 rounded-xl border flex justify-between items-center transition-all ${
+                  className={`w-full h-auto text-left p-3 rounded-xl border [&>span]:w-full [&>span]:justify-between [&>span]:items-center ${
                     pairedReader === r
-                      ? 'border-foreground bg-foreground text-background font-bold shadow-xs'
-                      : 'border-border bg-card text-foreground hover:border-foreground/30'
+                      ? 'border-foreground bg-foreground text-background font-bold shadow-xs hover:bg-foreground hover:text-background'
+                      : 'border-border bg-card text-foreground hover:bg-card hover:text-foreground hover:border-foreground/30'
                   }`}
                 >
                   <span className="text-xs font-semibold">{r}</span>
@@ -422,7 +427,7 @@ export function SettingsView() {
                       Paired
                     </span>
                   )}
-                </button>
+                </Button>
               ))}
             </div>
           </Card>
@@ -797,9 +802,10 @@ export function SettingsView() {
               ].map((s) => {
                 const isSelected = settings.display.textSize === s.id;
                 return (
-                  <button
+                  <Button
                     key={s.id}
                     type="button"
+                    variant="ghost"
                     onClick={() =>
                       setSettings({
                         ...settings,
@@ -810,17 +816,17 @@ export function SettingsView() {
                         },
                       })
                     }
-                    className={`p-3.5 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 h-auto rounded-xl border text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-start ${
                       isSelected
-                        ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.02]'
-                        : 'border-border bg-muted/30 text-foreground hover:border-foreground/30'
+                        ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.02] hover:bg-foreground hover:text-background'
+                        : 'border-border bg-muted/30 text-foreground hover:bg-muted/30 hover:text-foreground hover:border-foreground/30'
                     }`}
                   >
                     <span className="text-xs font-black block">{s.label}</span>
                     <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-background/70' : 'text-muted-foreground'}`}>
                       {s.desc}
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

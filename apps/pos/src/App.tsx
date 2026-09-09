@@ -14,6 +14,7 @@ import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
+  Button,
   Grid,
   X,
   ExternalLink,
@@ -94,10 +95,11 @@ export function App() {
       <header className="bg-slate-900 border-b border-slate-800 px-5 h-16 flex items-center justify-between shrink-0 shadow-md gap-4 text-white">
         {/* Left: Brand Identity & Active Staff */}
         <div className="flex items-center gap-3.5 shrink-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setView('dashboard')}
-            className="flex items-center gap-2.5 text-left hover:opacity-90 transition-opacity"
+            className="gap-2.5 text-left hover:opacity-90 hover:bg-transparent h-auto px-2 py-1 [&>span]:gap-2.5"
           >
             <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined filled text-[20px]">skillet</span>
@@ -115,7 +117,7 @@ export function App() {
                 CulinaryOS POS
               </span>
             </div>
-          </button>
+          </Button>
 
           <div className="h-6 w-px bg-slate-800 shrink-0" />
 
@@ -128,121 +130,124 @@ export function App() {
 
         {/* Center: Quick Navigation View Buttons with Visual Symbols */}
         <nav className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border-2 border-slate-800 overflow-x-auto no-scrollbar">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setView('dashboard')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'dashboard'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
                 : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">home</span>
             <span>Home</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => {
               setView('tables');
               setActiveOrder(null);
             }}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'tables' && !activeOrderId
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
                 : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">table_restaurant</span>
             <span>Floor Map</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               if (activeOrderId) setView('menu');
             }}
             disabled={!activeOrderId}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 disabled:opacity-30 ${
               !activeOrderId
-                ? 'opacity-30 cursor-not-allowed pointer-events-none border-slate-800 bg-slate-900/50 text-slate-500'
+                ? 'border-slate-800 bg-slate-900/50 text-slate-500'
                 : view === 'menu'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
                 : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">receipt_long</span>
             <span>Ticket</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               if (activeOrderId) setView('checkout');
             }}
             disabled={!activeOrderId}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 disabled:opacity-30 ${
               !activeOrderId
-                ? 'opacity-30 cursor-not-allowed pointer-events-none border-slate-800 bg-slate-900/50 text-slate-500'
+                ? 'border-slate-800 bg-slate-900/50 text-slate-500'
                 : view === 'checkout'
-                ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm hover:bg-emerald-600 hover:text-white'
                 : 'border-emerald-700 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">payments</span>
             <span>Pay</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setView('tabs')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'tabs'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
           >
             <span className="material-symbols-outlined text-[17px]">local_bar</span>
             <span>Tabs</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('recall')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'recall'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
           >
             <span className="material-symbols-outlined text-[17px]">history</span>
             <span>Recall</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('reports')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'reports'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
           >
             <span className="material-symbols-outlined text-[17px]">bar_chart</span>
             <span>Reports</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('cfd')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
               view === 'cfd'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
           >
             <span className="material-symbols-outlined text-[17px]">devices</span>
             <span>CFD Screen</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('settings')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border [&>span]:gap-1.5 ${
               view === 'settings'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">settings</span>
             <span>Settings</span>
-          </button>
+          </Button>
         </nav>
 
         {/* Right: Connection, Apps & Lock */}
@@ -254,28 +259,30 @@ export function App() {
 
           <ConnectionStatus />
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setShowApps(!showApps)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold gap-1.5 border [&>span]:gap-1.5 ${
               showApps
-                ? 'bg-slate-800 text-white border-slate-600'
-                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 border-slate-700'
+                ? 'bg-slate-800 text-white border-slate-600 hover:bg-slate-800 hover:text-white'
+                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-slate-200 border-slate-700'
             }`}
             title="Switch Applications"
           >
             <Grid className="w-4 h-4" />
             <span className="hidden lg:inline">Apps</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => setEmployee(null)}
-            className="bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+            className="bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-rose-300 border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider gap-1.5 [&>span]:gap-1.5"
             title="Lock Terminal"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Lock</span>
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -301,13 +308,15 @@ export function App() {
                   <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowApps(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+                className="h-7 w-7 rounded-full"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -402,10 +411,11 @@ export function App() {
         {/* Mobile/Tablet Ergonomic Thumb-Zone Floating Cart Bar (< 1024px) */}
         {activeOrderId && (view === 'menu' || view === 'checkout' || view === 'tables') && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 shadow-2xl flex items-center justify-between gap-3">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setMobileCartOpen(true)}
-              className="flex items-center gap-2.5 text-left active:scale-95 transition-transform"
+              className="justify-start gap-2.5 text-left h-auto px-2 py-1.5"
             >
               <div className="relative w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
                 <ShoppingCart className="w-5 h-5" />
@@ -423,24 +433,26 @@ export function App() {
                   {itemCount} items • ${(orderSubtotal / 100).toFixed(2)}
                 </div>
               </div>
-            </button>
+            </Button>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setMobileCartOpen(true)}
-                className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase tracking-wider active:scale-95 transition-all"
+                className="h-11 px-4 uppercase tracking-wider"
               >
                 View Ticket
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="success"
                 onClick={() => setView('checkout')}
-                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+                className="h-11 px-5 uppercase tracking-wider gap-1.5"
               >
                 <span>Pay</span>
                 <span className="font-mono">${(orderSubtotal / 100).toFixed(2)}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -457,13 +469,15 @@ export function App() {
                   Live Ticket ({currentOrder?.table_number ? `Table ${currentOrder.table_number}` : 'Open Tab'})
                 </span>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setMobileCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+                className="h-8 w-8 rounded-full"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
               <OrderView />

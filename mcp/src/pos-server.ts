@@ -24,7 +24,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "create_order",
-        description: "Creates a new POS checkout transaction and queues a KDS ticket",
+        description:
+          "Creates a new POS checkout transaction and queues a KDS ticket. " +
+          "Prices are ALWAYS taken from the live menu by the API server — the tool never sends prices.",
         inputSchema: {
           type: "object",
           properties: {
@@ -34,16 +36,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               items: {
                 type: "object",
                 properties: {
-                  productName: { type: "string" },
+                  productName: { type: "string", description: "Menu item display name" },
+                  menuItemId: {
+                    type: "string",
+                    description: "Menu item UUID from the live menu (required — the server prices from the menu)",
+                  },
                   quantity: { type: "number" },
-                  price: { type: "number" }
+                  price: {
+                    type: "number",
+                    description: "DEPRECATED and ignored. The API server always prices from the live menu.",
+                  },
                 },
-                required: ["productName", "quantity", "price"]
-              }
-            }
+                required: ["menuItemId", "quantity"],
+              },
+            },
           },
-          required: ["items"]
-        }
+          required: ["items"],
+        },
       },
       {
         name: "apply_loyalty_points",
@@ -69,7 +78,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === "create_order") {
       const { tableNumber = "Takeout", items } = args as {
         tableNumber?: string;
-        items: { productName: string; quantity: number; price: number; station?: string; menuItemId?: string }[];
+        items: { productName?: string; quantity: number; station?: string; menuItemId?: string }[];
       };
       
       const API_URL = culinaryOsBaseUrl();
@@ -95,16 +104,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const orderBody = await orderRes.json() as any;
       const order = orderBody.data;
 
-      // 2. Add line items to the order
+      // 2. Add line items to the order.
+      // SECURITY: never send unitPrice — the API server prices every line from
+      // the live menu, so agent-supplied prices can never alter what is charged.
+      // Items without a menuItemId are rejected rather than invented.
+      const skipped: string[] = [];
       for (const item of items) {
+        if (!item.menuItemId) {
+          skipped.push(item.productName ?? "(unnamed item)");
+          continue;
+        }
         const itemRes = await fetch(`${API_URL}/v1/orders/${order.id}/items`, {
           method: "POST",
           headers,
           body: JSON.stringify({
-            menuItemId: item.menuItemId || "mock-item-id",
+            menuItemId: item.menuItemId,
             name: item.productName,
             quantity: item.quantity ?? 1,
-            unitPrice: Math.round(item.price * 100), // convert to cents
             station: item.station ?? "hot"
           })
         });
@@ -112,6 +128,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!itemRes.ok) {
           const errText = await itemRes.text();
           console.error(`Failed to add line item: ${errText}`);
+          skipped.push(`${item.productName ?? item.menuItemId} (${errText})`);
         }
       }
 
@@ -130,9 +147,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: "text",
-            text: `Success: Order ${order.id} (Table: ${tableNumber}) created and fired to kitchen. Real-time ticket dispatched to KDS.`
-          }
-        ]
+            text:
+              `Success: Order ${order.id} (Table: ${tableNumber}) created and fired to kitchen. ` +
+              `Real-time ticket dispatched to KDS. Prices applied from the live menu.` +
+              (skipped.length > 0
+                ? ` Skipped ${skipped.length} item(s) without a valid menu item: ${skipped.join("; ")}.`
+                : ""),
+          },
+        ],
       };
     } else if (name === "apply_loyalty_points") {
       const { customerId, pointsToAdjust } = args as {

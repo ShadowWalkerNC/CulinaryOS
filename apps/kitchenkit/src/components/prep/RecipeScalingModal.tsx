@@ -17,6 +17,7 @@ import {
   evaluateDietaryProfile,
   ALLERGEN_REGISTRY,
 } from '@culinaryos/shared';
+import { Button } from '@culinaryos/ui';
 import AdhesiveLabelModal from './AdhesiveLabelModal';
 
 interface Props {
@@ -101,12 +102,15 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center transition"
+            aria-label="Close"
+            className="h-8 w-8 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-400"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Mode Selector */}
@@ -115,30 +119,34 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
             Scaling Method:
           </span>
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setScaleMode('bakers')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`h-auto px-3.5 py-1.5 rounded-lg text-xs font-bold ${
                 scaleMode === 'bakers'
-                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
               }`}
             >
               <Percent className="w-3.5 h-3.5" />
               Baker's Math (% of Flour Basis)
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setScaleMode('yield')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`h-auto px-3.5 py-1.5 rounded-lg text-xs font-bold ${
                 scaleMode === 'yield'
-                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
               }`}
             >
               <ChefHat className="w-3.5 h-3.5" />
               Standard Yield Portions Multiplier
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -204,15 +212,18 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
                       </td>
                       <td className="py-2.5 px-4 text-center">
                         {ing.percentage !== 100 && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() =>
                               setBakersIngredients(bakersIngredients.filter((_, i) => i !== idx))
                             }
-                            className="text-zinc-600 hover:text-red-400"
+                            aria-label={`Remove ${ing.name}`}
+                            className="h-7 w-7 text-zinc-600 hover:bg-transparent hover:text-red-400"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -221,13 +232,15 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
               </table>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={handleAddBakersRow}
-              className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
+              className="h-auto p-0 text-xs font-semibold text-amber-400 hover:text-amber-300 hover:no-underline"
             >
               + Add Baker's Ingredient Row
-            </button>
+            </Button>
           </div>
         ) : (
           /* ── STANDARD YIELD VIEW ── */
@@ -298,15 +311,18 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
                         {ing.amount} {ing.unit}
                       </td>
                       <td className="py-2.5 px-4 text-center">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() =>
                             setStandardIngredients(standardIngredients.filter((_, i) => i !== idx))
                           }
-                          className="text-zinc-600 hover:text-red-400"
+                          aria-label={`Remove ${ing.name}`}
+                          className="h-7 w-7 text-zinc-600 hover:bg-transparent hover:text-red-400"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -314,13 +330,15 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
               </table>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={handleAddStandardRow}
-              className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
+              className="h-auto p-0 text-xs font-semibold text-amber-400 hover:text-amber-300 hover:no-underline"
             >
               + Add Recipe Ingredient
-            </button>
+            </Button>
           </div>
         )}
 
@@ -381,21 +399,23 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
             Scaled batch is ready for mise en place station prep.
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-bold"
+              className="bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700 hover:text-zinc-300"
             >
               Close
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="warning"
               onClick={() => setShowLabelModal(true)}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs"
+              className="text-xs font-black text-zinc-950"
             >
               <Tag className="w-4 h-4" />
               <span>Print Adhesive Expiration Label</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

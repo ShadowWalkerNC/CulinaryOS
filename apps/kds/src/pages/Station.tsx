@@ -26,10 +26,19 @@ import { useCourseFiredNotices }  from '../hooks/useCourseFiredNotices';
 import { CourseHoldBanner }       from '../components/CourseHoldBanner';
 import { TicketCard }             from '../components/TicketCard';
 import { AnalyticsBar }           from '../components/AnalyticsBar';
-import type { AnalyticsSummary }  from '../types';
+import { AnalyticsSummary }       from '../types';
+import type { KitchenTicket }     from '../types';
 
 const API = getApiBase();
 const TENANT_ID = getTenantId();
+
+// How long a bumped ticket stays recallable from the "Recently bumped" tray
+const RECALL_WINDOW_MS = 60_000;
+
+interface BumpedRecord {
+  ticket: KitchenTicket;
+  bumpedAt: number;
+}
 
 const STATIONS = [
   { id: 'expo', label: 'Expo Pass', icon: 'room_service', color: 'text-amber-400' },
@@ -54,6 +63,11 @@ export function Station() {
   const [show86Modal, setShow86Modal]             = useState(false);
   const [items86, setItems86]                     = useState<any[]>([]);
   const [pacingData, setPacingData]               = useState<any[]>([]);
+  // Bumped-but-recallable tickets: bumped within RECALL_WINDOW_MS
+  const [recentlyBumped, setRecentlyBumped]       = useState<BumpedRecord[]>([]);
+  // Recalled tickets that must survive the 2s demo/offline poll, which
+  // rebuilds `tickets` wholesale from the mock store
+  const [recallKeepAlive, setRecallKeepAlive]     = useState<BumpedRecord[]>([]);
 
   const appModules = [
     { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },
@@ -138,23 +152,106 @@ export function Station() {
     } catch {}
   };
 
-  // Bump a ticket via REST — only mutate local state on success
+  // Bump a ticket via REST — only mutate local state on success.
+  // The bumped ticket is kept in the recall tray for RECALL_WINDOW_MS so an
+  // accidental bump can be undone.
   const handleBump = useCallback(async (ticketId: string) => {
+    const doomed = tickets.find(t => t.id === ticketId);
+    const recordBump = () => {
+      if (doomed) {
+        setRecentlyBumped(prev => [
+          ...prev.filter(r => r.ticket.id !== ticketId),
+          { ticket: doomed, bumpedAt: Date.now() },
+        ]);
+      }
+    };
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: apiHeaders(TENANT_ID),
       });
       if (!res.ok) throw new Error(`Bump failed: ${res.status}`);
+      recordBump();
       setTickets(prev => prev.filter(t => t.id !== ticketId));
     } catch {
       // Demo / offline fallback only when API unreachable
       if (!import.meta.env.VITE_SUPABASE_URL || String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) {
         bumpDemoTicket(ticketId);
+        recordBump();
         setTickets(prev => prev.filter(t => t.id !== ticketId));
       }
     }
-  }, [setTickets]);
+  }, [setTickets, tickets]);
+
+  // Restore a recently bumped ticket to the board
+  const handleRecall = useCallback((ticketId: string) => {
+    const rec = recentlyBumped.find(r => r.ticket.id === ticketId);
+    if (!rec) return;
+    setRecentlyBumped(prev => prev.filter(r => r.ticket.id !== ticketId));
+    setTickets(prev => {
+      if (prev.some(t => t.id === ticketId)) return prev;
+      return [...prev, rec.ticket].sort(
+        (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)
+      );
+    });
+    // Keep-alive: the demo/offline poll rebuilds `tickets` every 2s, which
+    // would erase the recall — re-merge until the recall window expires
+    setRecallKeepAlive(prev => [
+      ...prev.filter(r => r.ticket.id !== ticketId),
+      { ...rec, bumpedAt: Date.now() },
+    ]);
+  }, [setTickets, recentlyBumped]);
+
+  // Prune expired recall entries every second; re-merge recalled tickets
+  // that the demo/offline poll dropped, and tick the tray countdown
+  const [, setRecallTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = Date.now();
+      setRecentlyBumped(prev => {
+        const next = prev.filter(r => now - r.bumpedAt < RECALL_WINDOW_MS);
+        return next.length === prev.length ? prev : next;
+      });
+      setRecallKeepAlive(prev => {
+        const next = prev.filter(r => now - r.bumpedAt < RECALL_WINDOW_MS);
+        return next.length === prev.length ? prev : next;
+      });
+      setRecallTick(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (recallKeepAlive.length === 0) return;
+    setTickets(prev => {
+      const ids = new Set(prev.map(t => t.id));
+      const missing = recallKeepAlive
+        .filter(r => !ids.has(r.ticket.id))
+        .map(r => r.ticket);
+      return missing.length
+        ? [...prev, ...missing].sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt))
+        : prev;
+    });
+  }, [recallKeepAlive, setTickets]);
+
+  // Quick scrap logging with tenant-aware headers (TicketCard falls back to a
+  // hardcoded direct API call when this is not provided)
+  const handleQuickScrap = useCallback(async (payload: {
+    ingredient: string;
+    itemName: string;
+    quantity: number;
+    reason: 'dropped' | 'burned' | 'spoiled' | 'overportion' | 'void_cooked';
+  }) => {
+    try {
+      await fetch(`${API}/v1/ops/waste/quick`, {
+        method: 'POST',
+        headers: { ...apiHeaders(TENANT_ID), 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // non-fatal — waste entry stays local-only until the next sync
+    }
+  }, []);
 
   // Hold a course via REST
   const handleHoldCourse = useCallback(async (ticketId: string) => {
@@ -533,9 +630,45 @@ export function Station() {
             language={language}
             onBump={handleBump}
             onFire={handleFireCourse}
+            onQuickScrap={handleQuickScrap}
           />
         ))}
       </main>
+
+      {/* Recently bumped recall tray — thumb-zone, touch-sized */}
+      {recentlyBumped.length > 0 && (
+        <div
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700 px-4 py-3 flex items-center gap-3 max-w-[94vw] overflow-x-auto no-scrollbar"
+          role="status"
+          aria-label="Recently bumped tickets — recall available"
+        >
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 whitespace-nowrap flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px]">undo</span>
+            <span>Recently bumped</span>
+          </span>
+          {recentlyBumped.map((r) => {
+            const secsLeft = Math.max(0, Math.ceil((RECALL_WINDOW_MS - (Date.now() - r.bumpedAt)) / 1000));
+            return (
+              <div
+                key={r.ticket.id}
+                className="flex items-center gap-2 bg-slate-800 rounded-xl pl-3 pr-1.5 py-1.5 border border-slate-700 shrink-0"
+              >
+                <span className="text-xs font-bold whitespace-nowrap">
+                  {r.ticket.tableLabel} · {secsLeft}s
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleRecall(r.ticket.id)}
+                  className="min-h-[48px] min-w-[48px] px-4 rounded-lg bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">undo</span>
+                  <span>Recall</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Analytics footer */}
       <AnalyticsBar analytics={analytics} />

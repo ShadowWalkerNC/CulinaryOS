@@ -10,6 +10,7 @@ import {
   DEFAULT_DENNIS_ITEMS,
 } from '../hooks/useVendors';
 import { useParLevels } from '../hooks/useParLevels';
+import { Button } from '@culinaryos/ui';
 
 export default function VendorsPage() {
   const { data: vendors = [], isLoading: loadingVendors } = useVendors();
@@ -156,27 +157,30 @@ export default function VendorsPage() {
             <ExternalLink className="w-4 h-4" />
             Dennis Pepr Portal
           </a>
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setShowPeprImportModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-zinc-200 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition"
+            className="border border-zinc-700 bg-zinc-800 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-zinc-200"
           >
             <Upload className="w-4 h-4 text-amber-400" />
             Import Dennis Guide
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => setShowOrderGuide(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-zinc-200 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition"
+            className="border border-zinc-700 bg-zinc-800 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-zinc-200"
           >
             <FileText className="w-4 h-4 text-amber-400" />
             Generate PO / Guide
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="warning"
             onClick={() => setShowAddVendor(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+            className="text-sm font-semibold text-zinc-950"
           >
             <Plus className="w-4 h-4" />
             Add Vendor
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -214,17 +218,20 @@ export default function VendorsPage() {
                           <p className="text-xs text-zinc-400 mt-0.5">{vendor.contact_name}</p>
                         )}
                       </div>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm(`Delete vendor "${vendor.name}"?`)) {
                             deleteVendorMutation.mutate(vendor.id);
                           }
                         }}
-                        className="text-zinc-500 hover:text-red-400 p-1"
+                        aria-label={`Delete vendor ${vendor.name}`}
+                        className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-zinc-400">
                       {vendor.phone && (
@@ -256,13 +263,15 @@ export default function VendorsPage() {
                     Min Order: ${activeVendor.min_order_amount || '0.00'}
                   </p>
                 </div>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setShowAddItem(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition"
+                  className="border border-zinc-700 bg-zinc-800 text-xs font-semibold text-zinc-100 hover:bg-zinc-700 hover:text-zinc-100"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Map Ingredient
-                </button>
+                </Button>
               </div>
 
               {vendorItems.length === 0 ? (
@@ -289,12 +298,15 @@ export default function VendorsPage() {
                           <td className="py-3 px-4 text-zinc-400">{item.package_size || '—'}</td>
                           <td className="py-3 px-4 text-amber-400 font-mono">${item.unit_cost?.toFixed(2) || '0.00'}</td>
                           <td className="py-3 px-4 text-right">
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => deleteItemMutation.mutate(item.id)}
-                              className="text-zinc-500 hover:text-red-400 p-1"
+                              aria-label={`Remove ${item.ingredient_name} from ${activeVendor.name}`}
+                              className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-red-400"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -372,20 +384,22 @@ export default function VendorsPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAddVendor(false)}
-                  className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+                  className="text-sm text-zinc-400 hover:bg-transparent hover:text-zinc-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="warning"
                   disabled={createVendorMutation.isPending}
-                  className="px-4 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+                  className="text-sm font-semibold text-zinc-950"
                 >
                   Save Vendor
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -444,20 +458,22 @@ export default function VendorsPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAddItem(false)}
-                  className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+                  className="text-sm text-zinc-400 hover:bg-transparent hover:text-zinc-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="warning"
                   disabled={upsertItemMutation.isPending}
-                  className="px-4 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+                  className="text-sm font-semibold text-zinc-950"
                 >
                   Save Mapping
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -478,13 +494,16 @@ export default function VendorsPage() {
                 </div>
                 <h2 className="text-lg font-bold text-zinc-100">Import Dennis Catalog / Order Guide</h2>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowPeprImportModal(false)}
-                className="text-zinc-500 hover:text-zinc-300 p-1"
+                aria-label="Close"
+                className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-zinc-300"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <p className="text-xs text-zinc-400 leading-relaxed">
@@ -515,21 +534,25 @@ export default function VendorsPage() {
             </div>
 
             <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowPeprImportModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-zinc-200"
+                className="text-xs font-semibold text-zinc-400 hover:bg-transparent hover:text-zinc-200"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="warning"
+                size="sm"
                 onClick={handleBulkImportDennisGuide}
-                className="px-4 py-2 text-xs font-bold text-zinc-950 bg-amber-500 rounded-xl hover:bg-amber-400 transition flex items-center gap-1.5 shadow-xs"
+                className="text-xs font-bold text-zinc-950"
               >
                 <Download className="w-3.5 h-3.5" />
                 Import to {activeVendor.name}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -551,14 +574,16 @@ export default function VendorsPage() {
                 <p className="text-xs text-zinc-400">Automated replenishment calculation based on inventory par levels</p>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => {
                     const poText = belowParItems.map(i => `${i.ingredient_name} — Qty: ${Number(i.par_amount) - Number(i.current_stock)} ${i.unit}`).join('\n');
                     navigator.clipboard.writeText(`PURCHASE ORDER: ${activeVendor.name}\n${poText}`);
                     setCopiedPO(true);
                     setTimeout(() => setCopiedPO(false), 2500);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700"
+                  className="border border-zinc-700 bg-zinc-800 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 hover:text-zinc-300"
                 >
                   {copiedPO ? (
                     <>
@@ -571,14 +596,16 @@ export default function VendorsPage() {
                       <span>Copy PO</span>
                     </>
                   )}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="warning"
+                  size="sm"
                   onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400"
+                  className="text-xs font-semibold text-zinc-950"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Print PO
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -616,12 +643,13 @@ export default function VendorsPage() {
 
             <div className="flex justify-between items-center pt-3 border-t border-zinc-800 text-xs text-zinc-400">
               <span>Next Delivery Cutoff: <strong className="text-zinc-200">4:00 PM EST</strong></span>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowOrderGuide(false)}
-                className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+                className="text-sm text-zinc-400 hover:bg-transparent hover:text-zinc-200"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>

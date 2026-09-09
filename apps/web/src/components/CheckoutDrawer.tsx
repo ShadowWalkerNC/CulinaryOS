@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { CartState, OrderMode, CustomerInfo, OnlineOrder, PaymentMethod } from '../types';
 import { nanoid } from '../lib/nanoid';
 import { saveOrder } from '../lib/orderStore';
-import { X, CreditCard, Smartphone, Store, ShieldCheck, CheckCircle2, Lock, ArrowRight } from '@culinaryos/ui';
+import { Button, X, CreditCard, Smartphone, Store, ShieldCheck, CheckCircle2, Lock, ArrowRight } from '@culinaryos/ui';
 
 interface Props {
   cart: CartState;
@@ -158,13 +158,15 @@ export function CheckoutDrawer({
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all"
+            className="h-8 w-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-600"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Scrollable Form Content */}
@@ -172,30 +174,24 @@ export function CheckoutDrawer({
           {/* Order Mode Pill Switcher */}
           <div className="bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
             <div className="grid grid-cols-2 gap-1.5">
-              <button
+              <Button
                 type="button"
+                variant={mode === 'delivery' ? 'brand' : 'ghost'}
                 onClick={() => setMode('delivery')}
-                className={`py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  mode === 'delivery'
-                    ? 'bg-[#0f172a] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className={mode === 'delivery' ? '' : 'text-slate-600 hover:bg-transparent hover:text-slate-900'}
               >
                 <span>Delivery</span>
                 <span className="text-[10px] font-mono opacity-80">(+$3.99)</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant={mode === 'pickup' ? 'brand' : 'ghost'}
                 onClick={() => setMode('pickup')}
-                className={`py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  mode === 'pickup'
-                    ? 'bg-[#0f172a] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className={mode === 'pickup' ? '' : 'text-slate-600 hover:bg-transparent hover:text-slate-900'}
               >
                 <span>Store Pickup</span>
                 <span className="text-[10px] font-mono opacity-80">(Free)</span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -299,14 +295,15 @@ export function CheckoutDrawer({
                 const dollarAmount = opt !== 'custom' && opt !== '0' ? (subtotal * percentVal) / 100 : null;
 
                 return (
-                  <button
+                  <Button
                     key={opt}
                     type="button"
+                    variant={isSelected ? 'brand' : 'outline'}
                     onClick={() => setTipOption(opt)}
-                    className={`py-2 px-1 rounded-xl text-center border transition-all flex flex-col items-center justify-center ${
+                    className={`h-auto border px-1 py-2 text-center [&>span]:flex-col [&>span]:gap-0 ${
                       isSelected
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'border-[#0f172a]'
+                        : 'border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-700'
                     }`}
                   >
                     <span className="text-xs font-black">
@@ -321,7 +318,7 @@ export function CheckoutDrawer({
                         ${dollarAmount.toFixed(2)}
                       </span>
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -348,46 +345,49 @@ export function CheckoutDrawer({
               4. Payment Method
             </label>
             <div className="grid grid-cols-3 gap-2">
-              <button
+              <Button
                 type="button"
+                variant={paymentMethod === 'card' ? 'brand' : 'outline'}
                 onClick={() => setPaymentMethod('card')}
-                className={`p-3 rounded-xl border text-left flex flex-col justify-between h-20 transition-all ${
+                className={`h-20 border p-3 text-left [&>span]:h-full [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:justify-between [&>span]:gap-0 ${
                   paymentMethod === 'card'
-                    ? 'border-[#0f172a] bg-[#0f172a] text-white shadow-xs'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'border-[#0f172a]'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-700'
                 }`}
               >
                 <CreditCard className="w-5 h-5" />
                 <span className="text-xs font-bold">Credit Card</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant={paymentMethod === 'apple_pay' ? 'brand' : 'outline'}
                 onClick={() => setPaymentMethod('apple_pay')}
-                className={`p-3 rounded-xl border text-left flex flex-col justify-between h-20 transition-all ${
+                className={`h-20 border p-3 text-left [&>span]:h-full [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:justify-between [&>span]:gap-0 ${
                   paymentMethod === 'apple_pay'
-                    ? 'border-[#0f172a] bg-[#0f172a] text-white shadow-xs'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'border-[#0f172a]'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-700'
                 }`}
               >
                 <Smartphone className="w-5 h-5" />
                 <span className="text-xs font-bold">Apple Pay</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant={paymentMethod === 'pay_at_counter' ? 'brand' : 'outline'}
                 onClick={() => setPaymentMethod('pay_at_counter')}
-                className={`p-3 rounded-xl border text-left flex flex-col justify-between h-20 transition-all ${
+                className={`h-20 border p-3 text-left [&>span]:h-full [&>span]:w-full [&>span]:flex-col [&>span]:items-start [&>span]:justify-between [&>span]:gap-0 ${
                   paymentMethod === 'pay_at_counter'
-                    ? 'border-[#0f172a] bg-[#0f172a] text-white shadow-xs'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'border-[#0f172a]'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-700'
                 }`}
               >
                 <Store className="w-5 h-5" />
                 <span className="text-xs font-bold">
                   {mode === 'delivery' ? 'Cash on Deliv.' : 'At Counter'}
                 </span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -446,17 +446,19 @@ export function CheckoutDrawer({
           )}
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
+            variant="brand"
+            size="lg"
             disabled={submitting}
-            className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-4 px-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-between shadow-lg transition-all active:scale-[0.99] disabled:opacity-50"
+            className="w-full px-4 text-xs font-black uppercase tracking-wider shadow-lg [&>span]:w-full [&>span]:justify-between"
           >
             <span>{submitting ? 'Confirming Order…' : 'Authorize & Place Order'}</span>
             <span className="flex items-center gap-1 font-mono text-sm">
               ${(grandTotal / 100).toFixed(2)}
               <ArrowRight className="w-4 h-4 ml-1" />
             </span>
-          </button>
+          </Button>
         </form>
       </div>
     </div>

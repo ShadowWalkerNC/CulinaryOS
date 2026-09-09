@@ -224,39 +224,36 @@ export function PantryPage() {
             )}
             <span>{msg.text}</span>
           </div>
-          <button
+          <Button
+            variant="link"
+            className="h-auto px-0 py-0 text-inherit opacity-80 hover:opacity-100"
             onClick={() => setMsg(null)}
-            className="text-xs font-bold hover:underline opacity-80 hover:opacity-100"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Section Tabs */}
       <div className="flex items-center gap-2 border-b border-border pb-2">
-        <button
+        <Button
           onClick={() => setTab('inventory')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-            tab === 'inventory'
-              ? 'bg-primary text-primary-foreground shadow-xs'
-              : 'bg-card text-muted-foreground hover:text-foreground border border-border'
-          }`}
+          variant={tab === 'inventory' ? 'default' : 'outline'}
+          size="sm"
+          className="rounded-xl uppercase tracking-wider"
         >
           <Package className="w-4 h-4" />
           <span>Inventory Roster ({items.length})</span>
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setTab('orders')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-            tab === 'orders'
-              ? 'bg-primary text-primary-foreground shadow-xs'
-              : 'bg-card text-muted-foreground hover:text-foreground border border-border'
-          }`}
+          variant={tab === 'orders' ? 'default' : 'outline'}
+          size="sm"
+          className="rounded-xl uppercase tracking-wider"
         >
           <ShoppingBag className="w-4 h-4" />
           <span>Purchase Orders ({pos.length})</span>
-        </button>
+        </Button>
       </div>
 
       {/* Main Content Area */}
