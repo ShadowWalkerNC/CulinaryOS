@@ -155,8 +155,12 @@ ordersRoutes.post('/:id/items', async (c) => {
     const order = mockOrders.find(o => o.id === id);
     if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
 
-    const price = body.unitPrice ?? 0;
-    const quantity = body.quantity ?? 1;
+    const rawPrice = Math.floor(Number(body.unitPrice) || 0);
+    if (rawPrice < 0) {
+      return err(c, 'VALIDATION_ERROR', 'unitPrice must be a non-negative integer (cents)', 422);
+    }
+    const price = rawPrice;
+    const quantity = Math.max(1, Math.floor(Number(body.quantity) || 1));
     const lineTotal = price * quantity;
 
     const newItem = {
@@ -190,16 +194,56 @@ ordersRoutes.post('/:id/items', async (c) => {
     return ok(c, newItem, 201);
   }
 
+  // ---- Money integrity: the server is the price authority. Every line item
+  // must reference a real menu item for this tenant, and a client-supplied
+  // unitPrice must equal the menu price (omitted → menu price is used).
+  // This closes price injection from POS clients, MCP agents, and integrations.
+  const menuItemId = body.menuItemId;
+  if (typeof menuItemId !== 'string' || !menuItemId.trim()) {
+    return err(c, 'VALIDATION_ERROR', 'menuItemId is required', 422);
+  }
+  const quantity = Math.max(1, Math.floor(Number(body.quantity) || 1));
+
+  const { data: menuItem, error: menuErr } = await supabase
+    .from('menu_items')
+    .select('id, price, is_available, status')
+    .eq('id', menuItemId)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (menuErr || !menuItem) {
+    return err(c, 'NOT_FOUND', 'Menu item not found for this tenant', 404);
+  }
+
+  const menuPrice = Math.max(0, Math.floor(Number(menuItem.price) || 0));
+  let unitPrice: number;
+  if (body.unitPrice === undefined || body.unitPrice === null) {
+    unitPrice = menuPrice;
+  } else {
+    unitPrice = Math.floor(Number(body.unitPrice));
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      return err(c, 'VALIDATION_ERROR', 'unitPrice must be a non-negative integer (cents)', 422);
+    }
+    if (unitPrice !== menuPrice) {
+      return err(
+        c,
+        'PRICE_MISMATCH',
+        `unitPrice (${unitPrice}) does not match the menu price (${menuPrice}) for this item. Prices are set server-side from the menu.`,
+        422
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from('pos_order_line_items')
     .insert({
       tenant_id:     tenantId,
       order_id:      id,
-      menu_item_id:  body.menuItemId,
+      menu_item_id:  menuItemId,
       name:          body.name,
-      quantity:      body.quantity ?? 1,
-      unit_price:    body.unitPrice,
-      line_total:    body.unitPrice * (body.quantity ?? 1),
+      quantity,
+      unit_price:    unitPrice,
+      line_total:    unitPrice * quantity,
       station:       body.station ?? 'hot',
       course_number: body.courseNumber ?? 1,
       notes:         body.notes ?? null,
