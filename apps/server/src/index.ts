@@ -9,6 +9,7 @@ import { cors }                from 'hono/cors';
 import { logger }              from 'hono/logger';
 import { requireApiKey }       from './middleware/auth';
 import { withSupabase }        from './middleware/supabase';
+import { isAuthRelaxed, isLiveSupabaseConfigured } from './lib/secrets';
 import {
   handleIncomingEvent,
   startRealtimeBridge,
@@ -161,6 +162,21 @@ app.get('/health', (c) => c.json({
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
 startRealtimeBridge();
+
+// Auth posture banner — make the server's security mode impossible to miss.
+if (isAuthRelaxed()) {
+  console.warn(
+    '[culinaryos-api] ⚠️  AUTH MODE: RELAXED — authentication is DISABLED for every route. ' +
+    'Local development/demo only. NEVER use AUTH_RELAXED=true with a live database.'
+  );
+} else if (!isLiveSupabaseConfigured()) {
+  console.warn(
+    '[culinaryos-api] AUTH MODE: LOCAL DEMO — no live Supabase backend configured; ' +
+    'serving mock data only. Demo PINs accepted. Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for live mode.'
+  );
+} else {
+  console.log('[culinaryos-api] AUTH MODE: LIVE — Supabase backend configured, full authentication enforced.');
+}
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
