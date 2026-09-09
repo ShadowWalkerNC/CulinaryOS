@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import DemoSection from '@/components/DemoSection';
 
 export const metadata: Metadata = {
   title: 'CulinaryOS — AI-Native Restaurant Operating System',
@@ -113,6 +114,11 @@ export default function HomePage() {
             </a>
           </div>
         </div>
+      </section>
+
+      {/* ─── INTERACTIVE DEMO ─────────────────────────────────── */}
+      <section id="demo" className="py-24 px-4 scroll-mt-16">
+        <DemoSection />
       </section>
 
       {/* ─── SOCIAL PROOF TICKER ───────────────────────────────── */}
