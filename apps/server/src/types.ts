@@ -9,5 +9,7 @@ export interface Env {
     userId?: string;
     authRole?: string;
     authMode?: 'jwt' | 'api_key' | 'relaxed';
+    /** Set by PIN endpoints: true when this request was a failed PIN attempt. */
+    pinAuthFailed?: boolean;
   };
 }

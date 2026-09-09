@@ -9,7 +9,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../types.js';
 import { adminSupabase } from '../middleware/supabase.js';
 import { ok, err, requireTenant } from '../middleware/auth.js';
-import { isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
+import { pinRateLimit } from '../middleware/rateLimit.js';
+import { isAuthRelaxed, isDemoAuthAllowed, isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
 import { DEMO_STAFF, hashPin, verifyPin } from '../lib/pin.js';
 import { verifyManagerPinDirectly, getAuditLogs } from '../lib/audit.js';
 
@@ -26,7 +27,7 @@ function anonAuthClient() {
   });
 }
 
-authRoutes.post('/pin-login', async (c) => {
+authRoutes.post('/pin-login', pinRateLimit, async (c) => {
   const body = await c.req.json<{ pin?: string; tenant_id?: string }>().catch(() => ({} as any));
   const pin = String(body.pin ?? '').trim();
   const tenantId = String(body.tenant_id ?? process.env.VITE_TENANT_ID ?? DEMO_TENANT).trim();
@@ -35,10 +36,10 @@ authRoutes.post('/pin-login', async (c) => {
     return err(c, 'VALIDATION_ERROR', 'PIN must be 4–8 digits', 422);
   }
 
-  // Demo / local fallback when using standard test pins
+  // Demo / local fallback when using standard test pins — explicit relaxed mode only
   const demoStaff = DEMO_STAFF.find((s) => s.pin === pin);
   const fallbackToken = process.env.DEVICE_API_KEY ?? process.env.INTERNAL_API_KEY ?? 'demo';
-  if (process.env.AUTH_RELAXED === 'true' && demoStaff) {
+  if (isAuthRelaxed() && demoStaff) {
     return ok(c, {
       mode: 'demo',
       tenantId,
@@ -51,10 +52,11 @@ authRoutes.post('/pin-login', async (c) => {
   }
 
   // ---- Live path: staff_pins + Supabase Auth password (= PIN) ----
+  // Demo PINs are NEVER accepted in live mode — only real staff_pins rows.
   if (isLiveSupabaseConfigured()) {
     const admin = adminSupabase();
     if (!admin) {
-      if (demoStaff) {
+      if (demoStaff && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'demo',
           tenantId,
@@ -85,9 +87,9 @@ authRoutes.post('/pin-login', async (c) => {
 
     const match = (rows ?? []).find((r: any) => verifyPin(pin, r.pin_hash));
     if (!match) {
-      // Fallback for demo PINs 1234/5678
+      // Demo PINs are only honored in demo/relaxed mode — never against a live backend.
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
-      if (demo) {
+      if (demo && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'device_key',
           tenantId,
@@ -97,13 +99,13 @@ authRoutes.post('/pin-login', async (c) => {
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
       }
+      c.set('pinAuthFailed', true);
       return err(c, 'UNAUTHORIZED', 'Invalid PIN', 401);
     }
 
-    const { data: userData, error: userErr } = await admin.auth.admin.getUserById(match.user_id);
-    if (userErr || !userData?.user?.email) {
+    const { data: userData, error: userErr } = await admin.auth.admin.getUserById(match.user_id);    if (userErr || !userData?.user?.email) {
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
-      if (demo) {
+      if (demo && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'device_key',
           tenantId,
@@ -113,6 +115,7 @@ authRoutes.post('/pin-login', async (c) => {
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
       }
+      c.set('pinAuthFailed', true);
       return err(c, 'UNAUTHORIZED', 'Staff Auth user missing', 401);
     }
 
@@ -126,7 +129,7 @@ authRoutes.post('/pin-login', async (c) => {
 
     if (signErr || !sessionData.session) {
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
-      if (demo) {
+      if (demo && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'device_key',
           tenantId,
@@ -136,6 +139,7 @@ authRoutes.post('/pin-login', async (c) => {
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
       }
+      c.set('pinAuthFailed', true);
       return err(c, 'UNAUTHORIZED', signErr?.message ?? 'PIN login failed', 401);
     }
 
@@ -157,8 +161,8 @@ authRoutes.post('/pin-login', async (c) => {
         expiresAt: sessionData.session.expires_at,
       });
     } catch {
-      // Fallback if live Supabase is degraded
-      if (demoStaff) {
+      // Fallback if live Supabase is degraded — demo PINs only in demo/relaxed mode
+      if (demoStaff && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'device_key',
           tenantId,
@@ -174,7 +178,9 @@ authRoutes.post('/pin-login', async (c) => {
   // ---- Demo / offline path (no live service role) ----
   const demo = DEMO_STAFF.find((s) => s.pin === pin);
   if (!demo) {
-    return err(c, 'UNAUTHORIZED', 'Invalid PIN. Demo PINs: 1234 (server), 5678 (manager)', 401);
+    // Don't advertise which demo PINs exist.
+    c.set('pinAuthFailed', true);
+    return err(c, 'UNAUTHORIZED', 'Invalid PIN', 401);
   }
 
   const deviceKey =
@@ -225,7 +231,7 @@ export async function verifyManagerPinHelper(
 }
 
 
-authRoutes.post('/verify-manager-pin', async (c) => {
+authRoutes.post('/verify-manager-pin', pinRateLimit, async (c) => {
   const body = await c.req.json<{ pin?: string; tenant_id?: string }>().catch(() => ({} as any));
   const pin = String(body.pin ?? '').trim();
   const tenantId = String(body.tenant_id ?? c.get('tenantId') ?? process.env.VITE_TENANT_ID ?? DEMO_TENANT).trim();
@@ -236,6 +242,7 @@ authRoutes.post('/verify-manager-pin', async (c) => {
 
   const result = await verifyManagerPinDirectly(tenantId, pin);
   if (!result.authorized) {
+    c.set('pinAuthFailed', true);
     return ok(c, { authorized: false, role: 'none', error: result.error ?? 'Unauthorized' });
   }
 
@@ -258,7 +265,9 @@ authRoutes.get('/audit-logs', requireTenant, async (c) => {
 
 /** Dev helper: hash a PIN the same way seed/staff_pins expects. */
 authRoutes.post('/hash-pin', async (c) => {
-  if (process.env.NODE_ENV === 'production' && process.env.AUTH_RELAXED !== 'true') {
+  // Dev-only: hashing arbitrary PINs must never be exposed in production,
+  // relaxed mode or not.
+  if (process.env.NODE_ENV === 'production') {
     return err(c, 'FORBIDDEN', 'Not available', 403);
   }
   const body = await c.req.json<{ pin?: string }>().catch(() => ({} as any));
