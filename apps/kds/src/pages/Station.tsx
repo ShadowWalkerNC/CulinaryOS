@@ -167,7 +167,7 @@ export function Station() {
     };
     try {
       const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: apiHeaders(TENANT_ID),
       });
       if (!res.ok) throw new Error(`Bump failed: ${res.status}`);
