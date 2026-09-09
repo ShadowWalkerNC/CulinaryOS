@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiHeaders, getApiBase } from '@culinaryos/shared';
+import { apiHeaders, getApiBase, enqueueOfflineDelta } from '@culinaryos/shared';
 import { supabase } from './supabase';
 import { usePOSStore } from './store';
 import { getMockOrders, saveMockOrders } from './mockDb';
@@ -336,6 +336,12 @@ export function useOrder(id: string | null) {
   });
 }
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('culinaryos:order-status-changed', () => {
+    // React Query global cache invalidation if needed
+  });
+}
+
 export function useCreateOrder() {
   const qc = useQueryClient();
   const tenantId = usePOSStore((s) => s.tenantId);
@@ -415,6 +421,25 @@ export function useAddLineItem() {
           order.items.push(newLineItem);
           order.total = (order.total ?? 0) + line_total;
           saveMockOrders(orders);
+
+          // Enqueue delta so reconnection replays it deterministically
+          enqueueOfflineDelta({
+            tenant_id: tenantId,
+            order_id: item.order_id,
+            action: 'add_line_item',
+            payload: {
+              id: newLineItem.id,
+              menu_item_id: item.menu_item_id,
+              name: item.name,
+              quantity: item.quantity,
+              unit_price: finalUnitPrice,
+              line_total,
+              station: item.station,
+              course_number: item.course_number ?? 1,
+              notes: item.notes ?? null,
+            },
+          });
+
           return newLineItem;
         }
         throw new Error('Order not found');

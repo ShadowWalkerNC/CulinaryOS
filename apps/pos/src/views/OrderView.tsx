@@ -11,6 +11,7 @@ import {
 } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { calculateMultiRateTax } from '@culinaryos/shared';
+import { hardwarePrinter } from '../lib/hardware-printer';
 import {
   Flame,
   CreditCard,
@@ -214,6 +215,7 @@ export function OrderView() {
           reason: reasonCode,
           notes: pinNotes,
         });
+        hardwarePrinter.kickCashDrawer().catch(() => {});
         setShowPinModal(false);
         triggerToast(`Cash drawer opened by ${auth.managerName || 'Manager'}`);
       } else if (pinAction === 'high_comp' && pendingDiscount) {
@@ -417,7 +419,7 @@ export function OrderView() {
             <button
               onClick={() => fireOrder(order.id)}
               disabled={firing || !order.items?.length}
-              className="col-span-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
+              className="col-span-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
             >
               <Flame className="w-4 h-4" />
               <span>{firing ? 'Sending to Kitchen...' : 'SEND TO KITCHEN'}</span>
@@ -436,7 +438,7 @@ export function OrderView() {
                       triggerToast('⚡ Course 2 (Mains) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                    className="min-h-[48px] py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-transform duration-75 ease-out active:scale-[0.97] disabled:opacity-50"
                   >
                     <Flame className="w-3.5 h-3.5" />
                     <span>Fire Mains (C2)</span>
@@ -448,7 +450,7 @@ export function OrderView() {
                       triggerToast('⚡ Course 3 (Desserts) fired to kitchen!');
                     }}
                     disabled={firingCourse}
-                    className="py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                    className="min-h-[48px] py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-transform duration-75 ease-out active:scale-[0.97] disabled:opacity-50"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Fire Desserts (C3)</span>
@@ -458,7 +460,7 @@ export function OrderView() {
 
               <button
                 onClick={() => setView('checkout')}
-                className="col-span-3 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]"
+                className="col-span-3 min-h-[48px] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>PROCEED TO PAY</span>
@@ -469,7 +471,7 @@ export function OrderView() {
           <button
             onClick={initiateVoidOrder}
             disabled={voiding}
-            className="bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-1 shadow-xs"
+            className="min-h-[48px] bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
             <Trash2 className="w-4 h-4 text-rose-600" />
             <span>{isPostSend ? 'Void (PIN)' : 'Void'}</span>
@@ -477,7 +479,7 @@ export function OrderView() {
 
           <button
             onClick={() => setShowDiscountModal(true)}
-            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
+            className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
             <Tag className="w-4 h-4 text-slate-700" />
             <span>Promo</span>
@@ -485,7 +487,7 @@ export function OrderView() {
 
           <button
             onClick={() => setView('menu')}
-            className="bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2.5 text-[11px] font-black transition-all uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-1 shadow-xs"
+            className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
             <ClipboardList className="w-4 h-4 text-slate-700" />
             <span>Menu</span>

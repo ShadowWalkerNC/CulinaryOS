@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePOSStore } from '../lib/store';
 import { useCreateOrder, useOpenOrders } from '../lib/queries';
+import { createZReportJournalEntry } from '@culinaryos/accounting-engine';
 
 export function DashboardView() {
   const { employee, setEmployee, setView, setActiveOrder, drawerBalance, setDrawerBalance } = usePOSStore();
@@ -27,9 +28,44 @@ export function DashboardView() {
   const discrepancy = declaredTotal - expectedTotal;
 
   function handleSaveDeclaration() {
-    setDrawerBalance(declaredTotal * 100); // sync back in cents
+    const declaredCents = declaredTotal * 100;
+    const discrepancyCents = Math.round(discrepancy * 100);
+
+    // Generate balanced double-entry General Ledger audit journal entry
+    const journalEntry = createZReportJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      zReportNumber: `CASH-DECL-${Date.now()}`,
+      cashReceivedCents: declaredCents,
+      creditCardReceivedCents: 0,
+      foodSalesCents: 0,
+      beverageSalesCents: 0,
+      compsCents: 0,
+      salesTaxPayableCents: 0,
+      cashOverShortCents: discrepancyCents,
+    });
+
+    // Save shift audit record locally
+    try {
+      const historyRaw = localStorage.getItem('culinaryos_shift_reconciliations');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      history.push({
+        id: `recon-${Date.now()}`,
+        employeeName: employee?.name ?? 'Staff',
+        employeeRole: employee?.role ?? 'Server',
+        declaredCents,
+        expectedCents: drawerBalance,
+        discrepancyCents,
+        journalEntry,
+        timestamp: new Date().toISOString(),
+      });
+      localStorage.setItem('culinaryos_shift_reconciliations', JSON.stringify(history));
+    } catch {
+      // safe fallback
+    }
+
+    setDrawerBalance(declaredCents); // sync back in cents
     setShowDeclare(false);
-    alert(`Declaration saved. Drawer is currently $${Math.abs(discrepancy).toFixed(2)} ${discrepancy >= 0 ? 'OVER' : 'SHORT'}.`);
+    alert(`Declaration saved. Drawer is currently $${Math.abs(discrepancy).toFixed(2)} ${discrepancy >= 0 ? 'OVER' : 'SHORT'}. Balanced GL Journal Entry #${journalEntry.reference} recorded.`);
   }
 
   return (

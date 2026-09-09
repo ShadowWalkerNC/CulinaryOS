@@ -404,3 +404,104 @@ talentAdminRoutes.post('/applications/:id/hire', async (c) => {
     },
   });
 });
+
+// ============================================================
+// LABOR & SCHEDULING PARITY (FLSA Overtime & Shift Swaps)
+// ============================================================
+
+import {
+  auditEmployeeOvertime,
+  evaluateShiftSwap,
+  type Shift,
+  type EmployeeWeeklySchedule,
+  type ShiftSwapRequest,
+} from '@culinaryos/labor-engine';
+
+// Mock Shift Swap Store for zero-config offline/demo mode
+const mockShiftSwaps: ShiftSwapRequest[] = [];
+
+// POST /v1/talent/labor/audit-overtime — Audit weekly schedule for 40-hr / daily FLSA overtime
+talentAdminRoutes.post('/labor/audit-overtime', async (c) => {
+  const body = await c.req.json<{
+    employeeId: string;
+    hourlyRateCents: number;
+    shifts: Array<{
+      startTime: string;
+      endTime: string;
+      role?: string;
+    }>;
+  }>();
+
+  if (!body.employeeId || !body.hourlyRateCents || !Array.isArray(body.shifts)) {
+    return err(c, 'VALIDATION_ERROR', 'employeeId, hourlyRateCents, and shifts array required', 422);
+  }
+
+  const schedule: EmployeeWeeklySchedule = {
+    employeeId: body.employeeId,
+    hourlyRateCents: body.hourlyRateCents,
+    shifts: body.shifts.map((s) => ({
+      employeeId: body.employeeId,
+      role: s.role ?? 'cook',
+      startTime: new Date(s.startTime),
+      endTime: new Date(s.endTime),
+      hourlyRate: body.hourlyRateCents / 100,
+    })),
+  };
+
+  const audit = auditEmployeeOvertime(schedule);
+  return ok(c, audit);
+});
+
+// GET /v1/talent/labor/shift-swaps — List all shift swap requests
+talentAdminRoutes.get('/labor/shift-swaps', async (c) => {
+  const tenantId = c.get('tenantId');
+  const list = mockShiftSwaps.filter((s) => s.tenantId === tenantId);
+  return ok(c, { shiftSwaps: list });
+});
+
+// POST /v1/talent/labor/shift-swaps — Request a shift swap
+talentAdminRoutes.post('/labor/shift-swaps', async (c) => {
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json<{
+    fromEmployeeId: string;
+    toEmployeeId: string;
+    shiftId: string;
+  }>();
+
+  if (!body.fromEmployeeId || !body.toEmployeeId || !body.shiftId) {
+    return err(c, 'VALIDATION_ERROR', 'fromEmployeeId, toEmployeeId, and shiftId required', 422);
+  }
+
+  const swapRequest: ShiftSwapRequest = {
+    id: `swap-${Date.now()}`,
+    tenantId,
+    fromEmployeeId: body.fromEmployeeId,
+    toEmployeeId: body.toEmployeeId,
+    shiftId: body.shiftId,
+    requestedAt: new Date().toISOString(),
+    status: 'pending_manager_approval',
+  };
+
+  mockShiftSwaps.unshift(swapRequest);
+  return ok(c, swapRequest, 201);
+});
+
+// POST /v1/talent/labor/shift-swaps/:id/approve — Manager PIN authorization for shift swap
+talentAdminRoutes.post('/labor/shift-swaps/:id/approve', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json<{ managerPin: string; managerName?: string }>();
+
+  const swap = mockShiftSwaps.find((s) => s.id === id);
+  if (!swap) return err(c, 'NOT_FOUND', `Shift swap request ${id} not found`, 404);
+
+  const evaluation = evaluateShiftSwap(swap, body.managerPin, body.managerName);
+  if (!evaluation.success) {
+    return err(c, 'UNAUTHORIZED', evaluation.error ?? 'Manager authorization failed', 403);
+  }
+
+  Object.assign(swap, evaluation.updatedRequest);
+  return ok(c, {
+    message: 'Shift swap approved by manager',
+    swap,
+  });
+});

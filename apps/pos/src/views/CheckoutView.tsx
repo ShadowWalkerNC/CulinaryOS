@@ -115,6 +115,9 @@ export function CheckoutView() {
         }
         qc.invalidateQueries({ queryKey: ['orders'] });
         setPaid(true);
+        if (method === 'cash') {
+          hardwarePrinter.kickCashDrawer().catch(() => {});
+        }
         return;
       }
 
@@ -138,6 +141,11 @@ export function CheckoutView() {
 
       qc.invalidateQueries({ queryKey: ['orders'] });
       setPaid(true);
+
+      // Automatically kick cash drawer on cash tender
+      if (method === 'cash') {
+        hardwarePrinter.kickCashDrawer().catch(() => {});
+      }
     } catch (err: any) {
       alert('Payment failed: ' + (err?.message ?? err));
     } finally {

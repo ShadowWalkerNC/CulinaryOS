@@ -1,12 +1,12 @@
-# BRIEFING — 2026-09-02T12:55:50Z
+# BRIEFING — 2026-09-09T00:44:31Z
 
 ## Mission
-Supervise execution of CulinaryOS modular restaurant operations engines and turnkey installer suite via project orchestrator and independent victory auditor.
+Supervise execution of CulinaryOS full commercial restaurant daily operations simulation, error logging, performance benchmarks, and Council tradeoff evaluation via Project Orchestrator and independent Victory Auditor.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\sentinel
-- Orchestrator: 3b77e554-77e7-4dd7-88ac-6a0e72431240
+- Orchestrator: [TBD]
 - Victory Auditor: to be spawned on victory claim
 
 ## 🔒 Key Constraints
@@ -15,12 +15,12 @@ Supervise execution of CulinaryOS modular restaurant operations engines and turn
 - Keep context ultra-light and do not write code directly
 
 ## User Context
-- **Last user request**: Implement complete suite of modular restaurant operations engines and zero-dependency turnkey installer for CulinaryOS across all frontends, backend APIs, and shared packages.
+- **Last user request**: Full commercial restaurant daily operations simulation, bug/error capture engine across 18 subsystems, API and build benchmarks, and 4-voice Council tradeoff review.
 - **Pending clarifications**: none
 - **Delivered results**: none
 
 ## Project Status
-- **Phase**: in progress (Gen 2 Orchestrator active)
+- **Phase**: in progress (Routing: General -> teamwork_preview_orchestrator)
 
 ## Victory Audit Status
 - **Triggered**: no
@@ -30,3 +30,5 @@ Supervise execution of CulinaryOS modular restaurant operations engines and turn
 ## Artifact Index
 - ORIGINAL_REQUEST.md — Authoritative record of verbatim user request
 - .agents/ORIGINAL_REQUEST.md — Authoritative record of verbatim user request
+- docs/audits/error_log.md — Discovered bugs with exact reproduction steps
+- docs/benchmarks/perf_baseline.md — Empirical API and build latency benchmark timings

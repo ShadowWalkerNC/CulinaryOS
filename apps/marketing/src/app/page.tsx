@@ -68,7 +68,7 @@ const platformFeatures = [
   { label: 'REST API', description: 'Full v1 API — every operation accessible programmatically.' },
   { label: 'TypeScript SDK', description: 'Type-safe client for custom integrations and extensions.' },
   { label: '9 MCP Servers', description: 'Model Context Protocol servers for AI-native operator tools.' },
-  { label: 'Universal CLI', description: '100% terminal parity across all 15 operational subsystems.' },
+  { label: 'Universal CLI', description: '100% terminal parity across all 18 operational subsystems.' },
 ];
 
 export default function HomePage() {

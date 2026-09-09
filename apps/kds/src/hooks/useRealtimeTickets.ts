@@ -143,7 +143,30 @@ const INITIAL_DEMO_TICKETS: KitchenTicket[] = [
 let globalDemoTickets: KitchenTicket[] = [...INITIAL_DEMO_TICKETS];
 
 export function bumpDemoTicket(ticketId: string) {
+  const target = globalDemoTickets.find(t => t.id === ticketId);
   globalDemoTickets = globalDemoTickets.filter(t => t.id !== ticketId);
+
+  // Synchronize with POS mock order database if orderId is present
+  if (target?.orderId) {
+    try {
+      const raw = localStorage.getItem('culinaryos_mock_orders');
+      if (raw) {
+        const orders = JSON.parse(raw);
+        const idx = orders.findIndex((o: any) => o.id === target.orderId);
+        if (idx !== -1) {
+          orders[idx].status = 'served';
+          orders[idx].served_at = new Date().toISOString();
+          localStorage.setItem('culinaryos_mock_orders', JSON.stringify(orders));
+          window.dispatchEvent(new Event('mock-db-update'));
+          window.dispatchEvent(new CustomEvent('culinaryos:order-status-changed', {
+            detail: { orderId: target.orderId, status: 'served', order: orders[idx] },
+          }));
+        }
+      }
+    } catch {
+      // safe fallback
+    }
+  }
 }
 
 export function fireDemoTicket(ticketId: string) {

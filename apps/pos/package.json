@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@culinaryos/accounting-engine": "workspace:*",
     "@culinaryos/auth": "workspace:*",
     "@culinaryos/shared": "workspace:*",
     "@culinaryos/ui": "workspace:*",
