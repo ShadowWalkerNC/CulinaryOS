@@ -88,32 +88,32 @@ const DEFAULT_FLOOR_TABLES: FloorTable[] = [
 
 const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: string; badge: string; ring: string }> = {
   available: {
-    bg: 'bg-emerald-50/90 hover:bg-emerald-100/90',
-    border: 'border-emerald-500',
+    bg: 'bg-emerald-50/70 hover:bg-emerald-100/80',
+    border: 'border-emerald-600',
     text: 'text-emerald-950',
-    badge: 'bg-emerald-600 text-white',
-    ring: 'ring-emerald-400/30',
+    badge: 'bg-emerald-700 text-white',
+    ring: 'ring-emerald-400/40',
   },
   occupied: {
-    bg: 'bg-amber-50/95 hover:bg-amber-100',
-    border: 'border-[#0f172a]',
+    bg: 'bg-amber-50/80 hover:bg-amber-100/90',
+    border: 'border-amber-600',
     text: 'text-amber-950',
-    badge: 'bg-[#0f172a] text-white',
-    ring: 'ring-[#0f172a]/40',
+    badge: 'bg-slate-900 text-white',
+    ring: 'ring-amber-500/40',
   },
   reserved: {
-    bg: 'bg-indigo-50/90 hover:bg-indigo-100/90',
-    border: 'border-indigo-500',
+    bg: 'bg-indigo-50/70 hover:bg-indigo-100/80',
+    border: 'border-indigo-600',
     text: 'text-indigo-950',
-    badge: 'bg-indigo-600 text-white',
-    ring: 'ring-indigo-400/30',
+    badge: 'bg-indigo-700 text-white',
+    ring: 'ring-indigo-400/40',
   },
   dirty: {
-    bg: 'bg-rose-50/95 hover:bg-rose-100',
-    border: 'border-rose-500',
+    bg: 'bg-rose-50/70 hover:bg-rose-100/80',
+    border: 'border-rose-600',
     text: 'text-rose-950',
-    badge: 'bg-rose-600 text-white',
-    ring: 'ring-rose-400/30',
+    badge: 'bg-rose-700 text-white',
+    ring: 'ring-rose-400/40',
   },
 };
 
@@ -531,18 +531,8 @@ export function TablesView() {
     : null;
 
   function getShapeBadge(shape: FloorTable['shape']) {
-    switch (shape) {
-      case 'round':
-        return 'rounded-full';
-      case 'booth':
-        return 'rounded-2xl border-dashed border-2';
-      case 'bar':
-        return 'rounded-lg';
-      case 'oval':
-        return 'rounded-3xl';
-      default:
-        return 'rounded-xl';
-    }
+    // Standardize to uniform rounded-2xl cards so layout and content fit ergonomically
+    return 'rounded-2xl border-2';
   }
 
   return (
@@ -817,7 +807,7 @@ export function TablesView() {
                 <div
                   key={table.id}
                   onClick={() => handleTableClick(table, activeOrder)}
-                  className={`border-2 ${theme.border} ${theme.bg} ${shapeStyle} p-4 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[145px] group`}
+                  className={`border-2 ${theme.border} ${theme.bg} rounded-2xl p-5 transition-all duration-200 cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[155px] group`}
                 >
                   <div className="flex justify-between items-start gap-2 w-full">
                     <div>
