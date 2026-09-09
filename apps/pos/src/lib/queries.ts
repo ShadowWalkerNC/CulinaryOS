@@ -610,7 +610,23 @@ export function useVoidOrder() {
         }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error?.message ?? 'Void failed');
+      if (!res.ok && navigator.onLine && supabase) throw new Error(body?.error?.message ?? 'Void failed');
+      if (!res.ok) {
+        const orders = getMockOrders();
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          order.status = 'voided';
+          saveMockOrders(orders);
+          enqueueOfflineDelta({
+            tenant_id: tenantId,
+            order_id: orderId,
+            action: 'void_order',
+            payload: { reasonCode: reasonCode || reason, isCooked, notes },
+          });
+          return order;
+        }
+        throw new Error(body?.error?.message ?? 'Void failed');
+      }
       return body?.data ?? body;
     },
     onSuccess: (_, vars) => {
@@ -654,7 +670,25 @@ export function useVoidLineItem() {
         }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error?.message ?? 'Item void failed');
+      if (!res.ok && navigator.onLine && supabase) throw new Error(body?.error?.message ?? 'Item void failed');
+      if (!res.ok) {
+        const orders = getMockOrders();
+        const order = orders.find(o => o.id === orderId);
+        const line = order?.items?.find((li: any) => li.id === itemId);
+        if (line) {
+          line.is_voided = true;
+          line.void_reason = reasonCode || reason || 'offline_void';
+          saveMockOrders(orders);
+          enqueueOfflineDelta({
+            tenant_id: tenantId,
+            order_id: orderId,
+            action: 'void_line_item',
+            payload: { itemId, reasonCode: reasonCode || reason, isCooked, notes },
+          });
+          return line;
+        }
+        throw new Error(body?.error?.message ?? 'Item void failed');
+      }
       return body?.data ?? body;
     },
     onSuccess: (_, vars) => {

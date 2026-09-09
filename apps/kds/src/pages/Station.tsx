@@ -54,6 +54,12 @@ export function Station() {
   const [show86Modal, setShow86Modal]             = useState(false);
   const [items86, setItems86]                     = useState<any[]>([]);
   const [pacingData, setPacingData]               = useState<any[]>([]);
+  const [kdsError, setKdsError]                 = useState<string | null>(null);
+
+  function showKdsError(msg: string) {
+    setKdsError(msg);
+    window.setTimeout(() => setKdsError(null), 4000);
+  }
 
   const appModules = [
     { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },
@@ -152,6 +158,8 @@ export function Station() {
       if (!import.meta.env.VITE_SUPABASE_URL || String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) {
         bumpDemoTicket(ticketId);
         setTickets(prev => prev.filter(t => t.id !== ticketId));
+      } else {
+        showKdsError('Bump failed — ticket kept on screen');
       }
     }
   }, [setTickets]);
@@ -163,7 +171,7 @@ export function Station() {
         method: 'POST',
         headers: apiHeaders(TENANT_ID),
       });
-      if (!res.ok) throw new Error(`Hold failed: ${res.status}`);
+      if (!res.ok) { if (import.meta.env.VITE_SUPABASE_URL && !String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) showKdsError(`Hold failed (${res.status}) — ticket kept on screen`); throw new Error(`Hold failed: ${res.status}`); }
       setTickets(prev => prev.map(t => t.id === ticketId ? {
         ...t,
         courseHoldStatus: 'held',
@@ -189,7 +197,7 @@ export function Station() {
         method: 'POST',
         headers: apiHeaders(TENANT_ID),
       });
-      if (!res.ok) throw new Error(`Fire failed: ${res.status}`);
+      if (!res.ok) { if (import.meta.env.VITE_SUPABASE_URL && !String(import.meta.env.VITE_SUPABASE_URL).includes('your-project')) showKdsError(`Fire failed (${res.status}) — ticket kept on screen`); throw new Error(`Fire failed: ${res.status}`); }
       fireDemoTicket(ticketId);
       setTickets(prev => prev.map(t => t.id === ticketId ? {
         ...t,
@@ -238,6 +246,12 @@ export function Station() {
 
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden antialiased select-none">
+      {kdsError && (
+        <div role="alert" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl border border-slate-700 flex items-center gap-3 max-w-[90%] animate-fadeIn">
+          <span className="truncate">{kdsError}</span>
+          <button type="button" onClick={() => setKdsError(null)} aria-label="Dismiss kitchen error" className="min-w-[44px] min-h-[44px] -my-2 -mr-2 rounded-full hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white font-black">×</button>
+        </div>
+      )}
       {/* Single Unified KDS Kitchen Navigation Header */}
       <header className="bg-white border-b border-[#e5e7eb] px-4 sm:px-6 h-14 flex items-center justify-between shrink-0 shadow-xs gap-3">
         {/* Left: Brand & Station Title */}
@@ -264,7 +278,7 @@ export function Station() {
             return (
               <button
                 key={s.id}
-                onClick={() => navigate(`/station/${s.id}`)}
+                type="button" onClick={() => navigate(`/station/${s.id}`)}
                 className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] transition-transform duration-75 ease-out ${
                   isActive
                     ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
@@ -287,7 +301,7 @@ export function Station() {
               fetch86Items();
               setShow86Modal(true);
             }}
-            className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 shadow-xs cursor-pointer transition-colors"
+            type="button" className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 shadow-xs cursor-pointer transition-colors"
             title="86 Item Manager"
           >
             <span className="material-symbols-outlined text-[15px]">block</span>
@@ -296,7 +310,7 @@ export function Station() {
 
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-xs cursor-pointer transition-colors"
+            type="button" className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-xs cursor-pointer transition-colors"
             title="Display & Audio Scale"
           >
             <span className="material-symbols-outlined text-[15px]">tune</span>

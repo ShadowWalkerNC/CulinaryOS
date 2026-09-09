@@ -104,10 +104,8 @@ export function OrderView() {
 
   function initiateVoidOrder() {
     if (!isPostSend) {
-      if (confirm('Void this un-sent order?')) {
-        voidOrder({ orderId: order.id, reason: 'un_sent_cancel', isCooked: false });
-        triggerToast('Order voided');
-      }
+      voidOrder({ orderId: order.id, reason: 'un_sent_cancel', isCooked: false });
+      triggerToast('Order voided');
       return;
     }
     setPinAction('void_order');
@@ -122,10 +120,8 @@ export function OrderView() {
 
   function initiateVoidItem(itemId: string) {
     if (!isPostSend) {
-      if (confirm('Remove this un-sent item?')) {
-        voidLineItem({ orderId: order.id, itemId, reason: 'un_sent_remove', isCooked: false });
-        triggerToast('Item removed');
-      }
+      voidLineItem({ orderId: order.id, itemId, reason: 'un_sent_remove', isCooked: false });
+      triggerToast('Item removed');
       return;
     }
     setPinAction('void_item');
@@ -371,7 +367,7 @@ export function OrderView() {
       </div>
 
       {/* Ticket Totals & Operations */}
-      <div className="p-3.5 border-t border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3">
+      <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t-2 border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3 sticky bottom-0 z-10 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)]">
         <div className="space-y-1 text-[11px] text-[#6b7280]">
           <div className="flex justify-between">
             <span>Subtotal</span>
@@ -426,8 +422,8 @@ export function OrderView() {
                   },
                 });
               }}
-              disabled={firing || !order.items?.length}
-              className="col-span-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
+              type="button" disabled={firing || !order.items?.length}
+              className="col-span-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             >
               <Flame className="w-4 h-4" />
               <span>{firing ? 'Sending to Kitchen...' : 'SEND TO KITCHEN'}</span>
@@ -467,8 +463,8 @@ export function OrderView() {
               )}
 
               <button
-                onClick={() => setView('checkout')}
-                className="col-span-3 min-h-[48px] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out flex items-center justify-center gap-2 shadow-md active:scale-[0.97]"
+                type="button" onClick={() => setView('checkout')}
+                className="col-span-3 min-h-[48px] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-transform duration-75 ease-out flex items-center justify-center gap-2 shadow-md active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>PROCEED TO PAY</span>
@@ -477,7 +473,7 @@ export function OrderView() {
           )}
 
           <button
-            onClick={initiateVoidOrder}
+            type="button" onClick={initiateVoidOrder}
             disabled={voiding}
             className="min-h-[48px] bg-white text-rose-600 hover:bg-rose-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-rose-200 flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
@@ -486,7 +482,7 @@ export function OrderView() {
           </button>
 
           <button
-            onClick={() => setShowDiscountModal(true)}
+            type="button" onClick={() => setShowDiscountModal(true)}
             className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
             <Tag className="w-4 h-4 text-slate-700" />
@@ -494,7 +490,7 @@ export function OrderView() {
           </button>
 
           <button
-            onClick={() => setView('menu')}
+            type="button" onClick={() => setView('menu')}
             className="min-h-[48px] bg-white text-[#0f172a] hover:bg-blue-50 rounded-xl py-2 text-[11px] font-black transition-transform duration-75 ease-out uppercase border-2 border-[#e5e7eb] flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.97]"
           >
             <ClipboardList className="w-4 h-4 text-slate-700" />

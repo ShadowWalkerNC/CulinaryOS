@@ -45,6 +45,7 @@ export function MenuPage() {
   const [filterQuery, setFilterQuery] = useState('');
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,6 +69,7 @@ export function MenuPage() {
   }, [load]);
 
   async function toggleStatus(item: MenuItem) {
+    setPendingId(item.id);
     const next = item.status === 'available' ? '86' : 'available';
     try {
       const res = await fetch(`${API}/v1/admin/menu/items/${item.id}`, {
@@ -77,6 +79,7 @@ export function MenuPage() {
       });
       const body = await res.json();
       if (!body.ok) {
+        setPendingId(null);
         setMsg({ text: body.error?.message ?? 'Update failed', type: 'error' });
         return;
       }
@@ -84,8 +87,10 @@ export function MenuPage() {
         text: `Updated "${item.name}" availability to ${next === '86' ? "86'd (Unavailable)" : 'Available'}`,
         type: 'success',
       });
+      setPendingId(null);
       void load();
     } catch {
+      setPendingId(null);
       setMsg({ text: 'Network error updating item availability', type: 'error' });
     }
   }
@@ -257,9 +262,10 @@ export function MenuPage() {
                         type="button"
                         variant={isAvailable ? 'destructive' : 'brand'}
                         size="sm"
+                        disabled={pendingId === item.id}
                         onClick={() => void toggleStatus(item)}
                       >
-                        {isAvailable ? "86 Item" : 'Make Available'}
+                        {pendingId === item.id ? 'Updating…' : (isAvailable ? "86 Item" : 'Make Available')}
                       </Button>
                     </TableCell>
                   </TableRow>

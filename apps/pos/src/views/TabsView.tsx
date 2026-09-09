@@ -6,6 +6,8 @@ import { useCreateOrder } from '../lib/queries';
 export function TabsView() {
   const { setView, setActiveOrder } = usePOSStore();
   const { mutate: createOrder } = useCreateOrder();
+  const [showNewTabModal, setShowNewTabModal] = useState(false);
+  const [newTabName, setNewTabName] = useState('');
   const [tabs, setTabs] = useState<any[]>(() => {
     // Generate some mock bar tabs if none exist
     const orders = getMockOrders();
@@ -49,8 +51,15 @@ export function TabsView() {
   });
 
   function openNewTab() {
-    const tabName = prompt('Enter Guest Name / Tab Name:');
+    setNewTabName('');
+    setShowNewTabModal(true);
+    return;
+  }
+
+  function confirmNewTab() {
+    const tabName = newTabName.trim();
     if (!tabName) return;
+    setShowNewTabModal(false);
     createOrder(
       { table_number: `Bar-${tabName}`, cover_count: 1, server_name: 'Bartender' },
       {
@@ -112,6 +121,27 @@ export function TabsView() {
             </div>
           </button>
         ))}
+      {showNewTabModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowNewTabModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">New Bar Tab</h3>
+            <input
+              autoFocus
+              type="text"
+              value={newTabName}
+              onChange={(e) => setNewTabName(e.target.value)}
+              placeholder="Guest name"
+              aria-label="Guest name for new tab"
+              onKeyDown={(e) => { if (e.key === 'Enter') confirmNewTab(); if (e.key === 'Escape') setShowNewTabModal(false); }}
+              className="w-full border-2 border-slate-200 rounded-xl px-3.5 py-3 text-sm font-bold text-slate-900 outline-none focus:border-slate-900"
+            />
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowNewTabModal(false)} className="flex-1 min-h-[48px] rounded-xl border-2 border-slate-200 text-slate-700 text-xs font-black uppercase tracking-wider hover:bg-slate-50 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900">Cancel</button>
+              <button type="button" onClick={confirmNewTab} disabled={!newTabName.trim()} className="flex-1 min-h-[48px] rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900">Open Tab</button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

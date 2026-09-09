@@ -66,10 +66,14 @@ export function DashboardView() {
   const [bills10, setBills10] = useState<string>('');
   const [bills20, setBills20] = useState<string>('');
 
-  const num1 = parseInt(bills1 || '0', 10);
-  const num5 = parseInt(bills5 || '0', 10);
-  const num10 = parseInt(bills10 || '0', 10);
-  const num20 = parseInt(bills20 || '0', 10);
+  function countBills(v: string) {
+    const n = parseInt(v || '0', 10);
+    return Number.isNaN(n) ? 0 : Math.max(0, n);
+  }
+  const num1 = countBills(bills1);
+  const num5 = countBills(bills5);
+  const num10 = countBills(bills10);
+  const num20 = countBills(bills20);
 
   const activeDrawer = drawers.find((d) => d.id === activeDrawerId) || drawers[0];
   const expectedTotal = activeDrawer.currentBalanceCents / 100;
@@ -186,8 +190,8 @@ export function DashboardView() {
             )}
           </div>
           <button
-            onClick={() => setToast(null)}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+            type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition min-w-[44px] min-h-[44px] flex items-center justify-center -my-1 -mr-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -223,7 +227,7 @@ export function DashboardView() {
                 <span>Active Cash Drawer</span>
               </span>
               <button
-                onClick={() => setShowDrawerList(!showDrawerList)}
+                type="button" aria-expanded={showDrawerList} onClick={() => setShowDrawerList(!showDrawerList)}
                 className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition flex items-center gap-0.5"
               >
                 <span>Switch</span>
@@ -243,7 +247,7 @@ export function DashboardView() {
               <div className="pt-2 border-t border-slate-200 space-y-1.5">
                 {drawers.map((dr) => (
                   <button
-                    key={dr.id}
+                    type="button" key={dr.id}
                     onClick={() => {
                       setActiveDrawerId(dr.id);
                       setShowDrawerList(false);
@@ -287,7 +291,7 @@ export function DashboardView() {
                     <span>My Shift Hub</span>
                   </span>
                   <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded">
-                    #104 • Alex M.
+                    {employee?.name ?? 'Staff'}
                   </span>
                 </div>
 
@@ -314,16 +318,16 @@ export function DashboardView() {
         {/* Action Controls: Declare Drawer + Manager Day Controls */}
         <div className="space-y-2 pt-4 border-t border-[#e5e7eb]">
           <button
-            onClick={handleOpenDeclareModal}
-            className="w-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-2.5 rounded-xl text-xs uppercase transition-colors border border-[#e5e7eb] flex items-center justify-center gap-1.5"
+            type="button" onClick={handleOpenDeclareModal}
+            className="w-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-2.5 min-h-[48px] rounded-xl text-xs uppercase transition-colors border border-[#e5e7eb] flex items-center justify-center gap-1.5"
           >
             <DollarSign className="w-3.5 h-3.5 text-slate-700" />
             <span>Declare Cash Drawer</span>
           </button>
 
           <button
-            onClick={() => setShowDayModal(true)}
-            className={`w-full font-bold py-2.5 rounded-xl text-xs uppercase transition-colors border flex items-center justify-center gap-1.5 ${
+            type="button" onClick={() => setShowDayModal(true)}
+            className={`w-full font-bold py-2.5 min-h-[48px] rounded-xl text-xs uppercase transition-colors border flex items-center justify-center gap-1.5 ${
               dayStatus === 'open'
                 ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
                 : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -334,8 +338,8 @@ export function DashboardView() {
           </button>
 
           <button
-            onClick={() => setEmployee(null)}
-            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-xs uppercase transition-colors flex items-center justify-center gap-1.5"
+            type="button" onClick={() => setEmployee(null)}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 min-h-[48px] rounded-xl text-xs uppercase transition-colors flex items-center justify-center gap-1.5"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Lock Screen</span>
@@ -347,7 +351,7 @@ export function DashboardView() {
       <div className="flex-1 flex flex-col justify-between">
         <div className="grid grid-cols-2 gap-5 flex-1">
           {/* Quick Order */}
-          <button onClick={startQuickOrder}
+          <button type="button" onClick={startQuickOrder}
             className="bg-white hover:border-orange-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-orange-50/20">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -368,7 +372,7 @@ export function DashboardView() {
           </button>
 
           {/* Table Service */}
-          <button onClick={() => setView('tables')}
+          <button type="button" onClick={() => setView('tables')}
             className="bg-white hover:border-blue-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-blue-50/20">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -389,7 +393,7 @@ export function DashboardView() {
           </button>
 
           {/* Bar Tabs */}
-          <button onClick={() => setView('tabs')}
+          <button type="button" onClick={() => setView('tabs')}
             className="bg-white hover:border-purple-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-purple-50/20">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -410,7 +414,7 @@ export function DashboardView() {
           </button>
 
           {/* Recall Checks */}
-          <button onClick={() => setView('recall')}
+          <button type="button" onClick={() => setView('recall')}
             className="bg-white hover:border-slate-500/60 border-2 border-slate-200/90 rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-md hover:shadow-xl active:scale-[0.98] group bg-gradient-to-br from-white via-white to-slate-50/30">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -433,12 +437,12 @@ export function DashboardView() {
 
         {/* Bottom Setup & Reports Bar */}
         <div className="mt-5 flex gap-4">
-          <button onClick={() => setView('settings')}
+          <button type="button" onClick={() => setView('settings')}
             className="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl py-3.5 text-xs font-black uppercase tracking-wider text-slate-800 hover:border-slate-900 text-center transition-all shadow-xs flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-slate-600">settings</span>
             <span>Device Setup (Stripe / Thermal Printers)</span>
           </button>
-          <button onClick={() => setView('reports')}
+          <button type="button" onClick={() => setView('reports')}
             className="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl py-3.5 text-xs font-black uppercase tracking-wider text-slate-800 hover:border-slate-900 text-center transition-all shadow-xs flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-slate-600">bar_chart</span>
             <span>Business Reports & Shift PM Mix</span>
@@ -566,7 +570,7 @@ export function DashboardView() {
                 Cancel
               </button>
               <button
-                onClick={handleSaveDeclaration}
+                type="button" onClick={handleSaveDeclaration}
                 className="flex-1 bg-slate-900 hover:bg-black active:scale-[0.98] text-white rounded-xl py-3 text-xs font-black uppercase tracking-wider shadow-md transition"
               >
                 Save Audit & Log GL
@@ -653,8 +657,8 @@ export function DashboardView() {
                 Cancel
               </button>
               <button
-                onClick={handleToggleDay}
-                className={`flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider text-white shadow-md transition active:scale-[0.98] ${
+                type="button" onClick={handleToggleDay}
+                className={`flex-1 rounded-xl py-3 text-xs font-black min-h-[48px] uppercase tracking-wider text-white shadow-md transition active:scale-[0.98] ${
                   dayStatus === 'open' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >

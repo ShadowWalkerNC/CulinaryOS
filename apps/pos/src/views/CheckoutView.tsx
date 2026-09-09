@@ -10,6 +10,7 @@ import {
   flushOfflineQueue,
   ReceiptPayload,
   calculateDualPricing,
+  calculateMultiRateTax,
   loadLocalSettings,
 } from '@culinaryos/shared';
 import { hardwarePrinter } from '../lib/hardware-printer';
@@ -43,6 +44,7 @@ export function CheckoutView() {
   const [customTip, setCustomTip] = useState('0');
   const [cashTendered, setCashTendered] = useState<string>('');
   const [processing, setProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
   const [receiptSent, setReceiptSent] = useState(false);
   const [receiptChoice, setReceiptChoice] = useState<'none' | 'email' | 'text' | null>(null);
@@ -70,7 +72,16 @@ export function CheckoutView() {
   const discountFlat = selectedSeatFilter == null ? (order.discount_flat ?? 0) : 0;
   const discountAmount = Math.round(subtotal * (discountPercent / 100)) + discountFlat;
   const taxableSubtotal = Math.max(0, subtotal - discountAmount);
-  const tax = Math.round(taxableSubtotal * 0.1);
+  const taxResult = calculateMultiRateTax(
+    filteredItems.map((i: any) => ({
+      name: i.name,
+      station: i.station,
+      category: i.category,
+      lineTotalCents: i.line_total || (i.unit_price * (i.quantity || 1)),
+    }))
+  );
+  const effectiveTaxRatio = subtotal > 0 ? taxableSubtotal / subtotal : 1;
+  const tax = Math.round(taxResult.totalTaxCents * effectiveTaxRatio);
   
   let tipAmount = 0;
   if (tipPercent === 'custom') {
@@ -101,6 +112,7 @@ export function CheckoutView() {
   });
 
   async function finalizePayment() {
+    setPaymentError(null);
     setProcessing(true);
     const tenantId = order.tenant_id ?? usePOSStore.getState().tenantId;
     const API = getApiBase();
@@ -165,7 +177,7 @@ export function CheckoutView() {
         hardwarePrinter.kickCashDrawer().catch(() => {});
       }
     } catch (err: any) {
-      alert('Payment failed: ' + (err?.message ?? err));
+      setPaymentError('Payment failed: ' + (err?.message ?? err));
     } finally {
       setProcessing(false);
       setStripeSimState('idle');
@@ -638,12 +650,18 @@ export function CheckoutView() {
           )}
         </div>
 
+        {paymentError && (
+          <div role="alert" className="w-full bg-red-50 border-2 border-red-200 text-red-800 text-xs font-bold px-4 py-3 rounded-2xl mt-6 flex items-center justify-between gap-3">
+            <span>{paymentError}</span>
+            <button type="button" onClick={() => setPaymentError(null)} aria-label="Dismiss payment error" className="min-w-[44px] min-h-[44px] -my-2 -mr-2 px-3 rounded-xl hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 font-black">×</button>
+          </div>
+        )}
         {/* Charge and Submit */}
         <button
           type="button"
           onClick={startPaymentFlow}
           disabled={processing}
-          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-6 flex items-center justify-center gap-2.5 border-2 border-emerald-500"
+          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-6 mb-[env(safe-area-inset-bottom)] flex items-center justify-center gap-2.5 border-2 border-emerald-500 sticky bottom-4 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
         >
           <Check className="w-6 h-6" />
           <span>
