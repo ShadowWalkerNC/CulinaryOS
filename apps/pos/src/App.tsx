@@ -43,6 +43,9 @@ export function App() {
     { id: 'marketing', label: 'Marketing Hub', port: '5179', desc: 'SaaS portal, pricing, self-serve signup & docs', icon: Laptop },
   ];
 
+  const { data: currentOrder } = useOrder(activeOrderId);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
   // 1. Force Lock Screen if no employee session is active
   if (!employee) {
     return (
@@ -66,9 +69,6 @@ export function App() {
       </div>
     );
   }
-
-  const { data: currentOrder } = useOrder(activeOrderId);
-  const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   const activeItems = (currentOrder?.items || []).filter((i: any) => !i.is_voided);
   const itemCount = activeItems.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0);

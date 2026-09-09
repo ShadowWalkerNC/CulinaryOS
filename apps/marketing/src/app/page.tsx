@@ -115,14 +115,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── SOCIAL PROOF TICKER ───────────────────────────────── */}
-      <section className="py-6 border-y border-white/10 bg-white/[0.02] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-white/40 tracking-widest uppercase font-mono">
-            Trusted by independent restaurants across{' '}
-            <span className="text-white/70 font-semibold">6 countries</span>
-            {' '}· 🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇧🇷
+      {/* ─── INTERACTIVE DEMO PLAYER ─────────────────────────────── */}
+      <section id="demo" className="py-20 px-4 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
+        <div className="max-w-5xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-xs font-semibold text-brand-orange uppercase tracking-wider">
+            <span>Live Product Demo</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            See CulinaryOS in Action
+          </h2>
+          <p className="text-white/60 text-base max-w-xl mx-auto">
+            Watch end-to-end POS floor management, instant KDS kitchen dispatch, and physical drawer settlement.
           </p>
+
+          <div className="relative rounded-3xl overflow-hidden border border-white/15 bg-black/60 shadow-2xl p-2 group">
+            <video
+              className="w-full rounded-2xl aspect-video object-cover"
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src="/videos/culinaryos_commercial_demo.webm" type="video/webm" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       </section>
 
