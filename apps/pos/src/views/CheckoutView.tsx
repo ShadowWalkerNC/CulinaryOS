@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useOrder } from '../lib/queries';
+import { useOrder, useVerifyManagerPin } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
@@ -48,6 +48,13 @@ export function CheckoutView() {
   // Stripe Terminal Simulator State
   const [stripeSimState, setStripeSimState] = useState<'idle' | 'waiting' | 'authorizing' | 'declined' | 'timeout'>('idle');
   
+  // Comp tender requires a verified manager PIN before it can complete
+  const [showCompPinModal, setShowCompPinModal] = useState(false);
+  const [compPinInput, setCompPinInput] = useState('');
+  const [compPinError, setCompPinError] = useState<string | null>(null);
+  const [compAuthorizer, setCompAuthorizer] = useState<string | null>(null);
+  const { mutateAsync: verifyManagerPin } = useVerifyManagerPin();
+
   // Split Check Wizard Modal State
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [showCardCheckout, setShowCardCheckout] = useState(false);
@@ -87,7 +94,7 @@ export function CheckoutView() {
     seatTotals[s] = (seatTotals[s] ?? 0) + item.line_total;
   });
 
-  async function finalizePayment() {
+  async function finalizePayment(authorizedBy?: string) {
     setProcessing(true);
     const tenantId = order.tenant_id ?? usePOSStore.getState().tenantId;
     const API = getApiBase();
@@ -99,6 +106,7 @@ export function CheckoutView() {
       tip_amount: tipAmount,
       tip_cents: tipAmount,
       total,
+      manager_name: authorizedBy ?? null,
     };
 
     try {
@@ -155,11 +163,46 @@ export function CheckoutView() {
   }
 
   function startPaymentFlow() {
+    if (method === 'comp') {
+      // Comp tender is a manager-gated action: verify a manager PIN against
+      // the server before the comp can complete. Never auto-authorize.
+      setCompPinInput('');
+      setCompPinError(null);
+      setShowCompPinModal(true);
+      return;
+    }
     if (method === 'card') {
       // Real Stripe Elements checkout (confirm → capture)
       setShowCardCheckout(true);
     } else {
       finalizePayment();
+    }
+  }
+
+  async function handleConfirmCompPin() {
+    const pin = compPinInput.trim();
+    if (!pin) {
+      setCompPinError('Enter a manager PIN to authorize this comp');
+      return;
+    }
+    try {
+      const auth = await verifyManagerPin(pin);
+      if (!auth?.authorized) {
+        setCompPinError(auth?.error || 'Invalid manager PIN');
+        return;
+      }
+      const name = auth.managerName || auth.manager_name || 'Manager';
+      setCompAuthorizer(name);
+      setCompPinInput('');
+      setShowCompPinModal(false);
+      await finalizePayment(name);
+    } catch (err: any) {
+      const offline = err instanceof TypeError;
+      setCompPinError(
+        offline
+          ? 'Manager authorization unavailable offline — reconnect to authorize a comp'
+          : (err?.message || 'Authorization failed')
+      );
     }
   }
 
@@ -242,6 +285,9 @@ export function CheckoutView() {
                     {selectedSeatFilter ? `Seat ${selectedSeatFilter} Paid` : 'Transaction Approved'}
                   </h2>
                   <p className="text-xs text-[#6b7280] font-bold">Paid ${(total / 100).toFixed(2)} via {method.toUpperCase()}</p>
+                  {method === 'comp' && compAuthorizer && (
+                    <p className="text-xs text-amber-700 font-bold">Comp authorized by {compAuthorizer}</p>
+                  )}
                 </>
               )}
             </div>
@@ -417,7 +463,7 @@ export function CheckoutView() {
     { id: 'tap', name: 'Tap to Pay', icon: Smartphone, desc: 'Apple Pay, Google Pay, NFC' },
     { id: 'scan', name: 'Scan to Pay', icon: QrCode, desc: 'QR Code on Guest Phone' },
     { id: 'cash', name: 'Cash Tender', icon: Banknote, desc: 'Exact & Change Math' },
-    { id: 'comp', name: 'Comp / House', icon: Gift, desc: 'Manager Authorized' },
+    { id: 'comp', name: 'Comp / House', icon: Gift, desc: 'Requires Manager PIN' },
   ];
 
   return (
@@ -722,6 +768,67 @@ export function CheckoutView() {
               <button onClick={() => { setSelectedSeatFilter(null); setShowSplitModal(false); }}
                 className="w-full bg-[#f3f4f6] text-[#1f2937] rounded-xl py-3 text-xs font-black uppercase">
                 Reset to Full Check
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manager PIN gate for Comp tender */}
+      {showCompPinModal && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 z-50 animate-fadeIn">
+          <div className="bg-white border border-[#e5e7eb] rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-5">
+            <div className="border-b border-[#e5e7eb] pb-3">
+              <span className="text-[10px] text-amber-700 font-black tracking-wider uppercase block">Manager Authorization Required</span>
+              <h3 className="text-base font-black text-[#1f2937] uppercase mt-0.5">Authorize Comp</h3>
+              <p className="text-xs text-[#6b7280] mt-1">
+                Comping ${(total / 100).toFixed(2)} writes off the check. A verified manager PIN is required.
+              </p>
+            </div>
+
+            {compPinError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-700 flex items-center gap-2" role="alert">
+                <X className="w-4 h-4 shrink-0" />
+                <span>{compPinError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-[#475569] uppercase tracking-wider block">
+                Manager Authorization PIN
+              </label>
+              <input
+                type="password"
+                maxLength={8}
+                autoFocus
+                inputMode="numeric"
+                placeholder="Enter Manager PIN"
+                value={compPinInput}
+                onChange={(e) => {
+                  setCompPinInput(e.target.value);
+                  setCompPinError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleConfirmCompPin();
+                }}
+                className="w-full min-h-[48px] bg-[#f8fafc] border-2 border-[#cbd5e1] focus:border-[#0f172a] rounded-xl p-3 text-center text-base tracking-widest font-mono font-bold outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowCompPinModal(false)}
+                className="w-full min-h-[48px] bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#334155] font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCompPin}
+                className="w-full min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-colors shadow-md"
+              >
+                Authorize Comp
               </button>
             </div>
           </div>
