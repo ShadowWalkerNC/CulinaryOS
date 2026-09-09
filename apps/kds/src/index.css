@@ -58,3 +58,37 @@
   font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
+/* ------------------------------------------------------------------
+ * High Contrast OLED mode (kitchen rail)
+ * Driven by the "High Contrast Kitchen Mode" settings toggle via
+ * applyDisplaySettingsToDOM(), which sets data-contrast on <html>.
+ * Pure-black canvas for OLED rails, high-visibility edges, and
+ * boosted badge / muted-text legibility.
+ * ------------------------------------------------------------------ */
+html[data-contrast='high-contrast-oled'] {
+  color-scheme: dark;
+}
+html[data-contrast='high-contrast-oled'] body,
+html[data-contrast='high-contrast-oled'] #root {
+  background-color: #000;
+  color: #f8fafc;
+}
+/* Bordered surfaces become bold high-visibility edges */
+html[data-contrast='high-contrast-oled'] [class*='border']:not([class*='border-transparent']) {
+  border-color: rgb(255 255 255 / 0.9);
+}
+/* Muted greys become legible light grey on black */
+html[data-contrast='high-contrast-oled'] .text-gray-400,
+html[data-contrast='high-contrast-oled'] .text-gray-500,
+html[data-contrast='high-contrast-oled'] .text-slate-400,
+html[data-contrast='high-contrast-oled'] .text-slate-500 {
+  color: #e2e8f0;
+}
+/* Badges / pills read bolder at rail distance */
+html[data-contrast='high-contrast-oled'] [class*='rounded-full'] {
+  font-weight: 800;
+}
+html[data-contrast='high-contrast-oled'] ::-webkit-scrollbar-track {
+  background: #000;
+}
+
