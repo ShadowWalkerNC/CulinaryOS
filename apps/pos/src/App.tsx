@@ -127,13 +127,13 @@ export function App() {
         </div>
 
         {/* Center: Quick Navigation View Buttons with Visual Symbols */}
-        <nav className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar">
+        <nav className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border-2 border-slate-800 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setView('dashboard')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'dashboard'
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">home</span>
@@ -144,49 +144,56 @@ export function App() {
               setView('tables');
               setActiveOrder(null);
             }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'tables' && !activeOrderId
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">table_restaurant</span>
             <span>Floor Map</span>
           </button>
 
-          {activeOrderId && (
-            <>
-              <button
-                onClick={() => setView('menu')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  view === 'menu'
-                    ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[17px]">receipt_long</span>
-                <span>Ticket</span>
-              </button>
-              <button
-                onClick={() => setView('checkout')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  view === 'checkout'
-                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
-                    : 'bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900 border-emerald-800/60'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[17px]">payments</span>
-                <span>Pay</span>
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => {
+              if (activeOrderId) setView('menu');
+            }}
+            disabled={!activeOrderId}
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+              !activeOrderId
+                ? 'opacity-30 cursor-not-allowed pointer-events-none border-slate-800 bg-slate-900/50 text-slate-500'
+                : view === 'menu'
+                ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[17px]">receipt_long</span>
+            <span>Ticket</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (activeOrderId) setView('checkout');
+            }}
+            disabled={!activeOrderId}
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
+              !activeOrderId
+                ? 'opacity-30 cursor-not-allowed pointer-events-none border-slate-800 bg-slate-900/50 text-slate-500'
+                : view === 'checkout'
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                : 'border-emerald-700 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[17px]">payments</span>
+            <span>Pay</span>
+          </button>
 
           <button
             onClick={() => setView('tabs')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'tabs'
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">local_bar</span>
@@ -194,10 +201,10 @@ export function App() {
           </button>
           <button
             onClick={() => setView('recall')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'recall'
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">history</span>
@@ -205,10 +212,10 @@ export function App() {
           </button>
           <button
             onClick={() => setView('reports')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'reports'
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">bar_chart</span>
@@ -216,10 +223,10 @@ export function App() {
           </button>
           <button
             onClick={() => setView('cfd')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] ${
               view === 'cfd'
                 ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border-transparent'
+                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <span className="material-symbols-outlined text-[17px]">devices</span>
@@ -372,8 +379,8 @@ export function App() {
 
       {/* Main Workspace Layout — Dual-Pane on >=1024px, Single Canvas on <1024px */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Side: Desktop Dual-Pane Receipt Panel (Hidden on screens < 1024px) */}
-        {activeOrderId && (view === 'menu' || view === 'checkout') && (
+        {/* Left Side: Desktop Dual-Pane Receipt Panel (Hidden on screens < 1024px and when in focused checkout) */}
+        {activeOrderId && view === 'menu' && (
           <div className="hidden lg:flex w-80 xl:w-96 border-r border-[#e5e7eb] bg-white flex-col h-full shrink-0">
             <OrderView />
           </div>

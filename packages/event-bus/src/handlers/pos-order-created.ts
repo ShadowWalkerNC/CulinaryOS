@@ -53,7 +53,6 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
       order_number:       resolvedOrderNumber,
       station,
       status:             isFirstCourse ? 'fired' : 'queued',
-      course_hold_status: isFirstCourse ? 'fired' : 'held',
       priority:           hasAllergy ? 'allergy' : 'normal',
       table_number:       tableNumber ?? null,
       course_number:      courseNumber,

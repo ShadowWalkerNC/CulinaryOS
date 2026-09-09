@@ -9,7 +9,7 @@ import {
   Grid,
 } from 'lucide-react';
 
-export type TableStatus3D = 'available' | 'occupied' | 'reserved' | 'dirty';
+export type TableStatus3D = 'available' | 'occupied' | 'reserved' | 'dirty' | 'paying';
 
 export interface FloorTable3DData {
   id: string;
@@ -47,8 +47,9 @@ export interface FloorMap3DProps {
 const STATUS_COLORS: Record<TableStatus3D, { primary: number; glow: number; text: string }> = {
   available: { primary: 0x10b981, glow: 0x34d399, text: '#10b981' },
   occupied:  { primary: 0xf59e0b, glow: 0xfbbf24, text: '#f59e0b' },
+  paying:    { primary: 0x3b82f6, glow: 0x60a5fa, text: '#3b82f6' },
   reserved:  { primary: 0x6366f1, glow: 0x818cf8, text: '#6366f1' },
-  dirty:     { primary: 0xf43f5e, glow: 0xfb7185, text: '#f43f5e' },
+  dirty:     { primary: 0x94a3b8, glow: 0xcbd5e1, text: '#94a3b8' },
 };
 
 // Default spatial layout positions in 3D coordinate space [X, Z]

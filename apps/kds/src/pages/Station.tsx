@@ -258,20 +258,20 @@ export function Station() {
         </div>
 
         {/* Center: Station Selection Tabs — High-Contrast Kitchen Symbols */}
-        <nav className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar">
+        <nav className="flex items-center gap-2 bg-slate-100/90 p-1.5 rounded-2xl border-2 border-slate-200 overflow-x-auto no-scrollbar">
           {STATIONS.map((s) => {
             const isActive = s.id === stationId;
             return (
               <button
                 key={s.id}
                 onClick={() => navigate(`/station/${s.id}`)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap flex items-center gap-1.5 border-2 active:scale-[0.97] transition-transform duration-75 ease-out ${
                   isActive
-                    ? 'bg-[#0f172a] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
+                    ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
+                    : 'border-slate-300 bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-100 hover:border-slate-400'
                 }`}
               >
-                <span className={`material-symbols-outlined text-[16px] ${isActive ? 'text-white' : s.color}`}>
+                <span className={`material-symbols-outlined text-[18px] ${isActive ? 'text-white' : s.color}`}>
                   {s.icon}
                 </span>
                 <span>{s.label}</span>

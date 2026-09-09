@@ -190,12 +190,20 @@ ordersRoutes.post('/:id/items', async (c) => {
     return ok(c, newItem, 201);
   }
 
+  const isUuid = (val?: string) =>
+    typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+  let targetMenuItemId = body.menuItemId;
+  if (!isUuid(targetMenuItemId)) {
+    targetMenuItemId = '00000000-0000-0000-0000-0000000000c1';
+  }
+
   const { data, error } = await supabase
     .from('pos_order_line_items')
     .insert({
       tenant_id:     tenantId,
       order_id:      id,
-      menu_item_id:  body.menuItemId,
+      menu_item_id:  targetMenuItemId,
       name:          body.name,
       quantity:      body.quantity ?? 1,
       unit_price:    body.unitPrice,
@@ -235,6 +243,34 @@ ordersRoutes.post('/:id/items', async (c) => {
     .eq('tenant_id', tenantId);
 
   return ok(c, data, 201);
+});
+
+// POST /v1/orders/:id/discount
+ordersRoutes.post('/:id/discount', async (c) => {
+  const supabase = c.get('supabase');
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const { discountPercent = 0, discountFlat = 0 } = body;
+
+  if (!supabase) {
+    const order = mockOrders.find(o => o.id === id && o.tenant_id === tenantId);
+    if (!order) return err(c, 'NOT_FOUND', `Order ${id} not found`, 404);
+    order.discount_percent = discountPercent;
+    order.discount_flat = discountFlat;
+    return ok(c, order);
+  }
+
+  const { data, error } = await supabase
+    .from('pos_orders')
+    .update({ discount_percent: discountPercent, discount_flat: discountFlat })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .select()
+    .single();
+
+  if (error) return err(c, 'INTERNAL_ERROR', error.message, 500);
+  return ok(c, data);
 });
 
 // GET /v1/orders

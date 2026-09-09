@@ -627,9 +627,9 @@ export function CheckoutView() {
                 className="w-full bg-white border-2 border-[#cbd5e1] focus:border-[#0f172a] outline-none rounded-xl p-3 text-xs text-[#1f2937] font-mono font-bold shadow-inner"
               />
               {cashAmount > 0 && (
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-[#e5e7eb]">
-                  <span className="text-xs font-bold text-[#6b7280]">Change to return:</span>
-                  <span className="text-base font-black font-mono text-emerald-600">
+                <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border-2 border-emerald-300">
+                  <span className="text-xs font-black uppercase text-emerald-950">Change to Return:</span>
+                  <span className="text-3xl font-black font-mono text-emerald-700">
                     ${(changeDue / 100).toFixed(2)}
                   </span>
                 </div>
@@ -643,9 +643,9 @@ export function CheckoutView() {
           type="button"
           onClick={startPaymentFlow}
           disabled={processing}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
+          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-6 flex items-center justify-center gap-2.5 border-2 border-emerald-500"
         >
-          <Check className="w-5 h-5" />
+          <Check className="w-6 h-6" />
           <span>
             {processing
               ? 'Authorizing Transaction...'

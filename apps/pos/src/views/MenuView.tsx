@@ -539,9 +539,9 @@ export function MenuView() {
                     <button
                       type="button"
                       onClick={() => openModifierModal(item)}
-                      className="text-xs font-black text-slate-800 bg-slate-100 hover:bg-slate-900 hover:text-white border border-slate-300 hover:border-slate-900 px-3.5 py-1.5 rounded-full transition-all duration-150 flex items-center gap-1.5 shadow-2xs active:scale-95"
+                      className="min-h-[44px] px-4 py-2 text-xs font-black text-slate-900 bg-slate-50 hover:bg-orange-50 hover:text-orange-900 hover:border-orange-500 border-2 border-slate-300 rounded-full transition-all duration-150 flex items-center gap-1.5 shadow-sm active:scale-95"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4 text-orange-600" />
                       <span>{item.modifier_groups?.length > 0 ? 'Customize' : 'Add to Seat'}</span>
                     </button>
                   </div>

@@ -314,8 +314,36 @@ export function useRealtimeTickets(stationId: string) {
       };
     }
 
+    const API = getApiBase();
+
     async function fetchInitial() {
-      setLoading(true);
+      try {
+        const qs = new URLSearchParams();
+        if (stationId !== 'all' && stationId !== 'expo') qs.set('station', stationId);
+        const res = await fetch(`${API}/v1/kds/tickets?${qs}`, {
+          headers: apiHeaders(TENANT_ID),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          let rows: any[] = json.data ?? [];
+          if (stationId === 'all') {
+            rows = rows.filter((r) => r.course_hold_status === 'fired');
+          } else if (stationId !== 'expo') {
+            rows = rows.filter(
+              (r) =>
+                matchesStation(r.station, stationId) && r.course_hold_status === 'fired'
+            );
+          }
+          if (!mounted) return;
+          setTickets(rows.map(rowToTicket));
+          setError(null);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // Fallback below
+      }
+
       let query = supabase!
         .from('kitchen_tickets')
         .select('*, ticket_items(*)')
@@ -344,7 +372,6 @@ export function useRealtimeTickets(stationId: string) {
     }
 
     let lastAckId: string | null = null;
-    const API = getApiBase();
 
     async function catchUpPendingPush() {
       if (!TENANT_ID) return;
@@ -454,9 +481,11 @@ export function useRealtimeTickets(stationId: string) {
       });
 
     timerRef.current = setInterval(tick, 1000);
+    const pollInterval = setInterval(fetchInitial, 4000);
 
     return () => {
       mounted = false;
+      clearInterval(pollInterval);
       supabase!.removeChannel(channel);
       if (timerRef.current) clearInterval(timerRef.current);
     };

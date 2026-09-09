@@ -33,8 +33,14 @@ export function calculateModifierGroupPrices(
   let freeRemaining = freeQuantity;
 
   return selectedModifierIds.map((modId) => {
-    const mod = group.modifiers.find((m) => m.id === modId);
-    const originalPrice = mod ? (mod.priceAdjustmentCents ?? mod.priceAdjustment ?? 0) : 0;
+    const mod = group.modifiers?.find((m) => m.id === modId);
+    const originalPrice = mod
+      ? ((mod as any).price_adjustment_cents ??
+         (mod as any).price_adjustment ??
+         mod.priceAdjustmentCents ??
+         mod.priceAdjustment ??
+         0)
+      : 0;
     const name = mod?.name ?? 'Unknown Modifier';
 
     if (freeRemaining > 0 && originalPrice > 0) {

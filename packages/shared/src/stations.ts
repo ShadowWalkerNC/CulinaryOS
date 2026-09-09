@@ -53,7 +53,9 @@ export const STATION_LABELS: Record<string, string> = {
 export const KDS_ACTIVE_STATUSES = ['queued', 'fired', 'cooking'] as const;
 
 export function resolveDbStations(stationId: string): string[] {
-  return UI_STATION_TO_DB[stationId] ?? [stationId];
+  const mapped = UI_STATION_TO_DB[stationId] ?? [];
+  const reverse = DB_STATION_TO_UI[stationId] ? [DB_STATION_TO_UI[stationId]] : [];
+  return Array.from(new Set([stationId, ...mapped, ...reverse])).filter(Boolean);
 }
 
 export function uiStationFromDb(station: string | undefined | null): string | undefined {

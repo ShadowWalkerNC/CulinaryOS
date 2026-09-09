@@ -95,6 +95,12 @@ export function StaffPage() {
     pin: string;
   } | null>(null);
 
+  // Staff Edit Drawer state
+  const [editingStaff, setEditingStaff] = useState<StaffRow | null>(null);
+  const [editForm, setEditForm] = useState({ display_name: '', role: 'server', pin: '', active: true });
+  const [updatingStaff, setUpdatingStaff] = useState(false);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+
   // New Job Requisition state
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
@@ -156,11 +162,46 @@ export function StaffPage() {
         type: 'success',
       });
       setForm({ email: '', display_name: '', role: 'server', pin: '' });
+      setShowAddStaffModal(false);
       void load();
     } catch {
       setMsg({ text: 'Network error while creating staff member', type: 'error' });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleUpdateStaff(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingStaff?.user_id) return;
+    setUpdatingStaff(true);
+    try {
+      const payload: any = {
+        display_name: editForm.display_name,
+        role: editForm.role,
+        active: editForm.active,
+      };
+      if (editForm.pin.trim()) {
+        payload.pin = editForm.pin.trim();
+      }
+
+      const res = await fetch(`${API}/v1/admin/staff/${editingStaff.user_id}`, {
+        method: 'PATCH',
+        headers: apiHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json();
+      if (!body.ok) {
+        setMsg({ text: body.error?.message ?? 'Staff update failed', type: 'error' });
+        return;
+      }
+      setMsg({ text: `Updated staff profile for ${editForm.display_name}`, type: 'success' });
+      setEditingStaff(null);
+      void load();
+    } catch {
+      setMsg({ text: 'Network error while updating staff profile', type: 'error' });
+    } finally {
+      setUpdatingStaff(false);
     }
   }
 
@@ -344,20 +385,28 @@ export function StaffPage() {
         </div>
       )}
 
-      {/* TAB 1: STAFF DIRECTORY & PIN PROVISIONING */}
-      {activeTab === 'staff' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* Left Column: Staff Directory (2 cols) */}
-          <div className="lg:col-span-2">
+        <div className="space-y-4">
+          {/* Full Width Staff Directory */}
+          <div className="w-full">
             <Card className="p-5">
               <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
                 <div>
                   <CardTitle>Team Members Directory</CardTitle>
                   <CardDescription>Personnel with POS and KDS terminal authorizations</CardDescription>
                 </div>
-                <span className="text-[11px] font-bold text-muted-foreground">
-                  {activeStaffCount} Active Accounts · {pinConfiguredCount} PIN Ready
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold text-muted-foreground">
+                    {activeStaffCount} Active Accounts · {pinConfiguredCount} PIN Ready
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddStaffModal(true)}
+                    className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm hover:opacity-90 active:scale-95 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Add Staff</span>
+                  </button>
+                </div>
               </div>
 
               {loading ? (
@@ -369,7 +418,8 @@ export function StaffPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name & ID</TableHead>
+                      <TableHead>Staff Member</TableHead>
+                      <TableHead>Badge #</TableHead>
                       <TableHead>Role Level</TableHead>
                       <TableHead>Terminal PIN</TableHead>
                       <TableHead className="text-right">Status</TableHead>
@@ -377,14 +427,31 @@ export function StaffPage() {
                   </TableHeader>
                   <TableBody>
                     {staff.map((s, i) => (
-                      <TableRow key={s.user_id ?? i}>
+                      <TableRow
+                        key={s.user_id ?? i}
+                        onClick={() => {
+                          setEditingStaff(s);
+                          setEditForm({
+                            display_name: s.display_name,
+                            role: s.role,
+                            pin: '',
+                            active: s.active !== false,
+                          });
+                        }}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
                         <TableCell>
-                          <div className="font-bold text-foreground text-sm">{s.display_name}</div>
-                          {s.user_id && (
-                            <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                              {s.user_id}
-                            </div>
-                          )}
+                          <div className="font-black text-foreground text-sm flex items-center gap-2">
+                            <span>{s.display_name}</span>
+                            <span className="text-[10px] text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                              (Click to Edit)
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs font-mono font-black bg-secondary px-2 py-1 rounded border border-border">
+                            #{101 + i}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="brand">{(s.role ?? 'staff').toUpperCase()}</Badge>
@@ -403,95 +470,14 @@ export function StaffPage() {
                     ))}
                     {!staff.length && (
                       <TableRow>
-                        <TableCell colSpan={4} className="py-12 text-center text-xs text-muted-foreground">
-                          No staff found. Use the provision form to add team members.
+                        <TableCell colSpan={5} className="py-12 text-center text-xs text-muted-foreground">
+                          No staff found. Use + Add Staff to add team members.
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               )}
-            </Card>
-          </div>
-
-          {/* Right Column: Add Staff Form (1 col) */}
-          <div>
-            <Card className="p-5">
-              <CardHeader className="p-0 pb-4 border-b border-border mb-4">
-                <CardTitle>Add Staff Member</CardTitle>
-                <CardDescription>Provision email, role, and terminal PIN</CardDescription>
-              </CardHeader>
-              <form onSubmit={onCreate} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="employee@restaurant.com"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    type="text"
-                    placeholder="e.g. Alex Server"
-                    value={form.display_name}
-                    onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="role">Assigned Role</Label>
-                  <select
-                    id="role"
-                    value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
-                    className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground font-bold capitalize"
-                  >
-                    <option value="server">Server (POS Terminal)</option>
-                    <option value="cook">Cook / Chef (Kitchen KDS)</option>
-                    <option value="bartender">Bartender (Bar Tab Hub)</option>
-                    <option value="dishwasher">Dishwasher / Prep</option>
-                    <option value="manager">Manager (Admin & Voids)</option>
-                    <option value="owner">Owner (Full Permissions)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="pin">Terminal PIN (4–8 digits)</Label>
-                  <Input
-                    id="pin"
-                    type="password"
-                    inputMode="numeric"
-                    placeholder="••••"
-                    pattern="\d{4,8}"
-                    value={form.pin}
-                    onChange={(e) => setForm({ ...form, pin: e.target.value })}
-                    required
-                    className="font-mono"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1 font-medium">
-                    Used for quick POS/KDS lock screen authentication.
-                  </p>
-                </div>
-
-                <Button
-                  type="submit"
-                  variant="brand"
-                  size="touch"
-                  className="w-full mt-2"
-                  disabled={submitting}
-                >
-                  <Lock className="w-4 h-4 mr-2" />
-                  {submitting ? 'Provisioning…' : 'Create Staff Member'}
-                </Button>
-              </form>
             </Card>
           </div>
         </div>
@@ -827,6 +813,219 @@ export function StaffPage() {
                 </Button>
                 <Button type="submit" variant="brand" size="sm" className="font-bold">
                   Publish to Job Board
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Staff Edit Slide-over Drawer */}
+      {editingStaff && (
+        <div
+          onClick={() => setEditingStaff(null)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-card border-l-2 border-border h-full p-6 shadow-2xl flex flex-col justify-between overflow-y-auto"
+          >
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+                    Staff Profile Editor
+                  </span>
+                  <h2 className="text-xl font-black text-foreground">{editingStaff.display_name}</h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">ID: {editingStaff.user_id}</p>
+                </div>
+                <button
+                  onClick={() => setEditingStaff(null)}
+                  className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form id="edit-staff-form" onSubmit={handleUpdateStaff} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editName">Display Name</Label>
+                  <Input
+                    id="editName"
+                    type="text"
+                    value={editForm.display_name}
+                    onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="editRole">Assigned Role</Label>
+                  <select
+                    id="editRole"
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-1 text-xs text-foreground font-bold capitalize"
+                  >
+                    <option value="server">Server (FOH Dining & POS)</option>
+                    <option value="cook">Cook / Chef (Kitchen KDS Line)</option>
+                    <option value="bartender">Bartender (Bar Tab Hub)</option>
+                    <option value="dishwasher">Dishwasher / Prep Staff</option>
+                    <option value="manager">Manager (Admin, Voids & Comps)</option>
+                    <option value="owner">Owner (Full Permissions)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="editPin">Reset Terminal PIN (leave blank to keep current)</Label>
+                  <Input
+                    id="editPin"
+                    type="password"
+                    inputMode="numeric"
+                    placeholder="Enter new 4–8 digit PIN"
+                    value={editForm.pin}
+                    onChange={(e) => setEditForm({ ...editForm, pin: e.target.value })}
+                    className="font-mono text-center tracking-widest text-base"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    PIN enables instant touchscreen login on POS, Bar Tabs, and KDS.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <Label>Employment Status</Label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, active: true })}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${
+                        editForm.active
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                          : 'bg-muted text-muted-foreground border-border'
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, active: false })}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${
+                        !editForm.active
+                          ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                          : 'bg-muted text-muted-foreground border-border'
+                      }`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="flex gap-2 pt-4 border-t border-border mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                size="touch"
+                onClick={() => setEditingStaff(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="edit-staff-form"
+                variant="brand"
+                size="touch"
+                disabled={updatingStaff}
+                className="flex-1 font-bold"
+              >
+                {updatingStaff ? 'Saving…' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Staff Modal */}
+      {showAddStaffModal && (
+        <div
+          onClick={() => setShowAddStaffModal(false)}
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-md w-full bg-card rounded-2xl shadow-2xl p-6 space-y-4 border border-border text-left"
+          >
+            <div className="flex justify-between items-center border-b border-border pb-3">
+              <h3 className="text-base font-black text-foreground uppercase">Add Staff Member</h3>
+              <button onClick={() => setShowAddStaffModal(false)} className="text-muted-foreground hover:text-foreground">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={onCreate} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="modalEmail">Email Address</Label>
+                <Input
+                  id="modalEmail"
+                  type="email"
+                  placeholder="employee@restaurant.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="modalName">Display Name</Label>
+                <Input
+                  id="modalName"
+                  type="text"
+                  placeholder="e.g. Alex Server"
+                  value={form.display_name}
+                  onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="modalRole">Assigned Role</Label>
+                <select
+                  id="modalRole"
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-1 text-xs text-foreground font-bold capitalize"
+                >
+                  <option value="server">Server (POS Terminal)</option>
+                  <option value="cook">Cook / Chef (Kitchen KDS)</option>
+                  <option value="bartender">Bartender (Bar Tab Hub)</option>
+                  <option value="dishwasher">Dishwasher / Prep</option>
+                  <option value="manager">Manager (Admin & Voids)</option>
+                  <option value="owner">Owner (Full Permissions)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="modalPin">Terminal PIN (4–8 digits)</Label>
+                <Input
+                  id="modalPin"
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  pattern="\d{4,8}"
+                  value={form.pin}
+                  onChange={(e) => setForm({ ...form, pin: e.target.value })}
+                  required
+                  className="font-mono"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Button type="button" variant="outline" size="touch" onClick={() => setShowAddStaffModal(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button type="submit" variant="brand" size="touch" disabled={submitting} className="flex-1 font-bold">
+                  {submitting ? 'Provisioning…' : 'Provision Staff'}
                 </Button>
               </div>
             </form>

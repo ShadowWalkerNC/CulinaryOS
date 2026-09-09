@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePOSStore } from '../lib/store';
+import { useOrderStore } from '../lib/useOrderStore';
 import { getApiBase, apiHeaders } from '@culinaryos/shared';
 import type { ZReport, TipPoolMethod } from '@culinaryos/shared';
 import {
@@ -124,8 +125,37 @@ export function ReportsView() {
     }
   }
 
+  const { orders } = useOrderStore();
+  const openOrders = orders.filter((o) => ['open', 'sent', 'in-progress', 'ready', 'paying', 'tender'].includes(o.status));
+  const hasOpenChecks = openOrders.length > 0;
+
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] overflow-y-auto animate-fadeIn p-6 space-y-6">
+      {/* Toast POS EOD Hard Gate Alert Banner */}
+      {hasOpenChecks && (
+        <div className="bg-amber-500 text-slate-950 p-4 rounded-2xl shadow-lg border-2 border-amber-400 flex flex-wrap items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center font-black">
+              <AlertTriangle className="w-5 h-5 animate-bounce" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider block">
+                Cannot Close Shift — {openOrders.length} Open Check{openOrders.length > 1 ? 's' : ''} Active
+              </h4>
+              <p className="text-xs font-bold text-slate-900 mt-0.5">
+                Toast POS Standard: All dining room tabs and checks must be fully paid, transferred, or voided before sealing the shift.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setView('tables')}
+            className="px-4 py-2.5 rounded-xl bg-slate-950 text-white font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-md active:scale-95"
+          >
+            Review Open Tables ({openOrders.length}) →
+          </button>
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -178,12 +208,19 @@ export function ReportsView() {
 
           {zReport?.status !== 'closed' ? (
             <button
+              disabled={hasOpenChecks}
               onClick={() => {
+                if (hasOpenChecks) return;
                 setManagerPin('');
                 setCloseError(null);
                 setShowCloseModal(true);
               }}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-md active:scale-95"
+              title={hasOpenChecks ? 'All tabs must be closed or paid before shift closeout' : 'Seal shift and generate Z-Report'}
+              className={`font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
+                hasOpenChecks
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 border border-slate-300'
+                  : 'bg-rose-600 hover:bg-rose-700 text-white cursor-pointer'
+              }`}
             >
               <Lock className="w-4 h-4" />
               <span>Close Shift (Z-Report)</span>

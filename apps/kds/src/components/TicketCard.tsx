@@ -4,6 +4,8 @@ import { BumpButton } from './BumpButton';
 import { CulinaryBadge } from '@culinaryos/ui';
 import {
   translateTicketItem,
+  abbreviateItemName,
+  abbreviateModifier,
   type SupportedLanguage,
 } from '@culinaryos/shared';
 
@@ -79,6 +81,19 @@ export function TicketCard({
   const canBump = !isHeld && ticket.status !== 'voided';
   const [scrapItemName, setScrapItemName] = useState<string | null>(null);
   const [scrapSuccess, setScrapSuccess] = useState(false);
+  const [completedItemIds, setCompletedItemIds] = useState<Set<string>>(new Set());
+
+  const toggleItemComplete = (itemId: string) => {
+    setCompletedItemIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
 
   // Multi-course pacing alert: if held and order is >= 12 mins (720s) old
   const isPacingAlert = isHeld && elapsed >= 720;
@@ -123,7 +138,7 @@ export function TicketCard({
   }
 
   return (
-    <article className="bg-white border border-[#e5e7eb] rounded-2xl shadow-xs p-4 sm:p-5 flex flex-col gap-3 min-w-[280px] max-w-[350px] shrink-0 relative overflow-hidden transition-all hover:shadow-sm">
+    <article className="bg-white border-2 border-slate-300 rounded-2xl shadow-md p-5 flex flex-col gap-3 min-w-[320px] max-w-[380px] shrink-0 relative overflow-hidden transition-all hover:border-slate-400 hover:shadow-lg">
       {/* Top accent indicator strip */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 ${topAccentColor}`} />
 
@@ -189,38 +204,69 @@ export function TicketCard({
       {/* Ticket Items with Dual-Language & 86 Countdowns */}
       <ul className="flex flex-col gap-2.5 my-1">
         {ticket.items.map((item: any) => {
+          const isCompleted = completedItemIds.has(item.id);
           const trans = translateTicketItem(
             { name: item.name, quantity: item.quantity || 1, modifiers: item.modifiers || [] },
             language
           );
           const hasTranslation = language !== 'en' && trans.translatedName !== item.name;
-          const translatedMods = trans.translatedModifiers ?? [];
+          const translatedMods = (trans.translatedModifiers ?? []).map((m: string) => abbreviateModifier(m));
+          const displayName = language === 'en' ? abbreviateItemName(item.name) : trans.translatedName;
 
           return (
-            <li key={item.id} className="text-xs group relative">
+            <li
+              key={item.id}
+              className={`text-xs group relative rounded-xl p-2 transition-all cursor-pointer border ${
+                isCompleted
+                  ? 'bg-slate-100/90 border-slate-200 opacity-60'
+                  : 'bg-white hover:bg-slate-50 border-slate-200 shadow-2xs'
+              }`}
+              onClick={() => toggleItemComplete(item.id)}
+            >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2 flex-1">
+                <div className="flex items-start gap-2.5 flex-1">
+                  {/* Progressive Item Checkoff Box */}
+                  <div
+                    className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors mt-0.5 ${
+                      isCompleted
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-slate-300 bg-white hover:border-slate-500'
+                    }`}
+                  >
+                    {isCompleted && <span className="text-xs font-black">✓</span>}
+                  </div>
+
                   <span className="font-mono font-black text-xs bg-[#0f172a0d] text-[#0f172a] px-1.5 py-0.5 rounded border border-[#0f172a15] shrink-0">
                     ×{item.quantity}
                   </span>
 
                   <div className="flex flex-col">
-                    {/* Primary Name (Translated or Original) */}
-                    <span className="font-bold text-[#1f2937] leading-snug">
-                      {trans.translatedName}
+                    {/* Primary Name (Abbreviated or Translated) */}
+                    <span
+                      className={`font-black text-sm text-[#1f2937] leading-snug tracking-tight ${
+                        isCompleted ? 'line-through text-slate-400' : ''
+                      }`}
+                    >
+                      {displayName}
                     </span>
 
-                    {/* Dual-Language Subtitle */}
-                    {hasTranslation && (
+                    {/* Dual-Language / Full Name Subtitle */}
+                    {hasTranslation ? (
                       <span className="text-[10px] text-zinc-500 font-medium italic">
-                        ({item.name})
+                        ({abbreviateItemName(item.name)})
                       </span>
+                    ) : (
+                      item.name !== displayName && (
+                        <span className="text-[10px] text-zinc-400 font-medium">
+                          {item.name}
+                        </span>
+                      )
                     )}
                   </div>
                 </div>
 
                 {/* 86 Countdown Indicator & Quick Waste Action */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                   {item.countRemaining != null && (
                     <span
                       className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${
@@ -247,7 +293,7 @@ export function TicketCard({
 
               {/* Quick Scrap Reason Dropdown */}
               {scrapItemName === item.name && (
-                <div className="mt-1.5 p-2 bg-zinc-900 text-white rounded-xl border border-zinc-700 space-y-1 z-10 shadow-lg">
+                <div className="mt-1.5 p-2 bg-zinc-900 text-white rounded-xl border border-zinc-700 space-y-1 z-10 shadow-lg" onClick={(e) => e.stopPropagation()}>
                   <div className="text-[10px] font-bold text-zinc-400 uppercase">
                     Log Quick Scrap: {item.name}
                   </div>
@@ -265,20 +311,20 @@ export function TicketCard({
                 </div>
               )}
 
-              {/* Modifiers (Dual-Language) */}
+              {/* Modifiers (Dual-Language & Abbreviated) */}
               {item.modifiers && item.modifiers.length > 0 && (
-                <div className="pl-7 text-[11px] text-[#6b7280] mt-0.5 font-medium">
+                <div className={`pl-8 text-[11px] text-[#6b7280] mt-1 font-bold ${isCompleted ? 'line-through text-slate-400' : ''}`}>
                   {translatedMods.join(' · ')}
                   {hasTranslation && (
                     <span className="block text-[10px] text-zinc-400 italic">
-                      ({item.modifiers.join(' · ')})
+                      ({item.modifiers.map((m: string) => abbreviateModifier(m)).join(' · ')})
                     </span>
                   )}
                 </div>
               )}
 
               {item.notes && (
-                <div className="ml-7 mt-1 px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded flex items-center gap-1">
+                <div className="ml-8 mt-1 px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded flex items-center gap-1">
                   <span className="material-symbols-outlined text-[12px]">flag</span>
                   <span>{item.notes}</span>
                 </div>
@@ -310,13 +356,13 @@ export function TicketCard({
       {isHeld && onFire ? (
         <button
           onClick={() => onFire(ticket.id)}
-          className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] mt-2 cursor-pointer ${
+          className={`w-full min-h-[48px] sm:min-h-[52px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-2 active:scale-[0.97] transition-transform duration-75 ease-out shadow-sm mt-2 cursor-pointer ${
             isPacingAlert
-              ? 'bg-red-600 hover:bg-red-500 text-white animate-bounce'
-              : 'bg-[#0f172a] hover:bg-[#1e293b] text-white'
+              ? 'bg-red-600 hover:bg-red-500 text-white border-red-700 animate-bounce'
+              : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-950'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
+          <span className="material-symbols-outlined text-[18px]">local_fire_department</span>
           <span>Fire Course {ticket.courseNumber}</span>
         </button>
       ) : (

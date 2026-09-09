@@ -47,7 +47,7 @@ import {
 } from '@culinaryos/ui';
 
 
-export type TableStatus = 'available' | 'occupied' | 'reserved' | 'dirty';
+export type TableStatus = 'available' | 'occupied' | 'reserved' | 'dirty' | 'paying';
 export type SectionId = 'all' | 'main' | 'patio' | 'bar' | 'vip' | 'rooftop';
 
 export interface FloorTable {
@@ -87,34 +87,46 @@ const DEFAULT_FLOOR_TABLES: FloorTable[] = [
   { id: 'tbl-vip1', number: 'VIP1', label: 'VIP Suite', sectionId: 'vip', sectionName: 'Private VIP', capacity: 10, shape: 'oval', defaultStatus: 'reserved' },
 ];
 
-const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: string; badge: string; ring: string }> = {
+const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: string; badge: string; ring: string; dot: string }> = {
   available: {
-    bg: 'bg-emerald-50/70 hover:bg-emerald-100/80',
-    border: 'border-emerald-600',
+    bg: 'bg-emerald-50/80 hover:bg-emerald-100/90',
+    border: 'border-emerald-500 ring-2 ring-emerald-400/40',
     text: 'text-emerald-950',
-    badge: 'bg-emerald-700 text-white',
-    ring: 'ring-emerald-400/40',
+    badge: 'bg-emerald-600 text-white',
+    ring: 'ring-emerald-400/50',
+    dot: 'bg-emerald-500',
   },
   occupied: {
-    bg: 'bg-amber-50/80 hover:bg-amber-100/90',
-    border: 'border-amber-600',
+    bg: 'bg-amber-50/90 hover:bg-amber-100',
+    border: 'border-amber-500 ring-2 ring-amber-400/40',
     text: 'text-amber-950',
-    badge: 'bg-slate-900 text-white',
-    ring: 'ring-amber-500/40',
+    badge: 'bg-amber-600 text-white',
+    ring: 'ring-amber-500/50',
+    dot: 'bg-amber-500',
+  },
+  paying: {
+    bg: 'bg-blue-50/90 hover:bg-blue-100',
+    border: 'border-blue-500 ring-2 ring-blue-400/40',
+    text: 'text-blue-950',
+    badge: 'bg-blue-600 text-white',
+    ring: 'ring-blue-400/50',
+    dot: 'bg-blue-500',
   },
   reserved: {
-    bg: 'bg-indigo-50/70 hover:bg-indigo-100/80',
-    border: 'border-indigo-600',
+    bg: 'bg-indigo-50/80 hover:bg-indigo-100/90',
+    border: 'border-indigo-500 ring-2 ring-indigo-400/40',
     text: 'text-indigo-950',
-    badge: 'bg-indigo-700 text-white',
-    ring: 'ring-indigo-400/40',
+    badge: 'bg-indigo-600 text-white',
+    ring: 'ring-indigo-400/50',
+    dot: 'bg-indigo-500',
   },
   dirty: {
-    bg: 'bg-rose-50/70 hover:bg-rose-100/80',
-    border: 'border-rose-600',
-    text: 'text-rose-950',
-    badge: 'bg-rose-700 text-white',
-    ring: 'ring-rose-400/40',
+    bg: 'bg-slate-100 hover:bg-slate-200/90',
+    border: 'border-slate-400 ring-2 ring-slate-300',
+    text: 'text-slate-800',
+    badge: 'bg-slate-500 text-white',
+    ring: 'ring-slate-400/40',
+    dot: 'bg-slate-400',
   },
 };
 
@@ -223,7 +235,10 @@ export function TablesView() {
   }, [statusOverrides]);
 
   function getEffectiveStatus(table: FloorTable, activeOrder: any): TableStatus {
-    if (activeOrder) return 'occupied';
+    if (activeOrder) {
+      if (activeOrder.status === 'paying' || activeOrder.status === 'tender') return 'paying';
+      return 'occupied';
+    }
     return statusOverrides[table.id] ?? table.defaultStatus;
   }
 
@@ -520,10 +535,23 @@ export function TablesView() {
   });
 
   const occupiedCount = tableStats.filter((x) => x.status === 'occupied').length;
+  const payingCount = tableStats.filter((x) => x.status === 'paying').length;
   const availableCount = tableStats.filter((x) => x.status === 'available').length;
   const reservedCount = tableStats.filter((x) => x.status === 'reserved').length;
   const dirtyCount = tableStats.filter((x) => x.status === 'dirty').length;
   const totalActiveRevenue = orders.reduce((sum: number, o: any) => sum + (o.total ?? 0), 0);
+
+  // Server Load Balancing: count open tables and covers per server
+  const serverLoadMap = useMemo(() => {
+    const map: Record<string, { tables: number; covers: number }> = {};
+    orders.forEach((o: any) => {
+      const sName = o.server_name || 'Staff';
+      if (!map[sName]) map[sName] = { tables: 0, covers: 0 };
+      map[sName].tables += 1;
+      map[sName].covers += o.cover_count || 1;
+    });
+    return map;
+  }, [orders]);
 
   const selectedTableActiveOrder = selectedTable
     ? orders.find(
@@ -531,9 +559,22 @@ export function TablesView() {
       )
     : null;
 
-  function getShapeBadge(shape: FloorTable['shape']) {
-    // Standardize to uniform rounded-2xl cards so layout and content fit ergonomically
-    return 'rounded-2xl border-2';
+  function getShapeCardStyle(shape: FloorTable['shape']) {
+    switch (shape) {
+      case 'round':
+        return 'rounded-full aspect-square flex items-center justify-center p-6 text-center';
+      case 'booth':
+        return 'rounded-3xl border-l-[8px] border-l-primary p-5';
+      case 'bar':
+        return 'rounded-xl border-t-[6px] border-t-amber-500 p-4';
+      case 'oval':
+        return 'rounded-[2.5rem] p-5';
+      case 'rectangle':
+        return 'rounded-2xl p-5';
+      case 'square':
+      default:
+        return 'rounded-2xl p-5';
+    }
   }
 
   return (
@@ -570,14 +611,14 @@ export function TablesView() {
           <div>
             <div className="flex items-center gap-2.5">
               <Badge variant="brand" className="px-2.5 py-0.5 font-black text-xs">
-                FOH SPATIAL FLOOR
+                FOH 2D FLOOR MAP
               </Badge>
               <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
-                Spatial Floor & Table Map
+                Floor Plan & Table Management
               </h1>
             </div>
             <p className="text-xs text-muted-foreground mt-1 font-semibold">
-              Interactive 3D table editor, table merging, check splitting & server shift transfers.
+              Live geometric status rings, server rotation balance, and Toast-grade table actions.
             </p>
           </div>
 
@@ -585,9 +626,14 @@ export function TablesView() {
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             <div className="bg-secondary/70 border border-border px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[85px]">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Occupied</span>
-              <span className="text-base font-black text-foreground">
+              <span className="text-base font-black text-amber-600">
                 {occupiedCount} <span className="text-[10px] text-muted-foreground font-normal">/ {floorTables.length}</span>
               </span>
+            </div>
+
+            <div className="bg-secondary/70 border border-border px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[85px]">
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Paying</span>
+              <span className="text-base font-black text-blue-600">{payingCount}</span>
             </div>
 
             <div className="bg-secondary/70 border border-border px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[85px]">
@@ -602,7 +648,7 @@ export function TablesView() {
 
             <div className="bg-secondary/70 border border-border px-3.5 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[85px]">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Dirty</span>
-              <span className="text-base font-black text-rose-600">{dirtyCount}</span>
+              <span className="text-base font-black text-slate-600">{dirtyCount}</span>
             </div>
 
             <div className="bg-primary/5 border border-primary/20 px-4 py-2 rounded-xl text-center flex-1 lg:flex-none min-w-[120px]">
@@ -698,7 +744,7 @@ export function TablesView() {
 
             {/* Section Tabs (2D Mode) */}
             {viewMode === '2d' && (
-              <div className="hidden sm:flex bg-muted rounded-xl p-1 gap-1 overflow-x-auto border border-border">
+              <div className="flex bg-muted/80 rounded-xl p-1 gap-1 border border-border shrink-0">
                 {[
                   { id: 'all', label: 'All Floor' },
                   { id: 'main', label: 'Main' },
@@ -709,7 +755,7 @@ export function TablesView() {
                   <button
                     key={sec.id}
                     onClick={() => setActiveSection(sec.id as SectionId)}
-                    className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all active:scale-95 ${
                       activeSection === sec.id
                         ? 'bg-background text-foreground shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'
@@ -724,16 +770,16 @@ export function TablesView() {
 
           {/* Status Filter Options */}
           {viewMode === '2d' && (
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-1">Filter:</span>
-              {(['all', 'available', 'occupied', 'reserved', 'dirty'] as const).map((st) => (
+            <div className="flex items-center gap-1.5 shrink-0 bg-muted/60 p-1 rounded-xl border border-border">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-1">Status:</span>
+              {(['all', 'available', 'occupied', 'paying', 'reserved', 'dirty'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 border ${
                     statusFilter === st
                       ? 'border-foreground bg-foreground text-background shadow-xs'
-                      : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {st}
@@ -781,7 +827,7 @@ export function TablesView() {
                 : '💡 Orbit with mouse drag • Scroll to zoom • Click any table for check operations (Seat, Merge, Split, Transfer)'}
             </span>
             <span className="font-mono text-[10px]">
-              Theme: <span className="uppercase text-foreground font-black">{floorTheme}</span> • Room: {floorDimensions.width}x{floorDimensions.depth}m
+              Theme: <span className="uppercase text-foreground font-black">{floorTheme}</span> • Room: {floorDimensions.width}' × {floorDimensions.depth}' ft
             </span>
           </div>
         </div>
@@ -800,15 +846,16 @@ export function TablesView() {
               );
               const effStatus = getEffectiveStatus(table, activeOrder);
               const theme = STATUS_THEME[effStatus];
-              const shapeStyle = getShapeBadge(table.shape);
+              const shapeStyle = getShapeCardStyle(table.shape);
               const itemCount = activeOrder?.items?.length ?? 0;
               const orderTotal = activeOrder?.total ?? 0;
+              const serverInfo = activeOrder?.server_name ? serverLoadMap[activeOrder.server_name] : null;
 
               return (
                 <div
                   key={table.id}
                   onClick={() => handleTableClick(table, activeOrder)}
-                  className={`border-2 ${theme.border} ${theme.bg} rounded-2xl p-5 transition-all duration-200 cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[155px] group`}
+                  className={`border-2 ${theme.border} ${theme.bg} ${shapeStyle} transition-all duration-200 cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-98 relative flex flex-col justify-between min-h-[160px] group`}
                 >
                   <div className="flex justify-between items-start gap-2 w-full">
                     <div>
@@ -819,22 +866,34 @@ export function TablesView() {
                       <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-bold text-muted-foreground">
                         <Users className="w-3 h-3 text-muted-foreground" />
                         <span>{activeOrder?.cover_count ?? table.capacity}/{table.capacity} seats</span>
-                        <span className="capitalize">• {table.shape}</span>
+                        <span className="capitalize font-mono text-[9px] px-1.5 py-0.2 bg-black/5 rounded">
+                          {table.shape}
+                        </span>
                       </div>
                     </div>
 
-                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${theme.badge} shadow-xs tracking-wider`}>
-                      {effStatus}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full ${theme.dot} animate-pulse`} />
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${theme.badge} shadow-xs tracking-wider`}>
+                        {effStatus}
+                      </span>
+                    </div>
                   </div>
 
-                  {effStatus === 'occupied' && activeOrder ? (
-                    <div className="my-2 p-2 bg-white/90 backdrop-blur-xs rounded-xl border border-amber-200 space-y-1">
+                  {activeOrder ? (
+                    <div className={`my-2 p-2.5 bg-white/95 backdrop-blur-xs rounded-xl border ${effStatus === 'paying' ? 'border-blue-300' : 'border-amber-200'} space-y-1.5 shadow-2xs`}>
                       <div className="flex justify-between items-center text-[11px] font-bold">
-                        <span className="text-foreground truncate">
-                          {activeOrder.server_name ? `Server: ${activeOrder.server_name}` : 'Active Ticket'}
-                        </span>
-                        <Badge variant="secondary" className="text-[9px] font-black uppercase px-1.5 py-0.2">
+                        <div className="flex items-center gap-1 truncate">
+                          <span className="text-foreground truncate font-black">
+                            {activeOrder.server_name || 'Assigned Staff'}
+                          </span>
+                          {serverInfo && (
+                            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-700 font-bold" title="Server Open Tables & Total Covers">
+                              {serverInfo.tables} tbls • {serverInfo.covers} cvrs
+                            </span>
+                          )}
+                        </div>
+                        <Badge variant={effStatus === 'paying' ? 'brand' : 'secondary'} className="text-[9px] font-black uppercase px-1.5 py-0.2">
                           {activeOrder.status}
                         </Badge>
                       </div>
@@ -850,12 +909,12 @@ export function TablesView() {
                     <div className="my-2 py-2 text-[11px] font-semibold text-muted-foreground italic">
                       {effStatus === 'available' && 'Tap to seat guests & open order'}
                       {effStatus === 'reserved' && 'Reserved for upcoming party'}
-                      {effStatus === 'dirty' && 'Table needs busing & cleaning'}
+                      {effStatus === 'dirty' && 'Table needs busing & sanitizing'}
                     </div>
                   )}
 
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-muted-foreground group-hover:text-foreground">
-                    <span>{editMode ? 'Edit Table ⚙️' : effStatus === 'occupied' ? 'Table Check & Actions →' : 'Manage Table →'}</span>
+                    <span>{editMode ? 'Edit Table ⚙️' : effStatus === 'occupied' || effStatus === 'paying' ? 'Table Check & Actions →' : 'Seat Party →'}</span>
                     <span className="font-mono text-[9px] text-muted-foreground">ID #{table.number}</span>
                   </div>
                 </div>
@@ -1631,14 +1690,14 @@ export function TablesView() {
             <div className="space-y-3 pt-2">
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-black">
-                  <span>Room Width</span>
-                  <span className="font-mono text-sky-600">{floorDimensions.width} meters</span>
+                  <span>Room Width (Feet)</span>
+                  <span className="font-mono text-sky-600">{floorDimensions.width} ft ({floorDimensions.width}' × {floorDimensions.depth}')</span>
                 </div>
                 <input
                   type="range"
-                  min="30"
-                  max="80"
-                  step="5"
+                  min="16"
+                  max="120"
+                  step="2"
                   value={floorDimensions.width}
                   onChange={(e) => setFloorDimensions((prev) => ({ ...prev, width: Number(e.target.value) }))}
                   className="w-full accent-sky-600 cursor-pointer"
@@ -1647,14 +1706,14 @@ export function TablesView() {
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-black">
-                  <span>Room Depth</span>
-                  <span className="font-mono text-sky-600">{floorDimensions.depth} meters</span>
+                  <span>Room Depth (Feet)</span>
+                  <span className="font-mono text-sky-600">{floorDimensions.depth} ft</span>
                 </div>
                 <input
                   type="range"
-                  min="20"
-                  max="60"
-                  step="5"
+                  min="16"
+                  max="100"
+                  step="2"
                   value={floorDimensions.depth}
                   onChange={(e) => setFloorDimensions((prev) => ({ ...prev, depth: Number(e.target.value) }))}
                   className="w-full accent-sky-600 cursor-pointer"

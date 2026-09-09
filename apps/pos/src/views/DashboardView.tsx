@@ -267,36 +267,45 @@ export function DashboardView() {
             )}
           </div>
 
-          {/* Real-Time Processing Fees Saved Ticker (Square/Toast Killer) */}
+          {/* Staff Shift Info & Performance Panel (Toast-style Server Hub) */}
           {(() => {
-            const settings = loadLocalSettings();
-            const pricingConfig = settings.pricingProgram;
-            const completedOrders = getMockOrders().filter((o: any) => o.status === 'paid');
-            const savings = calculateCumulativeShiftSavings({
-              orders: completedOrders.map((o: any) => ({
-                totalCents: o.total || 0,
-                paymentMethod: o.payment_method || 'card',
-              })),
-              config: pricingConfig,
-            });
+            const openServerOrders = (openOrders as any[]).filter(
+              (o: any) => o.server_name?.toLowerCase() === employee?.name?.toLowerCase()
+            );
+            const myOpenCovers = openServerOrders.reduce((sum: number, o: any) => sum + (o.cover_count || 1), 0);
+            const paidOrders = getMockOrders().filter(
+              (o: any) => o.status === 'paid' && o.server_name?.toLowerCase() === employee?.name?.toLowerCase()
+            );
+            const mySalesCents = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+            const myTipsCents = paidOrders.reduce((sum: number, o: any) => sum + (o.tip || 0), 0);
 
             return (
-              <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/30 rounded-xl p-3.5 space-y-1.5 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-emerald-600 animate-pulse" />
-                    <span>Fees Kept Today</span>
+              <div className="bg-slate-50 border-2 border-slate-300 rounded-xl p-3.5 space-y-2 shadow-xs">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-slate-900" />
+                    <span>My Shift Hub</span>
                   </span>
-                  <span className="text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">
-                    vs Square (2.9%)
+                  <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded">
+                    #104 • Alex M.
                   </span>
                 </div>
-                <div className="text-2xl font-black font-mono text-emerald-700">
-                  ${(savings.totalSavedCents / 100).toFixed(2)}
+
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <div className="bg-white border border-slate-200 p-2 rounded-lg">
+                    <span className="text-[9px] font-black text-slate-500 uppercase block">Open Tables</span>
+                    <span className="text-sm font-black text-slate-900">{openServerOrders.length} <span className="text-[10px] text-slate-500 font-normal">({myOpenCovers} covers)</span></span>
+                  </div>
+                  <div className="bg-white border border-slate-200 p-2 rounded-lg">
+                    <span className="text-[9px] font-black text-slate-500 uppercase block">Shift Sales</span>
+                    <span className="text-sm font-black font-mono text-slate-900">${(mySalesCents / 100).toFixed(2)}</span>
+                  </div>
                 </div>
-                <p className="text-[10px] text-emerald-900/80 font-medium leading-tight">
-                  100% of ticket revenue retained via Dual Pricing & cash discount flow.
-                </p>
+
+                <div className="bg-white border border-slate-200 p-2 rounded-lg flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-600 uppercase">My Shift Tips</span>
+                  <span className="text-sm font-black font-mono text-emerald-700">${(myTipsCents / 100).toFixed(2)}</span>
+                </div>
               </div>
             );
           })()}

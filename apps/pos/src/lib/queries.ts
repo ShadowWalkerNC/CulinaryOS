@@ -299,19 +299,21 @@ export function useOpenOrders() {
   return useQuery({
     queryKey: ['orders', tenantId, 'open'],
     queryFn: async () => {
-      if (!supabase) {
-        return getMockOrders().filter(o => ['open', 'sent', 'in-progress', 'ready'].includes(o.status));
+      const API = getApiBase();
+      try {
+        const res = await fetch(`${API}/v1/orders`, {
+          headers: apiHeaders(tenantId),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          return json.data || [];
+        }
+      } catch {
+        // Fallback below
       }
-      const { data, error } = await supabase
-        .from('pos_orders')
-        .select('*, items:pos_order_line_items(*, modifiers:line_item_modifiers(*))')
-        .eq('tenant_id', tenantId)
-        .in('status', ['open', 'sent', 'in-progress', 'ready'])
-        .order('created_at');
-      if (error) throw error;
-      return data;
+      return getMockOrders().filter(o => ['open', 'sent', 'in-progress', 'ready'].includes(o.status));
     },
-    refetchInterval: 10_000,
+    refetchInterval: 5_000,
   });
 }
 
@@ -320,19 +322,23 @@ export function useOrder(id: string | null) {
   return useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
-      if (!supabase) {
-        return getMockOrders().find(o => o.id === id) || null;
+      if (!id) return null;
+      const API = getApiBase();
+      try {
+        const res = await fetch(`${API}/v1/orders/${id}`, {
+          headers: apiHeaders(tenantId),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          return json.data || null;
+        }
+      } catch {
+        // Fallback below
       }
-      const { data, error } = await supabase
-        .from('pos_orders')
-        .select('*, items:pos_order_line_items(*, modifiers:line_item_modifiers(*))')
-        .eq('id', id!)
-        .eq('tenant_id', tenantId)
-        .single();
-      if (error) throw error;
-      return data;
+      return getMockOrders().find(o => o.id === id) || null;
     },
     enabled: !!id,
+    refetchInterval: 5_000,
   });
 }
 
@@ -347,30 +353,40 @@ export function useCreateOrder() {
   const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
     mutationFn: async (payload: { table_number?: string; cover_count?: number; server_name?: string }) => {
-      if (!supabase) {
-        const newOrder = {
-          id: `o-${Math.floor(1000 + Math.random() * 9000)}`,
-          tenant_id: tenantId,
-          status: 'open',
-          table_number: payload.table_number || null,
-          cover_count: payload.cover_count || 1,
-          server_name: payload.server_name || 'Server',
-          items: [],
-          total: 0,
-          created_at: new Date().toISOString()
-        };
-        const orders = getMockOrders();
-        orders.push(newOrder);
-        saveMockOrders(orders);
-        return newOrder;
+      const API = getApiBase();
+      try {
+        const res = await fetch(`${API}/v1/orders`, {
+          method: 'POST',
+          headers: apiHeaders(tenantId),
+          body: JSON.stringify({
+            tableNumber: payload.table_number || '1',
+            coverCount: payload.cover_count || 1,
+            serverName: payload.server_name || 'Server',
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) return json.data;
+        }
+      } catch {
+        // Fallback to local mockDb
       }
-      const { data, error } = await supabase
-        .from('pos_orders')
-        .insert({ tenant_id: tenantId, ...payload })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+
+      const newOrder = {
+        id: `o-${Math.floor(1000 + Math.random() * 9000)}`,
+        tenant_id: tenantId,
+        status: 'open',
+        table_number: payload.table_number || null,
+        cover_count: payload.cover_count || 1,
+        server_name: payload.server_name || 'Server',
+        items: [],
+        total: 0,
+        created_at: new Date().toISOString()
+      };
+      const orders = getMockOrders();
+      orders.push(newOrder);
+      saveMockOrders(orders);
+      return newOrder;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['orders'] });
@@ -398,89 +414,74 @@ export function useAddLineItem() {
       const modTotal = item.selectedModifiers?.reduce((s, m) => s + m.price_adjustment, 0) ?? 0;
       const finalUnitPrice = item.unit_price + modTotal;
       const line_total = finalUnitPrice * item.quantity;
+      const API = getApiBase();
 
-      if (!supabase) {
-        const orders = getMockOrders();
-        const order = orders.find(o => o.id === item.order_id);
-        if (order) {
-          const newLineItem = {
-            id: `li-${Math.floor(10000 + Math.random() * 90000)}`,
-            line_total,
-            order_id: item.order_id,
-            menu_item_id: item.menu_item_id,
+      try {
+        const res = await fetch(`${API}/v1/orders/${item.order_id}/items`, {
+          method: 'POST',
+          headers: apiHeaders(tenantId),
+          body: JSON.stringify({
+            menuItemId: item.menu_item_id,
             name: item.name,
+            unitPrice: finalUnitPrice,
             quantity: item.quantity,
-            unit_price: finalUnitPrice,
-            station: item.station,
-            seat_number: item.seat_number ?? 1,
-            course_number: item.course_number ?? 1,
+            station: item.station || 'hot',
+            courseNumber: item.course_number ?? 1,
             notes: item.notes || null,
-            modifiers: item.selectedModifiers || []
-          };
-          order.items = order.items || [];
-          order.items.push(newLineItem);
-          order.total = (order.total ?? 0) + line_total;
-          saveMockOrders(orders);
-
-          // Enqueue delta so reconnection replays it deterministically
-          enqueueOfflineDelta({
-            tenant_id: tenantId,
-            order_id: item.order_id,
-            action: 'add_line_item',
-            payload: {
-              id: newLineItem.id,
-              menu_item_id: item.menu_item_id,
-              name: item.name,
-              quantity: item.quantity,
-              unit_price: finalUnitPrice,
-              line_total,
-              station: item.station,
-              course_number: item.course_number ?? 1,
-              notes: item.notes ?? null,
-            },
-          });
-
-          return newLineItem;
+            modifiers: item.selectedModifiers || [],
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) return json.data;
         }
-        throw new Error('Order not found');
+      } catch {
+        // Fallback to local mockDb
       }
 
-      // Live Supabase path
-      const { data: lineItem, error: lineError } = await supabase
-        .from('pos_order_line_items')
-        .insert({
-          tenant_id: tenantId,
+      const orders = getMockOrders();
+      const order = orders.find(o => o.id === item.order_id);
+      if (order) {
+        const newLineItem = {
+          id: `li-${Math.floor(10000 + Math.random() * 90000)}`,
+          line_total,
           order_id: item.order_id,
           menu_item_id: item.menu_item_id,
           name: item.name,
           quantity: item.quantity,
           unit_price: finalUnitPrice,
-          line_total,
           station: item.station,
-          notes: item.notes,
           seat_number: item.seat_number ?? 1,
           course_number: item.course_number ?? 1,
-        })
-        .select()
-        .single();
-      if (lineError) throw lineError;
+          notes: item.notes || null,
+          modifiers: item.selectedModifiers || []
+        };
+        order.items = order.items || [];
+        order.items.push(newLineItem);
+        order.total = (order.total ?? 0) + line_total;
+        saveMockOrders(orders);
 
-      if (item.selectedModifiers && item.selectedModifiers.length > 0) {
-        const { error: modError } = await supabase
-          .from('line_item_modifiers')
-          .insert(
-            item.selectedModifiers.map(m => ({
-              tenant_id: tenantId,
-              line_item_id: lineItem.id,
-              modifier_id: m.modifier_id,
-              name: m.name,
-              price_adjustment: m.price_adjustment
-            }))
-          );
-        if (modError) throw modError;
+        // Enqueue delta so reconnection replays it deterministically
+        enqueueOfflineDelta({
+          tenant_id: tenantId,
+          order_id: item.order_id,
+          action: 'add_line_item',
+          payload: {
+            id: newLineItem.id,
+            menu_item_id: item.menu_item_id,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: finalUnitPrice,
+            line_total,
+            station: item.station,
+            course_number: item.course_number ?? 1,
+            notes: item.notes ?? null,
+          },
+        });
+
+        return newLineItem;
       }
-
-      return lineItem;
+      throw new Error('Order not found');
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['order', vars.order_id] });
@@ -711,23 +712,31 @@ export function useVerifyManagerPin() {
 
 export function useApplyDiscount() {
   const qc = useQueryClient();
+  const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
     mutationFn: async ({ orderId, discountPercent, discountFlat }: { orderId: string; discountPercent: number; discountFlat: number }) => {
-      if (!supabase) {
-        const orders = getMockOrders();
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          order.discount_percent = discountPercent;
-          order.discount_flat = discountFlat;
-          saveMockOrders(orders);
+      const API = getApiBase();
+      try {
+        const res = await fetch(`${API}/v1/orders/${orderId}/discount`, {
+          method: 'POST',
+          headers: apiHeaders(tenantId),
+          body: JSON.stringify({ discountPercent, discountFlat }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          return json.data;
         }
-        return;
+      } catch {
+        // Fallback
       }
-      const { error } = await supabase
-        .from('pos_orders')
-        .update({ discount_percent: discountPercent, discount_flat: discountFlat })
-        .eq('id', orderId);
-      if (error) throw error;
+
+      const orders = getMockOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        order.discount_percent = discountPercent;
+        order.discount_flat = discountFlat;
+        saveMockOrders(orders);
+      }
     },
     onSuccess: (_, { orderId }) => {
       qc.invalidateQueries({ queryKey: ['order', orderId] });

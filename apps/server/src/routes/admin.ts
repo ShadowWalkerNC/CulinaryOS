@@ -254,6 +254,56 @@ adminRoutes.post('/staff', async (c) => {
   return ok(c, { user_id: userId, email: body.email, role: body.role, display_name: body.display_name }, 201);
 });
 
+adminRoutes.patch('/staff/:id', async (c) => {
+  const denied = requireManager(c);
+  if (denied) return denied;
+
+  const tenantId = c.get('tenantId');
+  const supabase = c.get('supabase');
+  const id = c.req.param('id');
+  const body = await c.req.json<{
+    display_name?: string;
+    role?: string;
+    pin?: string;
+    active?: boolean;
+  }>();
+
+  if (!supabase) {
+    const staff = mockStaffMembers.find((s) => s.user_id === id);
+    if (!staff) return err(c, 'NOT_FOUND', `Staff member ${id} not found`, 404);
+    if (body.display_name !== undefined) staff.display_name = body.display_name;
+    if (body.role !== undefined) staff.role = body.role;
+    if (body.active !== undefined) staff.active = body.active;
+    if (body.pin) staff.has_pin = true;
+    return ok(c, staff);
+  }
+
+  if (body.role) {
+    await supabase
+      .from('tenant_users')
+      .update({ role: body.role })
+      .eq('tenant_id', tenantId)
+      .eq('user_id', id);
+  }
+
+  const pinUpdates: Record<string, any> = {};
+  if (body.display_name !== undefined) pinUpdates.display_name = body.display_name;
+  if (body.active !== undefined) pinUpdates.active = body.active;
+  if (body.pin && /^\d{4,8}$/.test(body.pin)) {
+    pinUpdates.pin_hash = hashPin(body.pin);
+  }
+
+  if (Object.keys(pinUpdates).length > 0) {
+    await supabase
+      .from('staff_pins')
+      .update(pinUpdates)
+      .eq('tenant_id', tenantId)
+      .eq('user_id', id);
+  }
+
+  return ok(c, { id, ...body });
+});
+
 // ============================================================
 // Custom Roles & Permissions Matrix Engine (Sprint 5)
 // ============================================================
