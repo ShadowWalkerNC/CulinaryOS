@@ -3,6 +3,7 @@ import { usePOSStore } from '../lib/store';
 import { getApiBase, apiHeaders } from '@culinaryos/shared';
 import type { ZReport, TipPoolMethod } from '@culinaryos/shared';
 import {
+  Button,
   FileText,
   DollarSign,
   TrendingUp,
@@ -158,36 +159,40 @@ export function ReportsView() {
             className="bg-white border border-[#cbd5e1] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#1e293b] shadow-2xs"
           />
 
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={fetchZReport}
-            className="bg-white hover:bg-slate-100 text-[#0f172a] p-2.5 rounded-xl border border-[#cbd5e1] transition-colors shadow-2xs"
             title="Refresh Data"
+            className="h-10 w-10 rounded-xl"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
+          </Button>
 
           {zReport && (
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowPrintModal(true)}
-              className="bg-white hover:bg-slate-100 text-[#0f172a] font-black px-3.5 py-2.5 rounded-xl text-xs uppercase tracking-wider border border-[#cbd5e1] flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="uppercase tracking-wider gap-1.5"
             >
               <Printer className="w-4 h-4 text-[#475569]" />
               <span>Print Z-Chit</span>
-            </button>
+            </Button>
           )}
 
           {zReport?.status !== 'closed' ? (
-            <button
+            <Button
+              variant="destructive"
               onClick={() => {
                 setManagerPin('');
                 setCloseError(null);
                 setShowCloseModal(true);
               }}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-md active:scale-95"
+              className="uppercase tracking-wider gap-1.5"
             >
               <Lock className="w-4 h-4" />
               <span>Close Shift (Z-Report)</span>
-            </button>
+            </Button>
           ) : (
             <div className="bg-emerald-50 text-emerald-800 font-bold px-3 py-2 rounded-xl text-xs border border-emerald-200 flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -195,12 +200,13 @@ export function ReportsView() {
             </div>
           )}
 
-          <button
+          <Button
+            variant="brand"
             onClick={() => setView('dashboard')}
-            className="bg-[#0f172a] hover:bg-[#1e293b] text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-2xs"
+            className="uppercase tracking-wider"
           >
             Home
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -211,12 +217,13 @@ export function ReportsView() {
       ) : error || !zReport ? (
         <div className="bg-rose-50 border border-rose-200 text-rose-700 p-6 rounded-2xl text-center">
           <p className="font-bold text-sm">Failed to load reports: {error}</p>
-          <button
+          <Button
+            variant="destructive"
             onClick={fetchZReport}
-            className="mt-3 bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase"
+            className="mt-3 uppercase"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">
@@ -469,26 +476,28 @@ export function ReportsView() {
               </div>
 
               <div className="flex items-center gap-1.5 bg-[#f1f5f9] p-1 rounded-xl">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setTipMethod('role_weighted')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${
+                  className={`px-3 py-1.5 h-auto rounded-lg text-xs font-black uppercase ${
                     tipMethod === 'role_weighted'
-                      ? 'bg-white text-[#0f172a] shadow-xs'
+                      ? 'bg-white text-[#0f172a] shadow-xs hover:bg-white hover:text-[#0f172a]'
                       : 'text-[#64748b] hover:text-[#0f172a]'
                   }`}
                 >
                   Role-Weighted (Points)
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => setTipMethod('hours_worked')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${
+                  className={`px-3 py-1.5 h-auto rounded-lg text-xs font-black uppercase ${
                     tipMethod === 'hours_worked'
-                      ? 'bg-white text-[#0f172a] shadow-xs'
+                      ? 'bg-white text-[#0f172a] shadow-xs hover:bg-white hover:text-[#0f172a]'
                       : 'text-[#64748b] hover:text-[#0f172a]'
                   }`}
                 >
                   Hours-Worked Split
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -633,12 +642,14 @@ export function ReportsView() {
                   <p className="text-[10px] text-[#64748b]">Generates immutable Z-Report</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowCloseModal(false)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700"
+                aria-label="Close shift closeout"
+                className="h-auto px-1 text-xs font-bold text-gray-400 hover:text-gray-700"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             {closeError && (
@@ -696,21 +707,23 @@ export function ReportsView() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setShowCloseModal(false)}
-                className="w-full bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#334155] font-black rounded-xl py-3 text-xs uppercase"
+                className="w-full uppercase"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="destructive"
                 onClick={handleCloseShift}
-                disabled={closing}
-                className="w-full bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider shadow-md"
+                isLoading={closing}
+                className="w-full uppercase tracking-wider"
               >
-                {closing ? 'Sealing...' : 'Seal & Close'}
-              </button>
+                Seal & Close
+              </Button>
             </div>
           </div>
         </div>
@@ -727,12 +740,14 @@ export function ReportsView() {
                 <Receipt className="w-5 h-5 text-emerald-600" />
                 <h3 className="text-sm font-black text-[#0f172a] uppercase">Thermal Z-Report Chit</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowPrintModal(false)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700"
+                aria-label="Close print preview"
+                className="h-auto px-1 text-xs font-bold text-gray-400 hover:text-gray-700"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             {/* Thermal Print Preview Stream */}
@@ -768,16 +783,17 @@ export function ReportsView() {
             </div>
 
             <div className="shrink-0">
-              <button
+              <Button
+                variant="brand"
                 onClick={() => {
                   window.print();
                   setShowPrintModal(false);
                 }}
-                className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black rounded-xl py-3 text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full uppercase tracking-wider gap-2"
               >
                 <Printer className="w-4 h-4" />
                 <span>Send to ESC/POS Thermal Printer</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { Button } from '@culinaryos/ui';
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard',    end: true  },
@@ -68,13 +69,14 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="px-2 py-3 border-t border-[var(--color-divider)]">
-        <button
+        <Button
+          variant="ghost"
           onClick={handleSignOut}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)] transition-colors"
+          className="w-full justify-start px-3 py-2 text-sm font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)]"
         >
           <LogOut className="w-4 h-4 shrink-0" />
           Sign out
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -92,13 +94,15 @@ export function Sidebar() {
           <ChefHat className="w-5 h-5 text-[var(--color-primary)]" />
           <span className="font-semibold text-[var(--color-text)] text-sm">KitchenKit</span>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setOpen(true)}
           aria-label="Open navigation"
-          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] transition-colors"
+          className="text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)]"
         >
           <Menu className="w-5 h-5" />
-        </button>
+        </Button>
       </header>
 
       {/* Mobile drawer */}
@@ -106,13 +110,15 @@ export function Sidebar() {
         <div className="md:hidden fixed inset-0 z-40 flex" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <div ref={drawerRef} className="relative flex flex-col w-64 h-full bg-[var(--color-surface)] shadow-xl z-50">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setOpen(false)}
               aria-label="Close navigation"
-              className="absolute top-3 right-3 p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] transition-colors"
+              className="absolute top-3 right-3 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)]"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
             <NavContent />
           </div>
         </div>

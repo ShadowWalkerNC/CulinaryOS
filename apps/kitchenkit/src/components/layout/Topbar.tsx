@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from '@/lib/auth';
+import { Button } from '@culinaryos/ui';
 
 const titles: Record<string, string> = {
   '/dashboard':  'Dashboard',
@@ -26,14 +27,16 @@ export default function Topbar() {
             <User size={14} />
             <span className="hidden sm:inline">{user.email}</span>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => signOut()}
-            className="btn-ghost flex items-center gap-1.5 text-xs"
             title="Sign out"
+            className="text-xs text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <LogOut size={13} />
             <span className="hidden sm:inline">Sign out</span>
-          </button>
+          </Button>
         </div>
       )}
     </header>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { Button } from '@culinaryos/ui';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,12 +34,13 @@ export default function LoginPage() {
               className="w-full px-4 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             {error && <p className="text-red-400 text-xs">{error}</p>}
-            <button
+            <Button
               type="submit"
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold rounded-lg text-sm transition-colors"
+              variant="ghost"
+              className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-amber-400 hover:text-zinc-900"
             >
               Send Magic Link
-            </button>
+            </Button>
           </form>
         )}
       </div>

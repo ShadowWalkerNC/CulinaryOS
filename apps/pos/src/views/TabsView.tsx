@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePOSStore } from '../lib/store';
 import { getMockOrders, saveMockOrders } from '../lib/mockDb';
 import { useCreateOrder } from '../lib/queries';
+import { Button } from '@culinaryos/ui';
 
 export function TabsView() {
   const { setView, setActiveOrder } = usePOSStore();
@@ -78,21 +79,21 @@ export function TabsView() {
           <p className="text-xs text-[#6b7280]">Track bar tabs, guest card pre-authorizations, and bar orders.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setView('dashboard')}
-            className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm">
+          <Button variant="secondary" onClick={() => setView('dashboard')}
+            className="px-4 py-2.5 h-auto uppercase tracking-wider">
             Home
-          </button>
-          <button onClick={openNewTab}
-            className="bg-[#0f172a] hover:bg-[#1e293b] text-white font-black px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm active:scale-95">
+          </Button>
+          <Button variant="brand" onClick={openNewTab}
+            className="px-4 py-2.5 h-auto uppercase tracking-wider">
             + New Tab
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
         {tabs.map((tab: any) => (
-          <button key={tab.id} onClick={() => { setActiveOrder(tab.id); setView('menu'); }}
-            className="bg-white rounded-xl p-4 text-left border border-[#e5e7eb] hover:border-[#0f172a] transition-all active:scale-95 flex flex-col justify-between h-32 shadow-sm">
+          <Button key={tab.id} variant="ghost" onClick={() => { setActiveOrder(tab.id); setView('menu'); }}
+            className="bg-white hover:bg-white rounded-xl p-4 h-32 w-full text-left border border-[#e5e7eb] hover:border-[#0f172a] shadow-sm [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between">
             <div className="w-full">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[#1f2937] font-black text-sm uppercase">
@@ -105,12 +106,12 @@ export function TabsView() {
               <p className="text-[10px] text-[#6b7280]">Card: Visa **** {tab.card_last4 ?? '4242'}</p>
               <p className="text-[9px] text-green-600 font-bold mt-1">Pre-Auth: ${(tab.preauth_amount / 100).toFixed(2)}</p>
             </div>
-            
+
             <div className="flex justify-between items-end mt-2 pt-2 border-t border-[#f3f4f6] w-full">
               <span className="text-[9px] text-[#9ca3af]">{tab.items?.length ?? 0} items</span>
               <span className="font-mono text-xs font-black text-[#0f172a]">${((tab.total ?? 0) / 100).toFixed(2)}</span>
             </div>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

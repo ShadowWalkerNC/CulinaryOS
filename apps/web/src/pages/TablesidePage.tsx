@@ -27,6 +27,7 @@ import {
   Label,
   Input,
   Badge,
+  Button,
 } from '@culinaryos/ui';
 
 type TablesideMode = 'view' | 'pay' | 'order';
@@ -221,52 +222,57 @@ export function TablesidePage() {
           </div>
 
           {/* Assistance Buzzer Header Button */}
-          <button
+          <Button
             onClick={() => setBuzzerOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-400/30 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+            variant="ghost"
+            size="sm"
+            className="rounded-xl border border-amber-400/30 bg-slate-800 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-amber-400 shadow-sm hover:bg-slate-700 hover:text-amber-400 active:scale-95 [&>span]:gap-1.5"
           >
             <Bell className="w-3.5 h-3.5 animate-bounce" />
             <span>Call Server</span>
-          </button>
+          </Button>
         </div>
 
         {/* 3-Mode Selector Tabs */}
         <div className="max-w-xl mx-auto mt-3 bg-slate-950 p-1 rounded-2xl border border-slate-800 flex gap-1">
-          <button
+          <Button
             onClick={() => setActiveMode('view')}
-            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+            variant="ghost"
+            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider [&>span]:gap-1.5 ${
               activeMode === 'view'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                : 'text-slate-400 hover:bg-transparent hover:text-white'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
             <span>1. View Menu</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setActiveMode('pay')}
-            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+            variant="ghost"
+            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider [&>span]:gap-1.5 ${
               activeMode === 'pay'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                : 'text-slate-400 hover:bg-transparent hover:text-white'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span>2. Pay at Table</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setActiveMode('order')}
-            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+            variant="ghost"
+            className={`flex-1 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider [&>span]:gap-1.5 ${
               activeMode === 'order'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                : 'text-slate-400 hover:bg-transparent hover:text-white'
             }`}
           >
             <UtensilsCrossed className="w-3.5 h-3.5" />
             <span>3. Self-Order</span>
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -279,9 +285,9 @@ export function TablesidePage() {
               <Check className="w-4 h-4 text-emerald-400" />
               <span>{assistanceStatus}</span>
             </span>
-            <button onClick={() => setAssistanceStatus(null)} className="text-emerald-400 hover:text-white">
+            <Button onClick={() => setAssistanceStatus(null)} variant="ghost" aria-label="Dismiss" className="h-auto w-auto p-0 text-emerald-400 hover:bg-transparent hover:text-white">
               <X className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -292,9 +298,9 @@ export function TablesidePage() {
               <UtensilsCrossed className="w-4 h-4 text-amber-400" />
               <span>{orderSentSuccess}</span>
             </span>
-            <button onClick={() => setOrderSentSuccess(null)} className="text-amber-400 hover:text-white">
+            <Button onClick={() => setOrderSentSuccess(null)} variant="ghost" aria-label="Dismiss" className="h-auto w-auto p-0 text-amber-400 hover:bg-transparent hover:text-white">
               <X className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -420,39 +426,42 @@ export function TablesidePage() {
                   <div className="space-y-2">
                     <Label className="text-xs font-black uppercase text-slate-400">Split Bill Option</Label>
                     <div className="grid grid-cols-3 gap-2">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setSplitMethod('full')}
-                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider ${
                           splitMethod === 'full'
-                            ? 'bg-amber-400 text-slate-950 shadow-md'
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         Entire Bill
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setSplitMethod('even')}
-                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider ${
                           splitMethod === 'even'
-                            ? 'bg-amber-400 text-slate-950 shadow-md'
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         Split Evenly
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setSplitMethod('items')}
-                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                        className={`min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider ${
                           splitMethod === 'items'
-                            ? 'bg-amber-400 text-slate-950 shadow-md'
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-amber-400 text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         By Dish
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
@@ -461,21 +470,25 @@ export function TablesidePage() {
                     <div className="flex items-center justify-between bg-slate-950 p-3 rounded-2xl border border-slate-800">
                       <span className="text-xs font-bold text-slate-300">Split across guests:</span>
                       <div className="flex items-center gap-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setEvenSplitGuests((c) => Math.max(2, c - 1))}
-                          className="w-9 h-9 rounded-xl bg-slate-800 text-white font-black flex items-center justify-center active:scale-95"
+                          className="h-9 w-9 rounded-xl bg-slate-800 text-white hover:bg-slate-800 hover:text-white active:scale-95"
                         >
                           <Minus className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                         <span className="font-mono font-black text-sm w-6 text-center text-white">{evenSplitGuests}</span>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setEvenSplitGuests((c) => Math.min(8, c + 1))}
-                          className="w-9 h-9 rounded-xl bg-slate-800 text-white font-black flex items-center justify-center active:scale-95"
+                          className="h-9 w-9 rounded-xl bg-slate-800 text-white hover:bg-slate-800 hover:text-white active:scale-95"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -527,20 +540,21 @@ export function TablesidePage() {
                     <Label className="text-xs font-black uppercase text-slate-400">Add Server Gratuity</Label>
                     <div className="grid grid-cols-4 gap-2">
                       {[15, 18, 20, 25].map((pct) => (
-                        <button
+                        <Button
                           key={pct}
                           type="button"
+                          variant="ghost"
                           onClick={() => {
                             setSelectedTipPercent(pct);
                           }}
-                          className={`py-2 rounded-xl text-xs font-black transition-all ${
+                          className={`h-auto rounded-xl py-2 text-xs font-black ${
                             selectedTipPercent === pct
-                              ? 'bg-amber-400 text-slate-950 font-extrabold shadow-sm'
-                              : 'bg-slate-800 text-slate-400 hover:text-white'
+                              ? 'bg-amber-400 text-slate-950 font-extrabold shadow-sm hover:bg-amber-400 hover:text-slate-950'
+                              : 'bg-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
                           }`}
                         >
                           {pct}%
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -566,15 +580,17 @@ export function TablesidePage() {
                   </div>
 
                   {/* Pay CTA */}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="lg"
                     disabled={checkSubtotal <= 0 || isProcessingPayment}
                     onClick={handleProcessPayment}
-                    className="w-full min-h-[52px] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-between px-5 active:scale-98"
+                    className="w-full min-h-[52px] rounded-2xl bg-amber-400 px-5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg hover:bg-amber-300 hover:text-slate-950 active:scale-98 disabled:opacity-40 [&>span]:w-full [&>span]:justify-between"
                   >
                     <span>{isProcessingPayment ? 'Processing Card...' : 'Pay with Card / Apple Pay'}</span>
                     <span className="font-mono text-sm">${(checkGrandTotal / 100).toFixed(2)}</span>
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -591,13 +607,14 @@ export function TablesidePage() {
                 <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">Self-Ordering</span>
                 <h2 className="text-base font-black text-white">Order to Table {tableNumber}</h2>
               </div>
-              <button
+              <Button
                 onClick={() => setCartOpen(true)}
-                className="relative px-4 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-md active:scale-95"
+                variant="ghost"
+                className="relative rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-md hover:bg-amber-400 hover:text-slate-950 active:scale-95"
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>Bag ({cart.itemCount})</span>
-              </button>
+              </Button>
             </div>
 
             {sections.map((sec: MenuSection) => (
@@ -609,10 +626,11 @@ export function TablesidePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {sec.menu_items?.map((item: MenuItem) => (
-                    <button
+                    <Button
                       key={item.id}
                       onClick={() => setCustomizingItem(item)}
-                      className="bg-slate-900 border border-slate-800 hover:border-amber-400/50 p-4 rounded-2xl text-left flex flex-col justify-between min-h-[140px] transition-all shadow-xs group active:scale-[0.98]"
+                      variant="ghost"
+                      className="group h-auto min-h-[140px] w-full rounded-2xl border border-slate-800 bg-slate-900 p-4 text-left shadow-xs hover:border-amber-400/50 hover:bg-slate-900 hover:text-current active:scale-[0.98] [&>span]:h-full [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between [&>span]:gap-0"
                     >
                       <div className="space-y-1">
                         <div className="flex justify-between items-start gap-2">
@@ -634,7 +652,7 @@ export function TablesidePage() {
                         </span>
                         <span className="text-[10px] text-slate-400 font-bold">Customize & Add →</span>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -647,16 +665,18 @@ export function TablesidePage() {
       {activeMode === 'order' && cart.itemCount > 0 && (
         <div className="fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-4 z-40 shadow-2xl">
           <div className="max-w-xl mx-auto flex items-center gap-3">
-            <button
+            <Button
               onClick={() => setCartOpen(true)}
-              className="flex-1 min-h-[52px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl py-3 px-5 text-xs uppercase tracking-wider flex items-center justify-between shadow-lg transition-all active:scale-[0.98]"
+              variant="ghost"
+              size="lg"
+              className="flex-1 min-h-[52px] rounded-2xl bg-amber-400 px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg hover:bg-amber-300 hover:text-slate-950 active:scale-[0.98] [&>span]:w-full [&>span]:justify-between"
             >
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4" />
                 <span>View Table Bag ({cart.itemCount})</span>
               </div>
               <span className="font-mono text-sm">${(cart.total / 100).toFixed(2)}</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -682,15 +702,16 @@ export function TablesidePage() {
                 { type: 'bill', label: 'Bring Check', icon: '🧾' },
                 { type: 'help', label: 'Need Assistance', icon: '❓' },
               ].map((b) => (
-                <button
+                <Button
                   key={b.type}
                   type="button"
+                  variant="outline"
                   onClick={() => callAssistance(b.type as any)}
-                  className="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-2 shadow-xs transition-all active:scale-95"
+                  className="h-auto rounded-2xl border-slate-300 bg-slate-100 p-4 text-xs font-black uppercase tracking-wider text-slate-900 shadow-xs hover:bg-slate-200 hover:text-slate-900 active:scale-95 [&>span]:flex-col [&>span]:gap-2"
                 >
                   <span className="text-2xl">{b.icon}</span>
                   <span>{b.label}</span>
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -760,14 +781,16 @@ export function TablesidePage() {
                   </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="lg"
                   onClick={sendTablesideOrder}
-                  className="w-full min-h-[48px] bg-foreground text-background font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+                  className="w-full min-h-[48px] rounded-xl bg-foreground px-4 text-xs font-black uppercase tracking-wider text-background shadow-md hover:bg-foreground hover:text-background active:scale-98"
                 >
                   <UtensilsCrossed className="w-4 h-4" />
                   <span>Send Order to Kitchen</span>
-                </button>
+                </Button>
               </>
             )}
           </div>

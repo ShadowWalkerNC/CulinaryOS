@@ -14,6 +14,7 @@ import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
+  Button,
   Grid,
   X,
   ExternalLink,
@@ -80,10 +81,11 @@ export function App() {
       <header className="bg-white border-b border-slate-200 px-4 h-13 flex items-center justify-between shrink-0 shadow-xs gap-3">
         {/* Left: Brand Identity & Active Staff */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setView('dashboard')}
-            className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+            className="justify-start gap-2 text-left hover:opacity-80 h-auto px-2 py-1"
           >
             <div className="w-7 h-7 rounded-lg bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined filled text-[16px]">skillet</span>
@@ -91,7 +93,7 @@ export function App() {
             <span className="font-black text-xs text-slate-950 uppercase tracking-wider hidden sm:inline">
               POS Terminal
             </span>
-          </button>
+          </Button>
 
           <div className="h-4 w-px bg-slate-200 shrink-0" />
 
@@ -104,142 +106,153 @@ export function App() {
 
         {/* Center: Quick Navigation View Buttons with Visual Symbols */}
         <nav className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setView('dashboard')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'dashboard'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">home</span>
             <span>Home</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => {
               setView('tables');
               setActiveOrder(null);
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'tables' && !activeOrderId
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
             <span>Floor Map</span>
-          </button>
+          </Button>
 
           {activeOrderId && (
             <>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setView('menu')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
                   view === 'menu'
-                    ? 'bg-[#0f172a] text-white shadow-xs'
+                    ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                 <span>Ticket</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => setView('checkout')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
                   view === 'checkout'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                    ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-600 hover:text-white'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-800'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">payments</span>
                 <span>Pay</span>
-              </button>
+              </Button>
             </>
           )}
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setView('tabs')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'tabs'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">local_bar</span>
             <span>Tabs</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('recall')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'recall'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">history</span>
             <span>Recall</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('reports')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'reports'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">bar_chart</span>
             <span>Reports</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('cfd')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'cfd'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">devices</span>
             <span>CFD Guest Screen</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setView('settings')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold whitespace-nowrap gap-1.5 ${
               view === 'settings'
-                ? 'bg-[#0f172a] text-white shadow-xs'
+                ? 'bg-[#0f172a] text-white shadow-xs hover:bg-[#0f172a] hover:text-white'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-white/50'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">settings</span>
             <span>Settings</span>
-          </button>
+          </Button>
         </nav>
 
         {/* Right: Connection, Apps & Lock */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <ConnectionStatus />
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setShowApps(!showApps)}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border ${
+            className={`px-2 py-1 h-auto rounded-lg text-xs font-bold gap-1 ${
               showApps
-                ? 'bg-[#0f172a] text-white border-[#0f172a]'
+                ? 'bg-[#0f172a] text-white border-[#0f172a] hover:bg-[#1e293b] hover:text-white'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
             }`}
             title="Switch Applications"
           >
             <Grid className="w-3.5 h-3.5" />
             <span className="hidden lg:inline">Apps</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => setEmployee(null)}
-            className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2.5 py-1 rounded-lg text-[11px] uppercase tracking-wider flex items-center gap-1 transition-colors"
+            className="bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 font-bold px-2.5 py-1 h-auto rounded-lg text-[11px] uppercase tracking-wider gap-1"
             title="Lock Terminal"
           >
             <Lock className="w-3 h-3" />
             <span>Lock</span>
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -265,13 +278,15 @@ export function App() {
                   <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowApps(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+                className="h-7 w-7 rounded-full"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -366,10 +381,11 @@ export function App() {
         {/* Mobile/Tablet Ergonomic Thumb-Zone Floating Cart Bar (< 1024px) */}
         {activeOrderId && (view === 'menu' || view === 'checkout' || view === 'tables') && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 shadow-2xl flex items-center justify-between gap-3">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setMobileCartOpen(true)}
-              className="flex items-center gap-2.5 text-left active:scale-95 transition-transform"
+              className="justify-start gap-2.5 text-left h-auto px-2 py-1.5"
             >
               <div className="relative w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
                 <ShoppingCart className="w-5 h-5" />
@@ -387,24 +403,26 @@ export function App() {
                   {itemCount} items • ${(orderSubtotal / 100).toFixed(2)}
                 </div>
               </div>
-            </button>
+            </Button>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setMobileCartOpen(true)}
-                className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase tracking-wider active:scale-95 transition-all"
+                className="h-11 px-4 uppercase tracking-wider"
               >
                 View Ticket
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="success"
                 onClick={() => setView('checkout')}
-                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+                className="h-11 px-5 uppercase tracking-wider gap-1.5"
               >
                 <span>Pay</span>
                 <span className="font-mono">${(orderSubtotal / 100).toFixed(2)}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -421,13 +439,15 @@ export function App() {
                   Live Ticket ({currentOrder?.table_number ? `Table ${currentOrder.table_number}` : 'Open Tab'})
                 </span>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setMobileCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+                className="h-8 w-8 rounded-full"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
               <OrderView />

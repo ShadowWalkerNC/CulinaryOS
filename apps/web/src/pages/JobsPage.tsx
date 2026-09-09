@@ -20,6 +20,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Building,
+  Button,
 } from '@culinaryos/ui';
 import { getApiBase, apiHeaders } from '@culinaryos/shared';
 
@@ -227,17 +228,19 @@ export function JobsPage() {
                 { id: 'foh', label: 'Front of House' },
                 { id: 'bar', label: 'Bar & Cocktails' },
               ].map((d) => (
-                <button
+                <Button
                   key={d.id}
+                  variant={selectedDept === d.id ? 'brand' : 'ghost'}
+                  size="sm"
                   onClick={() => setSelectedDept(d.id)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  className={`rounded-xl px-3 py-2 text-xs font-bold whitespace-nowrap ${
                     selectedDept === d.id
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? ''
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-600'
                   }`}
                 >
                   {d.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -305,14 +308,16 @@ export function JobsPage() {
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-[10px] text-slate-400 font-medium">Immediate Start</span>
-                <button
+                <Button
                   type="button"
+                  variant="brand"
+                  size="sm"
                   onClick={() => setSelectedJob(job)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+                  className="rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider shadow-xs"
                 >
                   <span>Apply with 1-Click</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -342,13 +347,15 @@ export function JobsPage() {
                   <p className="font-bold text-slate-900">Next Step: Interview & Kitchen Staging</p>
                   <p className="text-[11px]">If selected, you'll receive an automated SMS/email invitation and your POS onboarding security pass.</p>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="brand"
+                  size="lg"
                   onClick={resetModal}
-                  className="w-full py-3 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-wider"
+                  className="w-full text-xs font-bold uppercase tracking-wider"
                 >
                   Done
-                </button>
+                </Button>
               </div>
             ) : (
               <>
@@ -360,12 +367,15 @@ export function JobsPage() {
                     <h3 className="text-base sm:text-lg font-bold text-slate-950 mt-1">{selectedJob.title}</h3>
                     <p className="text-xs font-mono font-bold text-emerald-700">{selectedJob.pay_range}</p>
                   </div>
-                  <button
+                  <Button
                     onClick={resetModal}
-                    className="text-slate-400 hover:text-slate-800 p-1"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Close"
+                    className="text-slate-400 hover:bg-transparent hover:text-slate-800"
                   >
                     <X className="w-5 h-5" />
-                  </button>
+                  </Button>
                 </div>
 
                 <form onSubmit={handleApply} className="space-y-3.5 text-left">
@@ -479,27 +489,25 @@ export function JobsPage() {
                   </div>
 
                   <div className="pt-2 flex gap-2 border-t border-slate-100">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={resetModal}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold uppercase"
+                      className="flex-1 rounded-xl border-slate-200 py-2.5 text-xs font-bold uppercase text-slate-600 shadow-none hover:text-slate-600"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      disabled={submitting}
-                      className="flex-2 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                      variant="brand"
+                      size="sm"
+                      isLoading={submitting}
+                      className="flex-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider shadow-xs"
                     >
-                      {submitting ? (
-                        <span>Submitting Application...</span>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Submit Application</span>
-                        </>
-                      )}
-                    </button>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Submit Application</span>
+                    </Button>
                   </div>
                 </form>
               </>

@@ -8,6 +8,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { apiHeaders, getApiBase } from '@culinaryos/shared';
 import { usePOSStore } from '../lib/store';
+import { Button } from '@culinaryos/ui';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const API = getApiBase();
@@ -104,9 +105,12 @@ function PaymentForm({
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '16px', borderTop: '1px solid #2e3150', paddingTop: '12px' }}>
         <span>Charge total</span><span>${(chargeCents / 100).toFixed(2)}</span>
       </div>
-      <button
+      <Button
         type="submit"
-        disabled={busy || !stripe}
+        variant="brand"
+        isLoading={busy}
+        disabled={!stripe}
+        className="w-full"
         style={{
           padding: '14px', borderRadius: '8px', border: 'none',
           background: busy ? '#2e3150' : '#7c6aff',
@@ -115,8 +119,8 @@ function PaymentForm({
           cursor: busy ? 'not-allowed' : 'pointer',
         }}
       >
-        {busy ? 'Processing…' : `Charge $${(chargeCents / 100).toFixed(2)}`}
-      </button>
+        {`Charge $${(chargeCents / 100).toFixed(2)}`}
+      </Button>
     </form>
   );
 }
@@ -157,18 +161,29 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#e8eaf0' }}>Checkout</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6b7299', fontSize: '20px', cursor: 'pointer' }}>×</button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close checkout"
+            className="h-auto w-auto p-0"
+            style={{ background: 'none', border: 'none', color: '#6b7299', fontSize: '20px', cursor: 'pointer' }}
+          >
+            ×
+          </Button>
         </div>
 
         <div>
           <label style={{ fontSize: '12px', color: '#6b7299', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Tip</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {TIP_PRESETS.map((pct) => (
-              <button
+              <Button
                 key={pct}
+                variant="outline"
                 onClick={() => setTipPct(pct)}
+                className="flex-1 h-auto"
                 style={{
-                  flex: 1, padding: '8px 4px', borderRadius: '6px',
+                  padding: '8px 4px', borderRadius: '6px',
                   border: `1px solid ${tipPct === pct ? '#7c6aff' : '#2e3150'}`,
                   background: tipPct === pct ? '#7c6aff22' : 'transparent',
                   color: tipPct === pct ? '#7c6aff' : '#6b7299',
@@ -177,7 +192,7 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
                 }}
               >
                 {pct === 0 ? 'No tip' : `${pct}%`}
-              </button>
+              </Button>
             ))}
           </div>
           {tipCents > 0 && (

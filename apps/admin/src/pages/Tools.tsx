@@ -231,50 +231,42 @@ export function ToolsPage() {
 
         {/* Master Tab Bar */}
         <div className="bg-muted p-1 rounded-xl flex items-center gap-1 border border-border">
-          <button
+          <Button
             onClick={() => setActiveTab('tools')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'tools'
-                ? 'bg-background text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            variant="ghost"
+            size="sm"
+            className={activeTab === 'tools' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
           >
-            <Zap className="w-3.5 h-3.5 inline mr-1.5 text-amber-500" />
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
             Built-in Tools
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('marketplace')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'marketplace'
-                ? 'bg-background text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            variant="ghost"
+            size="sm"
+            className={activeTab === 'marketplace' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
           >
-            <Package className="w-3.5 h-3.5 inline mr-1.5 text-blue-500" />
+            <Package className="w-3.5 h-3.5 text-blue-500" />
             Addons & Marketplace ({extensions.length})
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('themes')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'themes'
-                ? 'bg-background text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            variant="ghost"
+            size="sm"
+            className={activeTab === 'themes' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
           >
-            <Palette className="w-3.5 h-3.5 inline mr-1.5 text-emerald-500" />
+            <Palette className="w-3.5 h-3.5 text-emerald-500" />
             UI Themes ({themes.length || 5})
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('developer')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'developer'
-                ? 'bg-background text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            variant="ghost"
+            size="sm"
+            className={activeTab === 'developer' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
           >
-            <Terminal className="w-3.5 h-3.5 inline mr-1.5 text-purple-500" />
+            <Terminal className="w-3.5 h-3.5 text-purple-500" />
             Create Tool / Dev
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -295,12 +287,13 @@ export function ToolsPage() {
             )}
             <span>{msg.text}</span>
           </div>
-          <button
+          <Button
+            variant="link"
+            className="h-auto px-0 py-0 text-inherit opacity-80 hover:opacity-100"
             onClick={() => setMsg(null)}
-            className="text-xs font-bold hover:underline opacity-80 hover:opacity-100"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -314,18 +307,16 @@ export function ToolsPage() {
               { id: 'converter', label: 'Density-Aware Unit Math', icon: UtensilsCrossed },
               { id: 'flyer', label: 'Promo Flyer & Specials Builder', icon: Tag },
             ].map((t) => (
-              <button
+              <Button
                 key={t.id}
                 onClick={() => setActiveTool(t.id as any)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  activeTool === t.id
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
+                variant={activeTool === t.id ? 'default' : 'secondary'}
+                size="sm"
+                className="rounded-xl"
               >
                 <t.icon className="w-3.5 h-3.5" />
                 <span>{t.label}</span>
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -375,13 +366,14 @@ export function ToolsPage() {
                       { label: '100 Batch', val: 100 },
                       { label: '250 Event', val: 250 },
                     ].map((p) => (
-                      <button
+                      <Button
                         key={p.val}
                         onClick={() => setTargetServings(p.val)}
-                        className="px-2.5 py-2 rounded-lg bg-background border border-input text-[11px] font-bold hover:bg-muted transition"
+                        variant="outline"
+                        size="sm"
                       >
                         {p.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -567,21 +559,19 @@ export function ToolsPage() {
                         { id: 'specials', label: "Chef's Tasting Specials" },
                         { id: 'event', label: 'Live Music & Events' },
                       ].map((t) => (
-                        <button
+                        <Button
                           key={t.id}
                           type="button"
                           onClick={() => {
                             setFlyerType(t.id as any);
                             setFlyerTitle(t.label);
                           }}
-                          className={`p-2 rounded-lg text-xs font-bold text-left border transition ${
-                            flyerType === t.id
-                              ? 'bg-foreground text-background border-foreground'
-                              : 'bg-background border-border text-foreground hover:bg-muted'
-                          }`}
+                          variant={flyerType === t.id ? 'default' : 'outline'}
+                          size="sm"
+                          className="justify-start"
                         >
                           {t.label}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>

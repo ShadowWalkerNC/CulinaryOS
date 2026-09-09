@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePOSStore } from '../lib/store';
 import { useCreateOrder, useOpenOrders } from '../lib/queries';
+import { Button } from '@culinaryos/ui';
 
 export function DashboardView() {
   const { employee, setEmployee, setView, setActiveOrder, drawerBalance, setDrawerBalance } = usePOSStore();
@@ -56,14 +57,14 @@ export function DashboardView() {
         </div>
 
         <div className="space-y-2 pt-6 border-t border-[#e5e7eb]">
-          <button onClick={() => setShowDeclare(true)}
-            className="w-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#1f2937] font-bold py-2.5 rounded-xl text-xs uppercase transition-colors border border-[#e5e7eb]">
+          <Button variant="secondary" onClick={() => setShowDeclare(true)}
+            className="w-full uppercase">
             Declare Cash Drawer
-          </button>
-          <button onClick={() => setEmployee(null)}
-            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-xs uppercase transition-colors">
+          </Button>
+          <Button variant="outline" onClick={() => setEmployee(null)}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border-red-200 uppercase">
             Lock Screen
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -71,60 +72,60 @@ export function DashboardView() {
       <div className="flex-1 flex flex-col justify-between">
         <div className="grid grid-cols-2 gap-4 flex-1">
           {/* Quick Order */}
-          <button onClick={startQuickOrder}
-            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+          <Button variant="ghost" onClick={startQuickOrder}
+            className="bg-white hover:bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 h-auto text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between shadow-sm">
             <div className="space-y-2">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Quick Service</span>
               <h3 className="text-lg font-black text-[#1f2937]">Quick Order</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Start an instant counter ticket or takeaway check without table assignments.</p>
             </div>
             <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Start Quick Order →</span>
-          </button>
+          </Button>
 
           {/* Table Service */}
-          <button onClick={() => setView('tables')}
-            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+          <Button variant="ghost" onClick={() => setView('tables')}
+            className="bg-white hover:bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 h-auto text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between shadow-sm">
             <div className="space-y-2">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">FOH / Dining</span>
               <h3 className="text-lg font-black text-[#1f2937]">Table Service</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Manage restaurant dining tables, active covers, and courses via dining floor grid map.</p>
             </div>
             <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Open Floor Map →</span>
-          </button>
+          </Button>
 
           {/* Bar Tabs */}
-          <button onClick={() => setView('tabs')}
-            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+          <Button variant="ghost" onClick={() => setView('tabs')}
+            className="bg-white hover:bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 h-auto text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between shadow-sm">
             <div className="space-y-2">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Pub / Lounge</span>
               <h3 className="text-lg font-black text-[#1f2937]">Bar Tabs</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">List active bar cards, pre-authorize checkout limits, and manage bar tabs.</p>
             </div>
             <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Manage Tabs →</span>
-          </button>
+          </Button>
 
           {/* Recall Checks */}
-          <button onClick={() => setView('recall')}
-            className="bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 text-left flex flex-col justify-between transition-all shadow-sm active:scale-98">
+          <Button variant="ghost" onClick={() => setView('recall')}
+            className="bg-white hover:bg-white hover:border-[#0f172a] border border-[#e5e7eb] rounded-2xl p-6 h-auto text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:justify-between shadow-sm">
             <div className="space-y-2">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Audit / History</span>
               <h3 className="text-lg font-black text-[#1f2937]">Recall Checks</h3>
               <p className="text-xs text-[#6b7280] leading-relaxed">Retrieve previously completed checks, handle partial refunds, or reprint guest receipts.</p>
             </div>
             <span className="text-xs font-extrabold text-[#0f172a] uppercase tracking-wider mt-4">Search History →</span>
-          </button>
+          </Button>
         </div>
 
         {/* Bottom Panel */}
         <div className="mt-4 flex gap-4">
-          <button onClick={() => setView('settings')}
-            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#0f172a] text-center transition-colors shadow-sm">
+          <Button variant="outline" onClick={() => setView('settings')}
+            className="flex-1 py-4 h-auto">
             Device Setup (Stripe / Printers)
-          </button>
-          <button onClick={() => setView('reports')}
-            className="flex-1 bg-white border border-[#e5e7eb] rounded-xl py-4 text-xs font-bold text-[#1f2937] hover:border-[#0f172a] text-center transition-colors shadow-sm">
+          </Button>
+          <Button variant="outline" onClick={() => setView('reports')}
+            className="flex-1 py-4 h-auto">
             Business Reports (Shift PM Mix)
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -182,10 +183,10 @@ export function DashboardView() {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button onClick={() => setShowDeclare(false)}
-                className="flex-1 bg-[#f3f4f6] text-[#6b7280] rounded-xl py-2.5 text-xs font-black uppercase">Cancel</button>
-              <button onClick={handleSaveDeclaration}
-                className="flex-1 bg-[#0f172a] text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-wider shadow-sm">Save Audit</button>
+              <Button variant="secondary" onClick={() => setShowDeclare(false)}
+                className="flex-1 uppercase">Cancel</Button>
+              <Button variant="brand" onClick={handleSaveDeclaration}
+                className="flex-1 uppercase tracking-wider">Save Audit</Button>
             </div>
           </div>
         </div>

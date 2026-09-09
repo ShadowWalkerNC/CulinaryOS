@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 import { useUpsertParLevel, type DBParLevel } from '@/hooks/useParLevels';
 
 const UNITS = ['g', 'kg', 'oz', 'lb', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'unit', 'bunch', 'portion'];
@@ -51,9 +52,9 @@ export default function ParLevelModal({ existing, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <h2 className="font-semibold text-zinc-100">{isEdit ? 'Edit Par Level' : 'Add Par Item'}</h2>
-          <button onClick={onClose} className="btn-ghost p-1.5" aria-label="Close">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="h-8 w-8 text-zinc-400 hover:bg-surface-card hover:text-zinc-100">
             <X size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
@@ -126,17 +127,15 @@ export default function ParLevelModal({ existing, onClose }: Props) {
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-1">
-            <button type="button" onClick={onClose} className="btn-ghost text-sm">Cancel</button>
-            <button
+            <Button type="button" variant="ghost" onClick={onClose} className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100">Cancel</Button>
+            <Button
               type="submit"
-              disabled={isPending}
-              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+              variant="brand"
+              isLoading={isPending}
+              className="bg-brand-600 text-sm hover:bg-brand-700"
             >
-              {isPending
-                ? <><Loader2 size={14} className="animate-spin" /> Saving...</>
-                : isEdit ? 'Update' : 'Add Item'
-              }
-            </button>
+              {isEdit ? 'Update' : 'Add Item'}
+            </Button>
           </div>
         </form>
       </div>

@@ -8,6 +8,7 @@ import {
   useLogWaste
 } from '../hooks/useShelfLife';
 import AdhesiveLabelModal from '../components/prep/AdhesiveLabelModal';
+import { Button } from '@culinaryos/ui';
 import type { PrepBatch } from '@culinaryos/prep-engine';
 
 export default function ShelfLifePage() {
@@ -127,20 +128,22 @@ export default function ShelfLifePage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setShowLogWaste(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-200 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition"
+            className="border border-zinc-700 bg-zinc-800 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-zinc-200"
           >
             <AlertTriangle className="w-4 h-4 text-red-400" />
             Log Spoilage / Waste
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="warning"
             onClick={() => setShowAddBatch(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+            className="text-sm font-semibold text-zinc-950"
           >
             <Plus className="w-4 h-4" />
             Receive New Batch
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -183,7 +186,9 @@ export default function ShelfLifePage() {
                     <td className="py-3 px-4">{getExpirationBadge(batch.expiration_date)}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             setLabelBatch({
                               recipeName: batch.ingredient_name,
@@ -195,18 +200,22 @@ export default function ShelfLifePage() {
                             });
                             setShowLabelModal(true);
                           }}
-                          className="text-zinc-400 hover:text-amber-400 p-1"
                           title="Print Adhesive Expiration Label"
+                          aria-label={`Print label for ${batch.ingredient_name}`}
+                          className="h-7 w-7 text-zinc-400 hover:bg-transparent hover:text-amber-400"
                         >
                           <Printer className="w-4 h-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => deleteBatchMutation.mutate(batch.id)}
-                          className="text-zinc-500 hover:text-red-400 p-1"
                           title="Delete Batch"
+                          aria-label={`Delete batch of ${batch.ingredient_name}`}
+                          className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-red-400"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -339,20 +348,22 @@ export default function ShelfLifePage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAddBatch(false)}
-                  className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+                  className="text-sm text-zinc-400 hover:bg-transparent hover:text-zinc-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="warning"
                   disabled={addBatchMutation.isPending}
-                  className="px-4 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+                  className="text-sm font-semibold text-zinc-950"
                 >
                   Save Batch
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -427,20 +438,22 @@ export default function ShelfLifePage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowLogWaste(false)}
-                  className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+                  className="text-sm text-zinc-400 hover:bg-transparent hover:text-zinc-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="warning"
                   disabled={logWasteMutation.isPending}
-                  className="px-4 py-2 text-sm font-semibold text-zinc-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition"
+                  className="text-sm font-semibold text-zinc-950"
                 >
                   Record Waste
-                </button>
+                </Button>
               </div>
             </form>
           </div>

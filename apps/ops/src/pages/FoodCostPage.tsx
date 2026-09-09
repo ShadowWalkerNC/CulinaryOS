@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   CheckCircle2,
 } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 import {
   useMenuItems,
   useAddMenuItem,
@@ -130,58 +131,68 @@ export default function FoodCostPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
             onClick={() => setShowWasteModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl transition shadow-xs"
+            variant="ghost"
+            size="sm"
+            className="rounded-xl bg-red-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-500 hover:text-white"
           >
             <Trash2 className="w-4 h-4" />
             1-Tap Log Scrap
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => refetchVariance()}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-300 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 rounded-xl transition"
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-300 shadow-none hover:bg-zinc-700 hover:text-zinc-300 [&>span]:gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Navigation Tabs */}
       <div className="flex gap-2 border-b border-zinc-800 pb-3">
-        <button
+        <Button
           onClick={() => setActiveTab('variance')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          variant="ghost"
+          size="sm"
+          className={`rounded-xl px-4 py-2 text-xs font-bold [&>span]:gap-2 ${
             activeTab === 'variance'
-              ? 'bg-amber-500 text-zinc-950 shadow-xs'
-              : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800'
+              ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+              : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
           Actual vs Theoretical Variance
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setActiveTab('recipes')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          variant="ghost"
+          size="sm"
+          className={`rounded-xl px-4 py-2 text-xs font-bold [&>span]:gap-2 ${
             activeTab === 'recipes'
-              ? 'bg-amber-500 text-zinc-950 shadow-xs'
-              : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800'
+              ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+              : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
           Menu Recipe Costing ({items.length})
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setActiveTab('add')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          variant="ghost"
+          size="sm"
+          className={`rounded-xl px-4 py-2 text-xs font-bold [&>span]:gap-2 ${
             activeTab === 'add'
-              ? 'bg-amber-500 text-zinc-950 shadow-xs'
-              : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800'
+              ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+              : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
           Add Menu Item & BOM
-        </button>
+        </Button>
       </div>
 
       {/* ── ACTUAL VS THEORETICAL VARIANCE VIEW ── */}
@@ -410,12 +421,14 @@ export default function FoodCostPage() {
                       <td className={`py-2.5 text-right font-bold font-mono ${color}`}>{pct.toFixed(1)}%</td>
                       <td className="py-2.5 text-right font-mono text-zinc-300">{fmt(margin)}</td>
                       <td className="py-2.5 text-right">
-                        <button
+                        <Button
                           onClick={() => deleteItem.mutate(item.id)}
-                          className="text-zinc-600 hover:text-red-400 text-xs ml-4"
+                          variant="ghost"
+                          aria-label="Delete menu item"
+                          className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4"
                         >
                           ✕
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -508,17 +521,18 @@ export default function FoodCostPage() {
             </div>
 
             <div className="flex items-center gap-3 pt-3">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={addIngRow}
-                className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
+                className="h-auto w-auto p-0 text-xs font-semibold text-amber-400 hover:bg-transparent hover:text-amber-300"
               >
                 + Add Ingredient Row
-              </button>
+              </Button>
               <div className="flex-1" />
-              <button type="submit" className={btnCls} disabled={addItem.isPending}>
-                {addItem.isPending ? 'Saving…' : 'Save Menu Item'}
-              </button>
+              <Button type="submit" variant="ghost" isLoading={addItem.isPending} className={btnCls}>
+                Save Menu Item
+              </Button>
             </div>
           </form>
         </section>
@@ -533,12 +547,14 @@ export default function FoodCostPage() {
                 <Trash2 className="w-5 h-5 text-red-500" />
                 <h3 className="text-base font-bold text-zinc-100">1-Tap Kitchen Waste Logging</h3>
               </div>
-              <button
+              <Button
                 onClick={() => setShowWasteModal(false)}
-                className="text-zinc-500 hover:text-zinc-300 text-sm"
+                variant="ghost"
+                aria-label="Close"
+                className="h-auto w-auto p-0 text-sm font-normal text-zinc-500 hover:bg-transparent hover:text-zinc-300"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleQuickWasteSubmit} className="space-y-3">
@@ -591,18 +607,19 @@ export default function FoodCostPage() {
                     { id: 'overportion', label: 'Overportion' },
                     { id: 'void_cooked', label: 'Void Cooked' },
                   ].map((r) => (
-                    <button
+                    <Button
                       key={r.id}
                       type="button"
+                      variant="ghost"
                       onClick={() => setWasteReason(r.id as any)}
-                      className={`p-2 rounded-lg text-xs font-bold border transition ${
+                      className={`h-auto rounded-lg border p-2 text-xs font-bold ${
                         wasteReason === r.id
-                          ? 'bg-red-600 border-red-500 text-white'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                          ? 'border-red-500 bg-red-600 text-white hover:bg-red-600 hover:text-white'
+                          : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:bg-zinc-950 hover:text-zinc-200'
                       }`}
                     >
                       {r.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -619,20 +636,22 @@ export default function FoodCostPage() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowWasteModal(false)}
-                  className="w-1/2 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg text-xs"
+                  className="w-1/2 rounded-lg bg-zinc-800 py-2.5 text-xs font-bold text-zinc-300 hover:bg-zinc-700 hover:text-zinc-300"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={quickLogWaste.isPending}
-                  className="w-1/2 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition"
+                  variant="ghost"
+                  isLoading={quickLogWaste.isPending}
+                  className="w-1/2 rounded-lg bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-500 hover:text-white"
                 >
-                  {quickLogWaste.isPending ? 'Logging…' : 'Record Waste'}
-                </button>
+                  Record Waste
+                </Button>
               </div>
             </form>
           </div>

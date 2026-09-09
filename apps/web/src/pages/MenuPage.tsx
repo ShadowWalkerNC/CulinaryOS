@@ -19,6 +19,7 @@ import {
   Check,
   ChevronRight,
   ArrowLeft,
+  Button,
 } from '@culinaryos/ui';
 
 function emptyCart(): CartState {
@@ -244,13 +245,14 @@ export function MenuPage() {
             {/* Order Fulfillment Mode Selector Card */}
             <div className="bg-slate-50 p-2 rounded-2xl border border-slate-200/90 shrink-0 w-full md:w-64 shadow-xs">
               <div className="grid grid-cols-2 gap-1.5">
-                <button
+                <Button
                   type="button"
+                  variant={orderMode === 'delivery' ? 'brand' : 'outline'}
                   onClick={() => setOrderMode('delivery')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
+                  className={`h-auto rounded-xl px-3 py-2 text-xs font-bold [&>span]:flex-col [&>span]:gap-0.5 ${
                     orderMode === 'delivery'
-                      ? 'bg-[#0f172a] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
+                      ? ''
+                      : 'border border-slate-200/60 bg-white text-slate-600 shadow-none hover:bg-white hover:text-slate-900'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -258,14 +260,15 @@ export function MenuPage() {
                     <span>Delivery</span>
                   </span>
                   <span className="text-[10px] font-mono opacity-80">25–35 min</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={orderMode === 'pickup' ? 'brand' : 'outline'}
                   onClick={() => setOrderMode('pickup')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
+                  className={`h-auto rounded-xl px-3 py-2 text-xs font-bold [&>span]:flex-col [&>span]:gap-0.5 ${
                     orderMode === 'pickup'
-                      ? 'bg-[#0f172a] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200/60'
+                      ? ''
+                      : 'border border-slate-200/60 bg-white text-slate-600 shadow-none hover:bg-white hover:text-slate-900'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -273,7 +276,7 @@ export function MenuPage() {
                     <span>Pickup</span>
                   </span>
                   <span className="text-[10px] font-mono opacity-80">15–20 min</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -296,13 +299,14 @@ export function MenuPage() {
                 className="w-full bg-slate-50 border border-slate-200 focus:border-[#0f172a] focus:bg-white rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 font-semibold outline-none transition-all placeholder:text-slate-400 shadow-inner"
               />
               {searchQuery && (
-                <button
+                <Button
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300"
+                  variant="ghost"
+                  className="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 hover:text-slate-600"
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </Button>
               )}
             </div>
 
@@ -317,12 +321,14 @@ export function MenuPage() {
               ].map((df) => {
                 const isActive = activeDietary === df.id;
                 return (
-                  <button
+                  <Button
                     key={df.id}
+                    variant={isActive ? 'brand' : 'ghost'}
+                    size="sm"
                     onClick={() => setActiveDietary(df.id as DietaryFilter)}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    className={`rounded-xl px-2.5 py-1.5 text-xs font-bold whitespace-nowrap [&>span]:gap-1.5 ${
                       isActive
-                        ? 'bg-[#0f172a] text-white shadow-xs'
+                        ? ''
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
                     }`}
                   >
@@ -330,7 +336,7 @@ export function MenuPage() {
                       {df.icon}
                     </span>
                     <span>{df.label}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -342,22 +348,24 @@ export function MenuPage() {
               const isActive = activeSection === `section-${sec.id}`;
               const icon = getSectionIcon(sec.name);
               return (
-                <button
+                <Button
                   key={sec.id}
+                  variant={isActive ? 'brand' : 'ghost'}
+                  size="sm"
                   onClick={() => {
                     document.getElementById(`section-${sec.id}`)?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap [&>span]:gap-1.5 ${
                     isActive
-                      ? 'bg-[#0f172a] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+                      ? ''
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
                   }`}
                 >
                   <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-amber-400' : 'text-slate-400'}`}>
                     {icon}
                   </span>
                   <span>{sec.name}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -375,15 +383,17 @@ export function MenuPage() {
             <p className="text-xs text-slate-500 mt-1">
               Try searching with another keyword or resetting the dietary filters.
             </p>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
               onClick={() => {
                 setSearchQuery('');
                 setActiveDietary('all');
               }}
-              className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all"
+              className="mt-4 rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-200 hover:text-slate-800"
             >
               Reset Filters
-            </button>
+            </Button>
           </div>
         ) : (
           filteredSections.map((sec) => (
@@ -403,10 +413,12 @@ export function MenuPage() {
       {/* Mobile Sticky Thumb-Zone Action Bar & Desktop Floating FAB (Jakob's Law compliant) */}
       {cart.itemCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 p-3 sm:bottom-6 sm:right-6 sm:left-auto sm:p-0 z-40 bg-white/90 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t border-slate-200/80 sm:border-0 shadow-lg sm:shadow-none animate-fadeIn">
-          <button
+          <Button
             type="button"
+            variant="brand"
+            size="lg"
             onClick={() => setCartOpen(true)}
-            className="w-full sm:w-auto bg-[#0f172a] hover:bg-[#1e293b] text-white px-5 py-3.5 rounded-xl sm:rounded-full shadow-2xl border border-slate-700/60 flex items-center justify-between sm:justify-center gap-3 transition-all hover:scale-[1.02] sm:hover:scale-105 active:scale-95 group min-h-[48px]"
+            className="group min-h-[48px] w-full sm:w-auto rounded-xl sm:rounded-full border border-slate-700/60 px-5 py-3.5 shadow-2xl hover:scale-[1.02] sm:hover:scale-105 active:scale-95 [&>span]:w-full [&>span]:justify-between [&>span]:gap-3 sm:[&>span]:justify-center"
           >
             <div className="flex items-center gap-2.5">
               <div className="relative">
@@ -425,7 +437,7 @@ export function MenuPage() {
               </span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </div>
-          </button>
+          </Button>
         </div>
       )}
 

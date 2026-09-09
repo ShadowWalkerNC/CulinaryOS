@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@culinaryos/ui';
 
 interface PairingModalProps {
   isOpen: boolean;
@@ -72,28 +73,32 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
             </div>
           </div>
 
-          <button
+          <Button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
           >
             <span className="material-symbols-outlined text-lg">close</span>
-          </button>
+          </Button>
         </div>
 
         {/* Surface Switcher */}
         <div className="px-6 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {Object.entries(surfacePorts).map(([key, s]) => (
-            <button
+            <Button
               key={key}
               onClick={() => setActiveSurface(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition ${
+              variant={activeSurface === key ? 'default' : 'secondary'}
+              size="sm"
+              className={
                 activeSurface === key
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
+                  ? 'bg-orange-600 text-white shadow-md hover:bg-orange-700 uppercase tracking-wider whitespace-nowrap'
+                  : 'bg-slate-800 text-slate-400 hover:text-slate-200 uppercase tracking-wider whitespace-nowrap'
+              }
             >
               {s.name}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -118,12 +123,14 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
               <span className="text-[10px] text-slate-500 uppercase block">Direct LAN URL</span>
               <span className="text-orange-400 font-bold truncate block">{currentUrl}</span>
             </div>
-            <button
+            <Button
               onClick={copyUrl}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold shrink-0 transition"
+              variant="secondary"
+              size="sm"
+              className="shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-200"
             >
               {copied ? '✅ Copied!' : 'Copy Link'}
-            </button>
+            </Button>
           </div>
 
           <div className="w-full bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 text-left text-[11px] text-slate-400">
@@ -139,12 +146,14 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
 
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-end">
-          <button
+          <Button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
+            variant="secondary"
+            size="sm"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200"
           >
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

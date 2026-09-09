@@ -13,6 +13,7 @@ import {
   Receipt,
   Utensils,
   Share2,
+  Button,
 } from '@culinaryos/ui';
 
 interface Props {
@@ -121,13 +122,15 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
           We could not find an active ticket with reference <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-mono font-bold">{orderId}</code>.
         </p>
         {onBackToMenu && (
-          <button
+          <Button
             type="button"
+            variant="brand"
+            size="lg"
             onClick={onBackToMenu}
-            className="px-6 py-3 bg-[#0f172a] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#1e293b] transition-all"
+            className="px-6 text-xs font-black uppercase tracking-wider"
           >
             Back to Storefront
-          </button>
+          </Button>
         )}
       </div>
     );
@@ -226,14 +229,16 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
           </h3>
 
           {/* Demo Status Advancer */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleAdvanceStage}
-            className="px-2.5 py-1 bg-slate-100 hover:bg-[#0f172a] text-slate-700 hover:text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-xs"
             title="Advance lifecycle state for testing"
+            className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-xs hover:bg-[#0f172a] hover:text-white"
           >
             <span>Next Stage (Demo)</span>
-          </button>
+          </Button>
         </div>
 
         {/* Steps Progress Bar */}
@@ -391,24 +396,28 @@ export function OrderStatusTracker({ orderId, onBackToMenu }: Props) {
       {/* Action Footer */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         {onBackToMenu && (
-          <button
+          <Button
             type="button"
+            variant="brand"
+            size="lg"
             onClick={onBackToMenu}
-            className="flex-1 py-3.5 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+            className="flex-1 rounded-xl px-4 text-xs font-black uppercase tracking-wider shadow-md"
           >
             <Utensils className="w-4 h-4" />
             <span>Order More / Back to Menu</span>
-          </button>
+          </Button>
         )}
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="lg"
           onClick={handleShare}
-          className="py-3.5 px-5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
+          className="rounded-xl border-slate-200 bg-white px-5 text-xs font-bold text-slate-800 shadow-xs hover:bg-slate-50 hover:text-slate-800"
         >
           <Share2 className="w-4 h-4 text-slate-500" />
           <span>{copiedLink ? 'Link Copied!' : 'Share Live Tracker'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

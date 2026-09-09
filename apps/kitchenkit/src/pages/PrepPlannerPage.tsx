@@ -9,6 +9,7 @@ import ParLevelModal from '@/components/prep/ParLevelModal';
 import StationExportModal from '@/components/prep/StationExportModal';
 import RecipeScalingModal from '@/components/prep/RecipeScalingModal';
 import AdhesiveLabelModal from '@/components/prep/AdhesiveLabelModal';
+import { Button } from '@culinaryos/ui';
 import type { PrepBatch } from '@culinaryos/prep-engine';
 
 const SHIFTS = ['AM', 'PM', 'Brunch', 'Dinner'] as const;
@@ -85,50 +86,60 @@ export default function PrepPlannerPage() {
           <p className="text-sm text-zinc-500 mt-0.5">{today}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowScalingModal(true)}
-            className="btn-ghost flex items-center gap-1.5 text-sm"
             title="Batch Recipe Scaling & Baker's Math"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <Scale size={15} /> Scale Recipe
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowStationModal(true)}
-            className="btn-ghost flex items-center gap-1.5 text-sm"
             title="Print or view station prep sheet"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <Printer size={15} /> Station Sheet
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => refetch()}
-            className="btn-ghost flex items-center gap-1.5 text-sm"
             title="Recalculate from current stock"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <RefreshCw size={13} /> Refresh
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="brand"
+            size="sm"
             onClick={() => setShowAddItem(true)}
-            className="btn-primary flex items-center gap-2 text-sm"
+            className="bg-brand-600 text-sm hover:bg-brand-700"
           >
             <Plus size={15} /> Add Item
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Shift selector */}
       <div className="flex gap-2">
         {SHIFTS.map((s) => (
-          <button
+          <Button
             key={s}
+            variant="ghost"
+            size="sm"
             onClick={() => setShift(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`h-auto px-4 py-1.5 rounded-full text-sm font-medium ${
               shift === s
-                ? 'bg-brand-600 text-white'
-                : 'bg-surface-card text-zinc-400 hover:text-zinc-100 border border-surface-border'
+                ? 'bg-brand-600 text-white hover:bg-brand-600 hover:text-white'
+                : 'bg-surface-card text-zinc-400 border border-surface-border hover:bg-surface-card hover:text-zinc-100'
             }`}
           >
             {s}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -182,24 +193,28 @@ export default function PrepPlannerPage() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={handleSavePlan}
-                      disabled={isSaving}
-                      className="btn-ghost flex items-center gap-1.5 text-sm"
+                      isLoading={isSaving}
                       title="Rebuild plan from current stock levels"
+                      className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
                     >
-                      {isSaving ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                      <RefreshCw size={13} />
                       Rebuild
-                    </button>
+                    </Button>
                     {allDone && !planCompleted && (
-                      <button
+                      <Button
+                        variant="brand"
+                        size="sm"
                         onClick={() => completePlan({ planId: savedPlan!.id, shift, date: today })}
-                        disabled={isCompleting}
-                        className="btn-primary flex items-center gap-1.5 text-sm"
+                        isLoading={isCompleting}
+                        className="bg-brand-600 text-sm hover:bg-brand-700"
                       >
-                        {isCompleting ? <Loader2 size={13} className="animate-spin" /> : <CheckCheck size={13} />}
+                        <CheckCheck size={13} />
                         Complete Shift
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -257,30 +272,36 @@ export default function PrepPlannerPage() {
                         </label>
                         {!planCompleted && (
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => openScalingForIngredient(item.ingredient_name)}
-                              className="text-zinc-500 hover:text-amber-400 p-1"
                               aria-label={`Scale recipe for ${item.ingredient_name}`}
                               title="Scale recipe"
+                              className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-amber-400"
                             >
                               <Scale size={13} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => openLabelForIngredient(item.ingredient_name, item.prep_amount, item.unit)}
-                              className="text-zinc-500 hover:text-amber-400 p-1"
                               aria-label={`Print label for ${item.ingredient_name}`}
                               title="Print adhesive expiration label"
+                              className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-amber-400"
                             >
                               <Tag size={13} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => openEditForIngredient(item.ingredient_name)}
-                              className="text-zinc-500 hover:text-brand-400 p-1"
                               aria-label={`Edit par level for ${item.ingredient_name}`}
                               title="Edit par level"
+                              className="h-7 w-7 text-zinc-500 hover:bg-transparent hover:text-brand-400"
                             >
                               <Pencil size={13} />
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -310,16 +331,15 @@ export default function PrepPlannerPage() {
                         Save this prep list so you can track item completion during service.
                       </p>
                     </div>
-                    <button
+                    <Button
+                      variant="brand"
+                      size="sm"
                       onClick={handleSavePlan}
-                      disabled={isSaving}
-                      className="btn-primary flex items-center gap-1.5 text-sm shrink-0"
+                      isLoading={isSaving}
+                      className="shrink-0 bg-brand-600 text-sm hover:bg-brand-700"
                     >
-                      {isSaving
-                        ? <><Loader2 size={13} className="animate-spin" /> Saving…</>
-                        : <><Save size={13} /> Save Plan</>
-                      }
-                    </button>
+                      <Save size={13} /> Save Plan
+                    </Button>
                   </div>
 
                   <div className="card">

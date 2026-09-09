@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWasteLogs, useLogWaste, useDeleteWasteLog } from '../hooks/useWaste';
 import { summarizeWaste } from '@culinaryos/waste-engine';
 import type { WasteReason } from '../hooks/useWaste';
+import { Button } from '@culinaryos/ui';
 
 const REASONS: WasteReason[] = ['spoilage', 'trim', 'overcook', 'drop', 'expired', 'other'];
 
@@ -93,9 +94,9 @@ export default function WastePage() {
           <input className={inputCls} type="number" placeholder="Cost per gram ($)" value={form.cost_per_gram} onChange={e => setForm(f => ({ ...f, cost_per_gram: e.target.value }))} />
           <input className={inputCls} type="date" value={form.log_date} onChange={e => setForm(f => ({ ...f, log_date: e.target.value }))} />
           <input className={inputCls} placeholder="Notes (optional)" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-          <button type="submit" className={`${btnCls} sm:col-span-3`} disabled={logWaste.isPending}>
-            {logWaste.isPending ? 'Logging…' : 'Log Waste'}
-          </button>
+          <Button type="submit" variant="ghost" isLoading={logWaste.isPending} className={`${btnCls} sm:col-span-3`}>
+            Log Waste
+          </Button>
         </form>
       </section>
 
@@ -134,7 +135,7 @@ export default function WastePage() {
                   <td className="py-2 text-right">{l.quantity_grams.toFixed(0)}g</td>
                   <td className="py-2 text-right text-red-400">{fmt(l.quantity_grams * l.cost_per_gram)}</td>
                   <td className="py-2 text-right">
-                    <button onClick={() => deleteLog.mutate(l.id)} className="text-zinc-600 hover:text-red-400 text-xs ml-4">✕</button>
+                    <Button onClick={() => deleteLog.mutate(l.id)} variant="ghost" aria-label="Delete waste log" className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4">✕</Button>
                   </td>
                 </tr>
               ))}

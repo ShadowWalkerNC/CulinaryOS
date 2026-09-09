@@ -11,6 +11,7 @@ import {
 import { usePOSStore } from '../lib/store';
 import { acquireTableSeatLock } from '@culinaryos/shared';
 import {
+  Button,
   FloorMap3D,
   type FloorTable3DData,
   type FloorMaterialTheme,
@@ -564,12 +565,13 @@ export function TablesView() {
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="brand"
             onClick={() => dismissAssistance(activeAssistance[0].id)}
-            className="px-4 py-2 rounded-xl bg-slate-950 text-white font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-md active:scale-95"
+            className="px-4 py-2 h-auto uppercase tracking-wider"
           >
             Acknowledge & Clear
-          </button>
+          </Button>
         </div>
       )}
 
@@ -630,78 +632,86 @@ export function TablesView() {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* 2D / 3D Mode Toggle */}
             <div className="flex bg-muted rounded-xl p-1 border border-border">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setViewMode('3d')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                className={`gap-1.5 px-3.5 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
                   viewMode === '3d'
-                    ? 'bg-background text-foreground shadow-xs'
+                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Box className="w-4 h-4 text-sky-600" />
                 3D Spatial Map
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => setViewMode('2d')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                className={`gap-1.5 px-3.5 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
                   viewMode === '2d'
-                    ? 'bg-background text-foreground shadow-xs'
+                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <LayoutGrid className="w-4 h-4 text-muted-foreground" />
                 2D Grid
-              </button>
+              </Button>
             </div>
 
             {/* Quick Table Merge Action Button */}
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setShowMergeModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-secondary hover:bg-muted text-foreground border border-border transition-all shadow-xs active:scale-95"
+              className="gap-1.5 px-3.5 py-2 h-auto uppercase tracking-wider"
             >
               <Layers className="w-3.5 h-3.5 text-primary" />
               <span>Merge Tables</span>
-            </button>
+            </Button>
 
             {/* Layout Editor Button */}
-            <button
+            <Button
+              variant="outline"
               onClick={() => setEditMode((v) => !v)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border shadow-xs ${
+              className={`gap-2 px-3.5 py-2 h-auto uppercase tracking-wider ${
                 editMode
-                  ? 'bg-sky-600 text-white border-sky-500 ring-2 ring-sky-400/40 animate-pulse'
+                  ? 'bg-sky-600 text-white border-sky-500 ring-2 ring-sky-400/40 animate-pulse hover:bg-sky-600 hover:text-white'
                   : 'bg-background text-foreground border-border hover:bg-muted'
               }`}
             >
               <Wrench className="w-3.5 h-3.5" />
               <span>{editMode ? 'Finish Editing' : 'Edit Floor Layout'}</span>
-            </button>
+            </Button>
 
             {/* Editor Action Buttons when active */}
             {editMode && (
               <div className="flex items-center gap-1.5 animate-fadeIn">
-                <button
+                <Button
+                  variant="success"
                   onClick={() => setShowAddTableModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-500 transition-all shadow-xs"
+                  className="gap-1.5 px-3 py-2 h-auto uppercase tracking-wider"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Table</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setShowRoomSettings(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-secondary text-foreground hover:bg-muted border border-border transition-all shadow-xs"
+                  className="gap-1.5 px-3 py-2 h-auto uppercase tracking-wider"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                   <span>Room & Theme</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={handleResetLayout}
                   title="Reset to Factory Layout"
-                  className="p-2 rounded-xl text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all shadow-xs"
+                  className="h-9 w-9 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-600 border-rose-200"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             )}
 
@@ -715,17 +725,18 @@ export function TablesView() {
                   { id: 'bar', label: 'Bar' },
                   { id: 'vip', label: 'VIP' },
                 ].map((sec) => (
-                  <button
+                  <Button
                     key={sec.id}
+                    variant="ghost"
                     onClick={() => setActiveSection(sec.id as SectionId)}
-                    className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1 h-auto rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap ${
                       activeSection === sec.id
-                        ? 'bg-background text-foreground shadow-xs'
+                        ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {sec.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -736,17 +747,18 @@ export function TablesView() {
             <div className="flex items-center gap-1.5 overflow-x-auto">
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-1">Filter:</span>
               {(['all', 'available', 'occupied', 'reserved', 'dirty'] as const).map((st) => (
-                <button
+                <Button
                   key={st}
+                  variant="outline"
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${
+                  className={`px-2.5 py-1 h-auto rounded-lg text-[10px] font-black uppercase tracking-wider ${
                     statusFilter === st
-                      ? 'border-foreground bg-foreground text-background shadow-xs'
+                      ? 'border-foreground bg-foreground text-background shadow-xs hover:bg-foreground hover:text-background'
                       : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
                   }`}
                 >
                   {st}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -909,54 +921,58 @@ export function TablesView() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
+                  <Button
                     type="button"
+                    variant="brand"
                     onClick={() => {
                       setActiveOrder(selectedTableActiveOrder.id);
                       setView('menu');
                       setSelectedTable(null);
                     }}
-                    className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-12 rounded-xl text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                    className="w-full h-12 uppercase tracking-wider gap-2"
                   >
                     <UtensilsCrossed className="w-4 h-4" />
                     <span>View & Add Dishes</span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => {
                       setSplitTargetOrder(selectedTableActiveOrder);
                       setShowSplitModal(true);
                     }}
-                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                    className="w-full h-12 uppercase tracking-wider gap-2"
                   >
                     <Split className="w-4 h-4 text-sky-600" />
                     <span>Split Check</span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => {
                       setTransferTargetTable(selectedTable);
                       setShowTransferModal(true);
                     }}
-                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                    className="w-full h-12 uppercase tracking-wider gap-2"
                   >
                     <UserCheck className="w-4 h-4 text-emerald-600" />
                     <span>Transfer Server</span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => {
                       setMergeTargetTableId(selectedTable.number);
                       setShowMergeModal(true);
                     }}
-                    className="w-full bg-secondary hover:bg-muted text-foreground font-black h-12 rounded-xl text-xs uppercase tracking-wider border border-border shadow-xs transition-all flex items-center justify-center gap-2"
+                    className="w-full h-12 uppercase tracking-wider gap-2"
                   >
                     <Layers className="w-4 h-4 text-amber-600" />
                     <span>Merge into Table</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -966,21 +982,27 @@ export function TablesView() {
                   <div className="flex justify-between items-center text-xs">
                     <Label htmlFor="covers" className="text-foreground font-black uppercase tracking-wider">Party Size / Covers</Label>
                     <div className="flex items-center gap-3">
-                      <button
+                      <Button
                         type="button"
-                        className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Decrease party size"
+                        className="w-11 h-11 rounded-xl"
                         onClick={() => setCoverCount((c) => Math.max(1, c - 1))}
                       >
                         <Minus className="w-4 h-4" />
-                      </button>
+                      </Button>
                       <span className="font-mono text-base font-black w-8 text-center">{coverCount}</span>
-                      <button
+                      <Button
                         type="button"
-                        className="w-11 h-11 rounded-xl bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] font-black text-lg flex items-center justify-center shadow-xs active:scale-95"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Increase party size"
+                        className="w-11 h-11 rounded-xl"
                         onClick={() => setCoverCount((c) => Math.min(selectedTable.capacity + 4, c + 1))}
                       >
                         <Plus className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
@@ -996,14 +1018,16 @@ export function TablesView() {
                   </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="brand"
+                  size="touch"
                   onClick={handleStartOrder}
-                  className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-14 rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2"
+                  className="w-full h-14 rounded-2xl text-sm uppercase tracking-wider gap-2"
                 >
                   <UtensilsCrossed className="w-5 h-5" />
                   <span>Start Order & Seat Guests</span>
-                </button>
+                </Button>
               </div>
             )}
 
@@ -1013,30 +1037,33 @@ export function TablesView() {
                 Quick Table Status Override
               </Label>
               <div className="grid grid-cols-3 gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleUpdateStatus('available')}
-                  className="bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:bg-emerald-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
+                  className="bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-800 h-11 gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Available</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleUpdateStatus('reserved')}
-                  className="bg-indigo-50 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
+                  className="bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100 hover:text-indigo-800 h-11 gap-1.5"
                 >
                   <Bookmark className="w-4 h-4" />
                   <span>Reserved</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleUpdateStatus('dirty')}
-                  className="bg-rose-50 text-rose-800 border-2 border-rose-300 hover:bg-rose-100 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
+                  className="bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 hover:text-rose-800 h-11 gap-1.5"
                 >
                   <AlertCircle className="w-4 h-4" />
                   <span>Dirty</span>
-                </button>
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -1083,9 +1110,10 @@ export function TablesView() {
                   .map((t) => {
                     const isSelected = mergeSourceTableIds.includes(t.number);
                     return (
-                      <button
+                      <Button
                         key={t.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           if (isSelected) {
                             setMergeSourceTableIds((prev) => prev.filter((id) => id !== t.number));
@@ -1093,15 +1121,15 @@ export function TablesView() {
                             setMergeSourceTableIds((prev) => [...prev, t.number]);
                           }
                         }}
-                        className={`p-2.5 rounded-xl border text-xs font-bold text-left flex items-center justify-between transition-all ${
+                        className={`p-2.5 h-auto rounded-xl border text-xs font-bold text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center ${
                           isSelected
-                            ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                            : 'bg-card text-foreground border-border hover:bg-muted'
+                            ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs hover:bg-[#0f172a] hover:text-white'
+                            : 'bg-card text-foreground border-border hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         <span className="truncate">{t.label} (#{t.number})</span>
                         {isSelected && <Check className="w-3.5 h-3.5" />}
-                      </button>
+                      </Button>
                     );
                   })}
               </div>
@@ -1120,15 +1148,17 @@ export function TablesView() {
               />
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="brand"
               disabled={!mergeTargetTableId || mergeSourceTableIds.length === 0 || isMerging}
+              isLoading={isMerging}
               onClick={handleExecuteMerge}
-              className="w-full h-13 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+              className="w-full h-13 uppercase tracking-wider gap-2"
             >
               <Layers className="w-4 h-4" />
-              <span>{isMerging ? 'Merging Checks...' : 'Confirm Table Merge'}</span>
-            </button>
+              <span>Confirm Table Merge</span>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1149,28 +1179,30 @@ export function TablesView() {
           <div className="space-y-4 py-3">
             {/* Split Method Toggle */}
             <div className="flex bg-muted rounded-xl p-1 border border-border">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setSplitMethod('seat')}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                className={`flex-1 py-2 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
                   splitMethod === 'seat'
-                    ? 'bg-background text-foreground shadow-xs'
+                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Split By Seat
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setSplitMethod('custom')}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                className={`flex-1 py-2 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
                   splitMethod === 'custom'
-                    ? 'bg-background text-foreground shadow-xs'
+                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Custom Partitions
-              </button>
+              </Button>
             </div>
 
             {/* Split Details Preview */}
@@ -1184,21 +1216,27 @@ export function TablesView() {
                   <div className="flex items-center justify-between bg-muted/40 p-3 rounded-xl border border-border">
                     <span className="text-xs font-black uppercase">Number of Split Checks:</span>
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Fewer split checks"
                         onClick={() => setSplitCustomCheckCount((c) => Math.max(2, c - 1))}
-                        className="w-8 h-8 rounded-lg bg-card border border-border font-bold flex items-center justify-center"
+                        className="w-8 h-8 rounded-lg"
                       >
                         <Minus className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                       <span className="font-mono font-black text-sm w-6 text-center">{splitCustomCheckCount}</span>
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="More split checks"
                         onClick={() => setSplitCustomCheckCount((c) => Math.min(6, c + 1))}
-                        className="w-8 h-8 rounded-lg bg-card border border-border font-bold flex items-center justify-center"
+                        className="w-8 h-8 rounded-lg"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1240,15 +1278,17 @@ export function TablesView() {
               </div>
             )}
 
-            <button
+            <Button
               type="button"
+              variant="brand"
               disabled={isSplitting}
+              isLoading={isSplitting}
               onClick={handleExecuteSplit}
-              className="w-full h-13 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+              className="w-full h-13 uppercase tracking-wider gap-2"
             >
               <Split className="w-4 h-4" />
-              <span>{isSplitting ? 'Splitting Check...' : 'Confirm Order Split'}</span>
-            </button>
+              <span>Confirm Order Split</span>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1311,15 +1351,17 @@ export function TablesView() {
               </div>
             )}
 
-            <button
+            <Button
               type="button"
+              variant="success"
               disabled={!transferManagerPin.trim() || isTransferring}
+              isLoading={isTransferring}
               onClick={handleExecuteTransfer}
-              className="w-full h-13 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+              className="w-full h-13 uppercase tracking-wider gap-2"
             >
               <UserCheck className="w-4 h-4" />
-              <span>{isTransferring ? 'Authorizing Transfer...' : 'Authorize Server Reassignment'}</span>
-            </button>
+              <span>Authorize Server Reassignment</span>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1376,23 +1418,24 @@ export function TablesView() {
                 <Label className="text-xs font-black uppercase">3D Table Shape</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['square', 'round', 'rectangle', 'booth', 'bar', 'oval'] as const).map((sh) => (
-                    <button
+                    <Button
                       key={sh}
                       type="button"
+                      variant="outline"
                       onClick={() => {
                         setEditingTable((t) => (t ? { ...t, shape: sh } : null));
                         setFloorTables((prev) =>
                           prev.map((t) => (t.id === editingTable.id ? { ...t, shape: sh } : t))
                         );
                       }}
-                      className={`py-2 px-3 rounded-xl border text-xs font-black capitalize transition-all ${
+                      className={`py-2 px-3 h-auto rounded-xl text-xs font-black capitalize ${
                         editingTable.shape === sh
-                          ? 'bg-sky-600 text-white border-sky-500 shadow-xs'
+                          ? 'bg-sky-600 text-white border-sky-500 shadow-xs hover:bg-sky-600 hover:text-white'
                           : 'bg-muted border-border text-muted-foreground hover:bg-background'
                       }`}
                     >
                       {sh}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1402,9 +1445,12 @@ export function TablesView() {
                 <div className="space-y-1">
                   <Label className="text-xs font-black uppercase">Capacity (Seats)</Label>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
                       type="button"
-                      className="w-10 h-10 rounded-xl bg-muted border border-border font-black flex items-center justify-center"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Decrease capacity"
+                      className="w-10 h-10 rounded-xl"
                       onClick={() => {
                         const newCap = Math.max(1, editingTable.capacity - 1);
                         setEditingTable((t) => (t ? { ...t, capacity: newCap } : null));
@@ -1414,11 +1460,14 @@ export function TablesView() {
                       }}
                     >
                       <Minus className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                     <span className="font-mono text-base font-black w-8 text-center">{editingTable.capacity}</span>
-                    <button
+                    <Button
                       type="button"
-                      className="w-10 h-10 rounded-xl bg-muted border border-border font-black flex items-center justify-center"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Increase capacity"
+                      className="w-10 h-10 rounded-xl"
                       onClick={() => {
                         const newCap = editingTable.capacity + 1;
                         setEditingTable((t) => (t ? { ...t, capacity: newCap } : null));
@@ -1428,7 +1477,7 @@ export function TablesView() {
                       }}
                     >
                       <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -1463,22 +1512,24 @@ export function TablesView() {
 
               {/* Delete Table Action */}
               <div className="pt-3 border-t border-border flex justify-between items-center">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleDeleteTable(editingTable.id)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all shadow-xs"
+                  className="gap-1.5 px-3 py-2 h-auto text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-600 border-rose-200"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Delete Table</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="default"
                   onClick={() => setEditingTable(null)}
-                  className="px-5 py-2 rounded-xl text-xs font-black bg-foreground text-background hover:opacity-90 shadow-xs"
+                  className="px-5 py-2 h-auto text-xs font-black"
                 >
                   Done
-                </button>
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -1526,18 +1577,19 @@ export function TablesView() {
               <Label className="text-xs font-black uppercase">3D Table Shape</Label>
               <div className="grid grid-cols-3 gap-2">
                 {(['square', 'round', 'rectangle', 'booth', 'bar', 'oval'] as const).map((sh) => (
-                  <button
+                  <Button
                     key={sh}
                     type="button"
+                    variant="outline"
                     onClick={() => setNewTableShape(sh)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-black capitalize transition-all ${
+                    className={`py-2 px-3 h-auto rounded-xl text-xs font-black capitalize ${
                       newTableShape === sh
-                        ? 'bg-sky-600 text-white border-sky-500 shadow-xs'
+                        ? 'bg-sky-600 text-white border-sky-500 shadow-xs hover:bg-sky-600 hover:text-white'
                         : 'bg-muted border-border text-muted-foreground hover:bg-background'
                     }`}
                   >
                     {sh}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -1547,21 +1599,27 @@ export function TablesView() {
               <div className="space-y-1">
                 <Label className="text-xs font-black uppercase">Capacity</Label>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
-                    className="w-10 h-10 rounded-xl bg-muted border border-border font-black flex items-center justify-center"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Decrease capacity"
+                    className="w-10 h-10 rounded-xl"
                     onClick={() => setNewTableCapacity((c) => Math.max(1, c - 1))}
                   >
                     <Minus className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                   <span className="font-mono text-base font-black w-8 text-center">{newTableCapacity}</span>
-                  <button
+                  <Button
                     type="button"
-                    className="w-10 h-10 rounded-xl bg-muted border border-border font-black flex items-center justify-center"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Increase capacity"
+                    className="w-10 h-10 rounded-xl"
                     onClick={() => setNewTableCapacity((c) => c + 1)}
                   >
                     <Plus className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -1581,15 +1639,16 @@ export function TablesView() {
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="success"
               onClick={handleAddTable}
               disabled={!newTableLabel.trim()}
-              className="w-full h-13 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+              className="w-full h-13 uppercase tracking-wider gap-2"
             >
               <Plus className="w-4 h-4" />
               <span>Spawn Table on Floor</span>
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1619,19 +1678,20 @@ export function TablesView() {
                   { id: 'deck', label: 'Patio Wood Deck' },
                   { id: 'minimal', label: 'Clean Studio White' },
                 ].map((th) => (
-                  <button
+                  <Button
                     key={th.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => setFloorTheme(th.id as FloorMaterialTheme)}
-                    className={`p-3 rounded-xl border text-xs font-black text-left flex items-center justify-between transition-all ${
+                    className={`p-3 h-auto rounded-xl border text-xs font-black text-left [&>span]:w-full [&>span]:justify-between [&>span]:items-center ${
                       floorTheme === th.id
-                        ? 'bg-sky-600 text-white border-sky-500 shadow-xs'
-                        : 'bg-muted border-border text-foreground hover:bg-background'
+                        ? 'bg-sky-600 text-white border-sky-500 shadow-xs hover:bg-sky-600 hover:text-white'
+                        : 'bg-muted border-border text-foreground hover:bg-background hover:text-foreground'
                     }`}
                   >
                     <span>{th.label}</span>
                     {floorTheme === th.id && <Check className="w-4 h-4" />}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -1671,13 +1731,14 @@ export function TablesView() {
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="default"
               onClick={() => setShowRoomSettings(false)}
-              className="w-full h-12 rounded-xl bg-foreground text-background font-black text-xs uppercase tracking-wider shadow-xs hover:opacity-90 transition-all"
+              className="w-full h-12 uppercase tracking-wider"
             >
               Apply Environment Settings
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

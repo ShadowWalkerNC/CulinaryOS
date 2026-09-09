@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { MenuItem, CartModifier } from '../types';
 import { AllergenBadge } from './AllergenBadge';
-import { Plus, Minus, X, Check, ChevronRight } from '@culinaryos/ui';
+import { Button, Plus, Minus, X, Check, ChevronRight } from '@culinaryos/ui';
 import {
   type ModifierGroup,
   type Modifier,
@@ -243,13 +243,14 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
 
               return (
                 <div key={mod.id} className="flex flex-col gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant={isSelected ? 'brand' : 'outline'}
                     onClick={() => toggleModifier(group.id, mod.id, maxSelections)}
-                    className={`min-h-[48px] p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
+                    className={`min-h-[48px] border p-3 text-left shadow-none [&>span]:w-full [&>span]:justify-between ${
                       isSelected
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-sm scale-[1.01]'
-                        : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300 hover:bg-slate-50 active:scale-95'
+                        ? 'border-[#0f172a] shadow-sm scale-[1.01]'
+                        : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -280,7 +281,7 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
                         'Included'
                       )}
                     </span>
-                  </button>
+                  </Button>
 
                   {/* Render Nested Modifier Groups for Selected Modifier */}
                   {isSelected && mod.nestedGroups && mod.nestedGroups.length > 0 && (
@@ -325,13 +326,15 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <button
+            <Button
               onClick={onClose}
               aria-label="Close"
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-md transition-all active:scale-95"
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/70 hover:text-white active:scale-95"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
             <div className="absolute bottom-3 left-4 right-4 text-white">
               <span className="text-xs font-mono font-bold uppercase tracking-wider bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-white">
                 {item.station?.toUpperCase()} STATION
@@ -349,13 +352,15 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
               </span>
               <h2 className="text-xl font-black text-slate-900 mt-1 leading-tight">{item.name}</h2>
             </div>
-            <button
+            <Button
               onClick={onClose}
               aria-label="Close"
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all active:scale-95"
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-600 active:scale-95"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -411,35 +416,41 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center gap-3">
           {/* Quantity Stepper */}
           <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               disabled={quantity <= 1}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
+              className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:hover:bg-transparent"
             >
               <Minus className="w-4 h-4" />
-            </button>
+            </Button>
             <span className="w-8 text-center font-mono font-bold text-sm text-slate-900">
               {quantity}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setQuantity(quantity + 1)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-all active:scale-95"
+              className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
             >
               <Plus className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Add to Cart CTA */}
-          <button
+          <Button
             type="button"
+            variant="brand"
+            size="lg"
             onClick={handleAdd}
-            className="flex-1 min-h-[48px] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-between shadow-md transition-all active:scale-[0.98]"
+            className="flex-1 min-h-[48px] rounded-xl px-4 text-xs font-black uppercase tracking-wider shadow-md active:scale-[0.98] [&>span]:w-full [&>span]:justify-between"
           >
             <span>Add to Order</span>
             <span className="font-mono text-sm">${(totalPrice / 100).toFixed(2)}</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

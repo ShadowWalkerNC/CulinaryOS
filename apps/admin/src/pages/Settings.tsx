@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ThemeCustomizer } from '@culinaryos/ui';
+import { Button, ThemeCustomizer } from '@culinaryos/ui';
 import {
   loadLocalSettings,
   saveLocalSettings,
@@ -149,13 +149,14 @@ export function SettingsPage() {
               {saveMessage}
             </span>
           )}
-          <button
+          <Button
             onClick={handleSave}
-            className="px-5 py-2.5 bg-[#0f172a] text-white hover:bg-black font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all flex items-center gap-2"
+            variant="brand"
+            className="uppercase tracking-wider"
           >
             <span className="material-symbols-outlined text-[16px]">save</span>
             Save All Changes
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -169,18 +170,16 @@ export function SettingsPage() {
           { id: 'display', label: 'Display & Accessibility', icon: 'contrast' },
           { id: 'theme', label: 'Appearance & Themes', icon: 'palette' },
         ].map((tab) => (
-          <button
+          <Button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === tab.id
-                ? 'bg-white text-[#0f172a] shadow-xs border border-[#e5e7eb]'
-                : 'text-[#6b7280] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
+            variant={activeTab === tab.id ? 'outline' : 'ghost'}
+            size="sm"
+            className="uppercase tracking-wider"
           >
             <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
             <span>{tab.label}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -480,13 +479,14 @@ export function SettingsPage() {
                       {st.code}
                     </span>
                     {!st.isExpoPass && (
-                      <button
+                      <Button
                         onClick={() => handleRemoveStation(st.id)}
-                        className="text-[#9ca3af] hover:text-red-600 transition-colors"
+                        variant="ghost"
+                        className="h-auto w-auto p-0.5 text-[#9ca3af] hover:text-red-600"
                         title="Delete Station"
                       >
                         <span className="material-symbols-outlined text-[16px]">close</span>
-                      </button>
+                      </Button>
                     )}
                   </div>
                   <div>
@@ -524,13 +524,14 @@ export function SettingsPage() {
                   onChange={(e) => setNewStation({ ...newStation, description: e.target.value })}
                   className="bg-white border border-[#d1d5db] rounded-xl px-3 py-2 text-xs font-bold outline-none"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={handleAddStation}
-                  className="bg-[#0f172a] text-white hover:bg-black font-black text-xs uppercase tracking-wider rounded-xl py-2"
+                  variant="brand"
+                  className="uppercase tracking-wider"
                 >
                   Add Station
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -589,12 +590,13 @@ export function SettingsPage() {
                         )}
                       </td>
                       <td className="py-3 px-3 text-right">
-                        <button
+                        <Button
                           onClick={() => handleRemoveRule(rule.itemId)}
-                          className="text-[#9ca3af] hover:text-red-600 transition-colors"
+                          variant="ghost"
+                          className="h-auto w-auto p-0.5 text-[#9ca3af] hover:text-red-600"
                         >
                           <span className="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -643,13 +645,14 @@ export function SettingsPage() {
                   onChange={(e) => setNewRule({ ...newRule, targetPrepMinutes: parseInt(e.target.value) || 10 })}
                   className="bg-white border border-[#d1d5db] rounded-xl px-3 py-2 text-xs font-mono font-bold outline-none"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={handleAddRule}
-                  className="bg-[#0f172a] text-white hover:bg-black font-black text-xs uppercase tracking-wider rounded-xl py-2"
+                  variant="brand"
+                  className="uppercase tracking-wider"
                 >
                   Add Rule
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1083,8 +1086,11 @@ export function SettingsPage() {
                   placeholder="e.g. 45 Fore St, Portland, ME"
                   className="flex-1 bg-white border border-[#d1d5db] rounded-xl px-3.5 py-2 text-xs font-bold outline-none"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="brand"
+                  size="sm"
+                  className="uppercase"
                   onClick={() => {
                     // Simulate address validation
                     const dist = 2.4;
@@ -1097,10 +1103,9 @@ export function SettingsPage() {
                       minutes: Math.round(20 + dist * 4),
                     });
                   }}
-                  className="px-4 py-2 bg-[#0f172a] text-white hover:bg-black font-bold text-xs uppercase rounded-xl transition"
                 >
                   Verify Zone
-                </button>
+                </Button>
               </div>
             </div>
 

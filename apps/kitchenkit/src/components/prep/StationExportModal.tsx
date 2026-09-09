@@ -2,6 +2,7 @@ import { X, Printer, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import StationPrepSheet, { type StationPrepSheetItem } from './StationPrepSheet';
+import { Button } from '@culinaryos/ui';
 
 interface StationExportModalProps {
   shift: string;
@@ -57,24 +58,28 @@ export default function StationExportModal({
             <h2 className="font-bold text-zinc-100 text-lg">Station Prep Sheet Preview</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCopyText}
-              className="btn-ghost text-sm flex items-center gap-1.5"
               title="Copy plain text list to clipboard"
+              className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
             >
               {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
               {copied ? 'Copied' : 'Copy Text List'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="brand"
+              size="sm"
               onClick={handlePrint}
-              className="btn-primary text-sm flex items-center gap-2"
+              className="bg-brand-600 text-sm hover:bg-brand-700"
             >
               <Printer size={15} />
               Print Sheet
-            </button>
-            <button onClick={onClose} className="btn-ghost p-1.5 ml-2" aria-label="Close">
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="ml-2 h-8 w-8 text-zinc-400 hover:bg-surface-card hover:text-zinc-100">
               <X size={18} />
-            </button>
+            </Button>
           </div>
         </div>
 

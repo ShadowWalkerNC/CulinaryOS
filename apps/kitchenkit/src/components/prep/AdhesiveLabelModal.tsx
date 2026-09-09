@@ -13,6 +13,7 @@ import {
   type PrepBatch,
   type LabelFormat,
 } from '@culinaryos/prep-engine';
+import { Button } from '@culinaryos/ui';
 
 interface Props {
   initialBatch?: Partial<PrepBatch>;
@@ -92,12 +93,15 @@ export default function AdhesiveLabelModal({ initialBatch, onClose }: Props) {
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center transition"
+            aria-label="Close"
+            className="h-8 w-8 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-400"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Format Selector */}
@@ -106,30 +110,34 @@ export default function AdhesiveLabelModal({ initialBatch, onClose }: Props) {
             Label Stock Format:
           </span>
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setFormat('2x1')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold ${
                 format === '2x1'
-                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
               }`}
             >
               <Tag className="w-3.5 h-3.5" />
               2" × 1" (Standard Pantry Roll)
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setFormat('2x2')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold ${
                 format === '2x2'
-                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs hover:bg-amber-500 hover:text-zinc-950'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
               }`}
             >
               <QrCode className="w-3.5 h-3.5" />
               2" × 2" (Full Traceability + QR)
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -216,18 +224,20 @@ export default function AdhesiveLabelModal({ initialBatch, onClose }: Props) {
                 {FDA_ALLERGENS.map((alg) => {
                   const isSel = selectedAllergens.includes(alg);
                   return (
-                    <button
+                    <Button
                       key={alg}
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => toggleAllergen(alg)}
-                      className={`px-2 py-1 rounded-md text-[11px] font-bold border transition ${
+                      className={`h-auto px-2 py-1 rounded-md text-[11px] font-bold border ${
                         isSel
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 hover:bg-amber-500/20 hover:text-amber-300'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:bg-zinc-950 hover:text-zinc-300'
                       }`}
                     >
                       {alg}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -333,23 +343,25 @@ export default function AdhesiveLabelModal({ initialBatch, onClose }: Props) {
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleCopy}
-                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
+                className="flex-1 bg-zinc-800 py-2.5 text-xs font-bold text-zinc-300 hover:bg-zinc-700 hover:text-zinc-300"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? 'Copied ASCII' : 'Copy ASCII'}</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="warning"
                 onClick={handlePrint}
-                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
+                className="flex-1 py-2.5 text-xs font-black text-zinc-950"
               >
                 {printed ? <Check className="w-4 h-4" /> : <Printer className="w-4 h-4" />}
                 <span>{printed ? 'Sent to Printer!' : `Print ${format} Label`}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { Plus, Loader2, Pencil, Trash2, Scale } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@culinaryos/ui';
 import { useParLevels, type DBParLevel } from '@/hooks/useParLevels';
 import { useDeleteParLevel } from '@/hooks/useParLevels';
 import ParLevelModal from '@/components/prep/ParLevelModal';
@@ -26,12 +27,13 @@ export default function ParLevelsPage() {
             Set target stock levels — the Prep Planner calculates what to make from these.
           </p>
         </div>
-        <button
+        <Button
+          variant="brand"
           onClick={() => setShowAdd(true)}
-          className="btn-primary flex items-center gap-2 text-sm shrink-0"
+          className="shrink-0 bg-brand-600 text-sm hover:bg-brand-700"
         >
           <Plus size={15} /> Add Item
-        </button>
+        </Button>
       </div>
 
       {/* Loading */}
@@ -58,9 +60,9 @@ export default function ParLevelsPage() {
           <p className="text-sm text-zinc-500 mb-6 max-w-xs">
             Add your first ingredient par level to start generating automatic prep plans.
           </p>
-          <button onClick={() => setShowAdd(true)} className="btn-primary text-sm">
+          <Button variant="brand" onClick={() => setShowAdd(true)} className="bg-brand-600 text-sm hover:bg-brand-700">
             + Add First Item
-          </button>
+          </Button>
         </div>
       )}
 
@@ -98,22 +100,26 @@ export default function ParLevelsPage() {
                   </td>
                   <td className="py-3">
                     <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setEditing(item)}
-                        className="p-1.5 rounded text-zinc-500 hover:text-brand-400 hover:bg-brand-600/10 transition-colors"
                         aria-label={`Edit ${item.ingredient_name}`}
                         title="Edit"
+                        className="h-7 w-7 text-zinc-500 hover:bg-brand-600/10 hover:text-brand-400"
                       >
                         <Pencil size={13} />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setConfirmDelete(item)}
-                        className="p-1.5 rounded text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         aria-label={`Delete ${item.ingredient_name}`}
                         title="Delete"
+                        className="h-7 w-7 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
                       >
                         <Trash2 size={13} />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -133,23 +139,24 @@ export default function ParLevelsPage() {
               Any saved prep plans that reference this item will be unaffected.
             </p>
             <div className="flex gap-3 justify-end">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setConfirmDelete(null)}
-                className="btn-ghost text-sm"
+                className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
+                isLoading={isDeleting}
                 onClick={() => {
                   deleteParLevel(confirmDelete.id);
                   setConfirmDelete(null);
                 }}
-                disabled={isDeleting}
-                className="btn-primary bg-red-600 hover:bg-red-500 text-sm flex items-center gap-1.5"
+                className="text-sm"
               >
-                {isDeleting && <Loader2 size={13} className="animate-spin" />}
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>

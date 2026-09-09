@@ -146,12 +146,13 @@ export function MenuPage() {
             )}
             <span>{msg.text}</span>
           </div>
-          <button
+          <Button
+            variant="link"
+            className="h-auto px-0 py-0 text-inherit opacity-80 hover:opacity-100"
             onClick={() => setMsg(null)}
-            className="text-xs font-bold hover:underline opacity-80 hover:opacity-100"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 

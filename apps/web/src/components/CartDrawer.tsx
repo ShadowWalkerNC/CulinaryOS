@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import type { CartState, OrderMode } from '../types';
-import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Clock, Sparkles } from '@culinaryos/ui';
+import { Button, ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Clock, Sparkles } from '@culinaryos/ui';
 
 interface Props {
   cart: CartState;
@@ -63,42 +63,42 @@ export function CartDrawer({
               <p className="text-[11px] text-slate-500 font-medium">Review your selections</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all"
+            className="h-8 w-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-600"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Fulfillment Mode Toggle */}
         <div className="p-4 border-b border-slate-100 bg-slate-50">
           <div className="flex gap-1.5 p-1 bg-slate-200/70 rounded-xl">
-            <button
+            <Button
               type="button"
+              variant={orderMode === 'delivery' ? 'brand' : 'ghost'}
               onClick={() => onSetOrderMode('delivery')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                orderMode === 'delivery'
-                  ? 'bg-[#0f172a] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              className={`flex-1 rounded-lg ${
+                orderMode === 'delivery' ? '' : 'text-slate-600 hover:bg-transparent hover:text-slate-900'
               }`}
             >
               <span>Delivery</span>
               <span className="text-[10px] font-mono opacity-80">(25-35m)</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant={orderMode === 'pickup' ? 'brand' : 'ghost'}
               onClick={() => onSetOrderMode('pickup')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                orderMode === 'pickup'
-                  ? 'bg-[#0f172a] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              className={`flex-1 rounded-lg ${
+                orderMode === 'pickup' ? '' : 'text-slate-600 hover:bg-transparent hover:text-slate-900'
               }`}
             >
               <span>Pickup</span>
               <span className="text-[10px] font-mono opacity-80">(15-20m)</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -113,13 +113,15 @@ export function CartDrawer({
               <p className="text-xs text-slate-500 max-w-xs mt-1">
                 Explore our chef-crafted menu and add your favorite dishes to begin.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="brand"
+                size="sm"
                 onClick={onClose}
-                className="mt-4 px-4 py-2 bg-[#0f172a] text-white rounded-xl text-xs font-bold hover:bg-[#1e293b] transition-all"
+                className="mt-4 rounded-xl px-4 text-xs"
               >
                 Browse Menu
-              </button>
+              </Button>
             </div>
           ) : (
             cart.items.map((item) => (
@@ -156,33 +158,38 @@ export function CartDrawer({
 
                 {/* Bottom Row: Stepper & Remove */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => onRemove(item.id)}
-                    className="text-slate-400 hover:text-rose-600 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="h-auto p-0 text-xs font-semibold text-slate-400 hover:bg-transparent hover:text-rose-600"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Remove</span>
-                  </button>
+                  </Button>
 
                   <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onUpdateQty(item.id, item.quantity - 1)}
-                      className="w-7 h-7 rounded-md bg-white text-slate-700 hover:bg-slate-200 flex items-center justify-center shadow-xs transition-all"
+                      className="h-7 w-7 rounded-md bg-white text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-700"
                     >
                       <Minus className="w-3 h-3" />
-                    </button>
+                    </Button>
                     <span className="w-7 text-center font-mono font-bold text-xs text-slate-900">
                       {item.quantity}
                     </span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onUpdateQty(item.id, item.quantity + 1)}
-                      className="w-7 h-7 rounded-md bg-white text-slate-700 hover:bg-slate-200 flex items-center justify-center shadow-xs transition-all"
+                      className="h-7 w-7 rounded-md bg-white text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-700"
                     >
                       <Plus className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -228,17 +235,19 @@ export function CartDrawer({
             </div>
 
             {/* Checkout Button */}
-            <button
+            <Button
               type="button"
+              variant="brand"
+              size="lg"
               onClick={onCheckout}
-              className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-between shadow-md transition-all active:scale-[0.99]"
+              className="w-full px-4 text-xs font-black uppercase tracking-wider shadow-md [&>span]:w-full [&>span]:justify-between"
             >
               <span>Proceed to Checkout</span>
               <span className="flex items-center gap-1 font-mono text-sm">
                 ${(grandTotal / 100).toFixed(2)}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </span>
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { MarketingHeader, UtensilsCrossed, ArrowRight } from '@culinaryos/ui';
+import { MarketingHeader, UtensilsCrossed, ArrowRight, Button } from '@culinaryos/ui';
 
 export function NotFoundPage() {
   const navigate = useNavigate();
@@ -22,14 +22,16 @@ export function NotFoundPage() {
             </p>
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="brand"
+            size="lg"
             onClick={() => navigate('/menu/demo')}
-            className="w-full py-3.5 px-4 bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+            className="w-full px-4 text-xs font-black uppercase tracking-wider shadow-md"
           >
             <span>Explore Demo Storefront</span>
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </main>
     </div>

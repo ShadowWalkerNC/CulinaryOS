@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@culinaryos/ui';
 import { useCreateRecipe, type CreateRecipeInput } from '@/hooks/useRecipes';
 
 interface IngredientRow {
@@ -77,9 +78,9 @@ export default function CreateRecipeModal({ onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border shrink-0">
           <h2 className="font-semibold text-zinc-100">New Recipe</h2>
-          <button onClick={onClose} className="btn-ghost p-1.5">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="h-8 w-8 text-zinc-400 hover:bg-surface-card hover:text-zinc-100">
             <X size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* Body */}
@@ -118,10 +119,15 @@ export default function CreateRecipeModal({ onClose }: Props) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-zinc-300">Ingredients *</label>
-                <button type="button" onClick={addRow}
-                  className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addRow}
+                  className="h-auto p-0 text-xs text-brand-400 hover:text-brand-300 hover:no-underline"
+                >
                   <Plus size={13} /> Add row
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-2">
@@ -137,10 +143,16 @@ export default function CreateRecipeModal({ onClose }: Props) {
                       className="input text-sm" placeholder="1.0" type="number" step="any" min="0" />
                     <input value={row.unit} onChange={(e) => updateRow(i, 'unit', e.target.value)}
                       className="input text-sm" placeholder="g" />
-                    <button type="button" onClick={() => removeRow(i)}
-                      className="flex items-center justify-center text-zinc-600 hover:text-red-400 transition-colors">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRow(i)}
+                      aria-label={`Remove ingredient row ${i + 1}`}
+                      className="h-8 w-8 text-zinc-600 hover:bg-transparent hover:text-red-400"
+                    >
                       <Trash2 size={14} />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -155,11 +167,15 @@ export default function CreateRecipeModal({ onClose }: Props) {
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-surface-border shrink-0 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="btn-ghost text-sm">Cancel</button>
-            <button type="submit" disabled={isPending}
-              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50">
-              {isPending ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : 'Create Recipe'}
-            </button>
+            <Button type="button" variant="ghost" onClick={onClose} className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100">Cancel</Button>
+            <Button
+              type="submit"
+              variant="brand"
+              isLoading={isPending}
+              className="bg-brand-600 text-sm hover:bg-brand-700"
+            >
+              Create Recipe
+            </Button>
           </div>
         </form>
       </div>

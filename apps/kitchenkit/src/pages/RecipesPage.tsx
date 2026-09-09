@@ -2,6 +2,7 @@ import { Search, Plus, BookOpen, Loader2, Tag, SlidersHorizontal } from 'lucide-
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecipes } from '@/hooks/useRecipes';
+import { Button } from '@culinaryos/ui';
 import CreateRecipeModal from '@/components/recipes/CreateRecipeModal';
 
 export type RecipeSortOption =
@@ -118,12 +119,14 @@ export default function RecipesPage() {
             </select>
           </div>
 
-          <button
+          <Button
+            variant="brand"
+            size="sm"
             onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center gap-2 text-sm shrink-0"
+            className="shrink-0 bg-brand-600 text-sm hover:bg-brand-700"
           >
             <Plus size={15} /> New Recipe
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -131,45 +134,51 @@ export default function RecipesPage() {
       {recipes.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap pt-1">
           <Tag size={13} className="text-zinc-600 shrink-0" />
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setActiveTag(null)}
             className={[
-              'badge transition-colors cursor-pointer select-none',
+              'badge h-auto cursor-pointer select-none',
               activeTag === null
-                ? 'bg-brand-600/30 text-brand-300 ring-1 ring-brand-600/60 font-medium'
+                ? 'bg-brand-600/30 text-brand-300 ring-1 ring-brand-600/60 font-medium hover:bg-brand-600/30 hover:text-brand-300'
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300',
             ].join(' ')}
           >
             All ({recipes.length})
-          </button>
+          </Button>
           {allTags.map((tag) => {
             const count = tagCounts.get(tag) ?? 0;
             const isActive = activeTag === tag;
             return (
-              <button
+              <Button
                 key={tag}
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveTag(isActive ? null : tag)}
                 className={[
-                  'badge transition-colors cursor-pointer select-none',
+                  'badge h-auto cursor-pointer select-none',
                   isActive
-                    ? 'bg-brand-600/30 text-brand-300 ring-1 ring-brand-600/60 font-medium'
+                    ? 'bg-brand-600/30 text-brand-300 ring-1 ring-brand-600/60 font-medium hover:bg-brand-600/30 hover:text-brand-300'
                     : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300',
                 ].join(' ')}
               >
                 {tag} ({count})
-              </button>
+              </Button>
             );
           })}
           {(activeTag !== null || query !== '') && (
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={() => {
                 setActiveTag(null);
                 setQuery('');
               }}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors ml-1 underline cursor-pointer"
+              className="ml-1 h-auto p-0 text-xs text-zinc-500 underline hover:text-zinc-300"
             >
               Clear filters
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -194,17 +203,18 @@ export default function RecipesPage() {
               : 'Add your first recipe and let the Ratio Blueprint Engine handle the scaling.'}
           </p>
           {!query && !activeTag && (
-            <button onClick={() => setShowModal(true)} className="btn-primary text-sm">
+            <Button variant="brand" onClick={() => setShowModal(true)} className="bg-brand-600 text-sm hover:bg-brand-700">
               + Add Recipe
-            </button>
+            </Button>
           )}
           {(query || activeTag) && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => { setQuery(''); setActiveTag(null); }}
-              className="btn-ghost text-sm"
+              className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
             >
               Clear filters
-            </button>
+            </Button>
           )}
         </div>
       )}

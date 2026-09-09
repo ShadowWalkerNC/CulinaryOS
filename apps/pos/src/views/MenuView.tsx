@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMenu, useAddLineItem } from '../lib/queries';
 import { usePOSStore } from '../lib/store';
 import {
+  Button,
   Salad,
   Beef,
   Utensils,
@@ -299,13 +300,14 @@ export function MenuView() {
 
               return (
                 <div key={mod.id} className="flex flex-col gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => handleSelectModifier(group, mod)}
-                    className={`min-h-[54px] p-3 rounded-xl text-left border font-bold text-xs transition-all flex flex-col justify-between ${
+                    className={`min-h-[54px] p-3 h-auto rounded-xl text-left border font-bold text-xs [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch ${
                       isSelected
-                        ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.01]'
-                        : 'border-border bg-card text-foreground hover:border-foreground/40 active:scale-95'
+                        ? 'border-foreground bg-foreground text-background shadow-xs scale-[1.01] hover:bg-foreground hover:text-background'
+                        : 'border-border bg-card text-foreground hover:bg-card hover:text-foreground hover:border-foreground/40'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -321,7 +323,7 @@ export function MenuView() {
                         'Included'
                       )}
                     </span>
-                  </button>
+                  </Button>
 
                   {/* Render Nested Modifier Groups */}
                   {isSelected && mod.nestedGroups && mod.nestedGroups.length > 0 && (
@@ -358,15 +360,16 @@ export function MenuView() {
           {sections.map((s: any) => {
             const isActive = s.id === activeS && !searchQuery;
             return (
-              <button
+              <Button
                 key={s.id}
+                variant="ghost"
                 onClick={() => {
                   setActiveSection(s.id);
                   setSearchQuery('');
                 }}
-                className={`w-full text-left px-3.5 py-3 rounded-xl font-bold text-xs tracking-wide transition-all flex items-center gap-3 ${
+                className={`w-full justify-start text-left px-3.5 py-3 h-auto rounded-xl font-bold text-xs tracking-wide gap-3 ${
                   isActive
-                    ? 'bg-foreground text-background shadow-sm scale-[1.01]'
+                    ? 'bg-foreground text-background shadow-sm scale-[1.01] hover:bg-foreground hover:text-background'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/70 bg-card border border-border/50'
                 }`}
               >
@@ -379,7 +382,7 @@ export function MenuView() {
                     {s.items.length}
                   </span>
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -398,30 +401,32 @@ export function MenuView() {
             {[1, 2, 3, 4].map((sNum) => {
               const isSelected = activeSeat === sNum;
               return (
-                <button
+                <Button
                   key={sNum}
+                  variant="ghost"
                   onClick={() => setActiveSeat(sNum)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+                  className={`px-3.5 py-2 h-auto rounded-lg text-xs font-black gap-1.5 shrink-0 ${
                     isSelected
-                      ? 'bg-foreground text-background shadow-xs scale-105'
+                      ? 'bg-foreground text-background shadow-xs scale-105 hover:bg-foreground hover:text-background'
                       : 'text-muted-foreground hover:bg-card hover:text-foreground'
                   }`}
                 >
                   <span>Seat {sNum}</span>
-                </button>
+                </Button>
               );
             })}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setActiveSeat(0)}
-              className={`px-3 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+              className={`px-3 py-2 h-auto rounded-lg text-xs font-black gap-1.5 shrink-0 ${
                 activeSeat === 0
-                  ? 'bg-foreground text-background shadow-xs scale-105'
+                  ? 'bg-foreground text-background shadow-xs scale-105 hover:bg-foreground hover:text-background'
                   : 'text-muted-foreground hover:bg-card hover:text-foreground'
               }`}
             >
               <Users className="w-3 h-3 text-muted-foreground" />
               <span>Shared</span>
-            </button>
+            </Button>
           </div>
 
           {/* Search Bar */}
@@ -435,17 +440,21 @@ export function MenuView() {
               className="w-full bg-muted/40 border border-border focus:border-foreground focus:bg-card outline-none rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground font-semibold transition-all shadow-inner"
             />
             {searchQuery && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 text-xs font-bold text-muted-foreground hover:text-foreground bg-muted rounded-full w-5 h-5 flex items-center justify-center"
+                aria-label="Clear search"
+                className="absolute right-3 h-5 w-5 rounded-full"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             )}
           </div>
 
           {/* Quick Open Item / Custom Bakery Special Button */}
-          <button
+          <Button
+            variant="warning"
             onClick={() => {
               if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
               setOpenItemName('');
@@ -453,12 +462,12 @@ export function MenuView() {
               setOpenItemNotes('');
               setShowOpenItemModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
+            className="px-3.5 py-2 h-auto rounded-xl text-xs font-black gap-1.5 shrink-0 bg-amber-500 hover:bg-amber-600 text-slate-950"
             title="Ring up an off-menu item, daily special, or custom price"
           >
             <Plus className="w-4 h-4 text-slate-950" />
             <span>+ Open Item</span>
-          </button>
+          </Button>
         </div>
 
         {/* Menu Items Grid */}
@@ -477,10 +486,11 @@ export function MenuView() {
                     item.status === 'unavailable' ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                   }`}
                 >
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => openModifierModal(item)}
-                    className="text-left w-full focus:outline-none"
+                    className="text-left w-full h-auto p-0 rounded-none hover:bg-transparent [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <p className="text-foreground font-extrabold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
@@ -493,15 +503,16 @@ export function MenuView() {
                     {item.description && (
                       <p className="text-muted-foreground text-xs mt-1.5 leading-snug line-clamp-2">{item.description}</p>
                     )}
-                  </button>
+                  </Button>
 
                   {/* Inline Fast Modifier Chips (Toast Go / M3 Ergonomics) */}
                   {quickModifiers.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-dashed border-border/70 flex flex-wrap gap-1">
                       {quickModifiers.map((qm: any) => (
-                        <button
+                        <Button
                           key={qm.id}
                           type="button"
+                          variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!activeOrderId) { alert('No active order. Open table first.'); return; }
@@ -520,14 +531,14 @@ export function MenuView() {
                               }],
                             });
                           }}
-                          className="text-[10px] font-black px-2 py-1 rounded-lg bg-muted hover:bg-slate-900 hover:text-white text-foreground/80 border border-border/80 transition-all active:scale-95 flex items-center gap-1"
+                          className="text-[10px] font-black px-2 py-1 h-auto rounded-lg gap-1"
                           title={`Quick add ${item.name} with ${qm.name}`}
                         >
                           <span>{qm.name}</span>
                           {qm.price_adjustment > 0 && (
                             <span className="font-mono text-muted-foreground">+${(qm.price_adjustment / 100).toFixed(2)}</span>
                           )}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -536,14 +547,15 @@ export function MenuView() {
                     <span className="text-foreground font-black font-mono text-sm">
                       ${(item.price / 100).toFixed(2)}
                     </span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => openModifierModal(item)}
-                      className="text-xs font-bold text-muted-foreground group-hover:text-foreground bg-muted/60 group-hover:bg-foreground group-hover:text-background px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                      className="text-xs font-bold text-muted-foreground group-hover:text-foreground group-hover:bg-foreground group-hover:text-background px-3 py-1.5 h-auto rounded-xl gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>{item.modifier_groups?.length > 0 ? 'Customize' : 'Add'}</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );
@@ -566,12 +578,15 @@ export function MenuView() {
                   {currentModPrice > 0 && ` + $${(currentModPrice / 100).toFixed(2)} Modifiers`}
                 </p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setModifyingItem(null)}
-                className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground font-bold flex items-center justify-center active:scale-95"
+                aria-label="Close customizer"
+                className="h-8 w-8 rounded-full"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Modifier Groups Tree */}
@@ -589,19 +604,20 @@ export function MenuView() {
                     { num: 2, label: 'Course 2 (Mains/Entrees)' },
                     { num: 3, label: 'Course 3 (Desserts)' },
                   ].map((c) => (
-                    <button
+                    <Button
                       key={c.num}
                       type="button"
+                      variant="ghost"
                       onClick={() => setItemCourse(c.num)}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-0.5 ${
+                      className={`py-2 px-2.5 h-auto rounded-xl text-xs font-black flex-col text-center [&>span]:flex-col [&>span]:items-center [&>span]:gap-0.5 ${
                         itemCourse === c.num
-                          ? 'bg-slate-900 text-white shadow-xs'
-                          : 'bg-card text-foreground hover:bg-muted border border-border'
+                          ? 'bg-slate-900 text-white shadow-xs hover:bg-slate-900 hover:text-white'
+                          : 'bg-card text-foreground hover:bg-muted hover:text-foreground border border-border'
                       }`}
                     >
                       <span>C{c.num}</span>
                       <span className="text-[9px] opacity-75 font-normal">{c.num === 1 ? 'First' : c.num === 2 ? 'Main' : 'Sweet'}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -630,31 +646,36 @@ export function MenuView() {
             {/* Modal Actions */}
             <div className="flex gap-3 pt-2 border-t border-border">
               <div className="flex items-center gap-1.5 bg-muted rounded-xl p-1 border border-border">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs active:scale-95"
+                  className="w-10 h-10 rounded-lg"
+                  aria-label="Decrease quantity"
                 >
                   <Minus className="w-4 h-4" />
-                </button>
+                </Button>
                 <span className="font-mono font-black text-sm px-3">{quantity}</span>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-lg bg-card text-base font-black hover:bg-muted/80 flex items-center justify-center shadow-xs active:scale-95"
+                  className="w-10 h-10 rounded-lg"
+                  aria-label="Increase quantity"
                 >
                   <Plus className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={submitModifiers}
-                className="flex-1 bg-foreground hover:bg-foreground/90 text-background font-black rounded-xl py-3 text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-between px-4"
+                className="flex-1 bg-foreground hover:bg-foreground/90 text-background hover:text-background font-black rounded-xl py-3 h-auto text-xs uppercase tracking-wider shadow-md px-4 [&>span]:w-full [&>span]:justify-between"
               >
                 <span>Add to Ticket (Seat {activeSeat > 0 ? activeSeat : 'Shared'})</span>
                 <span className="font-mono text-sm">${(currentTotalItemPrice / 100).toFixed(2)}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -671,12 +692,15 @@ export function MenuView() {
                 </span>
                 <h3 className="text-base font-black text-foreground uppercase">Ring Open Custom Item</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowOpenItemModal(false)}
-                className="w-7 h-7 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground font-bold flex items-center justify-center"
+                aria-label="Close open item modal"
+                className="h-7 w-7 rounded-full"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3">
@@ -740,15 +764,17 @@ export function MenuView() {
             </div>
 
             <div className="pt-3 border-t border-border flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setShowOpenItemModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:bg-muted"
+                className="flex-1 py-2.5 h-auto"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="warning"
                 onClick={() => {
                   const priceCents = Math.round(parseFloat(openItemPriceDollars || '0') * 100);
                   if (!openItemName.trim()) { alert('Item name required'); return; }
@@ -767,10 +793,10 @@ export function MenuView() {
 
                   setShowOpenItemModal(false);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm"
+                className="flex-1 py-2.5 h-auto uppercase tracking-wider bg-amber-500 hover:bg-amber-600 text-slate-950"
               >
                 Add Open Item
-              </button>
+              </Button>
             </div>
           </div>
         </div>

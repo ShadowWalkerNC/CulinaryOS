@@ -266,39 +266,33 @@ export function StaffPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Navigation Tabs */}
           <div className="bg-muted p-1 rounded-xl flex items-center gap-1 border border-border">
-            <button
+            <Button
               onClick={() => setActiveTab('staff')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                activeTab === 'staff'
-                  ? 'bg-background text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              variant="ghost"
+              size="sm"
+              className={activeTab === 'staff' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
             >
-              <Users className="w-3.5 h-3.5 inline mr-1.5" />
+              <Users className="w-3.5 h-3.5" />
               Staff & PINs ({staff.length})
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('ats')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                activeTab === 'ats'
-                  ? 'bg-background text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              variant="ghost"
+              size="sm"
+              className={activeTab === 'ats' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
             >
-              <Briefcase className="w-3.5 h-3.5 inline mr-1.5 text-amber-500" />
+              <Briefcase className="w-3.5 h-3.5 text-amber-500" />
               Hiring ATS ({applications.length})
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('postings')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                activeTab === 'postings'
-                  ? 'bg-background text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              variant="ghost"
+              size="sm"
+              className={activeTab === 'postings' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'}
             >
-              <Sparkles className="w-3.5 h-3.5 inline mr-1.5 text-purple-500" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
               Job Postings ({jobs.length})
-            </button>
+            </Button>
           </div>
 
           <a
@@ -335,12 +329,13 @@ export function StaffPage() {
             )}
             <span>{msg.text}</span>
           </div>
-          <button
+          <Button
+            variant="link"
+            className="h-auto px-0 py-0 text-inherit opacity-80 hover:opacity-100"
             onClick={() => setMsg(null)}
-            className="text-xs font-bold hover:underline opacity-80 hover:opacity-100"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -511,17 +506,15 @@ export function StaffPage() {
               { id: 'offer', label: 'Offer Extended', count: applications.filter(a => a.stage === 'offer').length },
               { id: 'hired', label: 'Hired & Onboarded', count: applications.filter(a => a.stage === 'hired').length },
             ].map((st) => (
-              <button
+              <Button
                 key={st.id}
                 onClick={() => setSelectedStageFilter(st.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  selectedStageFilter === st.id
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
+                variant={selectedStageFilter === st.id ? 'default' : 'secondary'}
+                size="sm"
+                className="rounded-xl"
               >
                 {st.label} ({st.count})
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -733,9 +726,13 @@ export function StaffPage() {
           >
             <div className="flex justify-between items-center border-b border-border pb-3">
               <h3 className="text-base font-bold text-foreground">Create Job Requisition (CulinaryJobs)</h3>
-              <button onClick={() => setShowNewJobModal(false)} className="text-muted-foreground hover:text-foreground">
+              <Button
+                onClick={() => setShowNewJobModal(false)}
+                variant="ghost"
+                className="h-auto w-auto p-1 text-muted-foreground hover:text-foreground"
+              >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleCreateJobRequisition} className="space-y-3.5">

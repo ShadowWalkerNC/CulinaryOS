@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useVendors, useAddVendor, usePurchaseOrders, useCreatePO, useUpdatePOStatus } from '../hooks/useVendor';
 import type { POLineItem } from '../hooks/useVendor';
+import { Button } from '@culinaryos/ui';
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'text-zinc-400',
@@ -69,9 +70,9 @@ export default function VendorPage() {
           <input className={inputCls} placeholder="Contact name" value={vForm.contact_name} onChange={e => setVForm(f => ({ ...f, contact_name: e.target.value }))} />
           <input className={inputCls} placeholder="Email" value={vForm.email} onChange={e => setVForm(f => ({ ...f, email: e.target.value }))} />
           <input className={inputCls} placeholder="Phone" value={vForm.phone} onChange={e => setVForm(f => ({ ...f, phone: e.target.value }))} />
-          <button type="submit" className={`${btnCls} sm:col-span-4`} disabled={addVendor.isPending}>
-            {addVendor.isPending ? 'Saving…' : 'Add Vendor'}
-          </button>
+          <Button type="submit" variant="ghost" isLoading={addVendor.isPending} className={`${btnCls} sm:col-span-4`}>
+            Add Vendor
+          </Button>
         </form>
         {vLoading ? <p className="text-zinc-500 text-sm mt-3">Loading…</p> : (
           <ul className="mt-3 space-y-1">
@@ -106,10 +107,10 @@ export default function VendorPage() {
             </div>
           ))}
           <div className="flex gap-3">
-            <button type="button" onClick={addLine} className="text-xs text-amber-400 hover:text-amber-300">+ line</button>
-            <button type="submit" className={btnCls} disabled={createPO.isPending}>
-              {createPO.isPending ? 'Creating…' : 'Create PO'}
-            </button>
+            <Button type="button" onClick={addLine} variant="ghost" className="h-auto w-auto p-0 text-xs font-normal text-amber-400 hover:bg-transparent hover:text-amber-300">+ line</Button>
+            <Button type="submit" variant="ghost" isLoading={createPO.isPending} className={btnCls}>
+              Create PO
+            </Button>
           </div>
         </form>
       </section>
@@ -139,12 +140,13 @@ export default function VendorPage() {
                     <td className={`py-2 font-medium ${STATUS_COLORS[po.status]}`}>{po.status}</td>
                     <td className="py-2 text-right">
                       {po.status !== 'invoiced' && (
-                        <button
+                        <Button
                           onClick={() => updateStatus.mutate({ id: po.id, status: next[po.status] })}
-                          className="text-xs text-amber-400 hover:text-amber-300"
+                          variant="ghost"
+                          className="h-auto w-auto p-0 text-xs font-normal text-amber-400 hover:bg-transparent hover:text-amber-300"
                         >
                           → {next[po.status]}
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

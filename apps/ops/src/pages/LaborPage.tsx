@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEmployees, useAddEmployee, useShifts, useAddShift, useDeleteShift } from '../hooks/useLabor';
+import { Button } from '@culinaryos/ui';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
@@ -69,9 +70,9 @@ export default function LaborPage() {
           <input className={inputCls} placeholder="Name" value={empForm.name} onChange={e => setEmpForm(f => ({ ...f, name: e.target.value }))} />
           <input className={inputCls} placeholder="Role (e.g. Line Cook)" value={empForm.role} onChange={e => setEmpForm(f => ({ ...f, role: e.target.value }))} />
           <input className={inputCls} type="number" placeholder="Hourly Rate" value={empForm.hourly_rate} onChange={e => setEmpForm(f => ({ ...f, hourly_rate: e.target.value }))} />
-          <button type="submit" className={`${btnCls} sm:col-span-3`} disabled={addEmployee.isPending}>
-            {addEmployee.isPending ? 'Adding…' : 'Add Employee'}
-          </button>
+          <Button type="submit" variant="ghost" isLoading={addEmployee.isPending} className={`${btnCls} sm:col-span-3`}>
+            Add Employee
+          </Button>
         </form>
         {empLoading ? (
           <p className="text-zinc-500 text-sm mt-4">Loading employees…</p>
@@ -101,9 +102,9 @@ export default function LaborPage() {
           </select>
           <input className={inputCls} type="time" value={shiftForm.start_time} onChange={e => setShiftForm(f => ({ ...f, start_time: e.target.value }))} />
           <input className={inputCls} type="time" value={shiftForm.end_time} onChange={e => setShiftForm(f => ({ ...f, end_time: e.target.value }))} />
-          <button type="submit" className={btnCls} disabled={addShift.isPending}>
-            {addShift.isPending ? 'Logging…' : 'Log Shift'}
-          </button>
+          <Button type="submit" variant="ghost" isLoading={addShift.isPending} className={btnCls}>
+            Log Shift
+          </Button>
         </form>
       </section>
 
@@ -138,7 +139,7 @@ export default function LaborPage() {
                     <td className="py-2">{hrs.toFixed(2)}</td>
                     <td className="py-2 text-right text-amber-400">{fmt(hrs * rate)}</td>
                     <td className="py-2 text-right">
-                      <button onClick={() => deleteShift.mutate(s.id)} className="text-zinc-600 hover:text-red-400 text-xs ml-4">✕</button>
+                      <Button onClick={() => deleteShift.mutate(s.id)} variant="ghost" aria-label="Delete shift" className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4">✕</Button>
                     </td>
                   </tr>
                 );

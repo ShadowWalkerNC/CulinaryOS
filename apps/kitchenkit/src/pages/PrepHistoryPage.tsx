@@ -1,5 +1,6 @@
 import { History, ChevronDown, ChevronUp, Loader2, CheckCircle2, Circle } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@culinaryos/ui';
 import { usePrepHistory } from '@/hooks/usePrepHistory';
 
 function formatDate(dateStr: string) {
@@ -130,21 +131,25 @@ export default function PrepHistoryPage() {
       {/* Pagination */}
       {!isLoading && data && (
         <div className="flex items-center justify-between pt-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={prevPage}
             disabled={page === 0}
-            className="btn-ghost text-sm disabled:opacity-30"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100 disabled:opacity-30"
           >
             ← Newer
-          </button>
+          </Button>
           <span className="text-xs text-zinc-600">Page {page + 1}</span>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={nextPage}
             disabled={!data.hasMore}
-            className="btn-ghost text-sm disabled:opacity-30"
+            className="text-sm text-zinc-400 hover:bg-surface-card hover:text-zinc-100 disabled:opacity-30"
           >
             Older →
-          </button>
+          </Button>
         </div>
       )}
     </div>
