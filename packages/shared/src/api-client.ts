@@ -19,6 +19,15 @@ function readEnv(key: string): string | undefined {
 
 const SESSION_KEY = 'culinaryos_session';
 
+/**
+ * On Windows, `localhost` can resolve to an unrelated IPv6 listener while the
+ * CulinaryOS dev API listens only on IPv4. Keep browser clients on the known
+ * loopback address without changing remote or HTTPS deployment URLs.
+ */
+export function normalizeLocalApiBase(value: string): string {
+  return value.replace(/^http:\/\/localhost(?=[:/]|$)/i, 'http://127.0.0.1');
+}
+
 export function getApiBase(): string {
   const envUrl = readEnv('VITE_API_URL');
   // If explicitly configured with a non-localhost remote URL, honor it
@@ -34,7 +43,7 @@ export function getApiBase(): string {
       return `${protocol}//${host}:3000`;
     }
   }
-  return envUrl ?? 'http://localhost:3000';
+  return envUrl ? normalizeLocalApiBase(envUrl) : 'http://127.0.0.1:3000';
 }
 
 export function getTenantId(fallback?: string): string {

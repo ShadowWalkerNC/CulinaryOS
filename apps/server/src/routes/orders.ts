@@ -13,7 +13,7 @@
 import { Hono } from 'hono';
 import { handleIncomingEvent } from '@culinaryos/event-bus';
 import { calculateVoidWaste, isPostSendStatus } from '@culinaryos/waste-engine';
-import { calculateMultiRateTax } from '@culinaryos/shared';
+import { calculateMultiRateTax, normalizeLocalApiBase } from '@culinaryos/shared';
 import { requireTenant, ok, err } from '../middleware/auth.js';
 import { createMockTicketsFromOrder, decrementMock86 } from '../lib/mock-kitchen.js';
 import { verifyManagerPinDirectly, logAuditTrail } from '../lib/audit.js';
@@ -25,11 +25,15 @@ ordersRoutes.use('*', requireTenant);
 
 /** Prefer CULINARYOS_URL; accept bare host in CULINARYOS_HOST. */
 function resolveCulinaryOsUrl(): string {
-  if (process.env.CULINARYOS_URL) return process.env.CULINARYOS_URL.replace(/\/$/, '');
+  if (process.env.CULINARYOS_URL) {
+    return normalizeLocalApiBase(process.env.CULINARYOS_URL.replace(/\/$/, ''));
+  }
   const host = process.env.CULINARYOS_HOST;
-  if (!host) return 'http://localhost:3000';
-  if (host.startsWith('http://') || host.startsWith('https://')) return host.replace(/\/$/, '');
-  return `https://${host}`;
+  if (!host) return 'http://127.0.0.1:3000';
+  if (host.startsWith('http://') || host.startsWith('https://')) {
+    return normalizeLocalApiBase(host.replace(/\/$/, ''));
+  }
+  return normalizeLocalApiBase(`https://${host}`);
 }
 
 // Local Mock Database for Offline/Demo Mode

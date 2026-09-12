@@ -6,6 +6,8 @@ import {
   translateTicketItem,
   abbreviateItemName,
   abbreviateModifier,
+  apiHeaders,
+  getApiBase,
   type SupportedLanguage,
 } from '@culinaryos/shared';
 
@@ -123,11 +125,10 @@ export function TicketCard({
       });
     } else {
       // Direct API fallback
-      const apiBase = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000';
       const tenantId = (import.meta as any).env?.VITE_TENANT_ID || '00000000-0000-0000-0000-000000000001';
-      await fetch(`${apiBase}/v1/ops/waste/quick`, {
+      await fetch(`${getApiBase()}/v1/ops/waste/quick`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId },
+        headers: apiHeaders(tenantId),
         body: JSON.stringify({ ingredient: itemName, itemName, quantity: 1, reason }),
       }).catch(() => {});
     }

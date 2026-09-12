@@ -202,6 +202,8 @@ Never commit values. Always use `.env.example`.
 ### Lint / Test / Typecheck Caveats
 
 - `pnpm run typecheck` is the reliable static check across all packages.
+- `pnpm build` — build the project.
+- Verified source style: use ESM `import`/`export` syntax in `.ts` sources; name test files `*.test.ts`.
 - Test suite: `bun test tests/server/` or tsx runner `node ./scripts/run-all-tests.cjs`.
 - Seed data: `pnpm seed` (`scripts/seed.ts`). Local stack: `pnpm local:supabase`.
 

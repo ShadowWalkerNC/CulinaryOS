@@ -18,6 +18,7 @@ export interface OfflineTransactionDelta {
   action:
     | 'create_order'
     | 'add_line_item'
+    | 'void_line_item'
     | 'apply_discount'
     | 'finalize_payment'
     | 'void_order'

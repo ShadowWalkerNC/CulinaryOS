@@ -1,3 +1,4 @@
+@import '@culinaryos/ui/culinary-theme.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

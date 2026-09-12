@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
-import { Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { MenuPage } from './pages/Menu';
 import { StaffPage } from './pages/Staff';
 import { PantryPage } from './pages/Pantry';
 import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
+<<<<<<< Updated upstream
 import { Button, Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp } from '@culinaryos/ui';
+=======
+import { CompactNavigation, CulinaryAppLauncher, type CompactNavigationItem } from '@culinaryos/ui';
+>>>>>>> Stashed changes
 
 export function App() {
-  const [showApps, setShowApps] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const adminNav = [
     { to: '/menu', label: 'Menu Editor', icon: 'restaurant_menu' },
@@ -20,19 +24,18 @@ export function App() {
     { to: '/settings', label: 'Settings & Routing', icon: 'tune' },
   ];
 
-  const appModules = [
-    { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet },
-    { id: 'kds', label: 'KDS Kitchen', port: '5173', desc: 'Kitchen tickets, station filters & aging timers', icon: Tv },
-    { id: 'admin', label: 'Back-Office Admin', port: '5174', desc: 'Menu editor, staff PINs, auto-PO & settings', icon: Laptop, active: true },
-    { id: 'kitchenkit', label: 'KitchenKit', port: '5175', desc: 'Shift prep lists, recipe ratios & shelf life', icon: ChefHat },
-    { id: 'web', label: 'Guest Storefront', port: '5176', desc: 'Online customer ordering & live order tracker', icon: ShoppingBag },
-    { id: 'ops', label: 'CulinaryOps', port: '5177', desc: 'Theoretical vs actual food cost & waste ledger', icon: TrendingUp },
-  ];
+  const adminNavigation: CompactNavigationItem[] = adminNav.map((tab, index) => ({
+    id: tab.to,
+    label: tab.label,
+    primary: index < 3,
+    icon: <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>,
+  }));
+  const activeAdminPath = adminNav.find((tab) => tab.to === location.pathname)?.to ?? '/menu';
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col antialiased select-none">
       {/* Single Unified Admin Navigation Bar */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 h-15 flex items-center justify-between shrink-0 shadow-xs gap-4 sticky top-0 z-30">
+      <header className="bg-white border-b border-slate-200 px-3 sm:px-6 min-h-16 py-2 flex items-center justify-between shrink-0 shadow-xs gap-2 sticky top-0 z-30">
         {/* Left: Brand & Title */}
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
@@ -51,29 +54,17 @@ export function App() {
           </div>
         </div>
 
-        {/* Center: Admin Primary Navigation Tabs — Symbol & Icon Forward */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar">
-          {adminNav.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              className={({ isActive }) =>
-                `px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-white text-slate-950 shadow-xs border border-slate-200/90'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-                }`
-              }
-            >
-              <span className={`material-symbols-outlined text-[18px] ${tab.to === '/menu' ? 'text-amber-600' : tab.to === '/staff' ? 'text-blue-600' : tab.to === '/pantry' ? 'text-emerald-600' : tab.to === '/tools' ? 'text-purple-600' : tab.to === '/integrations' ? 'text-cyan-600' : 'text-slate-600'}`}>
-                {tab.icon}
-              </span>
-              <span>{tab.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+        <div className="min-w-0 flex-1 flex justify-center">
+          <CompactNavigation
+            items={adminNavigation}
+            activeId={activeAdminPath}
+            onSelect={navigate}
+            label="Admin sections"
+          />
+        </div>
 
         {/* Right: App Switcher & Server Status */}
+<<<<<<< Updated upstream
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Button
             type="button"
@@ -86,6 +77,10 @@ export function App() {
             <Grid className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Apps</span>
           </Button>
+=======
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <CulinaryAppLauncher activeApp="admin" />
+>>>>>>> Stashed changes
 
           <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -94,6 +89,7 @@ export function App() {
         </div>
       </header>
 
+<<<<<<< Updated upstream
       {/* Mobile Sub-Navigation Bar */}
       <nav className="md:hidden flex items-center gap-1 bg-white border-b border-slate-200 p-2 overflow-x-auto no-scrollbar shrink-0">
         {adminNav.map((tab) => (
@@ -209,8 +205,10 @@ export function App() {
         </div>
       )}
 
+=======
+>>>>>>> Stashed changes
       {/* Main Workspace Router */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
         <Routes>
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/staff" element={<StaffPage />} />

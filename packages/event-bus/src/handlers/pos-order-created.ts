@@ -14,6 +14,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 type SupabaseClient = any;
 
+export function initialCourseState(courseNumber: number) {
+  const fired = courseNumber <= 1;
+  return {
+    status: fired ? 'fired' : 'queued',
+    courseHoldStatus: fired ? 'fired' : 'held',
+  } as const;
+}
+
 export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
   event: DomainEvent<OrderCreatedPayload>,
   supabase: SupabaseClient
@@ -42,7 +50,8 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
       (i.modifiers ?? []).some((m: string) => /allerg/i.test(m))
     );
 
-    const isFirstCourse = courseNumber <= 1;
+    const initialState = initialCourseState(courseNumber);
+    const isFirstCourse = initialState.courseHoldStatus === 'fired';
     const ticketId = uuidv4();
     const now = new Date().toISOString();
 
@@ -52,7 +61,8 @@ export const handleOrderCreated: EventHandler<OrderCreatedPayload> = async (
       order_id:           orderId,
       order_number:       resolvedOrderNumber,
       station,
-      status:             isFirstCourse ? 'fired' : 'queued',
+      status:             initialState.status,
+      course_hold_status: initialState.courseHoldStatus,
       priority:           hasAllergy ? 'allergy' : 'normal',
       table_number:       tableNumber ?? null,
       course_number:      courseNumber,

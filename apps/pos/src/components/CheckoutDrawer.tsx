@@ -6,11 +6,13 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { apiHeaders, getApiBase } from '@culinaryos/shared';
+import { apiHeaders, getApiBase, isPlaceholderSecret } from '@culinaryos/shared';
 import { usePOSStore } from '../lib/store';
 import { Button } from '@culinaryos/ui';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const rawKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const isLiveStripe = !isPlaceholderSecret(rawKey);
+const stripePromise = isLiveStripe ? loadStripe(rawKey!) : null;
 const API = getApiBase();
 
 const STRIPE_APPEARANCE = {
@@ -26,17 +28,23 @@ const STRIPE_APPEARANCE = {
 
 const TIP_PRESETS = [0, 15, 18, 20, 25];
 
+export type CheckoutCompletion = { mode: 'stripe' | 'demo' };
+
 interface CheckoutDrawerProps {
   orderId:    string;
   totalCents: number;
-  onSuccess:  () => void;
+  onSuccess:  (completion: CheckoutCompletion) => void;
   onClose:    () => void;
 }
 
 function PaymentForm({
   orderId, totalCents, tipCents, onSuccess, tenantId,
 }: {
-  orderId: string; totalCents: number; tipCents: number; onSuccess: () => void; tenantId: string;
+  orderId: string;
+  totalCents: number;
+  tipCents: number;
+  onSuccess: (completion: CheckoutCompletion) => void;
+  tenantId: string;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -81,7 +89,7 @@ function PaymentForm({
     }
 
     setBusy(false);
-    onSuccess();
+    onSuccess({ mode: 'stripe' });
   }
 
   const chargeCents = totalCents + tipCents;
@@ -144,6 +152,15 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
   const chargeCents = totalCents + tipCents;
 
   useEffect(() => {
+    // Placeholder keys are a preview-only state. Do not create a mock
+    // PaymentIntent or let the UI imply that money was captured.
+    if (!isLiveStripe) {
+      setInitError(null);
+      setClientSecret('demo-preview');
+      setLoading(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
     (async () => {
       setLoading(true);
@@ -228,9 +245,40 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
         {loading   && <div style={{ color: '#6b7299' }}>Initialising payment…</div>}
         {initError && <div style={{ color: '#ef4444' }}>{initError}</div>}
         {!loading && clientSecret && (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
-            <PaymentForm orderId={orderId} totalCents={totalCents} tipCents={tipCents} tenantId={tenantId} onSuccess={onSuccess} />
-          </Elements>
+          isLiveStripe && stripePromise ? (
+            <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
+              <PaymentForm orderId={orderId} totalCents={totalCents} tipCents={tipCents} tenantId={tenantId} onSuccess={onSuccess} />
+            </Elements>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: '#1a1d27', padding: '16px', borderRadius: '8px', border: '1px solid #2e3150' }}>
+              <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                <span style={{ display: 'inline-block', background: '#7c6aff22', color: '#7c6aff', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, fontSize: '11px', marginRight: '6px' }}>DEMO TENDER</span>
+                Stripe is unconfigured. This is a checkout preview only; no card is charged or recorded.
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
+                <span>Order total</span><span>${(totalCents / 100).toFixed(2)}</span>
+              </div>
+              {tipCents > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
+                  <span>Tip</span><span>${(tipCents / 100).toFixed(2)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '16px', borderTop: '1px solid #2e3150', paddingTop: '12px' }}>
+                <span>Charge total</span><span>${(chargeCents / 100).toFixed(2)}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSuccess({ mode: 'demo' })}
+                style={{
+                  padding: '14px', borderRadius: '8px', border: 'none',
+                  background: '#7c6aff', color: '#fff',
+                  fontWeight: 700, fontSize: '15px', cursor: 'pointer',
+                }}
+              >
+                Finish Demo Preview — No Charge
+              </button>
+            </div>
+          )
         )}
       </div>
     </div>

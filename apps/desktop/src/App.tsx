@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { Button } from '@culinaryos/ui';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { PairingModal } from './components/PairingModal';
+import {
+  CompactNavigation,
+  getCulinaryAppModule,
+  resolveCulinaryAppHref,
+  type CompactNavigationItem,
+} from '@culinaryos/ui';
 
 interface SurfaceTab {
   id: string;
@@ -13,15 +19,29 @@ interface SurfaceTab {
   description: string;
 }
 
-const SURFACES: SurfaceTab[] = [
-  { id: 'pos', name: 'POS Terminal', url: 'http://localhost:5172', icon: 'point_of_sale', shortcut: 'F1', port: 5172, description: 'Table orders, 3D floor map, checkout' },
-  { id: 'kds', name: 'Kitchen KDS', url: 'http://localhost:5173', icon: 'soup_kitchen', shortcut: 'F2', port: 5173, description: 'Ticket aging, bump bar, station routing' },
-  { id: 'admin', name: 'Admin Back-Office', url: 'http://localhost:5174', icon: 'admin_panel_settings', shortcut: 'F3', port: 5174, description: 'Pantry inventory, menu editor, staff & tools' },
-  { id: 'web', name: 'Storefront', url: 'http://localhost:5176/menu/demo', icon: 'storefront', shortcut: 'F4', port: 5176, description: 'Customer ordering, dietary filters, delivery' },
-  { id: 'kitchenkit', name: 'KitchenKit', url: 'http://localhost:5175', icon: 'menu_book', shortcut: 'F5', port: 5175, description: 'Batch scaling, prep planner, vendor POs' },
-  { id: 'ops', name: 'CulinaryOps', url: 'http://localhost:5177', icon: 'monitoring', shortcut: 'F6', port: 5177, description: 'Food waste diagnostics, labor, plate economics' },
-  { id: 'marketing', name: 'Marketing & Hub', url: 'http://localhost:5176', icon: 'campaign', shortcut: 'F7', port: 5176, description: 'Public marketing landing page, ROI calculator & specs' },
-];
+const SURFACE_DETAILS = [
+  { id: 'pos', icon: 'point_of_sale', shortcut: 'F1' },
+  { id: 'kds', icon: 'soup_kitchen', shortcut: 'F2' },
+  { id: 'admin', icon: 'admin_panel_settings', shortcut: 'F3' },
+  { id: 'web', icon: 'storefront', shortcut: 'F4' },
+  { id: 'kitchenkit', icon: 'menu_book', shortcut: 'F5' },
+  { id: 'ops', icon: 'monitoring', shortcut: 'F6' },
+  { id: 'recipeos', icon: 'book_4', shortcut: 'F7' },
+] as const;
+
+const SURFACES: SurfaceTab[] = SURFACE_DETAILS.map((detail) => {
+  const app = getCulinaryAppModule(detail.id);
+  const url = resolveCulinaryAppHref(detail.id);
+  return {
+    id: detail.id,
+    name: app.label,
+    url: detail.id === 'web' ? `${url}menu/demo` : url,
+    icon: detail.icon,
+    shortcut: detail.shortcut,
+    port: app.port,
+    description: app.description,
+  };
+});
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('pos');
@@ -29,16 +49,20 @@ export function App() {
   const [pinUser] = useState<string>('Server #1234');
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
   const [isPairingOpen, setIsPairingOpen] = useState<boolean>(false);
+  const workstationNavigation: CompactNavigationItem[] = SURFACES.map((surface, index) => ({
+    id: surface.id,
+    label: surface.name,
+    primary: index < 4,
+    icon: <span className="material-symbols-outlined text-[17px]">{surface.icon}</span>,
+  }));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F1') { e.preventDefault(); setActiveTab('pos'); }
-      if (e.key === 'F2') { e.preventDefault(); setActiveTab('kds'); }
-      if (e.key === 'F3') { e.preventDefault(); setActiveTab('admin'); }
-      if (e.key === 'F4') { e.preventDefault(); setActiveTab('web'); }
-      if (e.key === 'F5') { e.preventDefault(); setActiveTab('kitchenkit'); }
-      if (e.key === 'F6') { e.preventDefault(); setActiveTab('ops'); }
-      if (e.key === 'F7') { e.preventDefault(); setActiveTab('marketing'); }
+      const matchingSurface = SURFACES.find((surface) => surface.shortcut === e.key);
+      if (matchingSurface) {
+        e.preventDefault();
+        setActiveTab(matchingSurface.id);
+      }
       if (e.key === 'F11') { e.preventDefault(); setIsKiosk((k) => !k); }
       if (e.key === 'F9' || (e.altKey && e.key.toLowerCase() === 'd')) {
         e.preventDefault();
@@ -58,7 +82,7 @@ export function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none overflow-hidden">
       {/* Top Desktop Master Navigation Bar */}
-      <header className="h-13 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-lg gap-3">
+      <header className="min-h-16 py-2 bg-slate-900 border-b border-slate-800 px-3 sm:px-4 flex flex-wrap items-center justify-between shrink-0 shadow-lg gap-2">
         {/* Left: Brand Identity & Active Surface */}
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2.5">
@@ -78,6 +102,7 @@ export function App() {
           <div className="h-5 w-px bg-slate-800 hidden md:block" />
         </div>
 
+<<<<<<< Updated upstream
         {/* Center: Surface Tab Strip */}
         <nav className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
           {SURFACES.map((s) => {
@@ -106,16 +131,31 @@ export function App() {
             );
           })}
         </nav>
+=======
+        <div className="min-w-0 flex-1 flex justify-center">
+          <CompactNavigation
+            items={workstationNavigation}
+            activeId={activeTab}
+            onSelect={setActiveTab}
+            label="Workstation surfaces"
+            tone="dark"
+          />
+        </div>
+>>>>>>> Stashed changes
 
         {/* Right Status & Tools Controls */}
-        <div className="flex items-center gap-2 text-xs shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs shrink-0">
           {/* LAN QR Pairing Button */}
           <Button
             onClick={() => setIsPairingOpen(true)}
             title="Mobile & Tablet QR Pairing (F10)"
+<<<<<<< Updated upstream
             variant="secondary"
             size="sm"
             className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
+=======
+            className="min-h-[48px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+>>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[15px] text-orange-400">qr_code_2</span>
             <span className="hidden lg:inline">Pair Mobile</span>
@@ -125,16 +165,20 @@ export function App() {
           <Button
             onClick={() => setIsDiagnosticsOpen(true)}
             title="System Diagnostics & Preflight (F9)"
+<<<<<<< Updated upstream
             variant="secondary"
             size="sm"
             className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
+=======
+            className="min-h-[48px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+>>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[15px] text-emerald-400">health_and_safety</span>
             <span className="hidden lg:inline">Diagnostics</span>
           </Button>
 
           {/* Active PIN Staff Session */}
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+          <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>{pinUser}</span>
           </div>
@@ -151,9 +195,13 @@ export function App() {
               }
             }}
             title="Toggle Kiosk Mode (F11)"
+<<<<<<< Updated upstream
             variant="secondary"
             size="icon"
             className="h-8 w-8 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200"
+=======
+            className="min-h-[48px] min-w-[48px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+>>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[16px]">
               {isKiosk ? 'fullscreen_exit' : 'fullscreen'}

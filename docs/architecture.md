@@ -33,17 +33,22 @@ Restaurant software runs in hostile conditions: poor WiFi, rushed staff, mid-ser
 
 ---
 
-## Client Surface Map
+## Application Surface Map
 
 | Client | Platform | Tech | Users | Connectivity |
 |---|---|---|---|---|
 | POS Terminal | Web (tablet / desktop browser) | React + Vite + Three.js | Server, Cashier | **Offline-first** |
 | KDS Display | Web (mounted display / tablet) | React + Vite | Cook | **Offline-capable** |
 | Admin Panel | Web (desktop browser) | React + Vite | Manager, Owner | Online preferred |
-| Online Ordering | Web (iOS, Android, Desktop) | React + Vite | Guest customer | Online required |
+| Guest Commerce | Web (iOS, Android, Desktop) | React + Vite | Guest customer | Online required |
+| Operations | Web (desktop browser) | React + Vite | Manager, Owner | Online preferred |
+| KitchenKit | Web (kitchen / desktop browser) | React + Vite | Chef, Prep Lead | Online preferred |
+| RecipeOS | Web | Next.js | Chef, Home Cook | Authenticated |
+| Marketing | Public web | Next.js | Prospect | Public |
+| Desktop Workstation | Local desktop web shell | React + Vite | Operator | Local network |
 | Mobile Companion | iOS + Android | React Native + Expo | Staff | Stub — future |
 
-All operational clients are **web-first React applications** built with Vite. No native app install is required for any operational surface. The mobile companion (`mobile/`) is an early stub.
+The canonical ownership and migration status for every surface is maintained in [APP_SURFACE_OWNERSHIP.md](APP_SURFACE_OWNERSHIP.md). The consolidation target is `apps/web` for both public product marketing and guest commerce. `apps/marketing` remains transitional until its unique content and routes have verified replacements; it has not been deleted.
 
 ---
 
@@ -56,7 +61,12 @@ CulinaryOS/
 │   ├── pos/             ← POS terminal (React + Vite + Three.js)
 │   ├── kds/             ← Kitchen Display (React + Vite)
 │   ├── admin/           ← Admin portal (React + Vite)
-│   └── web/             ← Online ordering (React + Vite)
+│   ├── web/             ← Guest commerce (React + Vite)
+│   ├── ops/             ← Operations analytics (React + Vite)
+│   ├── kitchenkit/      ← Prep and recipe operations (React + Vite)
+│   ├── desktop/         ← Local workstation shell (React + Vite)
+│   ├── marketing/       ← Public marketing (Next.js)
+│   └── recipeos/        ← Recipe vault (Next.js)
 ├── packages/
 │   ├── shared/          ← Domain models, course-engine, dietary engine, offline-sync
 │   ├── auth/            ← PIN auth, JWT helpers, managerGate RBAC
@@ -94,7 +104,7 @@ The Hono `requireTenant` middleware runs on every authenticated route. It:
 2. Injects `tenantId` into the request context.
 3. Rejects requests with `403` if tenant context is missing.
 
-In **demo mode** (`AUTH_RELAXED=true` or placeholder Supabase URL), the middleware accepts any `X-Tenant-Id` header without JWT validation. This enables the full system to run without Supabase credentials.
+In **demo mode** (server Supabase credentials absent or placeholders), the middleware accepts an `X-Tenant-Id` header without JWT validation. A configured live deployment always requires a JWT or recognized device/internal key; `AUTH_RELAXED` cannot weaken that rule.
 
 ---
 
@@ -263,7 +273,7 @@ CulinaryOS is designed from the ground up for multi-tenant operation. Each resta
 |---|---|
 | **Tenant isolation** | Supabase RLS + `my_tenant_id()` SECURITY DEFINER |
 | **Terminal auth** | scrypt PIN hashing (`staff_pins` table) → JWT session |
-| **API auth** | JWT (Supabase Auth) or `AUTH_RELAXED=true` in demo mode |
+| **API auth** | JWT (Supabase Auth) or automatic header-only mode only when live server credentials are absent |
 | **RBAC** | `managerGate()` in `packages/auth`; role claim in JWT |
 | **Secrets** | `SUPABASE_SERVICE_ROLE_KEY` never exposed to browser; validated via `apps/server/src/lib/secrets.ts` |
 | **Migrations** | Forward-only; immutable once committed |

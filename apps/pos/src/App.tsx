@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePOSStore } from './lib/store';
 import { useOrder } from './lib/queries';
 import { TablesView }   from './views/TablesView';
@@ -14,38 +14,33 @@ import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
+<<<<<<< Updated upstream
   Button,
   Grid,
+=======
+>>>>>>> Stashed changes
   X,
-  ExternalLink,
-  Tablet,
-  Tv,
-  Laptop,
-  ChefHat,
-  ShoppingBag,
-  TrendingUp,
   Lock,
   ShoppingCart,
   Sheet,
   SheetContent,
+  CompactNavigation,
+  CulinaryAppLauncher,
+  type CompactNavigationItem,
 } from '@culinaryos/ui';
 
 export function App() {
   const { view, setView, activeOrderId, setActiveOrder, employee, setEmployee } = usePOSStore();
-  const [showApps, setShowApps] = useState(false);
-
-  const appModules = [
-    { id: 'pos', label: 'POS Terminal', port: '5172', desc: 'Point of sale, 2D/3D floor map & checkout', icon: Tablet, active: true },
-    { id: 'kds', label: 'KDS Kitchen', port: '5173', desc: 'Kitchen tickets, station filters & aging timers', icon: Tv },
-    { id: 'admin', label: 'Back-Office Admin', port: '5174', desc: 'Menu editor, staff PINs, auto-PO & settings', icon: Laptop },
-    { id: 'kitchenkit', label: 'KitchenKit', port: '5175', desc: 'Shift prep lists, recipe ratios & shelf life', icon: ChefHat },
-    { id: 'web', label: 'Guest Storefront', port: '5176', desc: 'Online customer ordering & live order tracker', icon: ShoppingBag },
-    { id: 'ops', label: 'CulinaryOps', port: '5177', desc: 'Theoretical vs actual food cost & waste ledger', icon: TrendingUp },
-    { id: 'marketing', label: 'Marketing Hub', port: '5179', desc: 'SaaS portal, pricing, self-serve signup & docs', icon: Laptop },
-  ];
 
   const { data: currentOrder } = useOrder(activeOrderId);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
+  // A ticket sheet is contextual to the current view. Moving to Menu, Pay,
+  // Tables, Home, or another section must release the sheet and its focus trap
+  // without clearing the active check.
+  useEffect(() => {
+    setMobileCartOpen(false);
+  }, [view]);
 
   // 1. Force Lock Screen if no employee session is active
   if (!employee) {
@@ -88,18 +83,47 @@ export function App() {
   const activeItems = (currentOrder?.items || []).filter((i: any) => !i.is_voided);
   const itemCount = activeItems.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0);
   const orderSubtotal = activeItems.reduce((sum: number, i: any) => sum + (i.line_total || 0), 0);
+  const posNavigation: CompactNavigationItem[] = [
+    { id: 'dashboard', label: 'Home', primary: true, icon: <span className="material-symbols-outlined text-[17px]">home</span> },
+    { id: 'tables', label: 'Floor Map', primary: true, icon: <span className="material-symbols-outlined text-[17px]">table_restaurant</span> },
+    { id: 'menu', label: 'Ticket', primary: true, disabled: !activeOrderId, icon: <span className="material-symbols-outlined text-[17px]">receipt_long</span> },
+    { id: 'checkout', label: 'Pay', primary: true, disabled: !activeOrderId, icon: <span className="material-symbols-outlined text-[17px]">payments</span> },
+    { id: 'tabs', label: 'Tabs', icon: <span className="material-symbols-outlined text-[17px]">local_bar</span> },
+    { id: 'recall', label: 'Recall', icon: <span className="material-symbols-outlined text-[17px]">history</span> },
+    { id: 'reports', label: 'Reports', icon: <span className="material-symbols-outlined text-[17px]">bar_chart</span> },
+    { id: 'cfd', label: 'CFD Screen', icon: <span className="material-symbols-outlined text-[17px]">devices</span> },
+    { id: 'settings', label: 'Settings', icon: <span className="material-symbols-outlined text-[17px]">settings</span> },
+  ];
+
+  const selectPOSSection = (id: string) => {
+    if (id === 'tables') {
+      setActiveOrder(null);
+      setView('tables');
+      return;
+    }
+    setView(id as typeof view);
+  };
 
   return (
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn select-none">
       {/* Single Unified POS Terminal Navigation Bar (Industrial Tablet Grade) */}
-      <header className="bg-slate-900 border-b border-slate-800 px-5 h-16 flex items-center justify-between shrink-0 shadow-md gap-4 text-white">
+      <header className="bg-slate-900 border-b border-slate-800 px-3 sm:px-5 min-h-16 py-2 flex items-center justify-between shrink-0 shadow-md gap-2 text-white">
         {/* Left: Brand Identity & Active Staff */}
+<<<<<<< Updated upstream
         <div className="flex items-center gap-3.5 shrink-0">
           <Button
+=======
+        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+          <button
+>>>>>>> Stashed changes
             type="button"
             variant="ghost"
             onClick={() => setView('dashboard')}
+<<<<<<< Updated upstream
             className="gap-2.5 text-left hover:opacity-90 hover:bg-transparent h-auto px-2 py-1 [&>span]:gap-2.5"
+=======
+            className="min-h-[48px] flex items-center gap-2.5 rounded-xl text-left hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+>>>>>>> Stashed changes
           >
             <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined filled text-[20px]">skillet</span>
@@ -119,15 +143,16 @@ export function App() {
             </div>
           </Button>
 
-          <div className="h-6 w-px bg-slate-800 shrink-0" />
+          <div className="hidden xl:block h-6 w-px bg-slate-800 shrink-0" />
 
-          <span className="text-xs font-bold text-slate-200 bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl flex items-center gap-1.5">
+          <span className="hidden xl:flex text-xs font-bold text-slate-200 bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>{employee.name}</span>
             <span className="text-slate-400 font-medium hidden md:inline">({employee.role})</span>
           </span>
         </div>
 
+<<<<<<< Updated upstream
         {/* Center: Quick Navigation View Buttons with Visual Symbols */}
         <nav className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border-2 border-slate-800 overflow-x-auto no-scrollbar">
           <Button
@@ -249,16 +274,29 @@ export function App() {
             <span>Settings</span>
           </Button>
         </nav>
+=======
+        {/* Quick rail on wide workstations; a labeled sheet trigger on compact devices. */}
+        <div className="min-w-0 flex-1 flex justify-center">
+          <CompactNavigation
+            items={posNavigation}
+            activeId={view}
+            onSelect={selectPOSSection}
+            label="POS sections"
+            tone="dark"
+          />
+        </div>
+>>>>>>> Stashed changes
 
         {/* Right: Connection, Apps & Lock */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Online</span>
           </div>
 
-          <ConnectionStatus />
+          <div className="hidden sm:block"><ConnectionStatus /></div>
 
+<<<<<<< Updated upstream
           <Button
             type="button"
             variant="outline"
@@ -273,11 +311,18 @@ export function App() {
             <Grid className="w-4 h-4" />
             <span className="hidden lg:inline">Apps</span>
           </Button>
+=======
+          <CulinaryAppLauncher activeApp="pos" tone="dark" />
+>>>>>>> Stashed changes
 
           <Button
             variant="outline"
             onClick={() => setEmployee(null)}
+<<<<<<< Updated upstream
             className="bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-rose-300 border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider gap-1.5 [&>span]:gap-1.5"
+=======
+            className="min-h-[48px] bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 active:scale-[0.97]"
+>>>>>>> Stashed changes
             title="Lock Terminal"
           >
             <Lock className="w-3.5 h-3.5" />
@@ -286,6 +331,7 @@ export function App() {
         </div>
       </header>
 
+<<<<<<< Updated upstream
       {/* App Switcher Modal */}
       {showApps && (
         <div
@@ -386,6 +432,8 @@ export function App() {
         </div>
       )}
 
+=======
+>>>>>>> Stashed changes
       {/* Main Workspace Layout — Dual-Pane on >=1024px, Single Canvas on <1024px */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left Side: Desktop Dual-Pane Receipt Panel (Hidden on screens < 1024px and when in focused checkout) */}

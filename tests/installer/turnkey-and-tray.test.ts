@@ -22,6 +22,30 @@ import { runDiagnostics } from '../../scripts/doctor';
 
 const repoRoot = path.resolve(__dirname, '../..');
 
+async function reserveAvailablePorts(count: number): Promise<number[]> {
+  const servers = await Promise.all(
+    Array.from({ length: count }, async () => {
+      const server = net.createServer();
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', () => resolve());
+      });
+      return server;
+    })
+  );
+
+  const ports = servers.map((server) => {
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('Expected a TCP address');
+    return address.port;
+  });
+
+  await Promise.all(
+    servers.map((server) => new Promise<void>((resolve) => server.close(() => resolve())))
+  );
+  return ports;
+}
+
 describe('Milestone 4: Turnkey Zero-Tech Installer & System Tray Engine', () => {
   describe('F4.1: Turnkey Zero-Tech Windows Installer Scripts', () => {
     it('verifies install-windows-turnkey.ps1 exists and contains complete setup sequence', () => {
@@ -70,18 +94,20 @@ describe('Milestone 4: Turnkey Zero-Tech Installer & System Tray Engine', () => 
     });
 
     it('detects available port on an ephemeral port', async () => {
-      const ephemeralPort = 49152 + Math.floor(Math.random() * 10000);
+      const [ephemeralPort] = await reserveAvailablePorts(1);
       const available = await isPortAvailable(ephemeralPort);
       expect(available).toBe(true);
     });
 
     it('detects occupied port when a socket server is actively listening', async () => {
-      const testPort = 49200 + Math.floor(Math.random() * 5000);
       const server = net.createServer();
 
       await new Promise<void>((resolve) => {
-        server.listen(testPort, '127.0.0.1', () => resolve());
+        server.listen(0, '127.0.0.1', () => resolve());
       });
+      const address = server.address();
+      if (!address || typeof address === 'string') throw new Error('Expected a TCP address');
+      const testPort = address.port;
 
       const availableWhileListening = await isPortAvailable(testPort, '127.0.0.1');
       expect(availableWhileListening).toBe(false);
@@ -105,18 +131,18 @@ describe('Milestone 4: Turnkey Zero-Tech Installer & System Tray Engine', () => 
     });
 
     it('scans port list and returns structured heal results', async () => {
-      const testPorts = [49301, 49302] as const;
+      const testPorts = await reserveAvailablePorts(2);
       const results = await healPortConflicts(testPorts);
 
       expect(results.length).toBe(2);
-      expect(results[0].port).toBe(49301);
+      expect(results[0].port).toBe(testPorts[0]);
       expect(results[0].occupied).toBe(false);
       expect(results[0].healed).toBe(false);
       expect(results[0].message).toContain('free');
     });
 
     it('ensurePortsFree returns true for available port range', async () => {
-      const testPorts = [49401, 49402] as const;
+      const testPorts = await reserveAvailablePorts(2);
       const allFree = await ensurePortsFree(testPorts);
       expect(allFree).toBe(true);
     });
@@ -262,4 +288,3 @@ describe('Milestone 4: Turnkey Zero-Tech Installer & System Tray Engine', () => 
     });
   });
 });
-

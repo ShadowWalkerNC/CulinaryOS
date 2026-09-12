@@ -6,6 +6,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test
 import { ordersRoutes } from '@culinaryos/server/routes/orders';
 import { kdsRoutes } from '@culinaryos/server/routes/kds';
 import { resetMockTickets } from '@culinaryos/server/lib/mock-kitchen';
+import { requestKdsTicketAction } from '../../apps/kds/src/lib/ticket-actions';
+import { initialCourseState } from '../../packages/event-bus/src/handlers/pos-order-created';
 
 const TENANT = '00000000-0000-0000-0000-000000000001';
 
@@ -110,6 +112,29 @@ describe('POS → KDS fire path (mock kitchen store)', () => {
     const fryBody = await fryRes.json();
     expect(fryBody.data).toHaveLength(1);
     expect(fryBody.data[0].station).toBe('fry');
+  });
+
+  it('uses the PATCH ticket-action contract from the KDS client', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+      requests.push({ url: String(url), init });
+      return new Response(null, { status: 204 });
+    }) as typeof fetch;
+
+    for (const action of ['bump', 'hold', 'fire'] as const) {
+      await requestKdsTicketAction('http://api.test', 'ticket/1', action, tenantHeaders(), fetchImpl);
+    }
+
+    expect(requests.map(({ url, init }) => ({ url, method: init?.method }))).toEqual([
+      { url: 'http://api.test/v1/kds/tickets/ticket%2F1/bump', method: 'PATCH' },
+      { url: 'http://api.test/v1/kds/tickets/ticket%2F1/hold', method: 'PATCH' },
+      { url: 'http://api.test/v1/kds/tickets/ticket%2F1/fire', method: 'PATCH' },
+    ]);
+  });
+
+  it('uses fired state for course one and held state for later courses', () => {
+    expect(initialCourseState(1)).toEqual({ status: 'fired', courseHoldStatus: 'fired' });
+    expect(initialCourseState(2)).toEqual({ status: 'queued', courseHoldStatus: 'held' });
   });
 
   it('is idempotent when order already sent', async () => {

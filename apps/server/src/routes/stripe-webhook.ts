@@ -7,7 +7,7 @@ import { Hono } from 'hono';
 import Stripe from 'stripe';
 import type { Env } from '../types.js';
 import { adminSupabase } from '../middleware/supabase.js';
-import { isPlaceholderSecret } from '../lib/secrets.js';
+import { isDemoMode, isPlaceholderSecret } from '../lib/secrets.js';
 
 export const stripeWebhook = new Hono<Env>();
 
@@ -27,8 +27,8 @@ stripeWebhook.post('/', async (c) => {
   try {
     if (!isPlaceholderSecret(secret) && sig) {
       event = stripe.webhooks.constructEvent(raw, sig, secret);
-    } else if (process.env.AUTH_RELAXED === 'true') {
-      // Local/dev only — accept JSON body without signature
+    } else if (isDemoMode()) {
+      // Local demo only — accept an unsigned fixture without live credentials.
       event = JSON.parse(raw) as Stripe.Event;
     } else {
       return c.json({ ok: false, error: 'Webhook signature required' }, 400);

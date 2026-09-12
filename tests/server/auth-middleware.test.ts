@@ -29,6 +29,7 @@ const ENV_KEYS = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'INTERNAL_API_KEY',
   'DEVICE_API_KEY',
+  'CULINARYOS_ALLOW_LIVE_TEST_SERVICES',
 ] as const;
 
 describe('requireTenant middleware', () => {
@@ -79,6 +80,7 @@ describe('requireTenant middleware', () => {
     process.env.AUTH_RELAXED = 'false';
     process.env.SUPABASE_URL = 'https://real.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
+    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES = 'true';
     const { requireTenant } = await import('@culinaryos/server/middleware/auth');
     const c = makeCtx({
       'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
@@ -88,5 +90,27 @@ describe('requireTenant middleware', () => {
     await requireTenant(c as any, async () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
     expect(c.get('authMode')).toBe('api_key');
+  });
+
+  it('keeps configured credentials out of ordinary automated tests', async () => {
+    process.env.SUPABASE_URL = 'https://real.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
+    delete process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES;
+
+    const { isLiveSupabaseConfigured } = await import('@culinaryos/server/lib/secrets');
+    expect(isLiveSupabaseConfigured()).toBe(false);
+  });
+
+  it('never allows header-only authentication when live credentials are configured', async () => {
+    process.env.AUTH_RELAXED = 'true';
+    process.env.SUPABASE_URL = 'https://real.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
+    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES = 'true';
+    const { requireTenant } = await import('@culinaryos/server/middleware/auth');
+    const c = makeCtx({ 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001' });
+    let nextCalled = false;
+    const res: any = await requireTenant(c as any, async () => { nextCalled = true; });
+    expect(nextCalled).toBe(false);
+    expect(res?.status ?? c._result().status).toBe(401);
   });
 });

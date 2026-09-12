@@ -12,6 +12,7 @@ export function RecallView() {
   });
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [reprintStatus, setReprintStatus] = useState<string | null>(null);
+  const [confirmRefundId, setConfirmRefundId] = useState<string | null>(null);
 
   const selectedOrder = orders.find((o) => o.id === selectedOrderId);
 
@@ -58,7 +59,6 @@ export function RecallView() {
   }
 
   function handleRefund(orderId: string) {
-    if (!confirm('Proceed with refunding this order?')) return;
     
     // Update local DB
     const allOrders = getMockOrders();
@@ -103,9 +103,14 @@ export function RecallView() {
             orders.map((o) => (
               <Button
                 key={o.id}
+<<<<<<< Updated upstream
                 variant="ghost"
                 onClick={() => setSelectedOrderId(o.id)}
                 className={`w-full h-auto rounded-none p-4 text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:gap-1.5 ${
+=======
+                type="button" onClick={() => setSelectedOrderId(o.id)}
+                className={`w-full text-left p-4 transition-all flex flex-col gap-1.5 ${
+>>>>>>> Stashed changes
                   selectedOrderId === o.id
                     ? 'bg-foreground text-background hover:bg-foreground hover:text-background font-bold shadow-xs'
                     : 'text-foreground hover:bg-muted/60'
@@ -178,6 +183,21 @@ export function RecallView() {
               </div>
             </div>
 
+            {confirmRefundId === selectedOrder.id && (
+              <div role="alertdialog" aria-modal="true" aria-label="Confirm refund" className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setConfirmRefundId(null)}>
+                <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Refund this check?</h3>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    This will mark check <span className="font-mono font-bold text-foreground">#{selectedOrder.id.slice(-8).toUpperCase()}</span> ({`$${((selectedOrder.total ?? 0) / 100).toFixed(2)}`}) as refunded. This cannot be undone from here.
+                  </p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setConfirmRefundId(null)} className="flex-1 min-h-[48px] rounded-xl border border-border text-foreground text-xs font-black uppercase tracking-wider hover:bg-muted active:scale-[0.97]">Cancel</button>
+                    <button type="button" onClick={() => { setConfirmRefundId(null); handleRefund(selectedOrder.id); }} className="flex-1 min-h-[48px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider active:scale-[0.97]">Confirm Refund</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Action Bar */}
             <div className="flex gap-3 border-t border-border pt-4">
               <Button
@@ -190,7 +210,7 @@ export function RecallView() {
               {selectedOrder.status === 'paid' && (
                 <Button
                   variant="outline"
-                  onClick={() => handleRefund(selectedOrder.id)}
+                  onClick={() => setConfirmRefundId(selectedOrder.id)}
                   className="flex-1 text-rose-600 hover:bg-rose-50 border-rose-200 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />

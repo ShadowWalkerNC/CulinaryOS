@@ -751,7 +751,7 @@ export function CheckoutView() {
           type="button"
           onClick={startPaymentFlow}
           disabled={processing}
-          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-6 mb-[env(safe-area-inset-bottom)] flex items-center justify-center gap-2.5 border-2 border-emerald-500 sticky bottom-4 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.99] disabled:opacity-50 mt-6 mb-[env(safe-area-inset-bottom)] flex items-center justify-center gap-2.5 border-2 border-emerald-500 sticky bottom-4 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
         >
           <Check className="w-6 h-6" />
           <span>
@@ -771,8 +771,12 @@ export function CheckoutView() {
         <CheckoutDrawer
           orderId={order.id}
           totalCents={taxableSubtotal + tax}
-          onSuccess={() => {
+          onSuccess={({ mode }) => {
             setShowCardCheckout(false);
+            if (mode === 'demo') {
+              setPaymentError('Demo checkout preview finished. No card was charged and this ticket remains open.');
+              return;
+            }
             setPaid(true);
             qc.invalidateQueries({ queryKey: ['orders'] });
           }}

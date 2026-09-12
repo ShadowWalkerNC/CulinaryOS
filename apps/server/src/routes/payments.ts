@@ -21,6 +21,13 @@ export const paymentsRoutes = new Hono<Env>();
 
 paymentsRoutes.use('*', requireTenant);
 
+// Legacy handlers below fabricate settlement without processor evidence.
+// Keep them unavailable in every environment until verified settlement ships.
+for (const path of ['/terminal/process', '/split', '/tabs/preauth']) {
+  paymentsRoutes.post(path, (c) => err(c, 'PAYMENT_FLOW_UNAVAILABLE',
+    'This payment flow is unavailable. No payment or card authorization was recorded.', 503));
+}
+
 function isStripeConfigured(): boolean {
   const key = process.env.STRIPE_SECRET_KEY;
   return Boolean(key && !key.includes('your_stripe') && !key.includes('placeholder'));

@@ -206,6 +206,8 @@ export function TablesView() {
   const [transferToServerName, setTransferToServerName] = useState<string>('Jane Smith');
   const [transferManagerPin, setTransferManagerPin] = useState<string>('');
   const [transferError, setTransferError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; kind: 'success' | 'error' } | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
 
   // New Table Form State
   const [newTableNumber, setNewTableNumber] = useState('');
@@ -274,7 +276,7 @@ export function TablesView() {
     );
 
     if (!lockResult.success) {
-      alert(lockResult.error ?? 'Table is locked by another server');
+      setNotice({ text: lockResult.error ?? 'Table is locked by another server', kind: 'error' });
       return;
     }
 
@@ -357,7 +359,11 @@ export function TablesView() {
 
   // Reset Layout to Factory Defaults
   const handleResetLayout = () => {
-    if (window.confirm('Reset all table positions and floor layout to factory defaults?')) {
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetLayout = () => {
+    setShowResetConfirm(false);
       setFloorTables(DEFAULT_FLOOR_TABLES);
       setCustomPositions({});
       setFloorTheme('hardwood');
@@ -366,7 +372,6 @@ export function TablesView() {
       localStorage.removeItem('culinaryos_3d_table_positions');
       localStorage.removeItem('culinaryos_floor_dimensions');
       localStorage.removeItem('culinaryos_floor_theme');
-    }
   };
 
   // Execute Merge Operation
@@ -380,14 +385,14 @@ export function TablesView() {
       },
       {
         onSuccess: (res: any) => {
-          alert(`Successfully merged tables into Table ${res.targetTableId}!`);
+          setNotice({ text: `Successfully merged tables into Table ${res.targetTableId}!`, kind: 'success' });
           setShowMergeModal(false);
           setMergeSourceTableIds([]);
           setMergeTargetTableId('');
           setMergeManagerPin('');
         },
         onError: (err: any) => {
-          alert(err.message || 'Table merge failed');
+          setNotice({ text: err.message || 'Table merge failed', kind: 'error' });
         },
       }
     );
@@ -450,13 +455,13 @@ export function TablesView() {
       },
       {
         onSuccess: (res: any) => {
-          alert(`Check successfully split into ${res.newOrderIds.length} separate checks!`);
+          setNotice({ text: `Check successfully split into ${res.newOrderIds.length} separate checks!`, kind: 'success' });
           setShowSplitModal(false);
           setSplitTargetOrder(null);
           setSelectedTable(null);
         },
         onError: (err: any) => {
-          alert(err.message || 'Order split failed');
+          setNotice({ text: err.message || 'Order split failed', kind: 'error' });
         },
       }
     );
@@ -477,7 +482,7 @@ export function TablesView() {
       },
       {
         onSuccess: () => {
-          alert(`Table ${transferTargetTable.label} reassigned to server ${transferToServerName}.`);
+          setNotice({ text: `Table ${transferTargetTable.label} reassigned to server ${transferToServerName}.`, kind: 'success' });
           setShowTransferModal(false);
           setTransferTargetTable(null);
           setTransferManagerPin('');
@@ -580,6 +585,29 @@ export function TablesView() {
 
   return (
     <div className="p-6 bg-cos-bg h-full overflow-y-auto flex flex-col gap-5 animate-fadeIn">
+      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <DialogContent onClose={() => setShowResetConfirm(false)}>
+          <DialogHeader>
+            <DialogTitle>Reset Floor Layout?</DialogTitle>
+            <DialogDescription>
+              This restores all table positions and the floor layout to factory defaults. Custom tables and positions will be removed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setShowResetConfirm(false)} className="flex-1 h-12 rounded-xl border border-border font-black text-xs uppercase tracking-wider hover:bg-muted transition-all">Cancel</button>
+            <button type="button" onClick={confirmResetLayout} className="flex-1 h-12 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider shadow-xs transition-all">Reset Layout</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {notice && (
+        <div role={notice.kind === 'error' ? 'alert' : 'status'} className={`p-3.5 rounded-2xl shadow-lg border flex items-center justify-between gap-3 animate-fadeIn shrink-0 ${notice.kind === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {notice.kind === 'error' ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+            <span className="text-xs font-bold truncate">{notice.text}</span>
+          </div>
+          <button type="button" onClick={() => setNotice(null)} aria-label="Dismiss notification" className="min-w-[44px] min-h-[44px] -my-2 -mr-1 rounded-xl hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current font-black shrink-0">×</button>
+        </div>
+      )}
       {/* Tableside Assistance Buzzer Alert Banner */}
       {activeAssistance && activeAssistance.length > 0 && (
         <div className="bg-amber-500 text-slate-950 p-3.5 rounded-2xl shadow-lg border border-amber-400 flex flex-wrap items-center justify-between gap-3 animate-pulse">

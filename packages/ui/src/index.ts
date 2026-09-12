@@ -16,6 +16,9 @@ export * from './components/Progress';
 export * from './components/Toast';
 export * from './components/ThemeCustomizer';
 export * from './components/FloorMap3D';
+export * from './components/CompactNavigation';
+export * from './components/CulinaryAppLauncher';
+export * from './navigation';
 
 // Universal CulinaryOS Theme Engine & Presets
 export * from './theme/types';
