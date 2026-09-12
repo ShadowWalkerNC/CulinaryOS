@@ -1,6 +1,18 @@
 # CulinaryOS — Go-to-Market Strategy
 
-> Updated August 2026 — reflects v1.0.0 release and current web-first, MIT open-source positioning.
+> Updated September 2026 — reflects v1.2.1, the security-first hardening phase, and the current web-first, MIT open-source positioning.
+
+---
+
+## September 2026 Positioning Update
+
+Three shifts since the August draft:
+
+1. **Security is the headline, not a footnote.** The build is in a security-first hardening phase: fail-closed auth, demo PINs rejected on live paths, server-enforced menu prices, integer-cents money math. The pitch to operators: *your money and your data are defended by default* — no new features ship until money-integrity and access-control work is closed.
+2. **AI as the onboarding superpower (roadmap).** Planned headline: AI-assisted setup that imports a menu from PDFs/photos and inventory from spreadsheets — "set up your restaurant in an afternoon." AI proposes, humans approve; it never moves money on its own. Provider-neutral (OpenAI, Gemini, bring-your-own-key) so operators are never locked in.
+3. **"Linda" — the manager's AI layer (roadmap).** Morning briefings, food-cost diagnosis, close-day reviews — managers only, RBAC-bound, every action audit-logged. Not for staff, not for customers.
+
+These are direction, not shipped product — marketing claims wait for verified builds.
 
 ---
 

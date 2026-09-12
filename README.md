@@ -13,6 +13,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Version](https://img.shields.io/badge/Version-1.2.1-orange.svg)](./CHANGELOG.md)
 
+The marketing site now includes an interactive POS→KDS demo, blog, careers page, and privacy/terms — all at the link above.
+
 <p align="center">
   <img src="docs/screenshots/floor_map_3d.png" alt="CulinaryOS 3D Spatial Floor Plan" width="49%" />
   <img src="docs/screenshots/kds_station_board.png" alt="CulinaryOS KDS Kitchen Display" width="49%" />
@@ -25,6 +27,17 @@
 <p align="center"><em>3D Spatial Floor Plan · Real-Time Kitchen Display (KitchenKit) · Multi-Seat POS Terminal · Online Ordering Storefront</em></p>
 
 > Not a cheaper Toast clone. A **protocol restaurant**: kitchen state is a versioned contract that operators *and* AI agents can drive — with sovereign data and a closed economic loop (recipe → fire → waste/cost).
+
+---
+
+## 🧭 Current Focus
+
+The project is in a **security-first hardening phase**: no new features until money-integrity and access-control work is closed. In flight:
+
+- **RBAC you can enforce** — a single namespaced permission registry (`module.action`), server-side authorization on every route, and penetration-style role tests (a cashier must not reach manager functionality via URL or API).
+- **Server-authoritative payments** — verified totals, idempotent writes, signed webhooks, integer-cents everywhere.
+- **Operational truth** — persistent business-day/drawer state, real KDS ticket lifecycle, and reports computed from real data.
+- **AI as an accessory** — provider-neutral (OpenAI, Gemini, bring-your-own-key), managers-only assistant ("Linda"), always behind flags and off by default. AI proposes; humans approve. It never moves money on its own.
 
 ---
 
@@ -289,7 +302,7 @@ pnpm quickstart
 | Surface | URL | Credential |
 |---|---|---|
 | **Desktop Workstation** | [localhost:5180](http://localhost:5180) | F1–F6 quick switch · Kiosk mode · Split view |
-| **POS Terminal** | [localhost:5172](http://localhost:5172) | Server PIN: `1234` · Manager PIN: `5678` |
+| **POS Terminal** | [localhost:5172](http://localhost:5172) | Demo mode PINs: `1234` (server) · `5678` (manager) — demo PINs are rejected on live/production paths |
 | **Kitchen Display (KDS)** | [localhost:5173](http://localhost:5173) | No login required |
 | **Admin Portal** | [localhost:5174](http://localhost:5174) | No login required |
 | **Online Storefront** | [localhost:5176](http://localhost:5176) | No login required |
@@ -343,10 +356,22 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full Docker Compose and cloud
 
 ---
 
+## Security Posture
+
+Security and money-accuracy outrank shipping speed. Current enforcement:
+
+- **Fail-closed authentication** — auth denies by default; relaxed/demo modes require explicit opt-in, never the default.
+- **Demo PINs are demo-only** — `1234` / `5678` are rejected on live/production paths, and PIN entry is throttled against brute force.
+- **Server-authoritative money** — menu prices are enforced server-side; clients can never set their own prices. Financial math uses integer cents, never floats.
+- **No card data, ever** — no PAN storage, no CVV, card data never in logs. Card-present flows go through Stripe Terminal only.
+- **Manager gates on sensitive actions** — comp tenders require a manager PIN; refunds and voids are permission-checked.
+- **No bundled secrets** — service-role keys never ship in client bundles; credentials live in server env only.
+
+See [`docs/security.md`](docs/security.md) and `AGENTS.md` for the full ruleset.
+
 ## Quality & Testing Gate
 
 CulinaryOS enforces strict quality gates across the monorepo:
-
 ```bash
 # Run complete test suite (32 test suites, 110+ tests)
 node ./scripts/run-all-tests.cjs

@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-09-12: Security Hardening, Canonical UI Primitives & Marketing Pages
+
+### Security
+- **Fail-closed authentication** — auth modes now deny by default; relaxed/demo modes require explicit opt-in.
+- **Demo PINs gated to demo paths** — the demo manager PIN (`5678`) can never authorize in live mode, and PIN entry is throttled against brute force.
+- **Server-side menu-price enforcement** — order item prices are validated on the server; clients can no longer submit their own prices.
+- **Removed hardcoded Supabase credentials** from the RecipeOS bundle.
+- **Manager PIN required** before a comp tender can complete.
+- **Honest offline card state** — POS never claims a card approval without capture.
+
+### Added
+- **Canonical UI primitives (`@culinaryos/ui`)** — 6-state Button, Radix Dialog, labeled Input, adopted across POS and KDS.
+- **Marketing site pages** — blog post pages, careers page, privacy policy and terms of service, branded SVG favicon, and an interactive POS→KDS demo with idempotent SEND TO KITCHEN.
+- **KDS High Contrast OLED mode** and touch-sized always-visible scrap action.
+- **KDS bump recall** within a 60-second window.
+
+### Fixed
+- KDS ticket bump now uses PATCH to match the server route.
+- Admin ThemeProvider mounted so the theme customizer takes effect.
+- Shared Tailwind preset adopted in the remaining 5 apps.
+- Marketing: dead and duplicate footer/nav links repaired, signup page title/meta, Lighthouse accessibility checks (contrast and landmarks).
+- Merged upstream POS view and modifier updates.
+
+---
+
 ## [1.2.1] — 2026-09-03: Live Pilot Hardening & Countertop Quick-Service Workflows
 
 ### Added
