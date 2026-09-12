@@ -67,20 +67,22 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
 
   if (!item) return null;
 
-  function toggleModifier(groupId: string, modId: string, maxSelections: number) {
+  function toggleModifier(groupId: string, modId: string, maxSelections: number, groupName?: string) {
+    const current = selectedModifiers[groupId] ?? [];
+    if (!current.includes(modId) && maxSelections !== 1 && current.length >= maxSelections) {
+      setValidationError(`Maximum of ${maxSelections} selection(s) allowed${groupName ? ` for "${groupName}"` : ''}.`);
+      return;
+    }
     setValidationError(null);
     setSelectedModifiers((prev) => {
-      const current = prev[groupId] ?? [];
-      if (current.includes(modId)) {
-        return { ...prev, [groupId]: current.filter((id) => id !== modId) };
+      const prevCurrent = prev[groupId] ?? [];
+      if (prevCurrent.includes(modId)) {
+        return { ...prev, [groupId]: prevCurrent.filter((id) => id !== modId) };
       }
       if (maxSelections === 1) {
         return { ...prev, [groupId]: [modId] };
       }
-      if (current.length >= maxSelections) {
-        return prev;
-      }
-      return { ...prev, [groupId]: [...current, modId] };
+      return { ...prev, [groupId]: [...prevCurrent, modId] };
     });
   }
 
@@ -246,7 +248,7 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
                   <Button
                     type="button"
                     variant={isSelected ? 'brand' : 'outline'}
-                    onClick={() => toggleModifier(group.id, mod.id, maxSelections)}
+                    onClick={() => toggleModifier(group.id, mod.id, maxSelections, group.name)}
                     className={`min-h-[48px] border p-3 text-left shadow-none [&>span]:w-full [&>span]:justify-between ${
                       isSelected
                         ? 'border-[#0f172a] shadow-sm scale-[1.01]'
@@ -405,7 +407,7 @@ export function ItemModal({ item, onClose, onAddToCart }: Props) {
 
           {/* Validation Alert */}
           {validationError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+            <div role="alert" className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-center gap-2 animate-fadeIn">
               <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
               <span>{validationError}</span>
             </div>

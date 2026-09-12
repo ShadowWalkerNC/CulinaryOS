@@ -105,10 +105,8 @@ export function OrderView() {
 
   function initiateVoidOrder() {
     if (!isPostSend) {
-      if (confirm('Void this un-sent order?')) {
-        voidOrder({ orderId: order.id, reason: 'un_sent_cancel', isCooked: false });
-        triggerToast('Order voided');
-      }
+      voidOrder({ orderId: order.id, reason: 'un_sent_cancel', isCooked: false });
+      triggerToast('Order voided');
       return;
     }
     setPinAction('void_order');
@@ -123,10 +121,8 @@ export function OrderView() {
 
   function initiateVoidItem(itemId: string) {
     if (!isPostSend) {
-      if (confirm('Remove this un-sent item?')) {
-        voidLineItem({ orderId: order.id, itemId, reason: 'un_sent_remove', isCooked: false });
-        triggerToast('Item removed');
-      }
+      voidLineItem({ orderId: order.id, itemId, reason: 'un_sent_remove', isCooked: false });
+      triggerToast('Item removed');
       return;
     }
     setPinAction('void_item');
@@ -378,7 +374,7 @@ export function OrderView() {
       </div>
 
       {/* Ticket Totals & Operations */}
-      <div className="p-3.5 border-t border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3">
+      <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t-2 border-[#e5e7eb] bg-[#f8f9fa] shrink-0 space-y-3 sticky bottom-0 z-10 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)]">
         <div className="space-y-1 text-[11px] text-[#6b7280]">
           <div className="flex justify-between">
             <span>Subtotal</span>

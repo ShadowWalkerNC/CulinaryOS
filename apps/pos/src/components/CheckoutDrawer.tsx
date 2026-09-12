@@ -133,9 +133,18 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
   const [initError,    setInitError]    = useState<string | null>(null);
 
   const tipCents    = Math.round(totalCents * tipPct / 100);
+
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
   const chargeCents = totalCents + tipCents;
 
   useEffect(() => {
+    const timer = setTimeout(() => {
     (async () => {
       setLoading(true);
       const res = await fetch(`${API}/v1/payments/checkout`, {
@@ -148,6 +157,8 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
       setClientSecret(body.data.client_secret);
       setLoading(false);
     })();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [orderId, tipCents, tenantId]);
 
   return (
@@ -161,6 +172,7 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#e8eaf0' }}>Checkout</h2>
+<<<<<<< HEAD
           <Button
             variant="ghost"
             size="icon"
@@ -171,12 +183,16 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
           >
             ×
           </Button>
+=======
+          <button type="button" aria-label="Close checkout" onClick={onClose} style={{ background: 'none', border: 'none', color: '#e8eaf0', fontSize: '20px', cursor: 'pointer', minWidth: '44px', minHeight: '44px' }}>×</button>
+>>>>>>> origin/main
         </div>
 
         <div>
           <label style={{ fontSize: '12px', color: '#6b7299', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Tip</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {TIP_PRESETS.map((pct) => (
+<<<<<<< HEAD
               <Button
                 key={pct}
                 variant="outline"
@@ -184,6 +200,13 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
                 className="flex-1 h-auto"
                 style={{
                   padding: '8px 4px', borderRadius: '6px',
+=======
+              <button
+                type="button" key={pct}
+                aria-pressed={tipPct === pct} onClick={() => setTipPct(pct)}
+                style={{
+                  flex: 1, padding: '8px 4px', borderRadius: '6px', minHeight: '44px',
+>>>>>>> origin/main
                   border: `1px solid ${tipPct === pct ? '#7c6aff' : '#2e3150'}`,
                   background: tipPct === pct ? '#7c6aff22' : 'transparent',
                   color: tipPct === pct ? '#7c6aff' : '#6b7299',

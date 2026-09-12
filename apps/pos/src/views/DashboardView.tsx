@@ -67,10 +67,14 @@ export function DashboardView() {
   const [bills10, setBills10] = useState<string>('');
   const [bills20, setBills20] = useState<string>('');
 
-  const num1 = parseInt(bills1 || '0', 10);
-  const num5 = parseInt(bills5 || '0', 10);
-  const num10 = parseInt(bills10 || '0', 10);
-  const num20 = parseInt(bills20 || '0', 10);
+  function countBills(v: string) {
+    const n = parseInt(v || '0', 10);
+    return Number.isNaN(n) ? 0 : Math.max(0, n);
+  }
+  const num1 = countBills(bills1);
+  const num5 = countBills(bills5);
+  const num10 = countBills(bills10);
+  const num20 = countBills(bills20);
 
   const activeDrawer = drawers.find((d) => d.id === activeDrawerId) || drawers[0];
   const expectedTotal = activeDrawer.currentBalanceCents / 100;
@@ -293,7 +297,7 @@ export function DashboardView() {
                     <span>My Shift Hub</span>
                   </span>
                   <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded">
-                    #104 • Alex M.
+                    {employee?.name ?? 'Staff'}
                   </span>
                 </div>
 

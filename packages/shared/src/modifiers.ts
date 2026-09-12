@@ -29,7 +29,7 @@ export function calculateModifierGroupPrices(
   group: ModifierGroup,
   selectedModifierIds: string[]
 ): ModifierPriceCalculation[] {
-  const freeQuantity = Math.max(0, group.freeQuantity ?? 0);
+  const freeQuantity = Math.max(0, group.freeQuantity ?? (group as any).free_quantity ?? (group as any).freeQty ?? 0);
   let freeRemaining = freeQuantity;
 
   return selectedModifierIds.map((modId) => {

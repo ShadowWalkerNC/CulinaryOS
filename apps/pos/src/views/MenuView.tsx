@@ -50,6 +50,7 @@ export function MenuView() {
   const [quantity, setQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Auto Course Assignment based on section name / category
   function getDefaultCourseNumber(sectionName?: string, itemName?: string): number {
@@ -62,6 +63,7 @@ export function MenuView() {
 
   // Open Item / Custom Price State
   const [showOpenItemModal, setShowOpenItemModal] = useState(false);
+  const [openItemError, setOpenItemError] = useState<string | null>(null);
   const [openItemName, setOpenItemName] = useState('');
   const [openItemPriceDollars, setOpenItemPriceDollars] = useState('');
   const [openItemStation, setOpenItemStation] = useState('expo');
@@ -105,7 +107,7 @@ export function MenuView() {
   }
 
   function openModifierModal(item: any) {
-    if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
+    if (!activeOrderId) { setNotice('No active order. Go to Tables and open one first.'); return; }
     
     const currentSectionName = sections.find((s: any) => s.id === activeS)?.name;
     const defaultCourse = getDefaultCourseNumber(currentSectionName, item.name);
@@ -351,6 +353,12 @@ export function MenuView() {
 
   return (
     <div className="flex h-full bg-[#f8f9fa] relative overflow-hidden">
+      {notice && (
+        <div role="alert" className="absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-3 max-w-[90%]">
+          <span className="truncate">{notice}</span>
+          <button type="button" onClick={() => setNotice(null)} aria-label="Dismiss notice" className="min-w-[44px] min-h-[44px] -my-2 -mr-2 rounded-full hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white font-black">×</button>
+        </div>
+      )}
       {/* Category Sidebar */}
       <aside className="w-64 bg-white border-r-2 border-slate-200 p-4 flex flex-col gap-2 shrink-0 shadow-xs">
         <div className="px-2 py-1 text-[11px] font-black text-slate-500 uppercase tracking-wider">
@@ -456,8 +464,9 @@ export function MenuView() {
           <Button
             variant="warning"
             onClick={() => {
-              if (!activeOrderId) { alert('No active order. Go to Tables and open one first.'); return; }
+              if (!activeOrderId) { setNotice('No active order. Go to Tables and open one first.'); return; }
               setOpenItemName('');
+              setOpenItemError(null);
               setOpenItemPriceDollars('');
               setOpenItemNotes('');
               setShowOpenItemModal(true);
@@ -515,19 +524,19 @@ export function MenuView() {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!activeOrderId) { alert('No active order. Open table first.'); return; }
+                            if (!activeOrderId) { setNotice('No active order. Open table first.'); return; }
                             addItem({
                               order_id: activeOrderId,
                               menu_item_id: item.id,
                               name: `${item.name} (${qm.name})`,
                               quantity: 1,
-                              unit_price: item.price + (qm.price_adjustment || 0),
+                              unit_price: item.price + ((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) || 0),
                               station: item.station,
                               seat_number: activeSeat,
                               selectedModifiers: [{
                                 modifier_id: qm.id,
                                 name: qm.name,
-                                price_adjustment: qm.price_adjustment || 0,
+                                price_adjustment: (qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) || 0,
                               }],
                             });
                           }}
@@ -535,8 +544,8 @@ export function MenuView() {
                           title={`Quick add ${item.name} with ${qm.name}`}
                         >
                           <span>{qm.name}</span>
-                          {qm.price_adjustment > 0 && (
-                            <span className="font-mono text-slate-400 group-hover:text-slate-300">+${(qm.price_adjustment / 100).toFixed(2)}</span>
+                          {((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) > 0) && (
+                            <span className="font-mono text-slate-400 group-hover:text-slate-300">+${((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) / 100).toFixed(2)}</span>
                           )}
                         </Button>
                       ))}
@@ -763,6 +772,9 @@ export function MenuView() {
               </div>
             </div>
 
+            {openItemError && (
+              <div role="alert" className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">{openItemError}</div>
+            )}
             <div className="pt-3 border-t border-border flex gap-2">
               <Button
                 type="button"
@@ -777,8 +789,8 @@ export function MenuView() {
                 variant="warning"
                 onClick={() => {
                   const priceCents = Math.round(parseFloat(openItemPriceDollars || '0') * 100);
-                  if (!openItemName.trim()) { alert('Item name required'); return; }
-                  if (isNaN(priceCents) || priceCents <= 0) { alert('Valid price required'); return; }
+                  if (!openItemName.trim()) { setOpenItemError('Item name required'); return; }
+                  if (isNaN(priceCents) || priceCents <= 0) { setOpenItemError('Valid price required'); return; }
 
                   addItem({
                     order_id: activeOrderId!,

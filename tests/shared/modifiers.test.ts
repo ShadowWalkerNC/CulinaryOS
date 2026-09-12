@@ -109,6 +109,27 @@ describe('Hierarchical & Nested Modifiers Engine (F1.1)', () => {
     expect(excessValidation.errors[0]).toContain('allows at most 4');
   });
 
+  it('4b. honors snake_case API payloads (free_quantity, price_adjustment)', () => {
+    const legacyGroup = {
+      id: 'grp-legacy',
+      name: 'Legacy Add-Ons',
+      required: false,
+      min_selections: 0,
+      max_selections: 3,
+      free_quantity: 1,
+      modifiers: [
+        { id: 'mod-a', name: 'Bacon', price_adjustment: 250 },
+        { id: 'mod-b', name: 'Egg', price_adjustment_cents: 200 },
+      ],
+    } as unknown as ModifierGroup;
+    const results = calculateModifierGroupPrices(legacyGroup, ['mod-a', 'mod-b']);
+    expect(results).toHaveLength(2);
+    expect(results[0].isFree).toBe(true);
+    expect(results[0].effectivePriceCents).toBe(0);
+    expect(results[1].isFree).toBe(false);
+    expect(results[1].effectivePriceCents).toBe(200);
+  });
+
   it('4. flattens selected modifiers with nested breadcrumbs for KDS/printing', () => {
     const selectedTree = buildSelectedModifierTree([pizzaCrustGroup, pizzaToppingsGroup], {
       'grp-crust': ['mod-thin'],
