@@ -103,14 +103,9 @@ export function RecallView() {
             orders.map((o) => (
               <Button
                 key={o.id}
-<<<<<<< Updated upstream
                 variant="ghost"
                 onClick={() => setSelectedOrderId(o.id)}
                 className={`w-full h-auto rounded-none p-4 text-left [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:gap-1.5 ${
-=======
-                type="button" onClick={() => setSelectedOrderId(o.id)}
-                className={`w-full text-left p-4 transition-all flex flex-col gap-1.5 ${
->>>>>>> Stashed changes
                   selectedOrderId === o.id
                     ? 'bg-foreground text-background hover:bg-foreground hover:text-background font-bold shadow-xs'
                     : 'text-foreground hover:bg-muted/60'

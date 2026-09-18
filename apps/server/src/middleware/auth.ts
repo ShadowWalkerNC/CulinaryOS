@@ -6,17 +6,7 @@
 import type { Context, Next } from 'hono';
 import type { Env } from '../types.js';
 import { adminSupabase } from './supabase.js';
-<<<<<<< Updated upstream
 import { isDemoAuthAllowed, isPlaceholderSecret } from '../lib/secrets.js';
-=======
-import { isDemoMode, isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
-
-function isAuthRelaxed(): boolean {
-  // A truthy environment flag must never downgrade a configured live
-  // deployment to header-only authentication.
-  return isDemoMode();
-}
->>>>>>> Stashed changes
 
 function extractBearer(c: Context<Env>): string | null {
   const header = c.req.header('Authorization');

@@ -124,12 +124,8 @@ export function CheckoutView() {
     seatTotals[s] = (seatTotals[s] ?? 0) + item.line_total;
   });
 
-<<<<<<< HEAD
   async function finalizePayment(authorizedBy?: string) {
-=======
-  async function finalizePayment() {
     setPaymentError(null);
->>>>>>> origin/main
     setProcessing(true);
     const tenantId = order.tenant_id ?? usePOSStore.getState().tenantId;
     const API = getApiBase();

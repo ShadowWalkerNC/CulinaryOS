@@ -5,11 +5,7 @@ import { PantryPage } from './pages/Pantry';
 import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
-<<<<<<< Updated upstream
-import { Button, Grid, X, ExternalLink, Tablet, Tv, Laptop, ChefHat, ShoppingBag, TrendingUp } from '@culinaryos/ui';
-=======
 import { CompactNavigation, CulinaryAppLauncher, type CompactNavigationItem } from '@culinaryos/ui';
->>>>>>> Stashed changes
 
 export function App() {
   const location = useLocation();
@@ -64,23 +60,8 @@ export function App() {
         </div>
 
         {/* Right: App Switcher & Server Status */}
-<<<<<<< Updated upstream
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Button
-            type="button"
-            onClick={() => setShowApps(!showApps)}
-            variant={showApps ? 'brand' : 'outline'}
-            size="sm"
-            className="rounded-xl"
-            title="Switch Applications"
-          >
-            <Grid className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Apps</span>
-          </Button>
-=======
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <CulinaryAppLauncher activeApp="admin" />
->>>>>>> Stashed changes
 
           <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -88,125 +69,6 @@ export function App() {
           </div>
         </div>
       </header>
-
-<<<<<<< Updated upstream
-      {/* Mobile Sub-Navigation Bar */}
-      <nav className="md:hidden flex items-center gap-1 bg-white border-b border-slate-200 p-2 overflow-x-auto no-scrollbar shrink-0">
-        {adminNav.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            className={({ isActive }) =>
-              `px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap flex items-center gap-1 ${
-                isActive
-                  ? 'bg-[#0f172a] text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`
-            }
-          >
-            <span className="material-symbols-outlined text-[14px]">{tab.icon}</span>
-            <span>{tab.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* App Switcher Modal */}
-      {showApps && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
-          onClick={() => setShowApps(false)}
-        >
-          <div
-            className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 text-slate-900 animate-slideIn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#0f172a] text-white flex items-center justify-center">
-                  <Grid className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    CulinaryOS Applications
-                  </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                onClick={() => setShowApps(false)}
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {appModules.map((m) => {
-                const Icon = m.icon;
-                return (
-                  <a
-                    key={m.id}
-                    href={`http://localhost:${m.port}`}
-                    onClick={() => setShowApps(false)}
-                    className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 ${
-                      m.active
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-800'
-                    }`}
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        m.active ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-xs'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className={`text-xs font-bold truncate ${m.active ? 'text-white' : 'text-slate-950'}`}>
-                          {m.label}
-                        </p>
-                        {m.active && (
-                          <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-black uppercase">
-                            Active
-                          </span>
-                        )}
-                      </div>
-                      <p className={`text-[10px] line-clamp-1 mt-0.5 ${m.active ? 'text-slate-200' : 'text-slate-500'}`}>
-                        {m.desc}
-                      </p>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <a
-                href="http://localhost:5176/"
-                className="font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"
-              >
-                <span>Platform Home</span>
-              </a>
-              <a
-                href="https://github.com/ShadowWalkerNC/CulinaryOS"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-              >
-                <span>GitHub Monorepo</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-=======
->>>>>>> Stashed changes
       {/* Main Workspace Router */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
         <Routes>

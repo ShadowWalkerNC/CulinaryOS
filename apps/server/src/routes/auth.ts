@@ -9,12 +9,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../types.js';
 import { adminSupabase } from '../middleware/supabase.js';
 import { ok, err, requireTenant } from '../middleware/auth.js';
-<<<<<<< Updated upstream
 import { pinRateLimit } from '../middleware/rateLimit.js';
 import { isAuthRelaxed, isDemoAuthAllowed, isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
-=======
-import { isDemoMode, isLiveSupabaseConfigured, isPlaceholderSecret } from '../lib/secrets.js';
->>>>>>> Stashed changes
 import { DEMO_STAFF, hashPin, verifyPin } from '../lib/pin.js';
 import { verifyManagerPinDirectly, getAuditLogs } from '../lib/audit.js';
 
@@ -43,11 +39,7 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
   // Demo / local fallback when using standard test pins — explicit relaxed mode only
   const demoStaff = DEMO_STAFF.find((s) => s.pin === pin);
   const fallbackToken = process.env.DEVICE_API_KEY ?? process.env.INTERNAL_API_KEY ?? 'demo';
-<<<<<<< Updated upstream
   if (isAuthRelaxed() && demoStaff) {
-=======
-  if (isDemoMode() && demoStaff) {
->>>>>>> Stashed changes
     return ok(c, {
       mode: 'demo',
       tenantId,
@@ -64,7 +56,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
   if (isLiveSupabaseConfigured()) {
     const admin = adminSupabase();
     if (!admin) {
-<<<<<<< Updated upstream
       if (demoStaff && isDemoAuthAllowed()) {
         return ok(c, {
           mode: 'demo',
@@ -76,8 +67,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
           token: fallbackToken,
         });
       }
-=======
->>>>>>> Stashed changes
       return err(c, 'SERVICE_UNAVAILABLE', 'Auth backend unavailable', 503);
     }
 
@@ -98,7 +87,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
 
     const match = (rows ?? []).find((r: any) => verifyPin(pin, r.pin_hash));
     if (!match) {
-<<<<<<< Updated upstream
       // Demo PINs are only honored in demo/relaxed mode — never against a live backend.
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
       if (demo && isDemoAuthAllowed()) {
@@ -115,7 +103,8 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
       return err(c, 'UNAUTHORIZED', 'Invalid PIN', 401);
     }
 
-    const { data: userData, error: userErr } = await admin.auth.admin.getUserById(match.user_id);    if (userErr || !userData?.user?.email) {
+    const { data: userData, error: userErr } = await admin.auth.admin.getUserById(match.user_id);
+    if (userErr || !userData?.user?.email) {
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
       if (demo && isDemoAuthAllowed()) {
         return ok(c, {
@@ -129,14 +118,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
       }
       c.set('pinAuthFailed', true);
       return err(c, 'UNAUTHORIZED', 'Staff Auth user missing', 401);
-=======
-      return err(c, 'UNAUTHORIZED', 'Invalid PIN', 401);
-    }
-
-    const { data: userData, error: userErr } = await admin.auth.admin.getUserById(match.user_id);
-    if (userErr || !userData?.user?.email) {
-      return err(c, 'SERVICE_UNAVAILABLE', 'Staff Auth user unavailable', 503);
->>>>>>> Stashed changes
     }
 
     const anon = anonAuthClient();
@@ -148,7 +129,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
     });
 
     if (signErr || !sessionData.session) {
-<<<<<<< Updated upstream
       const demo = DEMO_STAFF.find((s) => s.pin === pin);
       if (demo && isDemoAuthAllowed()) {
         return ok(c, {
@@ -161,8 +141,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
         });
       }
       c.set('pinAuthFailed', true);
-=======
->>>>>>> Stashed changes
       return err(c, 'UNAUTHORIZED', signErr?.message ?? 'PIN login failed', 401);
     }
 
@@ -184,7 +162,6 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
         expiresAt: sessionData.session.expires_at,
       });
     } catch {
-<<<<<<< Updated upstream
       // Fallback if live Supabase is degraded — demo PINs only in demo/relaxed mode
       if (demoStaff && isDemoAuthAllowed()) {
         return ok(c, {
@@ -196,9 +173,7 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
           token: process.env.DEVICE_API_KEY ?? 'dev-device-key-local',
         });
       }
-=======
       return err(c, 'SERVICE_UNAVAILABLE', 'Auth backend unavailable', 503);
->>>>>>> Stashed changes
     }
   }
 
@@ -292,13 +267,9 @@ authRoutes.get('/audit-logs', requireTenant, async (c) => {
 
 /** Dev helper: hash a PIN the same way seed/staff_pins expects. */
 authRoutes.post('/hash-pin', async (c) => {
-<<<<<<< Updated upstream
   // Dev-only: hashing arbitrary PINs must never be exposed in production,
   // relaxed mode or not.
-  if (process.env.NODE_ENV === 'production') {
-=======
-  if (process.env.NODE_ENV === 'production' || !isDemoMode()) {
->>>>>>> Stashed changes
+  if (process.env.NODE_ENV === 'production' || !isDemoAuthAllowed()) {
     return err(c, 'FORBIDDEN', 'Not available', 403);
   }
   const body = await c.req.json<{ pin?: string }>().catch(() => ({} as any));

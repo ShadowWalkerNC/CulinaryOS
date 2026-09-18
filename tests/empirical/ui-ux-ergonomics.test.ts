@@ -29,10 +29,13 @@ describe('Industrial UI/UX Ergonomics & Interaction Standards', () => {
     path.resolve(process.cwd(), 'apps/pos/src/views/CheckoutView.tsx'),
     'utf-8'
   );
-  const routingRules = fs.readFileSync(
+  const routingRulesCandidates = [
     path.resolve(process.env.USERPROFILE || '', '.gemini/config/ROUTING_RULES.md'),
-    'utf-8'
-  );
+    path.resolve(process.cwd(), 'AGENTS.md'),
+    path.resolve(process.cwd(), '.agent/rules/agents.md'),
+  ];
+  const routingRulesPath = routingRulesCandidates.find((p) => fs.existsSync(p));
+  const routingRules = routingRulesPath ? fs.readFileSync(routingRulesPath, 'utf-8') : '';
 
   it('1. Enforces 48px minimum touch targets in @culinaryos/ui button and theme tokens', () => {
     // Button component must define explicit touch variant meeting 48px (Apple HIG & M3)

@@ -102,36 +102,6 @@ export function App() {
           <div className="h-5 w-px bg-slate-800 hidden md:block" />
         </div>
 
-<<<<<<< Updated upstream
-        {/* Center: Surface Tab Strip */}
-        <nav className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
-          {SURFACES.map((s) => {
-            const isSelected = activeTab === s.id;
-            return (
-              <Button
-                key={s.id}
-                onClick={() => setActiveTab(s.id)}
-                title={s.description}
-                variant={isSelected ? 'default' : 'ghost'}
-                size="sm"
-                className={
-                  isSelected
-                    ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20 hover:bg-orange-700 uppercase tracking-wider'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 uppercase tracking-wider'
-                }
-              >
-                <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
-                <span>{s.name}</span>
-                <span className={`text-[9px] font-mono px-1 py-0.5 rounded font-bold ${
-                  isSelected ? 'bg-black/30 text-white' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  {s.shortcut}
-                </span>
-              </Button>
-            );
-          })}
-        </nav>
-=======
         <div className="min-w-0 flex-1 flex justify-center">
           <CompactNavigation
             items={workstationNavigation}
@@ -141,7 +111,6 @@ export function App() {
             tone="dark"
           />
         </div>
->>>>>>> Stashed changes
 
         {/* Right Status & Tools Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2 text-xs shrink-0">
@@ -149,13 +118,7 @@ export function App() {
           <Button
             onClick={() => setIsPairingOpen(true)}
             title="Mobile & Tablet QR Pairing (F10)"
-<<<<<<< Updated upstream
-            variant="secondary"
-            size="sm"
-            className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
-=======
             className="min-h-[48px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
->>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[15px] text-orange-400">qr_code_2</span>
             <span className="hidden lg:inline">Pair Mobile</span>
@@ -165,13 +128,7 @@ export function App() {
           <Button
             onClick={() => setIsDiagnosticsOpen(true)}
             title="System Diagnostics & Preflight (F9)"
-<<<<<<< Updated upstream
-            variant="secondary"
-            size="sm"
-            className="border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200 text-[11px]"
-=======
             className="min-h-[48px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center gap-1.5 transition font-bold text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
->>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[15px] text-emerald-400">health_and_safety</span>
             <span className="hidden lg:inline">Diagnostics</span>
@@ -195,13 +152,7 @@ export function App() {
               }
             }}
             title="Toggle Kiosk Mode (F11)"
-<<<<<<< Updated upstream
-            variant="secondary"
-            size="icon"
-            className="h-8 w-8 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-200"
-=======
             className="min-h-[48px] min-w-[48px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
->>>>>>> Stashed changes
           >
             <span className="material-symbols-outlined text-[16px]">
               {isKiosk ? 'fullscreen_exit' : 'fullscreen'}

@@ -14,11 +14,6 @@ import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
-<<<<<<< Updated upstream
-  Button,
-  Grid,
-=======
->>>>>>> Stashed changes
   X,
   Lock,
   ShoppingCart,
@@ -108,22 +103,11 @@ export function App() {
     <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn select-none">
       {/* Single Unified POS Terminal Navigation Bar (Industrial Tablet Grade) */}
       <header className="bg-slate-900 border-b border-slate-800 px-3 sm:px-5 min-h-16 py-2 flex items-center justify-between shrink-0 shadow-md gap-2 text-white">
-        {/* Left: Brand Identity & Active Staff */}
-<<<<<<< Updated upstream
-        <div className="flex items-center gap-3.5 shrink-0">
-          <Button
-=======
         <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
           <button
->>>>>>> Stashed changes
             type="button"
-            variant="ghost"
             onClick={() => setView('dashboard')}
-<<<<<<< Updated upstream
-            className="gap-2.5 text-left hover:opacity-90 hover:bg-transparent h-auto px-2 py-1 [&>span]:gap-2.5"
-=======
             className="min-h-[48px] flex items-center gap-2.5 rounded-xl text-left hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
->>>>>>> Stashed changes
           >
             <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined filled text-[20px]">skillet</span>
@@ -141,7 +125,7 @@ export function App() {
                 CulinaryOS POS
               </span>
             </div>
-          </Button>
+          </button>
 
           <div className="hidden xl:block h-6 w-px bg-slate-800 shrink-0" />
 
@@ -152,129 +136,6 @@ export function App() {
           </span>
         </div>
 
-<<<<<<< Updated upstream
-        {/* Center: Quick Navigation View Buttons with Visual Symbols */}
-        <nav className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border-2 border-slate-800 overflow-x-auto no-scrollbar">
-          <Button
-            variant="ghost"
-            onClick={() => setView('dashboard')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'dashboard'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">home</span>
-            <span>Home</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setView('tables');
-              setActiveOrder(null);
-            }}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'tables' && !activeOrderId
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">table_restaurant</span>
-            <span>Floor Map</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (activeOrderId) setView('menu');
-            }}
-            disabled={!activeOrderId}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 disabled:opacity-30 ${
-              !activeOrderId
-                ? 'border-slate-800 bg-slate-900/50 text-slate-500'
-                : view === 'menu'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">receipt_long</span>
-            <span>Ticket</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (activeOrderId) setView('checkout');
-            }}
-            disabled={!activeOrderId}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 disabled:opacity-30 ${
-              !activeOrderId
-                ? 'border-slate-800 bg-slate-900/50 text-slate-500'
-                : view === 'checkout'
-                ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm hover:bg-emerald-600 hover:text-white'
-                : 'border-emerald-700 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">payments</span>
-            <span>Pay</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            onClick={() => setView('tabs')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'tabs'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">local_bar</span>
-            <span>Tabs</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setView('recall')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'recall'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">history</span>
-            <span>Recall</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setView('reports')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'reports'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">bar_chart</span>
-            <span>Reports</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setView('cfd')}
-            className={`min-h-[44px] sm:min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border-2 [&>span]:gap-1.5 ${
-              view === 'cfd'
-                ? 'bg-orange-600 text-white border-orange-500 shadow-sm hover:bg-orange-600 hover:text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800'            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">devices</span>
-            <span>CFD Screen</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setView('settings')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 border [&>span]:gap-1.5 ${
-              view === 'settings'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[17px]">settings</span>
-            <span>Settings</span>
-          </Button>
-        </nav>
-=======
         {/* Quick rail on wide workstations; a labeled sheet trigger on compact devices. */}
         <div className="min-w-0 flex-1 flex justify-center">
           <CompactNavigation
@@ -285,7 +146,6 @@ export function App() {
             tone="dark"
           />
         </div>
->>>>>>> Stashed changes
 
         {/* Right: Connection, Apps & Lock */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -296,144 +156,20 @@ export function App() {
 
           <div className="hidden sm:block"><ConnectionStatus /></div>
 
-<<<<<<< Updated upstream
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowApps(!showApps)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold gap-1.5 border [&>span]:gap-1.5 ${
-              showApps
-                ? 'bg-slate-800 text-white border-slate-600 hover:bg-slate-800 hover:text-white'
-                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-slate-200 border-slate-700'
-            }`}
-            title="Switch Applications"
-          >
-            <Grid className="w-4 h-4" />
-            <span className="hidden lg:inline">Apps</span>
-          </Button>
-=======
           <CulinaryAppLauncher activeApp="pos" tone="dark" />
->>>>>>> Stashed changes
 
-          <Button
-            variant="outline"
+          <button
+            type="button"
             onClick={() => setEmployee(null)}
-<<<<<<< Updated upstream
-            className="bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-rose-300 border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider gap-1.5 [&>span]:gap-1.5"
-=======
             className="min-h-[48px] bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/70 font-bold px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 active:scale-[0.97]"
->>>>>>> Stashed changes
             title="Lock Terminal"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Lock</span>
-          </Button>
+          </button>
         </div>
       </header>
 
-<<<<<<< Updated upstream
-      {/* App Switcher Modal */}
-      {showApps && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
-          onClick={() => setShowApps(false)}
-        >
-          <div
-            className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 text-slate-900 animate-slideIn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#0f172a] text-white flex items-center justify-center">
-                  <Grid className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    CulinaryOS Applications
-                  </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Switch between restaurant surfaces</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowApps(false)}
-                className="h-7 w-7 rounded-full"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
-              {appModules.map((m) => {
-                const Icon = m.icon;
-                return (
-                  <a
-                    key={m.id}
-                    href={`http://localhost:${m.port}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all ${
-                      m.active
-                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                        : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        m.active ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black leading-tight">{m.label}</span>
-                        <span
-                          className={`text-[9px] font-mono px-1 rounded ${
-                            m.active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          :{m.port}
-                        </span>
-                      </div>
-                      <p
-                        className={`text-[11px] leading-tight truncate mt-0.5 ${
-                          m.active ? 'text-slate-300' : 'text-slate-500'
-                        }`}
-                      >
-                        {m.desc}
-                      </p>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <a
-                href="http://localhost:5176/"
-                className="font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"
-              >
-                <span>Platform Home</span>
-              </a>
-              <a
-                href="https://github.com/ShadowWalkerNC/CulinaryOS"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-              >
-                <span>GitHub Monorepo</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-=======
->>>>>>> Stashed changes
       {/* Main Workspace Layout — Dual-Pane on >=1024px, Single Canvas on <1024px */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left Side: Desktop Dual-Pane Receipt Panel (Hidden on screens < 1024px and when in focused checkout) */}

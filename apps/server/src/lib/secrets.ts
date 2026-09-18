@@ -21,13 +21,13 @@ export function isLiveSupabaseConfigured(): boolean {
   return Boolean(url && key && !isPlaceholderSecret(url) && !isPlaceholderSecret(key));
 }
 
-<<<<<<< Updated upstream
 /**
  * Explicit opt-in ONLY. AUTH_RELAXED=true disables authentication for every
  * route — it is for local development and demos, NEVER for production or any
  * deployment with a live database.
  */
 export function isAuthRelaxed(): boolean {
+  if (isLiveSupabaseConfigured()) return false;
   return process.env.AUTH_RELAXED === 'true';
 }
 
@@ -41,17 +41,15 @@ export function isLocalDemoMode(): boolean {
   return !isLiveSupabaseConfigured();
 }
 
+/** Demo mode is possible only when live server credentials are absent. */
+export const isDemoMode = isLocalDemoMode;
+
 /**
  * Single predicate for "may demo credentials be honored". Demo PINs and
  * header-only tenant access are accepted ONLY when explicitly relaxed or in
  * local demo mode — NEVER when a live backend is configured.
  */
 export function isDemoAuthAllowed(): boolean {
+  if (isLiveSupabaseConfigured()) return false;
   return isAuthRelaxed() || isLocalDemoMode();
 }
-=======
-/** Demo mode is possible only when live server credentials are absent. */
-export function isDemoMode(): boolean {
-  return !isLiveSupabaseConfigured();
-}
->>>>>>> Stashed changes

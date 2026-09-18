@@ -64,10 +64,10 @@ core driver. Security and money-accuracy outrank shipping speed.
 12. **Before writing code,** restate which requirement this answers from the
     backlog in `docs/` or the assessment.
 13. **Jakob's Law & Industrial UI/UX Ergonomics (Permanent Standard):**
-    - **Thumb-Zone Optimization:** Primary actions (View Bag, Checkout, Send to Kitchen, Fire Course, Bump) must sit in the bottom ergonomic thumb zone (`fixed bottom-0` sticky action bar or bottom sheet). Handhelds never require top-screen reaches for primary workflows.
+    - **Jakob's Law & Thumb-Zone Ergonomics:** Primary actions (View Bag, Checkout, Send to Kitchen, Fire Course, Bump) must sit in the bottom ergonomic thumb zone (`fixed bottom-0` sticky action bar or bottom sheet). Handhelds never require top-screen reaches for primary workflows.
     - **Standard Navigation Patterns:** Bottom navigation bars, standard hamburger/drawer sheets, swipe-down modals, and sticky top search/filter headers.
-    - **Physical Touch Target Minimums:** Interactive elements must have a minimum touch target of 48×48px (Apple HIG & Material 3 guidelines) with at least 8px spacing between tap targets.
-    - **The 6-State Button Engine:** Every button/card chip implements deterministic states: Idle, Hover, Focus-Visible (2px solid ring), Active (haptic physics `active:scale-[0.97] transition-transform duration-75 ease-out`), Loading (fixed bounds to prevent layout shift), and Disabled (`opacity-50`).
+    - **The 48px Physical Touch Target Minimum:** Interactive elements must have a minimum touch target of 48×48px (Apple HIG & Material 3 guidelines) with at least 8px spacing between tap targets.
+    - **The 6 Mandatory Interaction States (6-State Button Engine):** Every button/card chip implements deterministic states: Idle, Hover, Focus-Visible (2px solid ring), Active (haptic physics `active:scale-[0.97] transition-transform duration-75 ease-out`), Loading (fixed bounds to prevent layout shift), and Disabled (`opacity-50`).
     - **Perceptually Uniform Color (OKLCH):** Themes and state layers use OKLCH color tokens guaranteeing $\ge 4.5:1$ WCAG AA contrast in both bright dining rooms and dark kitchen rails.
     - **Auditability:** Enforce via `culinary system doctor ui` in CI and agent workflows.
 14. **Monorepo discipline & Turborepo compliance.** All new code belongs in the correct package. Do not create files at the root level. Shared types go in `packages/` or `shared/`. All pipeline tasks must be declared in `turbo.json`.

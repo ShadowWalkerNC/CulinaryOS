@@ -380,11 +380,7 @@ export function StaffPage() {
         </div>
       )}
 
-<<<<<<< Updated upstream
-      {/* TAB 1: STAFF DIRECTORY */}
-=======
       {/* TAB 1: TEAM MEMBERS DIRECTORY */}
->>>>>>> Stashed changes
       {activeTab === 'staff' && (
         <div className="space-y-4">
           {/* Full Width Staff Directory */}

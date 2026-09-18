@@ -47,15 +47,19 @@ if (!process.env.ESBUILD_BINARY_PATH) {
   }
 }
 
+const nodeBin = `"${process.execPath}"`;
+const nodeDir = path.dirname(process.execPath);
+const testEnvPath = process.env.PATH ? `${nodeDir}${path.delimiter}${process.env.PATH}` : nodeDir;
+
 for (const file of testFiles) {
   console.log(`========================================`);
   console.log(` Running: ${file}`);
   console.log(`========================================`);
   try {
-    const output = execSync(`node -r ./scripts/test-hook.cjs --import tsx "${file}"`, {
+    const output = execSync(`${nodeBin} -r ./scripts/test-hook.cjs --import tsx "${file}"`, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, NODE_ENV: 'test' }
+      env: { ...process.env, PATH: testEnvPath, NODE_ENV: 'test' }
     });
     console.log(output);
     totalPassed++;

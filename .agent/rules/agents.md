@@ -63,12 +63,13 @@ core driver. Security and money-accuracy outrank shipping speed.
     estimated agent tokens, and rollback plan. Ask before exceeding stage scope.
 12. **Before writing code,** restate which requirement this answers from the
     backlog in `docs/` or the assessment.
-13. **Jakob's Law for Mobile & Touch Surfaces.** Users spend most of their time on other mobile apps and expect interfaces to work familiarly. All mobile viewports and touch surfaces (Storefront, Handheld POS, KDS, Mobile app) must strictly adhere to mobile platform conventions:
-    - **Thumb-Zone Optimization:** Primary actions (View Bag, Checkout, Send to Kitchen, Bump) must sit in the bottom ergonomic thumb zone (`fixed bottom-0` sticky action bar or bottom sheet).
-    - **Standard Navigation Patterns:** Bottom navigation bars, standard hamburger/drawer sheets, swipe-down modals, and sticky top search/filter headers. No non-standard gesture requirements.
-    - **Physical Touch Target Minimums:** Interactive elements must have a minimum touch target of 48×48px (Apple HIG & Material 3 guidelines) with at least 8px spacing between tap targets.
-    - **Standard E-Commerce & Ordering Flow:** Search & Filter at top → Scrollable menu categories → Item Modal with standard radio/checkbox modifier selection → Sticky Bottom Cart Bar → Swipeable Bottom Sheet / Drawer for Checkout → Clear Order Status Timeline.
-    - **Instant Familiar Feedback:** Haptic-style visual active states (`active:scale-95`), loading skeletons, standard back navigation buttons in top-left, and explicit error states with clear recovery actions.
+13. **Jakob's Law & Industrial UI/UX Ergonomics (Permanent Standard):**
+    - **Jakob's Law & Thumb-Zone Ergonomics:** Primary actions (View Bag, Checkout, Send to Kitchen, Fire Course, Bump) must sit in the bottom ergonomic thumb zone (`fixed bottom-0` sticky action bar or bottom sheet). Handhelds never require top-screen reaches for primary workflows.
+    - **Standard Navigation Patterns:** Bottom navigation bars, standard hamburger/drawer sheets, swipe-down modals, and sticky top search/filter headers.
+    - **The 48px Physical Touch Target Minimum:** Interactive elements must have a minimum touch target of 48×48px (Apple HIG & Material 3 guidelines) with at least 8px spacing between tap targets.
+    - **The 6 Mandatory Interaction States (6-State Button Engine):** Every button/card chip implements deterministic states: Idle, Hover, Focus-Visible (2px solid ring), Active (haptic physics `active:scale-[0.97] transition-transform duration-75 ease-out`), Loading (fixed bounds to prevent layout shift), and Disabled (`opacity-50`).
+    - **Perceptually Uniform Color (OKLCH):** Themes and state layers use OKLCH color tokens guaranteeing $\ge 4.5:1$ WCAG AA contrast in both bright dining rooms and dark kitchen rails.
+    - **Auditability:** Enforce via `culinary system doctor ui` in CI and agent workflows.
 14. **Monorepo discipline & Turborepo compliance.** All new code belongs in the correct package. Do not create files at the root level. Shared types go in `packages/` or `shared/`. All pipeline tasks must be declared in `turbo.json`.
 15. **Realtime contracts are stable.** POS/KDS rely on `pos:order:created` -> `kitchen_tickets`. Do not bypass `PATCH /v1/orders/:id/send` from clients.
 

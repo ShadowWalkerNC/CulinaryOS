@@ -56,20 +56,17 @@ export function Station() {
   const [show86Modal, setShow86Modal]             = useState(false);
   const [items86, setItems86]                     = useState<any[]>([]);
   const [pacingData, setPacingData]               = useState<any[]>([]);
-<<<<<<< HEAD
   // Bumped-but-recallable tickets: bumped within RECALL_WINDOW_MS
   const [recentlyBumped, setRecentlyBumped]       = useState<BumpedRecord[]>([]);
   // Recalled tickets that must survive the 2s demo/offline poll, which
   // rebuilds `tickets` wholesale from the mock store
   const [recallKeepAlive, setRecallKeepAlive]     = useState<BumpedRecord[]>([]);
-=======
   const [kdsError, setKdsError]                 = useState<string | null>(null);
 
   function showKdsError(msg: string) {
     setKdsError(msg);
     window.setTimeout(() => setKdsError(null), 4000);
   }
->>>>>>> origin/main
 
   useEffect(() => {
     applyDisplaySettingsToDOM(displaySettings);
@@ -159,14 +156,7 @@ export function Station() {
       }
     };
     try {
-<<<<<<< Updated upstream
-      const res = await fetch(`${API}/v1/kds/tickets/${ticketId}/bump`, {
-        method: 'PATCH',
-        headers: apiHeaders(TENANT_ID),
-      });
-=======
       const res = await requestKdsTicketAction(API, ticketId, 'bump', apiHeaders(TENANT_ID));
->>>>>>> Stashed changes
       if (!res.ok) throw new Error(`Bump failed: ${res.status}`);
       recordBump();
       setTickets(prev => prev.filter(t => t.id !== ticketId));
