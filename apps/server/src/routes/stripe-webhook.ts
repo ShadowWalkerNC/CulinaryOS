@@ -25,7 +25,10 @@ stripeWebhook.post('/', async (c) => {
 
   let event: Stripe.Event;
   try {
-    if (!isPlaceholderSecret(secret) && sig) {
+    if (!isPlaceholderSecret(secret)) {
+      if (!sig) {
+        return c.json({ ok: false, error: 'Webhook signature required' }, 400);
+      }
       event = stripe.webhooks.constructEvent(raw, sig, secret);
     } else if (isDemoMode()) {
       // Local demo only — accept an unsigned fixture without live credentials.
@@ -37,7 +40,7 @@ stripeWebhook.post('/', async (c) => {
     return c.json({ ok: false, error: e?.message ?? 'Invalid webhook' }, 400);
   }
 
-  if (event.type === 'payment_intent.succeeded') {
+  if (event?.type === 'payment_intent.succeeded' && event.data?.object) {
     const intent = event.data.object as Stripe.PaymentIntent;
     const tenantId = intent.metadata?.tenant_id;
     const orderId = intent.metadata?.order_id;

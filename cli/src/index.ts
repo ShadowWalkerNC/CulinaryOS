@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import fs from 'node:fs';
@@ -8,7 +9,7 @@ import { posCommand } from './commands/pos';
 import { kdsCommand } from './commands/kds';
 import { opsCommand } from './commands/ops';
 import { prepCommand } from './commands/prep';
-import { systemCommand } from './commands/system';
+import { systemCommand, runDoctor } from './commands/system';
 import { menuCommand } from './commands/menu';
 import { inventoryCommand } from './commands/inventory';
 import { ordersCommand } from './commands/orders';
@@ -53,6 +54,13 @@ program.addCommand(commissaryCommand);
 program.addCommand(autopilotCommand);
 program.addCommand(daypartsCommand);
 program.addCommand(hardwareCommand);
+
+// Top-Level Doctor Command (supports: culinary doctor security, culinary doctor ui)
+program
+  .command('doctor [subsystem]')
+  .description('Run system health, security posture, or UI ergonomics diagnostics (e.g. culinary doctor security)')
+  .option('--tenant <id>', 'Tenant ID for security checks')
+  .action(runDoctor);
 
 // 1. Init & Turnkey Provisioning Command
 program

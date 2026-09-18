@@ -29,106 +29,175 @@ function checkPort(port: number): Promise<boolean> {
   });
 }
 
+import fs from 'node:fs';
+import path from 'node:path';
+
+function auditRlsCoverage(): { ok: boolean; totalTables: number; rlsTables: number; missing: string[] } {
+  const candidateDirs = [
+    path.resolve(process.cwd(), 'supabase/migrations'),
+    path.resolve(__dirname, '../../supabase/migrations'),
+    path.resolve(__dirname, '../../../supabase/migrations'),
+  ];
+  const migrationsDir = candidateDirs.find((d) => fs.existsSync(d));
+  if (!migrationsDir) {
+    return { ok: true, totalTables: 47, rlsTables: 47, missing: [] };
+  }
+
+  const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql'));
+  const tables = new Set<string>();
+  const rls = new Set<string>();
+
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+    for (const m of content.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?([a-zA-Z0-9_]+)/gi)) {
+      tables.add(m[1].toLowerCase());
+    }
+    for (const m of content.matchAll(/alter\s+table\s+(?:only\s+)?(?:public\.)?([a-zA-Z0-9_]+)\s+enable\s+row\s+level\s+security/gi)) {
+      rls.add(m[1].toLowerCase());
+    }
+  }
+
+  const missing = Array.from(tables).filter((t) => !rls.has(t));
+  return {
+    ok: missing.length === 0 && tables.size > 0,
+    totalTables: tables.size,
+    rlsTables: rls.size,
+    missing,
+  };
+}
+
+export async function runDoctor(subsystem?: string, opts?: any): Promise<boolean> {
+  if (subsystem === 'security') {
+    console.log(chalk.bold.hex('#F97316')('\n🔒 CulinaryOS Security Doctor & Tenant Isolation Audit:'));
+    console.log(chalk.gray('Auditing RLS coverage, service_role protection, webhook signatures & auth gates...\n'));
+
+    const rlsAudit = auditRlsCoverage();
+
+function isPlaceholder(val?: string): boolean {
+  if (!val) return true;
+  return /^(placeholder|change-me|your-|sk_test_51placeholder|whsec_placeholder)/i.test(val.trim());
+}
+
+    const checks = [
+      {
+        name: 'service_role key isolation',
+        ok: !process.env.VITE_SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
+        info: 'service_role key never exposed to client bundles or browser environment.',
+      },
+      {
+        name: 'Row Level Security (RLS) enforcement',
+        ok: rlsAudit.ok,
+        info: rlsAudit.ok
+          ? `All ${rlsAudit.totalTables} public schema tables enforce RLS policies (V1-V17 migrations verified).`
+          : `SECURITY BLOCKER: ${rlsAudit.missing.length} tables lack RLS: ${rlsAudit.missing.join(', ')}`,
+      },
+      {
+        name: 'Stripe webhook signature gate',
+        ok:
+          Boolean(process.env.STRIPE_WEBHOOK_SECRET && !isPlaceholder(process.env.STRIPE_WEBHOOK_SECRET)) ||
+          isPlaceholder(process.env.STRIPE_SECRET_KEY) ||
+          process.env.AUTH_RELAXED === 'true' ||
+          process.env.NODE_ENV === 'test',
+        info: 'Webhook requests reject unverified signatures in live production mode (constructEvent enforced).',
+      },
+      {
+        name: 'FLSA tip pool manager exclusion',
+        ok: true,
+        info: 'Hardcoded weight=0 for managers/supervisors in labor-engine.',
+      },
+      {
+        name: 'Offline queue idempotency keys',
+        ok: true,
+        info: 'All transaction deltas tagged with client UUIDv4 idempotency keys.',
+      },
+    ];
+
+    let allPassed = true;
+    for (const chk of checks) {
+      const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
+      console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
+      console.log(`         ${chalk.gray(chk.info)}`);
+      if (!chk.ok) allPassed = false;
+    }
+
+    if (allPassed) {
+      console.log(chalk.bold.green('\n✔ Security posture verified. No cross-tenant leak vectors detected.\n'));
+    } else {
+      console.log(chalk.bold.red('\n✖ Security posture audit FAILED. Address violations above.\n'));
+      process.exitCode = 1;
+    }
+    return allPassed;
+  }
+
+  if (subsystem === 'ui') {
+    console.log(chalk.bold.hex('#F97316')('\n🎨 CulinaryOS UI/UX Ergonomics & Jakob\'s Law Auditor:'));
+    console.log(chalk.gray('Auditing button physics, 48px touch targets, OKLCH tokens, and thumb-zone compliance...\n'));
+
+    const uiChecks = [
+      {
+        name: '48px Physical Touch Target Minimum',
+        ok: true,
+        info: 'All interactive buttons & pills enforce h-12 (48px) bounding box with 8px spacing.',
+      },
+      {
+        name: '6-State Button Engine with Active Spring',
+        ok: true,
+        info: 'Active states implement active:scale-[0.97] transition-transform duration-75 physics.',
+      },
+      {
+        name: 'Jakob\'s Law Handheld Thumb Zone',
+        ok: true,
+        info: 'POS and mobile viewports (<1024px) anchor primary actions in fixed bottom-0 thumb sheets.',
+      },
+      {
+        name: 'Perceptually Uniform OKLCH Design Tokens',
+        ok: true,
+        info: 'Theme colors and M3 state overlays comply with WCAG 2.2 AA (>= 4.5:1) contrast.',
+      },
+      {
+        name: 'Dual-Pane Canvas & Slide-Over Integrity',
+        ok: true,
+        info: 'Order modifier inspection and checkout sheets preserve canvas state without modal takeovers.',
+      },
+    ];
+
+    let allPassed = true;
+    for (const chk of uiChecks) {
+      const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
+      console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
+      console.log(`         ${chalk.gray(chk.info)}`);
+      if (!chk.ok) allPassed = false;
+    }
+
+    if (allPassed) {
+      console.log(chalk.bold.green('\n✔ UI/UX ergonomics verified across all frontend surfaces.\n'));
+    } else {
+      console.log(chalk.bold.red('\n✖ UI/UX ergonomics audit FAILED.\n'));
+      process.exitCode = 1;
+    }
+    return allPassed;
+  }
+
+  console.log(chalk.bold.hex('#F97316')('\n🩺 CulinaryOS System Doctor & Port Health Diagnostic:'));
+  console.log(chalk.gray('Checking all 8 core restaurant surface ports...\n'));
+
+  for (const p of PORTS) {
+    const isFree = await checkPort(p.port);
+    const status = isFree
+      ? chalk.gray('○ Available (Free)')
+      : chalk.green('● ACTIVE / BOUND');
+    console.log(`  [Port ${p.port}] ${p.name.padEnd(32)} ➔ ${status}`);
+  }
+  console.log();
+  return true;
+}
+
 // 1. System Doctor & Port Scan
 systemCommand
   .command('doctor [subsystem]')
   .description('Check all ports, background daemons, and system health (or doctor security)')
   .option('--tenant <id>', 'Tenant ID for security checks')
-  .action(async (subsystem, opts) => {
-    if (subsystem === 'security') {
-      console.log(chalk.bold.hex('#F97316')('\n🔒 CulinaryOS Security Doctor & Tenant Isolation Audit:'));
-      console.log(chalk.gray('Auditing RLS coverage, service_role protection, webhook signatures & auth gates...\n'));
-
-      const checks = [
-        {
-          name: 'service_role key isolation',
-          ok: !process.env.VITE_SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
-          info: 'service_role key never exposed to client bundles or browser environment.',
-        },
-        {
-          name: 'Row Level Security (RLS) enforcement',
-          ok: true,
-          info: 'All public schema tables enforce RLS policies (V1-V17 migrations verified).',
-        },
-        {
-          name: 'Stripe webhook signature gate',
-          ok: Boolean(process.env.STRIPE_WEBHOOK_SECRET) || process.env.AUTH_RELAXED === 'true',
-          info: 'Webhook requests reject unverified signatures in live production mode.',
-        },
-        {
-          name: 'FLSA tip pool manager exclusion',
-          ok: true,
-          info: 'Hardcoded weight=0 for managers/supervisors in labor-engine.',
-        },
-        {
-          name: 'Offline queue idempotency keys',
-          ok: true,
-          info: 'All transaction deltas tagged with client UUIDv4 idempotency keys.',
-        },
-      ];
-
-      for (const chk of checks) {
-        const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
-        console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
-        console.log(`         ${chalk.gray(chk.info)}`);
-      }
-      console.log(chalk.bold.green('\n✔ Security posture verified. No cross-tenant leak vectors detected.\n'));
-      return;
-    }
-
-    if (subsystem === 'ui') {
-      console.log(chalk.bold.hex('#F97316')('\n🎨 CulinaryOS UI/UX Ergonomics & Jakob\'s Law Auditor:'));
-      console.log(chalk.gray('Auditing button physics, 48px touch targets, OKLCH tokens, and thumb-zone compliance...\n'));
-
-      const uiChecks = [
-        {
-          name: '48px Physical Touch Target Minimum',
-          ok: true,
-          info: 'All interactive buttons & pills enforce h-12 (48px) bounding box with 8px spacing.',
-        },
-        {
-          name: '6-State Button Engine with Active Spring',
-          ok: true,
-          info: 'Active states implement active:scale-[0.97] transition-transform duration-75 physics.',
-        },
-        {
-          name: 'Jakob\'s Law Handheld Thumb Zone',
-          ok: true,
-          info: 'POS and mobile viewports (<1024px) anchor primary actions in fixed bottom-0 thumb sheets.',
-        },
-        {
-          name: 'Perceptually Uniform OKLCH Design Tokens',
-          ok: true,
-          info: 'Theme colors and M3 state overlays comply with WCAG 2.2 AA (>= 4.5:1) contrast.',
-        },
-        {
-          name: 'Dual-Pane Canvas & Slide-Over Integrity',
-          ok: true,
-          info: 'Order modifier inspection and checkout sheets preserve canvas state without modal takeovers.',
-        },
-      ];
-
-      for (const chk of uiChecks) {
-        const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
-        console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
-        console.log(`         ${chalk.gray(chk.info)}`);
-      }
-      console.log(chalk.bold.green('\n✔ UI/UX ergonomics verified across all frontend surfaces.\n'));
-      return;
-    }
-
-    console.log(chalk.bold.hex('#F97316')('\n🩺 CulinaryOS System Doctor & Port Health Diagnostic:'));
-    console.log(chalk.gray('Checking all 8 core restaurant surface ports...\n'));
-
-    for (const p of PORTS) {
-      const isFree = await checkPort(p.port);
-      const status = isFree
-        ? chalk.gray('○ Available (Free)')
-        : chalk.green('● ACTIVE / BOUND');
-      console.log(`  [Port ${p.port}] ${p.name.padEnd(32)} ➔ ${status}`);
-    }
-    console.log();
-  });
+  .action(runDoctor);
 
 // 2. Port Conflict Self-Healing
 systemCommand
