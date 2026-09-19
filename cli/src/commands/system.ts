@@ -50,10 +50,10 @@ function auditRlsCoverage(): { ok: boolean; totalTables: number; rlsTables: numb
   for (const file of files) {
     const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
     for (const m of content.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?([a-zA-Z0-9_]+)/gi)) {
-      tables.add(m[1].toLowerCase());
+      if (m[1]) tables.add(m[1].toLowerCase());
     }
     for (const m of content.matchAll(/alter\s+table\s+(?:only\s+)?(?:public\.)?([a-zA-Z0-9_]+)\s+enable\s+row\s+level\s+security/gi)) {
-      rls.add(m[1].toLowerCase());
+      if (m[1]) rls.add(m[1].toLowerCase());
     }
   }
 
@@ -197,7 +197,9 @@ systemCommand
   .command('doctor [subsystem]')
   .description('Check all ports, background daemons, and system health (or doctor security)')
   .option('--tenant <id>', 'Tenant ID for security checks')
-  .action(runDoctor);
+  .action(async (subsystem, opts) => {
+    await runDoctor(subsystem, opts);
+  });
 
 // 2. Port Conflict Self-Healing
 systemCommand

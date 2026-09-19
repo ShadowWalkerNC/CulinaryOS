@@ -60,7 +60,9 @@ program
   .command('doctor [subsystem]')
   .description('Run system health, security posture, or UI ergonomics diagnostics (e.g. culinary doctor security)')
   .option('--tenant <id>', 'Tenant ID for security checks')
-  .action(runDoctor);
+  .action(async (subsystem, opts) => {
+    await runDoctor(subsystem, opts);
+  });
 
 // 1. Init & Turnkey Provisioning Command
 program

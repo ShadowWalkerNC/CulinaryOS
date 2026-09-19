@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { MenuPage } from './pages/Menu';
 import { StaffPage } from './pages/Staff';
 import { PantryPage } from './pages/Pantry';
+import { PurchasingPage } from './pages/Purchasing';
 import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
@@ -14,6 +15,7 @@ export function App() {
   const adminNav = [
     { to: '/menu', label: 'Menu Editor', icon: 'restaurant_menu' },
     { to: '/staff', label: 'Staff & Hiring', icon: 'badge' },
+    { to: '/purchasing', label: 'Purchasing & Vendors', icon: 'shopping_cart' },
     { to: '/pantry', label: 'Pantry & Inventory', icon: 'inventory_2' },
     { to: '/tools', label: 'Tools & Addons', icon: 'extension' },
     { to: '/integrations', label: 'Integrations & Hub', icon: 'hub' },
@@ -74,6 +76,7 @@ export function App() {
         <Routes>
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/staff" element={<StaffPage />} />
+          <Route path="/purchasing" element={<PurchasingPage />} />
           <Route path="/pantry" element={<PantryPage />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/integrations" element={<IntegrationsPage />} />

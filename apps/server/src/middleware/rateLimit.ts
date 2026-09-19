@@ -26,7 +26,7 @@ const buckets = new Map<string, Bucket>();
 
 function bucketKey(c: Context): string {
   const fwd = c.req.header('x-forwarded-for');
-  const ip = (fwd ? fwd.split(',')[0] : (c.req.header('x-real-ip') ?? 'unknown')).trim() || 'unknown';
+  const ip = (fwd ? (fwd.split(',')[0] ?? '') : (c.req.header('x-real-ip') ?? 'unknown')).trim() || 'unknown';
   return `${c.req.path}::${ip}`;
 }
 

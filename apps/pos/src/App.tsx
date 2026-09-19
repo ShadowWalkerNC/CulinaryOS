@@ -14,6 +14,7 @@ import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
+  Button,
   X,
   Lock,
   ShoppingCart,

@@ -56,7 +56,7 @@ export interface TipPoolStaffDistribution {
   effectiveHourlyTipRateCents: number;
 }
 
-export type TipPoolMethod = 'hours_worked' | 'role_weighted' | 'percentage_split';
+export type TipPoolMethod = 'hours_worked' | 'role_weighted' | 'percentage_split' | 'keep_your_own' | 'percent_of_sales';
 
 export interface TipPoolReportSummary {
   method: TipPoolMethod;

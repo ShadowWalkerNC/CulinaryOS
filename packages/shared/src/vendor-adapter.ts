@@ -252,7 +252,7 @@ export class USFoodsAdapter implements VendorAdapter {
     return { vendorOrderRef, status: 'processing' };
   }
 
-  async parseElectronicInvoice(rawInvoiceData: string): Promise<ParsedVendorInvoice> {
+  async parseElectronicInvoice(_rawInvoiceData: string): Promise<ParsedVendorInvoice> {
     return {
       invoiceNumber: `USF-INV-${Date.now()}`,
       invoiceDate: new Date().toISOString().split('T')[0]!,
@@ -279,11 +279,11 @@ export class LocalDirectAdapter implements VendorAdapter {
     this.vendorName = vendorName;
   }
 
-  async searchCatalog(query: string): Promise<VendorCatalogItem[]> {
+  async searchCatalog(_query: string): Promise<VendorCatalogItem[]> {
     return [];
   }
 
-  async getLivePricing(vendorSkus: string[]): Promise<Map<string, number>> {
+  async getLivePricing(_vendorSkus: string[]): Promise<Map<string, number>> {
     return new Map();
   }
 

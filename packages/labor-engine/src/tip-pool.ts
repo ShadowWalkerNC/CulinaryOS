@@ -42,10 +42,10 @@ export interface RoleWeight {
 export interface TipPoolConfig {
   method: TipPoolMethod;
   poolTotalCents: number;
-  roles?: RoleWeight[];
-  rolePercentages?: Record<string, number>; // e.g. { foh: 70, boh: 20, support: 10 }
-  paysTipCredit?: boolean;                  // True if employer pays sub-minimum wage (requires FOH-only pool)
-  tipOutPercent?: number;                   // For keep_your_own or percent_of_sales (e.g. 3.0 = 3% tip-out)
+  roles?: RoleWeight[] | undefined;
+  rolePercentages?: Record<string, number> | undefined; // e.g. { foh: 70, boh: 20, support: 10 }
+  paysTipCredit?: boolean | undefined;                  // True if employer pays sub-minimum wage (requires FOH-only pool)
+  tipOutPercent?: number | undefined;                   // For keep_your_own or percent_of_sales (e.g. 3.0 = 3% tip-out)
 }
 
 export type FlsaStatus = 'ELIGIBLE' | 'EXCLUDED_MANAGER' | 'EXCLUDED_TIP_CREDIT';
@@ -450,9 +450,9 @@ export function calculateTipPool(
 export function generateTipPayrollCsv(
   summary: TipPoolSummary,
   opts?: {
-    format?: 'standard' | 'gusto' | 'adp';
-    date?: string;
-    companyCode?: string;
+    format?: 'standard' | 'gusto' | 'adp' | undefined;
+    date?: string | undefined;
+    companyCode?: string | undefined;
   }
 ): string {
   const format = opts?.format || 'standard';
