@@ -149,6 +149,12 @@ export {
   Home,
   PanelBottom,
   ShoppingCart,
+  Menu,
+  Upload,
+  Camera,
+  PieChart,
+  Calendar,
+  HelpCircle,
 } from 'lucide-react';
 
 
