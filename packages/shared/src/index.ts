@@ -15,3 +15,4 @@ export * from './modifiers.js';
 export * from './pricing.js';
 export * from './translation.js';
 export * from './kitchen-abbreviations.js';
+export * from './vendor-adapter.js';

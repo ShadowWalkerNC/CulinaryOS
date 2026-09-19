@@ -4,6 +4,7 @@
 // ============================================================
 
 import { Hono } from 'hono';
+import { calculateMultiRateTax, type TaxRatesConfig } from '@culinaryos/shared';
 import {
   calculateTipPool,
   generateTipPayrollCsv,
@@ -12,6 +13,7 @@ import {
   type RoleWeight,
   type TipPoolMethod,
 } from '@culinaryos/labor-engine';
+import type { ZReport, ZReportStatus, CategorySalesSummary, TenderBreakdown, CashDrawerReconciliation, VoidCompSummary } from '@culinaryos/shared';
 import { requireTenant, ok, err } from '../middleware/auth.js';
 import { verifyManagerPinDirectly, logAuditTrail } from '../lib/audit.js';
 import { generateZReportPdf } from '@culinaryos/pdf-tools';
@@ -208,17 +210,23 @@ reportsRoutes.post('/tip-pool/calculate', async (c) => {
     poolTotalCents: number;
     staff?: StaffHours[];
     roles?: RoleWeight[];
+    paysTipCredit?: boolean;   // FLSA gate: excludes BOH when employer takes tip credit
+    tipOutPercent?: number;    // For keep_your_own / percent_of_sales methods
   }>().catch(() => ({} as any));
 
   const method = body.method || 'role_weighted';
   const poolTotalCents = Number(body.poolTotalCents || 0);
   const staff = body.staff && body.staff.length > 0 ? body.staff : DEFAULT_SHIFT_STAFF;
+  const paysTipCredit = Boolean(body.paysTipCredit);
+  const tipOutPercent = body.tipOutPercent !== undefined ? Number(body.tipOutPercent) : undefined;
 
   const summary = calculateTipPool(
     {
       method,
       poolTotalCents,
       roles: body.roles,
+      paysTipCredit,
+      tipOutPercent,
     },
     staff
   );
@@ -732,33 +740,36 @@ reportsRoutes.get('/export/csv', async (c) => {
 // ============================================================
 // GET /v1/reports/tips/export/csv
 // Generates downloadable payroll CSV for shift tip pool distribution
+// Supports ?format=standard|gusto|adp for payroll system compatibility
 // ============================================================
 reportsRoutes.get('/tips/export/csv', async (c) => {
   const method = (c.req.query('method') as TipPoolMethod) || 'hours_worked';
   const poolTotalCents = parseInt(c.req.query('poolTotalCents') ?? '0', 10);
   const date = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
+  const format = (c.req.query('format') ?? 'standard') as 'standard' | 'gusto' | 'adp';
+  const paysTipCredit = c.req.query('paysTipCredit') === 'true';
+  const tipOutPercent = c.req.query('tipOutPercent') ? Number(c.req.query('tipOutPercent')) : undefined;
+  const companyCode = c.req.query('companyCode') ?? undefined;
 
   const summary = calculateTipPool(
     {
       method,
       poolTotalCents: isNaN(poolTotalCents) ? 0 : poolTotalCents,
+      paysTipCredit,
+      tipOutPercent,
     },
     DEFAULT_SHIFT_STAFF
   );
 
-  const csvHeader = 'Date,Staff ID,Staff Name,Role,Hours,FLSA Status,Effective Hourly Tip ($),Tip Payout ($)\n';
-  const csvBody = summary.staffPayouts.map((s) => {
-    const isExcluded = s.weight === 0;
-    const hourlyDollar = (s.effectiveHourlyTipRateCents / 100).toFixed(2);
-    const payoutDollar = (s.payoutCents / 100).toFixed(2);
-    return `"${date}","${s.staffId}","${s.staffName}","${s.role}",${s.hours},"${isExcluded ? 'EXCLUDED (FLSA)' : 'ELIGIBLE'}",${hourlyDollar},${payoutDollar}`;
-  }).join('\n');
+  // Use the FLSA-aware generateTipPayrollCsv from labor-engine
+  const csvContent = generateTipPayrollCsv(summary, { format, date, companyCode });
 
-  return new Response(csvHeader + csvBody, {
+  const formatLabel = format === 'gusto' ? 'Gusto' : format === 'adp' ? 'ADP' : 'Standard';
+  return new Response(csvContent, {
     status: 200,
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="CulinaryOS-Tip-Payroll-${date}.csv"`,
+      'Content-Disposition': `attachment; filename="CulinaryOS-Tip-Payroll-${formatLabel}-${date}.csv"`,
     },
   });
 });
