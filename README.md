@@ -6,7 +6,7 @@
 
 [![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
 [![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 110 Passing](https://img.shields.io/badge/Tests-110%20Passing-brightgreen.svg)](./tests/)
+[![Tests: 121 Passing](https://img.shields.io/badge/Tests-121%20Passing-brightgreen.svg)](./tests/)
 [![Typecheck: 47/47 Passing](https://img.shields.io/badge/Typecheck-47%2F47%20Passing-blue.svg)](./turbo.json)
 [![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
@@ -346,13 +346,15 @@ To enable multi-device sync, PostgreSQL Row Level Security (RLS), and live Supab
    ```bash
    npx supabase db reset
    ```
-3. Seed default tenant, menu, and staff PINs:
+3. Seed multi-organization, multi-venue demo data:
    ```bash
    pnpm seed
+   # Applies: base_tenant.sql → menu.sql → demo.sql → multi_venue_orgs.sql
+   # Seeds >= 2 Organizations, >= 3 Venues (Bistro, Commissary, Food Truck), recipes, and PO cycle
    ```
 4. Start the stack — POS, KDS, Admin, and MCP agents will now operate on your live database with strict tenant isolation.
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full Docker Compose and cloud hosting options.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/architecture.md`](docs/architecture.md) for multi-venue architecture and Docker options.
 
 ---
 
@@ -373,7 +375,7 @@ See [`docs/security.md`](docs/security.md) and `AGENTS.md` for the full ruleset.
 
 CulinaryOS enforces strict quality gates across the monorepo:
 ```bash
-# Run complete test suite (32 test suites, 110+ tests)
+# Run complete test suite (121 test suites across all packages and surfaces — 100% green)
 node ./scripts/run-all-tests.cjs
 
 # Run workspace-wide typecheck (18 tasks across all packages — 0 errors)

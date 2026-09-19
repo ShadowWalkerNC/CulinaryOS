@@ -28,9 +28,13 @@ const supabaseUrl = process.env.SUPABASE_URL ?? '';
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+const COMMISSARY_ID = '00000000-0000-0000-0000-000000000002';
+const FOOD_TRUCK_ID = '00000000-0000-0000-0000-000000000003';
+const ORG_APEX_ID = '00000000-0000-0000-0001-000000000000';
+const ORG_COASTAL_ID = '00000000-0000-0000-0002-000000000000';
 
 // SQL files applied (in order) by the DATABASE_URL path.
-const SQL_FILES = ['base_tenant.sql', 'menu.sql', 'demo.sql'];
+const SQL_FILES = ['base_tenant.sql', 'menu.sql', 'demo.sql', 'multi_venue_orgs.sql'];
 
 async function seedViaPostgres(url: string) {
   let pg: typeof import('pg') | null = null;
@@ -78,8 +82,18 @@ async function seedViaServiceRole(url: string, key: string) {
   };
 
   console.log(`[seed] Seeding via Supabase service-role REST → ${url}`);
+
+  // 1. Organizations (>= 2 organizations)
+  await upsert('organizations', [
+    { id: ORG_APEX_ID, name: 'Apex Hospitality Group', slug: 'apex-hospitality', billing_email: 'billing@apexhospitality.local', royalty_rate_percent: 4.5 },
+    { id: ORG_COASTAL_ID, name: 'Coastal Food Ventures', slug: 'coastal-food', billing_email: 'finance@coastalfood.local', royalty_rate_percent: 3.0 },
+  ]);
+
+  // 2. Venues (>= 3 venues across 2 orgs)
   await upsert('tenants', [
-    { id: TENANT_ID, slug: 'golden-fork', name: 'The Golden Fork', plan: 'pro', status: 'active' },
+    { id: TENANT_ID, organization_id: ORG_APEX_ID, slug: 'golden-fork', name: 'The Golden Fork', plan: 'pro', status: 'active', is_commissary: false },
+    { id: COMMISSARY_ID, organization_id: ORG_APEX_ID, slug: 'gf-commissary', name: 'Golden Fork Commissary & Bakery', plan: 'pro', status: 'active', is_commissary: true },
+    { id: FOOD_TRUCK_ID, organization_id: ORG_COASTAL_ID, slug: 'northern-fixins', name: 'Northern Fixins Food Truck', plan: 'starter', status: 'active', is_commissary: false },
   ]);
   await upsert('menus', [
     { id: '00000000-0000-0000-0000-0000000000a0', tenant_id: TENANT_ID, name: 'Dinner Menu', description: 'CulinaryOS demo dinner menu', status: 'active', published_at: new Date().toISOString() },
