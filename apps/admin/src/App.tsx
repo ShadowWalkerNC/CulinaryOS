@@ -49,8 +49,8 @@ export function App() {
             <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
 
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ResponsiveShell>
 
