@@ -16,6 +16,7 @@ import {
   Terminal,
   RotateCcw,
   Sparkles,
+  Download,
 } from '@culinaryos/ui';
 
 interface SubsystemStatus {
@@ -106,6 +107,40 @@ export function SystemHealthPage() {
     }, 1500);
   };
 
+  const exportDiagnosticsBundle = () => {
+    const bundle = {
+      product: 'CulinaryOS Commercial',
+      version: '1.2.1-commercial',
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      screenResolution: `${window.innerWidth}x${window.innerHeight}`,
+      subsystems: subsystems.map((s) => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        status: s.status,
+        technicalDetails: s.technicalDetails,
+      })),
+      storageTelemetry: {
+        localStorageKeys: Object.keys(localStorage),
+        offlineCacheReady: true,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `culinaryos-diagnostics-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setRepairSuccess('Support Diagnostics Bundle exported. Attach this file to your support request.');
+    setTimeout(() => setRepairSuccess(null), 5000);
+  };
+
   const hasIssues = subsystems.some((s) => s.status !== 'healthy');
 
   return (
@@ -122,6 +157,13 @@ export function SystemHealthPage() {
             'Regularly download a backup file from the Backup tab to keep in your permanent records.',
           ],
         }}
+        secondaryActions={[
+          {
+            label: 'Export Support Bundle',
+            icon: <Download className="w-4 h-4" />,
+            onClick: exportDiagnosticsBundle,
+          },
+        ]}
         primaryAction={{
           label: 'Run Complete Diagnostic Scan',
           icon: <RefreshCw className="w-4 h-4" />,
