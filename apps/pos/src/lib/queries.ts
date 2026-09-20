@@ -259,6 +259,145 @@ const MOCK_MENU = {
   ]
 };
 
+export const CHEEZIES_POS_MENU = {
+  id: 'cheezies-gourmet-menu',
+  name: 'Cheezies Gourmet (Ohio Pilot Menu)',
+  sections: [
+    {
+      id: 'section-cheezies-sig',
+      name: 'Signature Creations',
+      sort_order: 1,
+      items: [
+        {
+          id: 'item-cheezies-patty-meltdown',
+          name: 'The Patty Meltdown',
+          description: 'Smash-seared Prime Rib patty, caramelized onions, Swiss & American, sweet & tangy sauce on sourdough.',
+          price: 1300,
+          status: 'available',
+          station: 'grill',
+          allergens: ['dairy', 'gluten'],
+          sort_order: 1,
+          modifier_groups: [
+            {
+              id: 'group-cheezies-patty-mods',
+              name: 'Patty Options',
+              required: false,
+              min_selections: 0,
+              max_selections: 2,
+              modifiers: [
+                { id: 'mod-extra-bacon', name: 'Add Smoked Bacon', price_adjustment: 200, is_default: false },
+                { id: 'mod-extra-cheese', name: 'Extra Swiss & American', price_adjustment: 150, is_default: false },
+              ]
+            }
+          ]
+        },
+        {
+          id: 'item-cheezies-mac-attack',
+          name: 'The Mac Attack',
+          description: 'Bacon Mac & Cheese stuffed between thick Texas Toast.',
+          price: 1200,
+          status: 'available',
+          station: 'grill',
+          allergens: ['dairy', 'gluten'],
+          sort_order: 2,
+          modifier_groups: []
+        },
+        {
+          id: 'item-cheezies-truffle-melt',
+          name: 'The Truffle Melt',
+          description: 'Gruyère, sautéed mushrooms, fresh thyme & truffle oil drizzle on golden sourdough.',
+          price: 1500,
+          status: 'available',
+          station: 'grill',
+          allergens: ['dairy', 'gluten'],
+          sort_order: 3,
+          modifier_groups: []
+        }
+      ]
+    },
+    {
+      id: 'section-cheezies-melts',
+      name: 'Gourmet Melts',
+      sort_order: 2,
+      items: [
+        {
+          id: 'item-cheezies-classic',
+          name: 'The Classic',
+          description: 'Aged cheddar & American on buttery sourdough — the grilled cheese that started it all.',
+          price: 900,
+          status: 'available',
+          station: 'grill',
+          allergens: ['dairy', 'gluten'],
+          sort_order: 1,
+          modifier_groups: []
+        },
+        {
+          id: 'item-cheezies-buffalo-chicken',
+          name: 'The Buffalo Chicken',
+          description: 'Shredded chicken, buffalo sauce, blue cheese crumble & mozzarella on sourdough.',
+          price: 1300,
+          status: 'available',
+          station: 'grill',
+          allergens: ['dairy', 'gluten'],
+          sort_order: 2,
+          modifier_groups: []
+        }
+      ]
+    },
+    {
+      id: 'section-cheezies-sides',
+      name: 'Sides & Refreshments',
+      sort_order: 3,
+      items: [
+        {
+          id: 'item-cheezies-combo',
+          name: 'Chips & Drink Combo',
+          description: 'Add crispy kettle chips and an ice-cold canned beverage to any sandwich.',
+          price: 350,
+          status: 'available',
+          station: 'expo',
+          allergens: [],
+          sort_order: 1,
+          modifier_groups: []
+        },
+        {
+          id: 'item-cheezies-soup',
+          name: 'Tomato Basil Dipping Soup',
+          description: 'Warm, creamy roasted tomato basil soup cup for dunking grilled cheese.',
+          price: 450,
+          status: 'available',
+          station: 'expo',
+          allergens: ['dairy'],
+          sort_order: 2,
+          modifier_groups: []
+        },
+        {
+          id: 'item-cheezies-extra-bacon',
+          name: 'Add Smoked Bacon',
+          description: 'Thick applewood smoked bacon add-on.',
+          price: 200,
+          status: 'available',
+          station: 'grill',
+          allergens: [],
+          sort_order: 3,
+          modifier_groups: []
+        },
+        {
+          id: 'item-cheezies-drinks',
+          name: 'Ice Cold Can Soda / Water',
+          description: 'Choice of Coca-Cola, Diet Coke, Sprite, or chilled Spring Water.',
+          price: 200,
+          status: 'available',
+          station: 'expo',
+          allergens: [],
+          sort_order: 4,
+          modifier_groups: []
+        }
+      ]
+    }
+  ]
+};
+
 // ---- MENU ----
 export function useMenu() {
   const tenantId = usePOSStore((s) => s.tenantId);
@@ -266,6 +405,10 @@ export function useMenu() {
     queryKey: ['menu', tenantId],
     queryFn: async () => {
       if (!supabase) {
+        const activeProfile = typeof window !== 'undefined' ? localStorage.getItem('culinaryos_active_profile') : null;
+        if (activeProfile === 'cheezies') {
+          return CHEEZIES_POS_MENU;
+        }
         return MOCK_MENU;
       }
       const { data, error } = await supabase

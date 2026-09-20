@@ -4,6 +4,8 @@ import {
   loadLocalSettings,
   saveLocalSettings,
   applyDisplaySettingsToDOM,
+  CHEEZIES_COMPANY_INFO,
+  CHEEZIES_SETTINGS_TEMPLATE,
   type CulinaryOSSettings,
   type KitchenStationConfig,
   type ItemRoutingRule,
@@ -208,6 +210,30 @@ export function SettingsPage() {
       {activeTab === 'company' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-2xl border border-[#e5e7eb] shadow-xs animate-fadeIn">
           <div className="space-y-4">
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3">
+              <div>
+                <p className="font-bold text-amber-950 text-xs">Load Cheezies Gourmet Profile</p>
+                <p className="text-[11px] text-amber-800">449 Howe Ave, Cuyahoga Falls, OH · 6.75% Tax</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-white border-amber-300 text-amber-950 hover:bg-amber-100 text-xs font-bold shrink-0 min-h-[36px]"
+                onClick={() => {
+                  setSettings((prev) => ({
+                    ...prev,
+                    ...CHEEZIES_SETTINGS_TEMPLATE,
+                    company: CHEEZIES_COMPANY_INFO,
+                  }));
+                  setIsSaved(true);
+                  setSaveMessage('Cheezies Gourmet profile and Summit County tax rates loaded!');
+                  setTimeout(() => { setIsSaved(false); setSaveMessage(''); }, 4000);
+                }}
+              >
+                Apply Cheezies
+              </Button>
+            </div>
+
             <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-wider border-b border-[#e5e7eb] pb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">badge</span>
               Restaurant Legal Identity

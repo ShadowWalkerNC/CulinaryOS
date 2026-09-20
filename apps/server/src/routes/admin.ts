@@ -8,6 +8,7 @@ import { requireTenant, ok, err } from '../middleware/auth.js';
 import { hashPin } from '../lib/pin.js';
 import { isLiveSupabaseConfigured } from '../lib/secrets.js';
 import { managerGate } from '../lib/rbac.js';
+import { CHEEZIES_MENU_ITEMS } from '@culinaryos/shared';
 
 export const adminRoutes = new Hono<Env>();
 adminRoutes.use('*', requireTenant);
@@ -19,14 +20,14 @@ function requireManager(c: any): Response | null {
 
 // In-Memory Mock Store for Offline / Demo Mode (No Supabase required)
 let mockMenuItems: any[] = [
-  { id: 'm-1', name: 'Wood-Fired Margherita Pizza', description: 'San Marzano tomato, fresh mozzarella, basil, EVOO', price: 1800, status: 'available', station: 'grill', sort_order: 1 },
-  { id: 'm-2', name: 'Prime Bistro Burger', description: '8oz dry-aged beef, aged cheddar, caramelized onion, brioche', price: 2200, status: 'available', station: 'grill', sort_order: 2 },
-  { id: 'm-3', name: 'Crispy Truffle Fries', description: 'Hand-cut russet potatoes, white truffle oil, parmigiano, herbs', price: 1000, status: 'available', station: 'fry', sort_order: 3 },
-  { id: 'm-4', name: 'Classic Caesar Salad', description: 'Romaine hearts, sourdough croutons, parmesan crisp, house dressing', price: 1400, status: 'available', station: 'cold', sort_order: 4 },
-  { id: 'm-5', name: 'Crispy Calamari', description: 'Point Judith squid, cherry peppers, citrus aioli', price: 1600, status: 'available', station: 'fry', sort_order: 5 },
-  { id: 'm-6', name: 'Ribeye Steak 12oz', description: 'Prime beef, herb compound butter, roasted garlic', price: 3800, status: 'available', station: 'grill', sort_order: 6 },
-  { id: 'm-7', name: 'Craft IPA Pint', description: 'Local draft India Pale Ale, 6.8% ABV', price: 800, status: 'available', station: 'bar', sort_order: 7 },
-  { id: 'm-8', name: 'House Red Wine Glass', description: 'Cabernet Sauvignon, Napa Valley', price: 1200, status: 'available', station: 'bar', sort_order: 8 },
+  ...CHEEZIES_MENU_ITEMS.map((item, idx) => ({
+    ...item,
+    sort_order: idx + 1,
+  })),
+  { id: 'm-1', name: 'Wood-Fired Margherita Pizza', description: 'San Marzano tomato, fresh mozzarella, basil, EVOO', price: 1800, status: 'available', station: 'grill', sort_order: 10 },
+  { id: 'm-2', name: 'Prime Bistro Burger', description: '8oz dry-aged beef, aged cheddar, caramelized onion, brioche', price: 2200, status: 'available', station: 'grill', sort_order: 11 },
+  { id: 'm-3', name: 'Crispy Truffle Fries', description: 'Hand-cut russet potatoes, white truffle oil, parmigiano, herbs', price: 1000, status: 'available', station: 'fry', sort_order: 12 },
+  { id: 'm-4', name: 'Classic Caesar Salad', description: 'Romaine hearts, sourdough croutons, parmesan crisp, house dressing', price: 1400, status: 'available', station: 'cold', sort_order: 13 },
 ];
 
 let mockStaffMembers: any[] = [

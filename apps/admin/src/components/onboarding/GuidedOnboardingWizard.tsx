@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BUSINESS_PRESETS, type BusinessPreset } from '../../data/businessPresets';
 import {
+  saveLocalSettings,
+  CHEEZIES_SETTINGS_TEMPLATE,
+  CHEEZIES_COMPANY_INFO,
+  type CulinaryOSSettings,
+} from '@culinaryos/shared';
+import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
@@ -32,14 +38,17 @@ export function GuidedOnboardingWizard({
   const totalSteps = 5;
 
   // Step 1 State: Identity & Concept Preset
-  const [restaurantName, setRestaurantName] = useState('The Golden Fork');
-  const [cityState, setCityState] = useState('Portland, ME');
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('full-service');
+  const [restaurantName, setRestaurantName] = useState('Cheezies Gourmet');
+  const [cityState, setCityState] = useState('Cuyahoga Falls, OH');
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('cheezies-gourmet');
+  const [ownerName, setOwnerName] = useState('Nathaniel (Operator)');
+  const [ownerEmail, setOwnerEmail] = useState('oglmf@hotmail.com');
+  const [staffPin, setStaffPin] = useState('1234');
 
   // Step 2 State: Service & Floor Setup
-  const [tablesCount, setTablesCount] = useState(24);
-  const [taxRate, setTaxRate] = useState(8.25);
-  const [tipDistribution, setTipDistribution] = useState<'hours-weighted' | 'keep-your-own'>('hours-weighted');
+  const [tablesCount, setTablesCount] = useState(0);
+  const [taxRate, setTaxRate] = useState(6.75);
+  const [tipDistribution, setTipDistribution] = useState<'hours-weighted' | 'keep-your-own'>('keep-your-own');
 
   // Step 3 State: Hardware Auto-Discovery
   const [detectingHardware, setDetectingHardware] = useState(false);
@@ -79,7 +88,29 @@ export function GuidedOnboardingWizard({
       }
       setCurrentStep(currentStep + 1);
     } else {
-      // Completed!
+      // Completed! Save profile and session
+      if (selectedPresetId === 'cheezies-gourmet') {
+        saveLocalSettings({
+          ...CHEEZIES_SETTINGS_TEMPLATE,
+          company: {
+            ...CHEEZIES_COMPANY_INFO,
+            name: restaurantName,
+            email: ownerEmail,
+            taxRatePercent: taxRate,
+          },
+        });
+        localStorage.setItem('culinaryos_active_profile', 'cheezies');
+        localStorage.setItem('culinaryos_staff_pin', staffPin);
+        localStorage.setItem('culinaryos_owner_email', ownerEmail);
+      } else {
+        saveLocalSettings({
+          company: {
+            name: restaurantName,
+            email: ownerEmail,
+            taxRatePercent: taxRate,
+          } as any,
+        });
+      }
       if (onComplete) onComplete();
       onClose();
       navigate('/dashboard');
@@ -149,7 +180,7 @@ export function GuidedOnboardingWizard({
                     value={restaurantName}
                     onChange={(e) => setRestaurantName(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                    placeholder="e.g. The Golden Fork"
+                    placeholder="e.g. Cheezies Gourmet"
                   />
                 </div>
                 <div>
@@ -159,16 +190,63 @@ export function GuidedOnboardingWizard({
                     value={cityState}
                     onChange={(e) => setCityState(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                    placeholder="e.g. Austin, TX"
+                    placeholder="e.g. Cuyahoga Falls, OH"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2">
+              {/* Owner Account Details */}
+              <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-orange-950 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-orange-600" />
+                    Manager Account & Staff PIN
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-200 text-orange-900 rounded-full">
+                    Primary Profile
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Operator Name</label>
+                    <input
+                      type="text"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium"
+                      placeholder="Nathaniel (Operator)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Email / Login</label>
+                    <input
+                      type="email"
+                      value={ownerEmail}
+                      onChange={(e) => setOwnerEmail(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium"
+                      placeholder="oglmf@hotmail.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Quick PIN (POS/KDS)</label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      value={staffPin}
+                      onChange={(e) => setStaffPin(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold tracking-widest text-center"
+                      placeholder="1234"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
                 <label className="text-xs font-bold text-slate-700 block">Choose Starter Concept:</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {BUSINESS_PRESETS.map((preset) => {
                     const isSelected = selectedPresetId === preset.id;
+                    const isCheezies = preset.id === 'cheezies-gourmet';
                     return (
                       <div
                         key={preset.id}
@@ -177,13 +255,23 @@ export function GuidedOnboardingWizard({
                           setTablesCount(preset.tablesCount);
                           setTaxRate(preset.suggestedTaxRatePct);
                           setTipDistribution(preset.tipDistributionMethod === 'keep-your-own' ? 'keep-your-own' : 'hours-weighted');
+                          if (isCheezies) {
+                            setRestaurantName('Cheezies Gourmet');
+                            setCityState('Cuyahoga Falls, OH');
+                            setOwnerEmail('oglmf@hotmail.com');
+                          }
                         }}
-                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.98] ${
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.98] relative ${
                           isSelected
                             ? 'border-orange-500 bg-orange-50/50 ring-2 ring-orange-300'
                             : 'border-slate-200 hover:border-slate-300 bg-white'
                         }`}
                       >
+                        {isCheezies && (
+                          <span className="absolute -top-2 right-3 text-[9px] font-extrabold uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-xs">
+                            Ohio Pilot
+                          </span>
+                        )}
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="font-bold text-sm text-slate-900">{preset.name}</span>
                           {isSelected && <CheckCircle2 className="w-4 h-4 text-orange-600" />}

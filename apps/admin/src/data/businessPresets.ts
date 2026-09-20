@@ -23,6 +23,34 @@ export interface BusinessPreset {
 
 export const BUSINESS_PRESETS: BusinessPreset[] = [
   {
+    id: 'cheezies-gourmet',
+    name: 'Cheezies Gourmet (Ohio Pilot)',
+    tagline: 'Gourmet grilled cheese food truck & catering in Akron / Cuyahoga Falls, OH',
+    icon: 'flame',
+    description: 'The official live pilot profile for Cheezies Gourmet Ohio. Features handcrafted artisan melts (The Patty Meltdown, The Mac Attack, The Truffle Melt), food-truck order numbering, Summit County 6.75% tax rate, and fast line-expo routing.',
+    serviceModel: 'counter-service',
+    suggestedTaxRatePct: 6.75,
+    tipDistributionMethod: 'keep-your-own',
+    sampleCategories: ['Signature Creations', 'Gourmet Melts', 'Sides & Refreshments'],
+    sampleItemsCount: 9,
+    sampleItems: [
+      { name: 'The Patty Meltdown', category: 'Signature Creations', price: 13.0, cost: 4.1, station: 'truck-line', description: 'Smash-seared Prime Rib patty, caramelized onions, Swiss & American, sweet & tangy sauce on sourdough.' },
+      { name: 'The Mac Attack', category: 'Signature Creations', price: 12.0, cost: 3.2, station: 'truck-line', description: 'Bacon Mac & Cheese stuffed between thick Texas Toast.' },
+      { name: 'The Truffle Melt', category: 'Signature Creations', price: 15.0, cost: 4.8, station: 'truck-line', description: 'Gruyère, sautéed mushrooms, fresh thyme & truffle oil drizzle on golden sourdough.' },
+      { name: 'The Classic', category: 'Gourmet Melts', price: 9.0, cost: 2.1, station: 'truck-line', description: 'Aged cheddar & American on buttery sourdough — the grilled cheese that started it all.' },
+      { name: 'The Buffalo Chicken', category: 'Gourmet Melts', price: 13.0, cost: 3.9, station: 'truck-line', description: 'Shredded chicken, buffalo sauce, blue cheese crumble & mozzarella on sourdough.' },
+      { name: 'Chips & Drink Combo', category: 'Sides & Refreshments', price: 3.5, cost: 0.95, station: 'truck-expo', description: 'Add crispy kettle chips and an ice-cold canned beverage to any sandwich.' },
+      { name: 'Tomato Basil Dipping Soup', category: 'Sides & Refreshments', price: 4.5, cost: 1.1, station: 'truck-expo', description: 'Warm, creamy roasted tomato basil soup cup for dunking grilled cheese.' },
+      { name: 'Add Applewood Smoked Bacon', category: 'Sides & Refreshments', price: 2.0, cost: 0.65, station: 'truck-line', description: 'Crispy applewood smoked bacon slice added into any sandwich.' },
+      { name: 'Ice Cold Can Soda / Water', category: 'Sides & Refreshments', price: 2.0, cost: 0.45, station: 'truck-expo', description: 'Choice of Coca-Cola, Diet Coke, Sprite, or chilled Spring Water.' },
+    ],
+    kitchenStations: [
+      { name: 'Truck Line & Flat Top', code: 'truck-line', color: '#f59e0b' },
+      { name: 'Cold Assembly & Expo', code: 'truck-expo', color: '#10b981' },
+    ],
+    tablesCount: 0,
+  },
+  {
     id: 'full-service',
     name: 'Full-Service Dining & Bar',
     tagline: 'Multi-course dining, split checks, bar & kitchen routing',
