@@ -1,7 +1,7 @@
-# Railway reads this file from the repo root.
-# Each service is configured in the Railway dashboard
-# pointing to its Dockerfile.* at the repo root.
-# Build context is always the full repo root.
+# Legacy Docker configuration, retained for existing consumers.
+# The current CulinaryOS Railway services use dashboard-managed Railpack.
+# Do not attach this file to those services; see docs/DEPLOYMENT.md section 5.
+# Build context for either approach is the full repository root.
 
 [build]
   builder = "dockerfile"

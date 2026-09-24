@@ -13,12 +13,13 @@ COPY packages/ ./packages/
 COPY apps/server/package.json ./apps/server/
 
 # Install only the backend dependencies
-RUN pnpm install --frozen-lockfile --filter @culinaryos/server
+RUN pnpm install --frozen-lockfile --filter @culinaryos/server...
 
 # Copy server source code
 COPY apps/server/ ./apps/server/
 
-# Compile TypeScript
+# Build config exports and typecheck. Workspace packages export TypeScript;
+# the production start script runs them through the pinned tsx dependency.
 RUN pnpm --filter @culinaryos/server run build
 
 EXPOSE 3000

@@ -71,7 +71,6 @@
     "@culinaryos/server": "workspace:*",
     "@culinaryos/shared": "workspace:*",
     "@culinaryos/waste-engine": "workspace:*",
-    "@esbuild/win32-x64": "0.28.1",
     "@supabase/supabase-js": "^2.43.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.0",
@@ -87,6 +86,9 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "optionalDependencies": {
+    "@esbuild/win32-x64": "0.28.1"
   },
   "dependencies": {
     "@swc/helpers": "0.5.11",

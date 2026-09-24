@@ -91,19 +91,28 @@ Deploy individual apps by linking the monorepo root to Vercel and configuring ro
 
 ## 5. Deployment Option C: Railway
 
-A `railway.toml` is included in the repository root. Deploy the unified API to Railway in one step:
+Use separate Railpack services with the repository root as the build context. The current Railway project is `9d7feb1d-d852-4c93-a2a8-75de59bf43a0`. The root `railway.toml` describes the old Docker setup; it is not the configuration used by the current dashboard-managed services.
 
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
+| Service | Build command | Start command | Service variable |
+| --- | --- | --- | --- |
+| culinaryos-api | `pnpm --filter @culinaryos/server build` | `pnpm --filter @culinaryos/server start` | `NODE_ENV=production` |
+| culinaryos-web | `pnpm --filter @culinaryos/app-web build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/web/dist` |
+| culinaryos-admin | `pnpm --filter @culinaryos/admin build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist` |
 
-# Login and deploy
-railway login
-railway link   # link to your Railway project
-railway up
-```
+Railpack installs from the pnpm lockfile before the build command. Web and Admin explicitly build their compiled config package, so they do not depend on outputs from a prior local API build. The API starts TypeScript through its production `tsx` dependency because workspace packages export TypeScript source and the server typecheck does not emit `dist/index.js`.
 
-Set all required environment variables in the Railway dashboard under **Variables**.
+[Railpack native SPA hosting](https://railpack.com/languages/node) serves static assets with Caddy and supports client-side routes. A custom start command disables SPA mode. Do not use the repository's interactive root `start` command for these services. Set `VITE_API_URL` on each frontend **before building** to the API's public URL. Configure API healthcheck `/health` and frontend healthcheck `/`; API health is currently a process check, not a database readiness check.
+
+### Deployment verification and rollback
+
+1. Run `pnpm install --frozen-lockfile`, then the three build commands above. Both Next apps elsewhere in this monorepo must also have patched dependencies: Railway scans the shared lockfile even when deploying a Vite app.
+2. After the reviewed commit is pushed, inspect each service's build/deploy logs and verify the deployed commit. Never bypass Railway's vulnerability scan.
+3. Verify public Web/Admin HTML and nested-route fallback, API `/health`, and configured API calls. A green healthcheck alone does not prove authentication, tenant isolation, payment or database behavior.
+4. Record deployment IDs, commit, and results in [the shared ledger](AI_SHARED_LEDGER.md). Roll back a failed release by restoring the previous service settings and reverting the relevant logical commit; never reset the database as a deployment workaround.
+
+### Database transition status
+
+The user selected **fresh Railway PostgreSQL, replacing Supabase**, with no existing data to migrate. This is a target decision, not an implemented backend. Current code still uses Supabase Auth, data APIs, and realtime, and current migrations reference Supabase roles/functions/publications. A `DATABASE_URL` substitution is insufficient. Do not remove Supabase variables and label the resulting offline/demo behavior production-ready. Complete replacement authentication, restricted runtime database access with tenant RLS tests, query adapters, and realtime delivery before a database cutover.
 
 ---
 
