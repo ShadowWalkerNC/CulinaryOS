@@ -1,5 +1,7 @@
 # CulinaryOS — Antigravity Rules & Research Dossier (v2)
 
+> **Shared AI coordination:** Codex and Muse must read [docs/AI_SHARED_LEDGER.md](docs/AI_SHARED_LEDGER.md) before work, claim non-overlapping file ownership, and record verification and handoffs there. Deployment stabilization is the current priority.
+
 > **Extends:** `ShadowWalkerNC/.github/AGENTS.md` — all global rules apply unconditionally.
 > **Auto-loaded by:** Google Antigravity (`.agent/rules/`) · Claude Code · GitHub Copilot · OpenAI Codex · Cursor · Windsurf
 > **Canonical global system:** [ShadowWalkerNC/.github](https://github.com/ShadowWalkerNC/.github)
