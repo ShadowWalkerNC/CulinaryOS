@@ -1,7 +1,7 @@
-# Legacy Docker configuration, retained for existing consumers.
-# The current CulinaryOS Railway services use dashboard-managed Railpack.
-# Do not attach this file to those services; see docs/DEPLOYMENT.md section 5.
-# Build context for either approach is the full repository root.
+# Railway config overrides the dashboard builder for existing services.
+# Keep only the shared builder here; service-specific build/start commands,
+# healthchecks and SPA output variables live in the Railway dashboard.
+# See docs/DEPLOYMENT.md section 5. Build context is the repository root.
 
 [build]
-  builder = "dockerfile"
+  builder = "railpack"

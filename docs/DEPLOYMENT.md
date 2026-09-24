@@ -91,7 +91,7 @@ Deploy individual apps by linking the monorepo root to Vercel and configuring ro
 
 ## 5. Deployment Option C: Railway
 
-Use separate Railpack services with the repository root as the build context. The current Railway project is `9d7feb1d-d852-4c93-a2a8-75de59bf43a0`. The root `railway.toml` describes the old Docker setup; it is not the configuration used by the current dashboard-managed services.
+Use separate Railpack services with the repository root as the build context. The current Railway project is `9d7feb1d-d852-4c93-a2a8-75de59bf43a0`. The root `railway.toml` selects the shared Railpack builder; service-specific commands and variables are managed in the dashboard. Railway reads the root file even when the dashboard builder appears to be Railpack: config-as-code overrides are not reflected in the dashboard settings. The former Docker override caused a confirmed `couldn't locate a dockerfile at path Dockerfile in code archive` failure after dependency scanning was fixed.
 
 | Service | Build command | Start command | Service variable |
 | --- | --- | --- | --- |

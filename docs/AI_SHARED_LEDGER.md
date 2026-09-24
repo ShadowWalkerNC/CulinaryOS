@@ -27,15 +27,16 @@ Codex and Muse share this repository and this file. Read this ledger and `git st
 - Server build, Web build and Admin build passed locally. API isolated startup smoke returned HTTP 200 at `/health`; no live database functionality was verified.
 - Windows-specific esbuild binary moved to optional dependencies for Linux installs.
 - Railway settings observed: Railpack, monorepo root, GitHub main, filtered service builds. Web has no custom start. Web/Admin need explicit Railpack SPA output directories; API needs filtered start command.
-- Release implementation committed locally as `7969f8c` (`fix(deploy): unblock Railway builds and service startup`). Last observed remote builds still fail at dependency scanning; no successful deployment claimed.
+- User approved and Codex pushed `7969f8c` and `a8b64be` to main. Railway's next build passed archive/security scanning but failed because the root config still forced Docker. No successful deployment claimed.
 
 ## Release checks still open
 
-- Finish staging Railway API/frontend settings, obtain exact reviewed push approval, inspect deployment logs and public smoke checks.
+- Correct the confirmed root builder override, then inspect deployment logs and public smoke checks. The 11 reviewed Railway settings have been applied.
 - Record deployment IDs and tested commit after success. Revert the corresponding logical commit/settings to roll back; do not reset or destroy a database.
 
 ## Codex entries
 
+- 2026-09-24: Approved commits pushed and 11 Railway settings applied. API deployment `0a2436e8-cfd6-4a9a-ab44-10db386d6d11` failed with `couldn't locate a dockerfile at path Dockerfile in code archive`. This disproves our earlier assumption that the root config was unused. Railway documentation confirms file settings override the dashboard without changing its display. Corrected root builder to `railpack` and corrected the runbook. No application logic changed in this follow-up.
 - 2026-09-24: Reviewed 11 staged Railway changes: filtered build commands on all three services, `/health` API and `/` frontend healthchecks, two SPA output variables, two VITE_API_URL variables pointing to the existing API public domain, and API CORS_ORIGINS limited to the existing Web/Admin public origins. API already has NODE_ENV=production and AUTH_RELAXED=false. No database credentials configured or modified. Release waits for the required reviewed Git push approval, then apply settings and verify.
 - 2026-09-24: Muse completed independent review with no confirmed blockers or changed-code security regressions. Its runtime and database caveats remain open as documented. Clarification: the Windows esbuild package moved from **devDependencies** to optionalDependencies. Annotated the legacy root railway.toml to prevent accidental use with Railpack.
 - 2026-09-24: Frozen lockfile install with scripts disabled passed. Updated Web and Admin builds explicitly compile config; both builds passed (existing chunk-size warnings only). Node/tsx regression runs passed for `demo-payment-guard.test.ts` and `tenant-isolation.test.ts`. These are not live database integration tests.
