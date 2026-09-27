@@ -86,4 +86,12 @@ Append dated findings here with file paths, severity, and evidence. Distinguish 
     - `pnpm run typecheck`: 47/47 tasks successful, 0 errors (24.2s).
     - `tests/e2e/ui-ergonomics.test.ts`: 100% passed (exit code 0).
     - Master Test Runner `node ./scripts/run-all-tests.cjs`: 124 passed, 0 failed.
+- 2026-09-27 (Antigravity): Executed Milestone 2 3D Floor Map & Touch Ergonomics Elevation:
+  - Scope: `packages/ui/src/components/FloorMap3D.tsx`.
+  - Elevated floating camera controls (`RotateCw`, `3D`, `2D`, `ZoomIn`, `ZoomOut`, `RotateCcw`) from 36px to 44–48px ergonomic touch targets (`min-h-[44px] min-w-[44px] sm:min-h-[48px] sm:min-w-[48px]`).
+  - Added tactile haptic spring physics (`active:scale-[0.97] transition-transform duration-75 ease-out`), accessible `focus-visible:ring-2 focus-visible:ring-primary`, and dark mode support (`dark:bg-slate-900/95`).
+  - Verification:
+    - `@culinaryos/ui` package build: passed (`tsc`).
+    - Full monorepo typecheck: `pnpm run typecheck` passed (47/47 tasks successful, 0 errors in 20.7s).
+    - Test runner: `node ./scripts/run-all-tests.cjs` passed (124/124 suites green, 0 failed).
 

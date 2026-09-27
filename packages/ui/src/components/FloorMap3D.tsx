@@ -624,50 +624,62 @@ export function FloorMap3D({
       )}
 
       {/* Floating Camera & Editor Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 z-10">
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10 select-none">
         {editMode && selectedTableId && (
           <button
+            type="button"
             onClick={handleRotateSelected}
             title="Rotate Selected Table 45°"
-            className="w-9 h-9 rounded-xl bg-sky-600 text-white shadow-md flex items-center justify-center hover:bg-sky-500 active:scale-95 transition-all mb-1 border border-sky-400"
+            aria-label="Rotate Selected Table 45°"
+            className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-sky-600 text-white shadow-md flex items-center justify-center hover:bg-sky-500 active:scale-[0.97] transition-transform duration-75 ease-out mb-0.5 border border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
           >
-            <RotateCw className="w-4 h-4" />
+            <RotateCw className="w-5 h-5" />
           </button>
         )}
         <button
+          type="button"
           onClick={setIsometricView}
           title="Isometric View"
-          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all text-[11px] font-black"
+          aria-label="Switch to Isometric 3D View"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-muted/80 active:scale-[0.97] transition-transform duration-75 ease-out text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
         >
           3D
         </button>
         <button
+          type="button"
           onClick={setTopDownView}
           title="Top-Down Blueprint View"
-          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all text-[11px] font-black"
+          aria-label="Switch to Top-Down 2D Blueprint View"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-muted/80 active:scale-[0.97] transition-transform duration-75 ease-out text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
         >
           2D
         </button>
         <button
+          type="button"
           onClick={zoomIn}
           title="Zoom In"
-          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          aria-label="Zoom Camera In"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-muted/80 active:scale-[0.97] transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
         >
-          <ZoomIn className="w-4 h-4" />
+          <ZoomIn className="w-5 h-5" />
         </button>
         <button
+          type="button"
           onClick={zoomOut}
           title="Zoom Out"
-          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          aria-label="Zoom Camera Out"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-muted/80 active:scale-[0.97] transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
         >
-          <ZoomOut className="w-4 h-4" />
+          <ZoomOut className="w-5 h-5" />
         </button>
         <button
+          type="button"
           onClick={resetCamera}
           title="Reset Perspective"
-          className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-white active:scale-95 transition-all"
+          aria-label="Reset Camera Perspective"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] sm:w-12 sm:h-12 sm:min-h-[48px] sm:min-w-[48px] rounded-xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xs text-foreground flex items-center justify-center hover:bg-muted/80 active:scale-[0.97] transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-4 h-4" />
         </button>
       </div>
 
