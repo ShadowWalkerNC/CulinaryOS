@@ -28,6 +28,9 @@ import {
   Input,
   Badge,
   Button,
+  Receipt,
+  Droplets,
+  HelpCircle,
 } from '@culinaryos/ui';
 
 type TablesideMode = 'view' | 'pay' | 'order';
@@ -388,8 +391,8 @@ export function TablesidePage() {
           <div className="space-y-5">
             {paymentSuccess ? (
               <div className="bg-slate-900 border border-emerald-500/40 p-6 rounded-3xl text-center space-y-4 shadow-xl">
-                <div className="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center mx-auto text-2xl font-black">
-                  ✓
+                <div className="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center mx-auto shadow-md">
+                  <Check className="w-8 h-8 stroke-[3]" />
                 </div>
                 <h2 className="text-xl font-black text-white">Payment Confirmed!</h2>
                 <p className="text-xs text-slate-400">
@@ -695,21 +698,22 @@ export function TablesidePage() {
           </DialogHeader>
 
           <div className="space-y-4 py-3">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { type: 'server', label: 'Call Server', icon: '🛎️' },
-                { type: 'water', label: 'Water Refill', icon: '💧' },
-                { type: 'bill', label: 'Bring Check', icon: '🧾' },
-                { type: 'help', label: 'Need Assistance', icon: '❓' },
+                { type: 'server', label: 'Call Server', icon: <Bell className="w-6 h-6 text-amber-500" /> },
+                { type: 'water', label: 'Water Refill', icon: <Droplets className="w-6 h-6 text-sky-500" /> },
+                { type: 'bill', label: 'Bring Check', icon: <Receipt className="w-6 h-6 text-emerald-500" /> },
+                { type: 'help', label: 'Need Assistance', icon: <HelpCircle className="w-6 h-6 text-purple-500" /> },
               ].map((b) => (
                 <Button
                   key={b.type}
                   type="button"
                   variant="outline"
+                  size="touch"
                   onClick={() => callAssistance(b.type as any)}
-                  className="h-auto rounded-2xl border-slate-300 bg-slate-100 p-4 text-xs font-black uppercase tracking-wider text-slate-900 shadow-xs hover:bg-slate-200 hover:text-slate-900 active:scale-95 [&>span]:flex-col [&>span]:gap-2"
+                  className="min-h-[76px] h-auto rounded-2xl border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-slate-800 p-4 text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white shadow-xs hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.97] transition-transform duration-75 ease-out flex flex-col items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span className="text-2xl">{b.icon}</span>
+                  {b.icon}
                   <span>{b.label}</span>
                 </Button>
               ))}

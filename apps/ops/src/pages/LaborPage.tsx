@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useEmployees, useAddEmployee, useShifts, useAddShift, useDeleteShift } from '../hooks/useLabor';
-import { Button } from '@culinaryos/ui';
+import { Button, Trash2 } from '@culinaryos/ui';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
@@ -139,7 +139,15 @@ export default function LaborPage() {
                     <td className="py-2">{hrs.toFixed(2)}</td>
                     <td className="py-2 text-right text-amber-400">{fmt(hrs * rate)}</td>
                     <td className="py-2 text-right">
-                      <Button onClick={() => deleteShift.mutate(s.id)} variant="ghost" aria-label="Delete shift" className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4">✕</Button>
+                      <Button
+                        onClick={() => deleteShift.mutate(s.id)}
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete shift"
+                        className="min-h-[44px] min-w-[44px] text-zinc-400 hover:text-red-400 hover:bg-red-500/10 ml-2 rounded-lg cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
                 );

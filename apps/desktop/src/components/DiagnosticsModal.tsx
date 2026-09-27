@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Button, Wrench } from '@culinaryos/ui';
+import {
+  Button,
+  Wrench,
+  Activity,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  RefreshCw,
+  X,
+} from '@culinaryos/ui';
 
 export interface CheckItem {
   category: string;
@@ -125,7 +135,7 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
         <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/20">
-              <span className="material-symbols-outlined text-2xl">health_and_safety</span>
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-black text-white uppercase tracking-wider">
@@ -138,12 +148,14 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
           </div>
 
           <Button
+            type="button"
             onClick={onClose}
-            variant="secondary"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+            aria-label="Close dialog"
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
-            <span className="material-symbols-outlined text-lg">close</span>
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
@@ -191,23 +203,25 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
 
           <div className="flex items-center gap-2">
             <Button
+              type="button"
               onClick={healPorts}
               disabled={healing}
               variant="default"
               size="sm"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white"
+              className="min-h-[40px] bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 active:scale-[0.97]"
             >
-              <span className="material-symbols-outlined text-sm">healing</span>
+              <Activity className="w-4 h-4" />
               <span>{healing ? 'Healing...' : 'Auto-Heal Ports'}</span>
             </Button>
             <Button
+              type="button"
               onClick={fetchDiagnostics}
               disabled={loading}
               variant="secondary"
               size="sm"
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200"
+              className="min-h-[40px] bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 active:scale-[0.97]"
             >
-              <span className="material-symbols-outlined text-sm">refresh</span>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Testing...' : 'Re-Run Preflight'}</span>
             </Button>
           </div>
@@ -245,9 +259,13 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
                         : 'bg-red-500/20 text-red-400'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-sm">
-                      {isPass ? 'check_circle' : isWarn ? 'warning' : 'error'}
-                    </span>
+                    {isPass ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : isWarn ? (
+                      <AlertTriangle className="w-4 h-4" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
+                    )}
                   </div>
 
                   <div>
@@ -291,10 +309,11 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
             <span className="font-bold text-red-400">{report?.failCount || 0} Critical</span>
           </div>
           <Button
+            type="button"
             onClick={onClose}
             variant="secondary"
             size="sm"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200"
+            className="min-h-[40px] px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 active:scale-[0.97]"
           >
             Dismiss
           </Button>

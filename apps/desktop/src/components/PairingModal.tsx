@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@culinaryos/ui';
+import {
+  Button,
+  QrCode,
+  X,
+  Check,
+  Copy,
+  Radio,
+} from '@culinaryos/ui';
 
 interface PairingModalProps {
   isOpen: boolean;
@@ -61,7 +68,7 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
         <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/20">
-              <span className="material-symbols-outlined text-2xl">qr_code_2</span>
+              <QrCode className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-black text-white uppercase tracking-wider">
@@ -74,27 +81,30 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
           </div>
 
           <Button
+            type="button"
             onClick={onClose}
-            variant="secondary"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+            aria-label="Close dialog"
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
           >
-            <span className="material-symbols-outlined text-lg">close</span>
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Surface Switcher */}
-        <div className="px-6 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="px-6 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
           {Object.entries(surfacePorts).map(([key, s]) => (
             <Button
               key={key}
+              type="button"
               onClick={() => setActiveSurface(key)}
               variant={activeSurface === key ? 'default' : 'secondary'}
               size="sm"
               className={
                 activeSurface === key
-                  ? 'bg-orange-600 text-white shadow-md hover:bg-orange-700 uppercase tracking-wider whitespace-nowrap'
-                  : 'bg-slate-800 text-slate-400 hover:text-slate-200 uppercase tracking-wider whitespace-nowrap'
+                  ? 'min-h-[38px] bg-orange-600 text-white shadow-md hover:bg-orange-700 uppercase tracking-wider whitespace-nowrap active:scale-[0.97]'
+                  : 'min-h-[38px] bg-slate-800 text-slate-400 hover:text-slate-200 uppercase tracking-wider whitespace-nowrap active:scale-[0.97]'
               }
             >
               {s.name}
@@ -109,7 +119,7 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
               <img src={qrDataUrl} alt="Pairing QR Code" className="w-56 h-56 rounded-lg" />
             ) : (
               <div className="w-56 h-56 flex flex-col items-center justify-center bg-slate-100 text-slate-600 rounded-lg p-4">
-                <span className="material-symbols-outlined text-5xl mb-2 text-slate-800">qr_code</span>
+                <QrCode className="w-16 h-16 mb-2 text-slate-800" />
                 <span className="text-xs font-mono font-bold break-all text-slate-900">{currentUrl}</span>
               </div>
             )}
@@ -124,18 +134,29 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
               <span className="text-orange-400 font-bold truncate block">{currentUrl}</span>
             </div>
             <Button
+              type="button"
               onClick={copyUrl}
               variant="secondary"
               size="sm"
-              className="shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-200"
+              className="min-h-[40px] px-3 shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 active:scale-[0.97]"
             >
-              {copied ? '✅ Copied!' : 'Copy Link'}
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-slate-400" />
+                  <span>Copy Link</span>
+                </>
+              )}
             </Button>
           </div>
 
-          <div className="w-full bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 text-left text-[11px] text-slate-400">
+          <div className="w-full bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-left text-[11px] text-slate-400">
             <div className="flex items-center gap-1.5 text-slate-300 font-bold mb-1">
-              <span className="material-symbols-outlined text-sm text-emerald-400">cell_tower</span>
+              <Radio className="w-4 h-4 text-emerald-400" />
               <span>Zero-Config mDNS Discovery</span>
             </div>
             <span>Devices with mDNS support can also visit </span>
@@ -147,10 +168,11 @@ export function PairingModal({ isOpen, onClose }: PairingModalProps) {
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-end">
           <Button
+            type="button"
             onClick={onClose}
             variant="secondary"
             size="sm"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200"
+            className="min-h-[40px] px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 active:scale-[0.97]"
           >
             Close
           </Button>

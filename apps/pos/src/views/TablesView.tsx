@@ -963,7 +963,7 @@ export function TablesView() {
                   )}
 
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider pt-1 border-t border-black/5 text-muted-foreground group-hover:text-foreground">
-                    <span>{editMode ? 'Edit Table ⚙️' : effStatus === 'occupied' || effStatus === 'paying' ? 'Table Check & Actions →' : 'Seat Party →'}</span>
+                    <span>{editMode ? 'Edit Table Settings' : effStatus === 'occupied' || effStatus === 'paying' ? 'Table Check & Actions →' : 'Seat Party →'}</span>
                     <span className="font-mono text-[9px] text-muted-foreground">ID #{table.number}</span>
                   </div>
                 </div>

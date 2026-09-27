@@ -94,4 +94,12 @@ Append dated findings here with file paths, severity, and evidence. Distinguish 
     - `@culinaryos/ui` package build: passed (`tsc`).
     - Full monorepo typecheck: `pnpm run typecheck` passed (47/47 tasks successful, 0 errors in 20.7s).
     - Test runner: `node ./scripts/run-all-tests.cjs` passed (124/124 suites green, 0 failed).
+- 2026-09-27 (Antigravity): Executed Milestone 3 Cross-App UI Elevation (Admin, Desktop, Ops, Web, POS):
+  - Scope: `apps/web` (`TablesidePage.tsx`, `CheckoutDrawer.tsx`), `apps/ops` (`LaborPage.tsx`, `WastePage.tsx`, `FoodCostPage.tsx`), `apps/desktop` (`PairingModal.tsx`, `DiagnosticsModal.tsx`), `apps/admin` (`Pantry.tsx`), `apps/pos` (`TablesView.tsx`), `packages/ui` (`index.ts`).
+  - Replaced all raw unicode characters, font-symbol placeholders, and emojis with semantic Lucide SVG icons (`Bell`, `Droplets`, `Receipt`, `HelpCircle`, `Check`, `Trash2`, `X`, `ShieldCheck`, `CheckCircle2`, `AlertTriangle`, `AlertCircle`, `QrCode`, `Copy`, `Radio`, `Activity`, `RefreshCw`).
+  - Elevated all delete, close, PO action, and diagnostics triggers across Web, Ops, Desktop, and Admin to 40–48px physical touch targets with tactile spring physics (`active:scale-[0.97]`).
+  - Verification:
+    - Monorepo typecheck: `pnpm run typecheck` passed (47/47 tasks successful, 0 errors in 12.2s).
+    - Master Test Runner `node ./scripts/run-all-tests.cjs`: 124 passed, 0 failed.
+
 

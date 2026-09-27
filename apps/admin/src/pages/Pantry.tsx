@@ -185,23 +185,23 @@ export function PantryPage() {
             href="https://dennisfoodservice.pepr.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-xs transition"
+            className="inline-flex items-center justify-center px-3.5 py-2 min-h-[40px] text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-xs transition active:scale-[0.97]"
           >
-            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+            <ExternalLink className="w-4 h-4 mr-1.5" />
             Dennis Pepr Portal
           </a>
           <Button
             variant="brand"
-            size="sm"
+            size="default"
             onClick={createAutoPO}
             disabled={creating || alerts.length === 0}
-            className="uppercase tracking-wider"
+            className="uppercase tracking-wider min-h-[40px] rounded-xl font-black text-xs"
           >
-            <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+            <ShoppingBag className="w-4 h-4 mr-1.5" />
             {creating ? 'Generating…' : 'Auto-Generate PO'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => void fetchAll()}>
-            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+          <Button variant="outline" size="default" onClick={() => void fetchAll()} className="min-h-[40px] rounded-xl font-bold text-xs">
+            <RefreshCw className="w-4 h-4 mr-1.5" />
             Refresh
           </Button>
         </div>
@@ -356,6 +356,7 @@ export function PantryPage() {
                           variant="brand"
                           size="sm"
                           onClick={() => void approvePO(po.id)}
+                          className="min-h-[40px] px-3.5 rounded-xl font-bold uppercase tracking-wider active:scale-[0.97]"
                         >
                           Approve
                         </Button>
@@ -365,6 +366,7 @@ export function PantryPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => void sendPO(po.id)}
+                          className="min-h-[40px] px-3.5 rounded-xl font-bold uppercase tracking-wider active:scale-[0.97]"
                         >
                           Mark Sent
                         </Button>
@@ -374,6 +376,7 @@ export function PantryPage() {
                           variant="destructive"
                           size="sm"
                           onClick={() => void cancelPO(po.id)}
+                          className="min-h-[40px] px-3.5 rounded-xl font-bold uppercase tracking-wider active:scale-[0.97]"
                         >
                           Cancel
                         </Button>

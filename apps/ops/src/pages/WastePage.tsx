@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useWasteLogs, useLogWaste, useDeleteWasteLog } from '../hooks/useWaste';
 import { summarizeWaste } from '@culinaryos/waste-engine';
 import type { WasteReason } from '../hooks/useWaste';
-import { Button } from '@culinaryos/ui';
+import { Button, Trash2 } from '@culinaryos/ui';
 
 const REASONS: WasteReason[] = ['spoilage', 'trim', 'overcook', 'drop', 'expired', 'other'];
 
@@ -135,7 +135,15 @@ export default function WastePage() {
                   <td className="py-2 text-right">{l.quantity_grams.toFixed(0)}g</td>
                   <td className="py-2 text-right text-red-400">{fmt(l.quantity_grams * l.cost_per_gram)}</td>
                   <td className="py-2 text-right">
-                    <Button onClick={() => deleteLog.mutate(l.id)} variant="ghost" aria-label="Delete waste log" className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4">✕</Button>
+                    <Button
+                      onClick={() => deleteLog.mutate(l.id)}
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Delete waste log"
+                      className="min-h-[44px] min-w-[44px] text-zinc-400 hover:text-red-400 hover:bg-red-500/10 ml-2 rounded-lg cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </td>
                 </tr>
               ))}

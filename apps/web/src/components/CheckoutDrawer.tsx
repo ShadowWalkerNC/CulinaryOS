@@ -267,10 +267,10 @@ export function CheckoutDrawer({
                   onChange={(e) => setPickupTime(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 focus:border-[#0f172a] focus:bg-white focus:ring-1 focus:ring-[#0f172a] rounded-xl p-3 text-xs text-slate-900 font-bold outline-none transition-all cursor-pointer"
                 >
-                  <option value="ASAP (15-20 mins)">⚡ ASAP (approx 15-20 mins)</option>
-                  <option value="In 30 mins">🕒 In 30 mins</option>
-                  <option value="In 45 mins">🕒 In 45 mins</option>
-                  <option value="In 60 mins">🕒 In 60 mins</option>
+                  <option value="ASAP (15-20 mins)">ASAP (approx 15-20 mins)</option>
+                  <option value="In 30 mins">In 30 mins</option>
+                  <option value="In 45 mins">In 45 mins</option>
+                  <option value="In 60 mins">In 60 mins</option>
                 </select>
                 <p className="text-[11px] text-slate-500 font-medium">
                   Collect your order at the counter: <strong>142 Mercer Street, Soho</strong>

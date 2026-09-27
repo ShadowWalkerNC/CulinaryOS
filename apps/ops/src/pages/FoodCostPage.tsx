@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ShieldAlert,
   CheckCircle2,
+  X,
 } from 'lucide-react';
 import { Button } from '@culinaryos/ui';
 import {
@@ -424,10 +425,11 @@ export default function FoodCostPage() {
                         <Button
                           onClick={() => deleteItem.mutate(item.id)}
                           variant="ghost"
+                          size="icon"
                           aria-label="Delete menu item"
-                          className="h-auto w-auto p-0 text-xs font-normal text-zinc-600 hover:bg-transparent hover:text-red-400 ml-4"
+                          className="min-h-[44px] min-w-[44px] text-zinc-400 hover:text-red-400 hover:bg-red-500/10 ml-2 rounded-lg cursor-pointer"
                         >
-                          ✕
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </td>
                     </tr>
@@ -550,10 +552,11 @@ export default function FoodCostPage() {
               <Button
                 onClick={() => setShowWasteModal(false)}
                 variant="ghost"
+                size="icon"
                 aria-label="Close"
-                className="h-auto w-auto p-0 text-sm font-normal text-zinc-500 hover:bg-transparent hover:text-zinc-300"
+                className="min-h-[44px] min-w-[44px] text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </Button>
             </div>
 

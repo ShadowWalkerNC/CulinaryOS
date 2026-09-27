@@ -160,6 +160,7 @@ export {
   PauseCircle,
   Flag,
   Delete,
+  Droplets,
 } from 'lucide-react';
 
 
