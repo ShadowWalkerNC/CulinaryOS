@@ -38,12 +38,12 @@ export function MobileQuickActionsSheet({ isOpen, onClose }: MobileQuickActionsS
   };
 
   const triggerDrawerKick = () => {
-    setStatusMessage('⚡ Cash Drawer DK Port Kick pulse sent via ESC/POS (Star/Epson)');
+    setStatusMessage('Cash Drawer DK Port Kick pulse sent via ESC/POS (Star/Epson)');
     setTimeout(() => setStatusMessage(null), 3500);
   };
 
   const triggerManagerAlert = () => {
-    setStatusMessage('🚨 Manager on Duty notified: "Floor assistance requested at Table 14"');
+    setStatusMessage('Manager on Duty notified: "Floor assistance requested at Table 14"');
     setTimeout(() => setStatusMessage(null), 3500);
   };
 

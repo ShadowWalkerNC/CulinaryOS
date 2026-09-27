@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@culinaryos/ui';
+import { Button, Wrench } from '@culinaryos/ui';
 
 export interface CheckItem {
   category: string;
@@ -259,8 +259,9 @@ export function DiagnosticsModal({ isOpen, onClose }: DiagnosticsModalProps) {
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{c.message}</p>
                     {c.remediation && (
-                      <p className="text-xs text-amber-300 font-mono mt-1">
-                        👉 Fix: {c.remediation}
+                      <p className="text-xs text-amber-300 font-mono mt-1 flex items-center gap-1.5">
+                        <Wrench className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                        <span>Fix: {c.remediation}</span>
                       </p>
                     )}
                   </div>

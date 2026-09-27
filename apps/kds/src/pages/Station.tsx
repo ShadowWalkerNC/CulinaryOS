@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   CompactNavigation,
   CulinaryAppLauncher,
+  AlertTriangle,
+  Flame,
   type CompactNavigationItem,
 } from '@culinaryos/ui';
 import {
@@ -420,7 +422,7 @@ export function Station() {
       {pacingData.some((p) => p.pacingAlert !== 'normal' && p.c2Status === 'held') && (
         <section className="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider animate-pulse shrink-0 shadow-md">
           <div className="flex items-center gap-2">
-            <span className="text-base">🚨</span>
+            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               Multi-Course Pacing Alert: {pacingData.filter((p) => p.pacingAlert !== 'normal' && p.c2Status === 'held').length} course(s) exceed 12m threshold!
             </span>
@@ -432,9 +434,10 @@ export function Station() {
                 <button
                   key={p.orderId}
                   onClick={() => handleFireCourse(p.c2TicketId)}
-                  className="px-3 py-1 bg-white text-red-700 hover:bg-red-50 rounded-lg text-xs font-black shadow-xs cursor-pointer transition"
+                  className="min-h-[44px] sm:min-h-[48px] px-4 py-2 bg-white text-red-700 hover:bg-red-50 rounded-xl text-xs sm:text-sm font-black shadow-xs cursor-pointer transition flex items-center gap-2 active:scale-[0.97] transition-transform duration-75 ease-out"
                 >
-                  ⚡ Fire Course 2 (Table {p.tableNumber || p.orderId.slice(-4)})
+                  <Flame className="w-4 h-4 text-orange-600" />
+                  <span>Fire Course 2 (Table {p.tableNumber || p.orderId.slice(-4)})</span>
                 </button>
               ))}
           </div>

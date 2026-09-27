@@ -1,12 +1,12 @@
-# BRIEFING — 2026-09-09T00:44:31Z
+# BRIEFING — 2026-09-27T00:33:00Z
 
 ## Mission
-Supervise execution of CulinaryOS full commercial restaurant daily operations simulation, error logging, performance benchmarks, and Council tradeoff evaluation via Project Orchestrator and independent Victory Auditor.
+Supervise elevation of CulinaryOS frontend UI/UX and micro-interactions into a high-end modern industrial hospitality operating system across POS, KDS, Admin, and Ops via Project Orchestrator (gen 2) and independent Victory Auditor.
 
 ## 🔒 My Identity
 - Archetype: sentinel
-- Working directory: c:\Users\white\OneDrive\Documents\GitHub\CulinaryOS\.agents\sentinel
-- Orchestrator: [TBD]
+- Working directory: c:\Users\white\Documents\GitHub\CulinaryOS\.agents\sentinel
+- Orchestrator: 20d7b699-9f26-418e-a925-d18f8f5c588c
 - Victory Auditor: to be spawned on victory claim
 
 ## 🔒 Key Constraints
@@ -15,12 +15,16 @@ Supervise execution of CulinaryOS full commercial restaurant daily operations si
 - Keep context ultra-light and do not write code directly
 
 ## User Context
-- **Last user request**: Full commercial restaurant daily operations simulation, bug/error capture engine across 18 subsystems, API and build benchmarks, and 4-voice Council tradeoff review.
+- **Last user request**: Elevate CulinaryOS frontend UI/UX and micro-interactions (deep charcoal zinc, warm amber/ember accents, tactile spring physics, thumb-zone ergonomics, KDS pacing visual engine, admin data tables & 3D floor map, 6-state interactive engine, zero emoji icons, 48px touch targets, typecheck & test pass).
 - **Pending clarifications**: none
 - **Delivered results**: none
 
 ## Project Status
-- **Phase**: in progress (Routing: General -> teamwork_preview_orchestrator)
+- **Phase**: in progress (Orchestrator gen 2 dispatched)
+- **Active Orchestrator ID**: 20d7b699-9f26-418e-a925-d18f8f5c588c
+- **Progress Cron**: task-32 (*/8 * * * *)
+- **Liveness Cron**: task-34 (*/10 * * * *)
+- **Notes**: Orchestrator gen 1 encountered quota reset window; fresh Orchestrator gen 2 spawned following quota reset.
 
 ## Victory Audit Status
 - **Triggered**: no
@@ -30,5 +34,5 @@ Supervise execution of CulinaryOS full commercial restaurant daily operations si
 ## Artifact Index
 - ORIGINAL_REQUEST.md — Authoritative record of verbatim user request
 - .agents/ORIGINAL_REQUEST.md — Authoritative record of verbatim user request
-- docs/audits/error_log.md — Discovered bugs with exact reproduction steps
-- docs/benchmarks/perf_baseline.md — Empirical API and build latency benchmark timings
+- .agents/teamwork/ORIGINAL_REQUEST.md — Authoritative record of verbatim user request
+- .agents/teamwork/orchestrator_2/ — Orchestrator (gen 2) working directory

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@culinaryos/ui';
+import { Button, UtensilsCrossed } from '@culinaryos/ui';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { PairingModal } from './components/PairingModal';
 import {
@@ -86,8 +86,8 @@ export function App() {
         {/* Left: Brand Identity & Active Surface */}
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-600 flex items-center justify-center font-black text-base text-white shadow-md shadow-orange-600/20">
-              🍽️
+            <div className="w-8 h-8 rounded-xl bg-orange-600 flex items-center justify-center font-black text-white shadow-md shadow-orange-600/20">
+              <UtensilsCrossed className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div>
               <span className="font-black text-xs uppercase tracking-wider text-slate-100 block leading-tight">

@@ -271,15 +271,15 @@ export function OrderView() {
             variant="outline"
             onClick={initiateDrawerOpen}
             title="Pop Cash Drawer"
-            className="text-[10px] font-black uppercase gap-1 h-7 px-2.5 py-1 rounded-lg"
+            className="text-xs font-black uppercase gap-1.5 min-h-[44px] sm:min-h-[48px] px-3.5 rounded-xl active:scale-[0.97]"
           >
-            <KeyRound className="w-3 h-3 text-amber-600" />
+            <KeyRound className="w-4 h-4 text-amber-600" />
             <span>Drawer</span>
           </Button>
           <Button
-            variant="link"
+            variant="outline"
             onClick={() => setActiveOrder(null)}
-            className="text-[10px] font-black uppercase h-auto px-1"
+            className="text-xs font-black uppercase min-h-[44px] sm:min-h-[48px] px-3 rounded-xl active:scale-[0.97] text-slate-600 hover:text-slate-950"
           >
             Close
           </Button>
@@ -352,18 +352,18 @@ export function OrderView() {
                         setCustomItemSeat(item.seat_number || 1);
                       }}
                       title="Edit kitchen instructions or seat"
-                      className="h-7 w-7 rounded-lg"
+                      className="min-h-[44px] min-w-[44px] sm:min-h-[48px] sm:min-w-[48px] rounded-xl hover:bg-slate-200 active:scale-[0.97]"
                     >
-                      <Tag className="w-3.5 h-3.5" />
+                      <Tag className="w-4 h-4 text-slate-600" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => initiateVoidItem(item.id)}
                       title="Void line item"
-                      className="h-7 w-7 rounded-lg text-gray-400 hover:text-rose-600"
+                      className="min-h-[44px] min-w-[44px] sm:min-h-[48px] sm:min-w-[48px] rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-[0.97]"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </>
                 )}
@@ -423,7 +423,7 @@ export function OrderView() {
               onClick={() => {
                 fireOrder(order.id, {
                   onSuccess: () => {
-                    triggerToast('🔥 Order sent to kitchen!');
+                    triggerToast('Order sent to kitchen');
                     setActiveOrder(null);
                     setView('tables');
                   },
@@ -449,7 +449,7 @@ export function OrderView() {
                     variant="warning"
                     onClick={() => {
                       fireCourse({ orderId: order.id, courseNumber: 2 });
-                      triggerToast('⚡ Course 2 (Mains) fired to kitchen!');
+                      triggerToast('Course 2 (Mains) fired to kitchen');
                     }}
                     disabled={firingCourse}
                     className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm"
@@ -462,7 +462,7 @@ export function OrderView() {
                     variant="destructive"
                     onClick={() => {
                       fireCourse({ orderId: order.id, courseNumber: 3 });
-                      triggerToast('⚡ Course 3 (Desserts) fired to kitchen!');
+                      triggerToast('Course 3 (Desserts) fired to kitchen');
                     }}
                     disabled={firingCourse}
                     className="min-h-[48px] py-2.5 px-3 uppercase tracking-wider gap-1.5 bg-rose-500 hover:bg-rose-600 text-white shadow-sm"
@@ -527,11 +527,12 @@ export function OrderView() {
               </div>
               <Button
                 variant="ghost"
+                size="icon"
                 onClick={() => setShowDiscountModal(false)}
                 aria-label="Close discount modal"
-                className="h-auto px-1 text-xs font-bold text-[#9ca3af] hover:text-[#0f172a]"
+                className="min-h-[44px] min-w-[44px] rounded-xl text-slate-400 hover:text-slate-900 active:scale-[0.97]"
               >
-                ✕
+                <X className="w-5 h-5" />
               </Button>
             </div>
 
@@ -647,11 +648,12 @@ export function OrderView() {
               </div>
               <Button
                 variant="ghost"
+                size="icon"
                 onClick={() => setShowPinModal(false)}
                 aria-label="Close authorization modal"
-                className="h-auto px-1 text-xs font-bold text-gray-400 hover:text-gray-700"
+                className="min-h-[44px] min-w-[44px] rounded-xl text-slate-400 hover:text-slate-900 active:scale-[0.97]"
               >
-                ✕
+                <X className="w-5 h-5" />
               </Button>
             </div>
 

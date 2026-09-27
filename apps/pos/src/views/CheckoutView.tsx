@@ -558,11 +558,17 @@ export function CheckoutView() {
           {pricingConfig?.mode !== 'standard' && (
             <div className="pt-2 border-t border-dashed border-slate-200 space-y-1.5 font-bold">
               <div className="flex justify-between text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
-                <span className="flex items-center gap-1">💵 Cash Tender Price</span>
+                <span className="flex items-center gap-1.5">
+                  <Banknote className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                  Cash Tender Price
+                </span>
                 <span className="font-mono">${(dualPricing.cashAmountCents / 100).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-700 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
-                <span className="flex items-center gap-1">💳 Card Tender Price ({pricingConfig?.programFeePercent ?? 3.8}%)</span>
+                <span className="flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-slate-600" aria-hidden="true" />
+                  Card Tender Price ({pricingConfig?.programFeePercent ?? 3.8}%)
+                </span>
                 <span className="font-mono">${(dualPricing.cardAmountCents / 100).toFixed(2)}</span>
               </div>
             </div>
@@ -657,9 +663,9 @@ export function CheckoutView() {
                     key={pct}
                     type="button"
                     onClick={() => setTipPercent(pct)}
-                    className={`py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center gap-0.5 ${
+                    className={`min-h-[48px] py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center gap-0.5 active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md scale-105'
+                        ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md'
                         : 'bg-[#f8f9fa] border-[#e5e7eb] text-[#4b5563] hover:border-[#9ca3af] hover:bg-white'
                     }`}
                   >
@@ -673,9 +679,9 @@ export function CheckoutView() {
               <button
                 type="button"
                 onClick={() => setTipPercent('custom')}
-                className={`py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center ${
+                className={`min-h-[48px] py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${
                   tipPercent === 'custom'
-                    ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md scale-105'
+                    ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md'
                     : 'bg-[#f8f9fa] border-[#e5e7eb] text-[#4b5563] hover:border-[#9ca3af] hover:bg-white'
                 }`}
               >
@@ -710,7 +716,7 @@ export function CheckoutView() {
                       key={idx}
                       type="button"
                       onClick={() => setCashTendered(val.toString())}
-                      className="bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] hover:bg-[#0f172a] hover:text-white text-[#1f2937] font-black py-2.5 rounded-xl text-xs transition-all shadow-xs"
+                      className="min-h-[48px] bg-white border-2 border-[#e5e7eb] hover:border-[#0f172a] hover:bg-[#0f172a] hover:text-white text-[#1f2937] font-black py-2.5 px-3 rounded-xl text-xs transition-all shadow-xs active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
                     >
                       {idx === 0 ? 'Exact' : `$${val}`}
                     </button>
@@ -747,18 +753,28 @@ export function CheckoutView() {
           type="button"
           onClick={startPaymentFlow}
           disabled={processing}
-          className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.99] disabled:opacity-50 mt-6 mb-[env(safe-area-inset-bottom)] flex items-center justify-center gap-2.5 border-2 border-emerald-500 sticky bottom-4 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+          aria-busy={processing ? true : undefined}
+          className="relative w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4.5 rounded-2xl text-base uppercase tracking-wider transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-6 mb-[env(safe-area-inset-bottom)] flex items-center justify-center gap-2.5 border-2 border-emerald-500 sticky bottom-4 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
         >
-          <Check className="w-6 h-6" />
-          <span>
-            {processing
-              ? 'Authorizing Transaction...'
-              : method === 'tap'
-              ? `Tap Terminal • $${(total / 100).toFixed(2)}`
-              : method === 'scan'
-              ? `Confirm QR Paid • $${(total / 100).toFixed(2)}`
-              : `Finalize Payment • $${(total / 100).toFixed(2)}`}
+          <span className={processing ? 'invisible' : 'inline-flex items-center justify-center gap-2.5'}>
+            <Check className="w-6 h-6" />
+            <span>
+              {method === 'tap'
+                ? `Tap Terminal • $${(total / 100).toFixed(2)}`
+                : method === 'scan'
+                ? `Confirm QR Paid • $${(total / 100).toFixed(2)}`
+                : `Finalize Payment • $${(total / 100).toFixed(2)}`}
+            </span>
           </span>
+          {processing && (
+            <span className="absolute inset-0 flex items-center justify-center gap-2.5">
+              <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span>Authorizing Transaction...</span>
+            </span>
+          )}
         </button>
       </div>
 

@@ -125,6 +125,18 @@
   --oklch-brand-danger:    oklch(0.58 0.22 25);  /* Crimson Red */
   --oklch-surface-light:   oklch(0.98 0.005 260);
   --oklch-surface-dark:    oklch(0.12 0.015 260);
+
+  /* — KDS High-Glare Environment Contrast Tokens (≥5:1 WCAG AA) — */
+  --kds-bg:            oklch(0.14 0.015 260);
+  --kds-surface:       oklch(0.19 0.02 260);
+  --kds-surface-hover: oklch(0.24 0.025 260);
+  --kds-border:        oklch(0.28 0.02 260);
+  --kds-text-primary:  oklch(0.96 0.005 260);
+  --kds-text-dim:      oklch(0.75 0.01 260);
+  --kds-status-green:  oklch(0.65 0.18 145);
+  --kds-status-amber:  oklch(0.75 0.16 75);
+  --kds-status-red:    oklch(0.60 0.22 28);
+  --kds-bump-h:        64px;
 }
 
 .dark {
@@ -199,14 +211,28 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: var(--touch-target-pointer, 40px);
   padding: 8px 16px;
   border-radius: var(--cos-radius-md);
   font-size: 13px;
   font-weight: 700;
-  transition: all 0.15s;
+  transition: transform 0.075s ease-out, background-color 0.15s, box-shadow 0.15s;
   cursor: pointer;
   border: none;
   outline: none;
+  user-select: none;
+}
+.cos-btn:focus-visible {
+  outline: 2px solid var(--cos-brand);
+  outline-offset: 2px;
+}
+.cos-btn:active {
+  transform: scale(0.97);
+}
+.cos-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 .cos-btn-primary {
   background: var(--cos-brand);

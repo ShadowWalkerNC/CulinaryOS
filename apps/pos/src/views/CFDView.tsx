@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOrderStore } from '../lib/useOrderStore';
 import { usePOSStore } from '../lib/store';
-import { Button } from '@culinaryos/ui';
+import { Button, UtensilsCrossed, ShoppingCart, Banknote, CreditCard } from '@culinaryos/ui';
 import { calculateDualPricing, loadLocalSettings } from '@culinaryos/shared';
 
 export function CFDView() {
@@ -49,7 +49,7 @@ export function CFDView() {
       <header className="h-16 px-8 bg-[#121215] border-b border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B35] to-[#E63946] flex items-center justify-center font-black text-white shadow-lg shadow-orange-500/20">
-            🍽️
+            <UtensilsCrossed className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
           <div>
             <h1 className="text-sm font-black tracking-wider uppercase">CulinaryOS Guest Display</h1>
@@ -74,7 +74,7 @@ export function CFDView() {
 
           {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-zinc-500">
-              <span className="text-5xl mb-3">🛒</span>
+              <ShoppingCart className="w-12 h-12 text-zinc-600 mb-3" aria-hidden="true" />
               <h2 className="text-lg font-bold text-zinc-300">Welcome to Our Dining Room</h2>
               <p className="text-sm mt-1 max-w-sm">Items will appear on this screen as your order is entered by our staff.</p>
             </div>
@@ -120,11 +120,17 @@ export function CFDView() {
             {pricingConfig?.mode !== 'standard' ? (
               <div className="pt-2 border-t border-dashed border-white/10 space-y-2">
                 <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl text-emerald-400 font-bold">
-                  <span className="flex items-center gap-1.5 text-xs">💵 Cash Price (3.8% Discount)</span>
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <Banknote className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+                    Cash Price (3.8% Discount)
+                  </span>
                   <span className="text-base font-black font-mono">${(dualPricing.cashAmountCents / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-zinc-300 font-bold">
-                  <span className="flex items-center gap-1.5 text-xs">💳 Card Price</span>
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <CreditCard className="w-4 h-4 text-zinc-300" aria-hidden="true" />
+                    Card Price
+                  </span>
                   <span className="text-base font-black font-mono">${(dualPricing.cardAmountCents / 100).toFixed(2)}</span>
                 </div>
                 <p className="text-[10px] text-zinc-500 italic text-center">
@@ -199,8 +205,8 @@ export function CFDView() {
 
           {/* Payment Card Reader Prompt */}
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-3">
-            <div className="w-12 h-12 mx-auto rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-2xl animate-bounce">
-              💳
+            <div className="w-12 h-12 mx-auto rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center animate-bounce">
+              <CreditCard className="w-6 h-6 text-orange-400" aria-hidden="true" />
             </div>
             <div>
               <h3 className="text-base font-black text-white">Tap, Insert, or Swipe</h3>

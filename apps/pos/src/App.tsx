@@ -225,7 +225,7 @@ export function App() {
                 type="button"
                 variant="secondary"
                 onClick={() => setMobileCartOpen(true)}
-                className="h-11 px-4 uppercase tracking-wider"
+                className="min-h-[48px] h-12 px-4 uppercase tracking-wider active:scale-[0.97]"
               >
                 View Ticket
               </Button>
@@ -233,7 +233,7 @@ export function App() {
                 type="button"
                 variant="success"
                 onClick={() => setView('checkout')}
-                className="h-11 px-5 uppercase tracking-wider gap-1.5"
+                className="min-h-[48px] h-12 px-5 uppercase tracking-wider gap-1.5 active:scale-[0.97]"
               >
                 <span>Pay</span>
                 <span className="font-mono">${(orderSubtotal / 100).toFixed(2)}</span>
@@ -247,7 +247,7 @@ export function App() {
           <SheetContent side="bottom" className="p-0 h-[85vh] max-h-[85vh] flex flex-col rounded-t-3xl border-t border-slate-200 shadow-2xl">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 rounded-t-3xl">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
                   <ShoppingCart className="w-4 h-4" />
                 </div>
                 <span className="font-black text-xs text-slate-950 uppercase tracking-wider">
@@ -259,9 +259,9 @@ export function App() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileCartOpen(false)}
-                className="h-8 w-8 rounded-full"
+                className="min-h-[48px] min-w-[48px] rounded-xl active:scale-[0.97]"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto">

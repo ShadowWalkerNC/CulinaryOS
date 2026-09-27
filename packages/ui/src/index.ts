@@ -155,6 +155,9 @@ export {
   PieChart,
   Calendar,
   HelpCircle,
+  Lightbulb,
+  PauseCircle,
+  Flag,
 } from 'lucide-react';
 
 

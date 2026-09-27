@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import type { KitchenTicket } from '../types';
 import { BumpButton } from './BumpButton';
-import { CulinaryBadge } from '@culinaryos/ui';
+import {
+  CulinaryBadge,
+  AlertTriangle,
+  PauseCircle,
+  Flame,
+  Check,
+  Trash2,
+  Flag,
+  CheckCircle2,
+} from '@culinaryos/ui';
 import {
   translateTicketItem,
   abbreviateItemName,
@@ -24,7 +33,7 @@ interface Props {
   }) => Promise<void>;
 }
 
-/** Returns color + alert status based on elapsed seconds */
+/** Returns color + alert status based on elapsed seconds: <10m green, 10-20m amber, >20m crimson */
 function getTimerMeta(secs: number): {
   badgeVariant: 'success' | 'warning' | 'danger';
   textColor: string;
@@ -35,25 +44,25 @@ function getTimerMeta(secs: number): {
   const s = (secs % 60).toString().padStart(2, '0');
   const formatted = `${m}:${s}`;
 
-  if (secs < 300) {
+  if (secs < 600) {
     return {
       badgeVariant: 'success',
-      textColor: 'text-[#16a34a]',
+      textColor: 'text-emerald-500 font-bold',
       label: formatted,
       alertName: 'NORMAL',
     };
   }
-  if (secs < 600) {
+  if (secs < 1200) {
     return {
       badgeVariant: 'warning',
-      textColor: 'text-[#d97706]',
+      textColor: 'text-amber-500 font-bold',
       label: formatted,
       alertName: 'AMBER ALERT',
     };
   }
   return {
     badgeVariant: 'danger',
-    textColor: 'text-[#dc2626]',
+    textColor: 'text-red-500 font-black animate-pulse',
     label: formatted,
     alertName: 'RED ALERT',
   };
@@ -145,8 +154,11 @@ export function TicketCard({
 
       {/* Pacing Alert Warning Banner */}
       {isPacingAlert && (
-        <div className="mt-1 px-2 py-1 bg-red-600 text-white font-black text-[10px] rounded-lg uppercase tracking-wider flex items-center justify-between animate-pulse">
-          <span>🚨 PACING ALERT: FIRE COURSE {ticket.courseNumber} NOW!</span>
+        <div className="mt-1 px-2.5 py-1.5 bg-red-600 text-white font-black text-[11px] rounded-lg uppercase tracking-wider flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>PACING ALERT: FIRE COURSE {ticket.courseNumber} NOW!</span>
+          </div>
           <span className="font-mono">+{Math.floor(elapsed / 60)}m</span>
         </div>
       )}
@@ -179,13 +191,13 @@ export function TicketCard({
 
           {/* Hold / Fired Status Badge */}
           {isHeld ? (
-            <CulinaryBadge variant="warning" className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px]">pause_circle</span>
+            <CulinaryBadge variant="warning" className="flex items-center gap-1 font-bold">
+              <PauseCircle className="w-3.5 h-3.5" />
               <span>HELD</span>
             </CulinaryBadge>
           ) : (
-            <CulinaryBadge variant="success" className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px]">local_fire_department</span>
+            <CulinaryBadge variant="success" className="flex items-center gap-1 font-bold">
+              <Flame className="w-3.5 h-3.5 text-orange-300" />
               <span>FIRED</span>
             </CulinaryBadge>
           )}
@@ -234,7 +246,7 @@ export function TicketCard({
                         : 'border-slate-300 bg-white hover:border-slate-500'
                     }`}
                   >
-                    {isCompleted && <span className="text-xs font-black">✓</span>}
+                    {isCompleted && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                   </div>
 
                   <span className="font-mono font-black text-xs bg-[#0f172a0d] text-[#0f172a] px-1.5 py-0.5 rounded border border-[#0f172a15] shrink-0">
@@ -289,7 +301,7 @@ export function TicketCard({
                     title="Log kitchen scrap / waste"
                     className="min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl text-zinc-500 hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-[0.96] transition shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                    <Trash2 className="w-4 h-4 text-zinc-400 group-hover:text-red-500" />
                   </button>
                 </div>
               </div>
@@ -328,7 +340,7 @@ export function TicketCard({
 
               {item.notes && (
                 <div className="ml-8 mt-1 px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">flag</span>
+                  <Flag className="w-3 h-3 text-amber-700" />
                   <span>{item.notes}</span>
                 </div>
               )}
@@ -339,8 +351,9 @@ export function TicketCard({
 
       {/* Scrap confirmation alert */}
       {scrapSuccess && (
-        <div className="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded text-center">
-          ✓ Scrap logged to Kitchen Waste Ledger!
+        <div className="px-2.5 py-1.5 bg-emerald-600 text-white font-bold text-[11px] rounded-lg text-center flex items-center justify-center gap-1.5 shadow-xs">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>Scrap logged to Kitchen Waste Ledger!</span>
         </div>
       )}
 
@@ -359,13 +372,13 @@ export function TicketCard({
       {isHeld && onFire ? (
         <button
           onClick={() => onFire(ticket.id)}
-          className={`w-full min-h-[48px] sm:min-h-[52px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-2 active:scale-[0.97] transition-transform duration-75 ease-out shadow-sm mt-2 cursor-pointer ${
+          className={`w-full min-h-[64px] sm:min-h-[72px] h-16 sm:h-20 py-3 px-5 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 border-2 active:scale-[0.97] transition-transform duration-75 ease-out shadow-md mt-2 cursor-pointer ${
             isPacingAlert
-              ? 'bg-red-600 hover:bg-red-500 text-white border-red-700 animate-bounce'
+              ? 'bg-red-600 hover:bg-red-500 text-white border-red-700 animate-pulse'
               : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-950'
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">local_fire_department</span>
+          <Flame className="w-5 h-5 text-amber-400" />
           <span>Fire Course {ticket.courseNumber}</span>
         </button>
       ) : (

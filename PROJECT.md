@@ -1,7 +1,7 @@
-# Project: CulinaryOS Complete Engine Implementation & Zero-Tech Packaging
+# Project: CulinaryOS High-End Industrial Hospitality Operating System (Frontend Elevation)
 
 ## Architecture
-CulinaryOS is an AI-native, multi-tenant restaurant operating system monorepo orchestrated via pnpm workspaces and Turborepo. It powers Front-of-House (POS, Storefront, Tableside QR), Back-of-House (KDS, KitchenKit Prep Planner, Shelf-Life Manager), Operations (CulinaryOps food costing, waste logging, labor/tips), Security & Ledger (Manager PIN gatekeeper, Multi-Rate Tax, EOD Z-Report), and a Turnkey Zero-Tech System Tray & Network Discovery Engine.
+CulinaryOS is an AI-native, multi-tenant restaurant operating system monorepo orchestrated via pnpm workspaces and Turborepo. This project elevates the frontend UI/UX and micro-interactions into a high-end, modern industrial hospitality operating system (Linear meets Toast aesthetic) characterized by deep charcoal zinc surfaces (`#090d16` / `#121824`), warm stone light mode (`#f8f9fa` / `#ffffff`), warm amber (`#f59e0b`) and culinary ember (`#ff6b35`) accents, tactile spring physics (`active:scale-[0.97]`), 48px touch target safety, and thumb-zone ergonomics across POS, KDS, Admin, and Operations.
 
 ```
                     ┌──────────────────────────────────────────────┐
@@ -16,156 +16,151 @@ CulinaryOS is an AI-native, multi-tenant restaurant operating system monorepo or
              └────────────────┘    └──────────────┘   └─────────────────────┘
                            │               │                │
   ┌────────────────────────┴───────────────┴────────────────┴───────────────────────┐
-  │ Shared Core Engines (packages/)                                                 │
-  │ • shared (pricing, modifier, translation, contracts, printer ESC/POS)           │
-  │ • prep-engine (batch scaling, 2"x1" / 2"x2" adhesive thermal expiration labels) │
-  │ • food-cost-engine (actual-vs-theoretical cost variance analysis)               │
-  │ • waste-engine (1-click scrap & auto-void debiting)                             │
-  │ • labor-engine (role-weighted & hours-based tip pooling)                        │
-  │ • pdf-tools (QR pairing, printable table tents, thermal chits)                  │
-  └─────────────────────────────────────────────────────────────────────────────────┘
-                                   │
-  ┌────────────────────────────────┴────────────────────────────────────────────────┐
-  │ Turnkey Zero-Tech Runtime & Installer (scripts/ & apps/desktop)                 │
-  │ • install-windows-turnkey.ps1, Install-CulinaryOS.bat                           │
-  │ • scripts/tray-manager.ts (System Tray Daemon, Silent Boot, Port Self-Heal)     │
-  │ • scripts/mdns-qr-discovery.ts (mDNS culinaryos.local, LAN Pairing QR)          │
+  │ Shared Core UI & Design System (packages/ui)                                    │
+  │ • Deep Charcoal Zinc (#090d16 / #121824) & Warm Stone (#f8f9fa / #ffffff)       │
+  │ • OKLCH Contrast Tokens (>=5:1 in kitchen glare, >=4.5:1 WCAG AA)               │
+  │ • Deterministic 6-State Interactive Engine (Idle, Hover, Focus, Active, Load)   │
+  │ • Mathematical Nested Radius Standard (R_inner = R_outer - padding)             │
+  │ • Lucide SVG Icon Standard (Zero Emoji / Material Symbols in Core UI)           │
+  │ • 48x48px Physical Touch Target Safety Boundary                                 │
   └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Feature Inventory
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| F1.1 | Hierarchical Modifiers | Multi-level nested modifier selection with min/max rules and included/free allowances | M1 | ORIGINAL_REQUEST §R1 |
-| F1.2 | 2D/3D Floor Map Operations | Drag-and-drop table merging, seat/bill splitting, server shift reassignment | M1 | ORIGINAL_REQUEST §R1 |
-| F1.3 | Daypart & Happy Hour Pricing | Automated time/day-scheduled price adjustments with time-range validation | M1 | ORIGINAL_REQUEST §R1 |
-| F1.4 | 3-Mode Tableside QR | View-only, Pay-at-Table with split bill, and Self-Ordering with Assistance Buzzer | M1 | ORIGINAL_REQUEST §R1 |
-| F2.1 | Live 86 Countdowns | Real-time portion decrementing on order send and automatic 86 status lock at 0 | M2 | ORIGINAL_REQUEST §R2 |
-| F2.2 | Multi-Course Hold/Fire Pacing | Course staging with pacing countdown timers, warning alerts, and 1-click fire | M2 | ORIGINAL_REQUEST §R2 |
-| F2.3 | Per-Station Dual Translation | Bilingual kitchen ticket and ESC/POS thermal chit translation (EN/ES/FR) | M2 | ORIGINAL_REQUEST §R2 |
-| F2.4 | 1-Click Waste & Variance | Quick-tap scrap logging linked directly to actual-vs-theoretical food cost variance | M2 | ORIGINAL_REQUEST §R2 |
-| F2.5 | Batch Prep Scaling & Labels | Baker's percentage prep scaling with 2"x1" & 2"x2" adhesive thermal expiration labels | M2 | ORIGINAL_REQUEST §R2 |
-| F3.1 | Manager PIN Gatekeeper | Authorization gate for post-send voids, comps, drawer opens with reason tracking | M3 | ORIGINAL_REQUEST §R3 |
-| F3.2 | Post-Send Void Auto-Waste | Automatic inventory reduction and waste event generation on post-send item voids | M3 | ORIGINAL_REQUEST §R3 |
-| F3.3 | Multi-Rate Tax Engine | Categorized tax calculations for prepared food, alcoholic beverages, and exemptions | M3 | ORIGINAL_REQUEST §R3 |
-| F3.4 | Role-Weighted Tip Pooling | Tip distribution calculations supporting hours-worked and role percentage splits | M3 | ORIGINAL_REQUEST §R3 |
-| F3.5 | Automated EOD Z-Report | Shift reconciliation, cash float audit (over/short), and immutable daily closeout | M3 | ORIGINAL_REQUEST §R3 |
-| F4.1 | Turnkey Windows Installer | Zero-tech 1-click setup script provisioning Node, dependencies, firewall, shortcuts | M4 | ORIGINAL_REQUEST §R4 |
-| F4.2 | System Tray Background Daemon | Silent background supervisor managing API, POS, KDS, Desktop with tray controls | M4 | ORIGINAL_REQUEST §R4 |
-| F4.3 | Automated Diagnostics Preflight | 1-click system health check verifying Node, ports, disk, DB, and network reachability | M4 | ORIGINAL_REQUEST §R4 |
-| F4.4 | Port Conflict Self-Healing | Automated detection and termination of zombie processes locking ports 3000/5172-5180 | M4 | ORIGINAL_REQUEST §R4 |
-| F4.5 | Local QR & mDNS Discovery | mDNS broadcasting (`culinaryos.local`) and terminal LAN QR pairing generation | M4 | ORIGINAL_REQUEST §R4 |
-| F5.1 | Full 4-Tier E2E Test Suite | Automated test verification across all 26 feature definitions (Tiers 1-4) | M5 / Test Track | ORIGINAL_REQUEST Acceptance |
-| F5.2 | Adversarial Hardening | White-box stress testing, boundary fuzzing, race-condition and audit verification | M5 | System Prompt |
+| F1.1 | Theme & Color Architecture | Deep charcoal zinc (`#090d16`/`#121824`), warm stone (`#f8f9fa`/`#ffffff`), warm amber (`#f59e0b`), culinary ember (`#ff6b35`), emerald (`#10b981`), crimson (`#ef4444`) with valid CSS variable bindings | M1 | ORIGINAL_REQUEST §R1 |
+| F1.2 | Mathematical Nested Radius & Borders | 1px subtle borders (`border-white/10` in dark, `border-slate-200` in light), `backdrop-blur-md`, nested radius standard ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$), standardizing cards on `rounded-2xl` | M1 | ORIGINAL_REQUEST §R1 |
+| F1.3 | OKLCH Contrast Compliance | OKLCH color token definition guaranteeing $\ge 5:1$ contrast against stainless steel reflections and $\ge 4.5:1$ WCAG AA | M1 | ORIGINAL_REQUEST §R1, §R3 |
+| F2.1 | 6-State Interactive Engine | Implementation of Idle, Hover, Focus-Visible (2px solid ring, 2px offset), Active (`active:scale-[0.97] duration-75`), Loading (fixed bounds, centered spinner), Disabled (50% opacity) across Button, Input, Chip | M1 | ORIGINAL_REQUEST §R5 |
+| F2.2 | Lucide SVG Icon Standardization | Total elimination of emojis and Material Symbols webfont from shared UI, replacing with semantic Lucide SVG line icons | M1 | ORIGINAL_REQUEST §R5 |
+| F2.3 | 48px Physical Touch Target Safety | Guaranteed 48×48px physical tap target safety wrapper/primitive on all interactive components | M1 | ORIGINAL_REQUEST §R5, Rule 13 |
+| F3.1 | POS Tactile Spring Feedback | Micro-spring feedback (`active:scale-[0.97] transition-transform duration-75 ease-out`) on menu item cards, seat chips, and payment tiles | M2 | ORIGINAL_REQUEST §R2 |
+| F3.2 | POS Sticky Bottom Thumb-Zone Cart | Sticky bottom thumb-zone cart & checkout summary drawer on viewports <1024px, preventing unreachable top-screen interactions | M2 | ORIGINAL_REQUEST §R2 |
+| F3.3 | POS Dual-Pricing Segmented Toggle | Interactive segmented toggle (`[ Cash Discount | Card Tender ]`) with immediate visual total reconciliation | M2 | ORIGINAL_REQUEST §R2 |
+| F3.4 | POS Split-Check & Tip Numeric Keypad | Split-check and tip-entry modal interactions with 48px tactile numeric keypad buttons and percentage chips | M2 | ORIGINAL_REQUEST §R2 |
+| F3.5 | POS Touch Target & Dark Mode Elevation | Elevate all sub-48px buttons (void, notes, headers) and activate dark charcoal zinc mode in `apps/pos` | M2 | ORIGINAL_REQUEST §R2, §R1 |
+| F4.1 | KDS Glare-Resistant Dark Theme | Integration of `culinary-theme.css` with dark zinc background (`#090d16`), high-contrast OKLCH status tokens ($\ge 5:1$) | M3 | ORIGINAL_REQUEST §R3 |
+| F4.2 | KDS Oversized Bump & Fire Triggers | Oversized tactile bump triggers (64px - 80px height) and oversized Fire Course triggers engineered for gloved/greasy hands | M3 | ORIGINAL_REQUEST §R3 |
+| F4.3 | KDS Visual Aging Indicators | Color-shifting border pulses on TicketCard: green (<10m), amber (10-20m), flashing crimson (>20m) | M3 | ORIGINAL_REQUEST §R3 |
+| F4.4 | KDS Course Pacing Alert Bar | Persistent course pacing bar with prominent 64px fire actions and live ticking wait-time counters | M3 | ORIGINAL_REQUEST §R3 |
+| F4.5 | KDS Icon & Touch Standardization | Elimination of emojis (`⚡`) and check glyphs (`✓`), replacing with Lucide SVGs, ensuring $\ge 48\text{px}$ touch safety | M3 | ORIGINAL_REQUEST §R3, §R5 |
+| F5.1 | Admin & Ops Dense Data Tables | Dense data tables with sticky headers (`sticky top-0 z-10 backdrop-blur-md bg-card/95`), alternating zebra hover layers, and keyboard shortcut focus (`j`/`k`, arrows, Enter) | M4 | ORIGINAL_REQUEST §R4 |
+| F5.2 | Admin App Shell & Navigation Test Fix | Restore `CompactNavigation` in `apps/admin/src/App.tsx`, resolving `tests/ui/navigation.test.ts` line 71 regression | M4 | ORIGINAL_REQUEST Acceptance |
+| F5.3 | Interactive 3D Floor Map Elevation | Integrate `FloorMap3D` in Admin/Ops, add mobile/tablet touch & pinch camera orbit controls, and right-hand table property drawer (`<Sheet side="right">`) | M4 | ORIGINAL_REQUEST §R4 |
+| F5.4 | Mobile Floor Manager Bottom Sheet | Implement native swipe-down bottom sheets (`vaul`) with drag handles and quick operational triggers (86 toggle, manager alert, drawer kick) | M4 | ORIGINAL_REQUEST §R4 |
+| F5.5 | Admin & Ops Touch & Icon Elevation | Elevate all sub-48px touch targets and replace Material Symbols in `Purchasing.tsx` with Lucide SVGs | M4 | ORIGINAL_REQUEST §R4, §R5 |
+| F6.1 | E2E Requirement-Driven Test Suite | Opaque-box test suite verifying Tiers 1-4: 48px touch targets, thumb-zone anchoring, 6-state engine, OKLCH contrast, aging pulses, dual-pricing, 3D map, data tables | M5 / Test Track | ORIGINAL_REQUEST Acceptance |
+| F6.2 | Monorepo Typecheck & Test Gate | 100% pass on `pnpm run typecheck` (47/47 tasks) and `node ./scripts/run-all-tests.cjs` across all 123 test suites | M5 | ORIGINAL_REQUEST Acceptance |
+| F6.3 | Adversarial Coverage Hardening | Tier 5 white-box stress testing: rapid multi-click, extreme screen resize, glove-touch emulation, color contrast verification | M5 | System Prompt |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Front-of-House Dining & Service Engines | F1.1 (Hierarchical Modifiers), F1.2 (Floor Operations), F1.3 (Daypart Pricing), F1.4 (3-Mode Tableside QR) | None | IN_PROGRESS |
-| M2 | Back-of-House Kitchen & Prep Engines | F2.1 (Live 86 Decrement), F2.2 (Course Pacing Timers), F2.3 (Dual Translation), F2.4 (1-Click Waste & Variance), F2.5 (Batch Prep & Adhesive Labels) | None | IN_PROGRESS |
-| M3 | Security, Void Governance & Accounting Ledger | F3.1 (Manager PIN Gates), F3.2 (Void Auto-Waste), F3.3 (Multi-Rate Tax), F3.4 (Tip Pooling), F3.5 (Automated EOD Z-Report) | None | IN_PROGRESS |
-| M4 | Turnkey Zero-Tech Installer & System Tray Engine | F4.1 (Turnkey Installer), F4.2 (Tray Daemon), F4.3 (Diagnostics Preflight), F4.4 (Port Self-Healing), F4.5 (mDNS & Local QR Discovery) | None | IN_PROGRESS |
-| M5 | Full E2E Integration & Adversarial Verification | F5.1 (Tiers 1-4 Test Pass), F5.2 (Adversarial Coverage Hardening, Static Typecheck & Build Gate) | M1, M2, M3, M4 | PLANNED |
+| M1 | Design System Core & 6-State Interactive Engine | F1.1, F1.2, F1.3, F2.1, F2.2, F2.3 (`packages/ui`) | None | PLANNED |
+| M2 | POS Terminal & Handheld Ergonomics | F3.1, F3.2, F3.3, F3.4, F3.5 (`apps/pos`) | M1 | PLANNED |
+| M3 | KDS Kitchen Rail & Pacing Visual Engine | F4.1, F4.2, F4.3, F4.4, F4.5 (`apps/kds`) | M1 | PLANNED |
+| M4 | Admin Back-Office & Floor Management Workspaces | F5.1, F5.2, F5.3, F5.4, F5.5 (`apps/admin`, `apps/ops`) | M1 | PLANNED |
+| M5 | Full E2E Verification & Adversarial Coverage Hardening | F6.1, F6.2, F6.3 (`tests/`, workspace-wide) | M2, M3, M4 | PLANNED |
 
 ## Interface Contracts
 
-### 1. Hierarchical Modifiers (`packages/shared/src/types/menu.ts` & `apps/server/src/routes/orders.ts`)
-- **Schema Extension**:
-  - `ModifierGroup`: `{ id: string, menuItemId?: string, parentModifierId?: string, name: string, minSelections: number, maxSelections: number, freeQuantity: number, required: boolean, nestedGroups?: ModifierGroup[] }`
-  - `SelectedModifier`: `{ id: string, modifierGroupId: string, parentModifierId?: string, name: string, priceAdjustmentCents: number, effectivePriceCents: number, subModifiers?: SelectedModifier[] }`
-- **Pricing Calculation**: First `freeQuantity` selections in a group cost $0; remaining selections incur `priceAdjustmentCents`.
+### 1. 6-State Button Engine (`packages/ui/src/components/Button.tsx`)
+```typescript
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'ember' | 'amber';
+  size?: 'sm' | 'md' | 'lg' | 'touch' | 'bump'; // touch >= 48px, bump >= 64px
+  loading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+}
+// States: Idle, Hover, Focus-Visible (ring-2 ring-primary ring-offset-2), Active (active:scale-[0.97] duration-75), Loading (fixed bounds, centered Spinner), Disabled (opacity-50 pointer-events-none)
+```
 
-### 2. Table Operations (`apps/server/src/routes/tables.ts`)
-- `POST /v1/tables/merge`: `{ sourceTableIds: string[], targetTableId: string, managerPin?: string }` ➔ `{ success: true, targetTableId: string, mergedOrderId: string }`
-- `POST /v1/orders/:id/split`: `{ splitType: 'seat' | 'items' | 'custom', partitions: { seatNumber?: number, itemIds: string[] }[] }` ➔ `{ newOrderIds: string[] }`
-- `POST /v1/tables/transfer`: `{ tableId: string, fromServerId: string, toServerId: string, managerPin: string }` ➔ `{ success: true }`
-- `POST /v1/tables/:id/assistance`: `{ tableId: string, type: 'server' | 'water' | 'bill', note?: string }` ➔ `{ notificationId: string, timestamp: string }`
+### 2. Dense Data Table Component (`packages/ui/src/components/Table.tsx`)
+```typescript
+export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  dense?: boolean;
+}
+export interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  sticky?: boolean; // Adds sticky top-0 z-10 backdrop-blur-md bg-card/95
+}
+export interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  zebra?: boolean; // Adds even:bg-muted/30
+  interactive?: boolean; // Adds cursor-pointer hover:bg-muted/50 focus-visible:ring-2
+}
+```
 
-### 3. Daypart Pricing (`packages/shared/src/pricing.ts` & `apps/server/src/routes/dayparts.ts`)
-- `DaypartSchedule`: `{ id: string, name: string, daysOfWeek: number[], startTime: string, endTime: string, adjustmentType: 'percent' | 'fixed_cents' | 'override_cents', value: number }`
-- `resolveEffectivePrice(basePriceCents: number, schedules: DaypartSchedule[], atTime?: Date): number`
+### 3. Dual Pricing Reconciliation Contract (`packages/shared/src/pricing.ts` & `apps/pos`)
+```typescript
+export interface DualPricingResult {
+  cashAmountCents: number;
+  cardAmountCents: number;
+  cashDiscountPercentage: number;
+  discountCents: number;
+  activeTenderMode: 'cash' | 'card';
+}
+```
 
-### 4. Back-of-House 86 & Course Pacing (`apps/server/src/routes/orders.ts` & `apps/server/src/routes/kds.ts`)
-- `PATCH /v1/orders/:id/send`: Atomically decrements `menu_items.count_remaining`. If `count_remaining <= 0`, sets `status = '86d'` and broadcasts real-time 86 alert.
-- `CoursePacing`: `{ courseNumber: number, holdStatus: 'held' | 'firing' | 'fired', targetFireTime?: string, pacingDurationMinutes: number }`
-- `PATCH /v1/kds/tickets/:id/fire-course`: `{ courseNumber: number }` ➔ sets `holdStatus = 'fired'`, updates `fired_at = now()`.
+### 4. KDS Ticket Aging & Pacing Engine (`apps/kds/src/types/pacing.ts`)
+```typescript
+export type TicketAgingTier = 'fresh' | 'warning' | 'critical'; // fresh < 10m, warning 10-20m, critical > 20m
+export interface TicketAgingState {
+  elapsedSeconds: number;
+  tier: TicketAgingTier;
+  borderPulseClass: string; // border-emerald-500, border-amber-500, border-crimson-500 animate-pulse
+  waitFormatted: string; // e.g. "08:14"
+}
+```
 
-### 5. Dual Translation (`packages/shared/src/translation.ts`)
-- `translateTicket(ticket: KitchenTicket, targetLanguage: 'es' | 'fr' | 'en'): TranslatedKitchenTicket`
-- Formats KDS cards and ESC/POS thermal printer chits with primary translated name + original subtitle.
-
-### 6. 1-Click Waste & Food Cost Variance (`apps/server/src/routes/ops.ts`)
-- `POST /v1/ops/waste/quick`: `{ ingredientId?: string, menuItemId?: string, quantity: number, unit: string, reason: 'dropped' | 'burned' | 'spoiled' | 'overportion' | 'void_cooked', staffPin: string }`
-- `GET /v1/ops/food-cost/variance`: Returns theoretical food cost vs actual ingredient depletion + waste loss percentage.
-
-### 7. Adhesive Expiration Labels (`packages/prep-engine/src/labels.ts`)
-- `formatAdhesiveLabel(batch: PrepBatch, format: '2x1' | '2x2'): AdhesiveLabelPayload`
-- Returns printable thermal bitmap / ESC/POS commands with item name, prep date/time, use-by date/time, cook initials, batch #, allergen warnings, QR code.
-
-### 8. Manager PIN Security & Void Waste Ledger (`apps/server/src/routes/auth.ts` & `orders.ts`)
-- `POST /v1/auth/verify-manager-pin`: `{ pin: string }` ➔ `{ authorized: boolean, managerId?: string, role: string }`
-- `PATCH /v1/orders/:id/items/:itemId/void`: `{ managerPin: string, reasonCode: 'customer_change' | 'kitchen_error' | 'damaged' | 'spill', isCooked: boolean }` ➔ Voids line item, records audit trail, and if `isCooked === true`, auto-creates `waste_events` record.
-
-### 9. Multi-Rate Tax & Tip Pooling EOD Z-Report (`packages/labor-engine` & `apps/server/src/routes/reports.ts`)
-- `TaxRates`: `{ preparedFoodRate: number, alcoholRate: number, taxExemptRate: 0 }`
-- `TipPoolDistribution`: `{ method: 'hours_worked' | 'role_weighted', poolTotalCents: number, roles: { role: string, weight: number }[], staffHours: { staffId: string, role: string, hours: number }[] }`
-- `GET /v1/reports/z-report`: Full end-of-day reconciliation: total gross sales, category breakdown, tax summary, tip distribution, cash drawer over/short.
-- `POST /v1/reports/z-report/close`: Atomically seals the shift and writes immutable Z-Report ledger record.
-
-### 10. Turnkey Installer & Tray Daemon (`scripts/` & `apps/desktop`)
-- `scripts/install-windows-turnkey.ps1` / `Install-CulinaryOS.bat`: One-click setup.
-- `scripts/tray-manager.ts`: Runs background tray daemon, handles port self-healing, launches `apps/desktop` workstation, displays LAN pairing QR.
-- `scripts/mdns-qr-discovery.ts`: mDNS broadcast on `culinaryos.local` and terminal QR display.
+### 5. Mobile Floor Manager Quick Action Sheet (`apps/admin` & `packages/ui`)
+```typescript
+export interface MobileQuickActionPayload {
+  action: 'toggle_86' | 'manager_alert' | 'kick_drawer' | 'log_waste';
+  payload?: Record<string, unknown>;
+  managerPin?: string;
+}
+```
 
 ## Code Layout
 ```
+packages/
+  ui/
+    src/
+      culinary-theme.css     # OKLCH tokens, dark/light theme definitions, border/radius standards
+      tailwind.preset.js     # Color bindings without invalid hsl wrappers
+      components/
+        Button.tsx           # 6-state button engine (48px touch target safety)
+        Card.tsx             # rounded-2xl cards with 1px subtle borders
+        Table.tsx            # Sticky header, zebra striping, dense table primitives
+        FloorMap3D.tsx       # 3D floor map with touch/pinch camera orbit controls
+        KeypadModal.tsx      # 48px tactile numeric keypad for tips and split check
+        BumpButton.tsx       # 64-80px tactile kitchen bump button
+        Spinner.tsx          # Centered fixed-layout loading spinner
 apps/
-  server/src/
-    routes/
-      auth.ts          # Manager PIN verification & staff authentication
-      orders.ts        # Order lifecycles, nested modifiers, atomic 86 decrement, post-send void auto-waste
-      tables.ts        # Table merge, split, server transfer, assistance buzzer
-      dayparts.ts      # Scheduled daypart/happy hour pricing
-      kds.ts           # Course pacing, dual-language ticket formatting, station routing
-      ops.ts           # Quick-tap waste logging, theoretical vs actual food cost variance
-      reports.ts       # Multi-rate tax, tip pool distribution, immutable EOD Z-Report
-    lib/
-      pin.ts           # Scrypt / timing-safe PIN verification
-      mock-kitchen.ts  # Offline demo state for kitchen tickets & inventory
   pos/src/
     views/
-      TablesView.tsx   # 2D/3D floor map with table merge, split, and transfer modals
-      MenuView.tsx     # Nested hierarchical modifier selection modal
-      OrderView.tsx    # Manager PIN protected void & comp modal with reason capture
-      ReportsView.tsx  # Interactive EOD Z-Report view with cash reconciliation
+      MenuView.tsx           # Tactile micro-springs on item cards & seat chips
+      OrderView.tsx          # 48px touch target compliance on all triggers
+      CheckoutView.tsx       # Interactive Dual-Pricing toggle & Keypad modals
+    components/
+      StickyCartDrawer.tsx   # Sticky bottom thumb-zone cart & drawer (<1024px)
   kds/src/
     components/
-      TicketCard.tsx   # Multi-course pacing timers, dual-language card rendering, 1-tap waste
-  web/src/
+      TicketCard.tsx         # OKLCH >=5:1 contrast, aging border pulses (<10m/<20m/>20m)
+      PacingAlertBar.tsx     # 64px prominent fire triggers & live ticking wait counters
+  admin/src/
+    App.tsx                  # CompactNavigation restoration for navigation.test.ts
     pages/
-      TablesidePage.tsx# 3-Mode Tableside QR experience (/table/:slug/:tableNumber)
-  kitchenkit/src/
-    pages/
-      PrepPlannerPage.tsx # Batch prep scaling & 2"x1" / 2"x2" adhesive expiration label generator
+      Staff.tsx              # Sticky header, zebra hover, keyboard focus table
+      FloorPlanPage.tsx      # 3D FloorMap integration with right property drawer
+    components/
+      MobileQuickActionsSheet.tsx # Native swipe-down bottom sheet (vaul)
   ops/src/
     pages/
-      FoodCostPage.tsx # Actual-vs-Theoretical food cost variance dashboard
-packages/
-  shared/src/
-    types/             # Hierarchical modifiers, table operations, pricing schedules, Z-Reports
-    pricing.ts         # Daypart pricing engine
-    modifiers.ts       # Nested modifier tree & free quantity calculator
-    translation.ts     # Culinary translation dictionary (EN/ES/FR)
-    printer.ts         # ESC/POS adhesive label & Z-Report thermal printing
-  prep-engine/src/     # Prep batch scaling & adhesive label formatting
-  waste-engine/src/    # Scrap aggregation & auto-waste debiting
-  food-cost-engine/src/# Actual-vs-theoretical variance formulas
-  labor-engine/src/    # Role-weighted & hours-worked tip pooling
-scripts/
-  install-windows-turnkey.ps1 # Turnkey Windows installer script
-  Install-CulinaryOS.bat      # 1-click batch launcher
-  tray-manager.ts             # System tray background supervisor & port self-healer
-  mdns-qr-discovery.ts        # mDNS culinaryos.local advertising & LAN QR pairing
-  run-all-tests.cjs           # Universal test suite runner
+      FoodCostPage.tsx       # Dense sticky zebra data table
+      WastePage.tsx          # 48px touch targets on waste logs
 tests/
-  e2e/                        # Comprehensive Tiers 1-4 Opaque-Box Test Suites
+  e2e/
+    ui-ergonomics.test.ts    # 4-tier opaque-box test suite for UI/UX & ergonomics
+```

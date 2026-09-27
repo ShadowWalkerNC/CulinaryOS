@@ -375,7 +375,7 @@ export function MenuView() {
                   setActiveSection(s.id);
                   setSearchQuery('');
                 }}
-                className={`w-full justify-start text-left px-3.5 py-3 rounded-xl font-bold text-xs tracking-wide flex items-center gap-3 border-2 ${
+                className={`w-full justify-start text-left px-3.5 py-3 min-h-[48px] rounded-xl font-bold text-xs tracking-wide flex items-center gap-3 border-2 active:scale-[0.97] transition-all ${
                   isActive
                     ? 'bg-slate-900 text-white border-slate-900 shadow-sm scale-[1.01] hover:bg-slate-900 hover:text-white'
                     : 'text-slate-700 hover:text-slate-950 hover:bg-slate-50 bg-white border-slate-200/90'
@@ -560,7 +560,7 @@ export function MenuView() {
                       type="button"
                       variant="ghost"
                       onClick={() => openModifierModal(item)}
-                      className="min-h-[44px] px-4 py-2 text-xs font-black text-slate-900 bg-slate-50 hover:bg-orange-50 hover:text-orange-900 hover:border-orange-500 border-2 border-slate-300 rounded-full shadow-sm"
+                      className="min-h-[48px] px-4 py-2.5 text-xs font-black text-slate-900 bg-slate-50 hover:bg-orange-50 hover:text-orange-900 hover:border-orange-500 border-2 border-slate-300 rounded-xl shadow-xs active:scale-[0.97] transition-all"
                     >
                       <Plus className="w-4 h-4 text-orange-600" />
                       <span>{item.modifier_groups?.length > 0 ? 'Customize' : 'Add to Seat'}</span>

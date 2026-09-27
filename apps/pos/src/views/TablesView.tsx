@@ -34,6 +34,7 @@ import {
   Bookmark,
   AlertCircle,
   Wrench,
+  Lightbulb,
   RotateCcw,
   Trash2,
   SlidersHorizontal,
@@ -861,10 +862,18 @@ export function TablesView() {
           />
 
           <div className="flex flex-wrap items-center justify-between text-[11px] text-muted-foreground font-bold px-2">
-            <span>
-              {editMode
-                ? '🛠️ Edit Mode Active: Drag tables in 3D to reposition • Click to edit properties • Grid snaps to 0.5m'
-                : '💡 Orbit with mouse drag • Scroll to zoom • Click any table for check operations (Seat, Merge, Split, Transfer)'}
+            <span className="inline-flex items-center gap-1.5">
+              {editMode ? (
+                <>
+                  <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                  <span>Edit Mode Active: Drag tables in 3D to reposition • Click to edit properties • Grid snaps to 0.5m</span>
+                </>
+              ) : (
+                <>
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                  <span>Orbit with mouse drag • Scroll to zoom • Click any table for check operations (Seat, Merge, Split, Transfer)</span>
+                </>
+              )}
             </span>
             <span className="font-mono text-[10px]">
               Theme: <span className="uppercase text-foreground font-black">{floorTheme}</span> • Room: {floorDimensions.width}' × {floorDimensions.depth}' ft

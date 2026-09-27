@@ -1,13 +1,13 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Button } from '@culinaryos/ui';
+import { Button, LayoutGrid, Users, DollarSign, Package, Trash2 } from '@culinaryos/ui';
 
 const NAV = [
-  { to: '/',          label: '⚡ Dashboard' },
-  { to: '/labor',     label: '👥 Labor'     },
-  { to: '/food-cost', label: '💰 Food Cost' },
-  { to: '/vendor',    label: '🚚 Vendors'   },
-  { to: '/waste',     label: '♻️ Waste'     },
+  { to: '/',          label: 'Dashboard',  Icon: LayoutGrid },
+  { to: '/labor',     label: 'Labor',      Icon: Users      },
+  { to: '/food-cost', label: 'Food Cost',  Icon: DollarSign },
+  { to: '/vendor',    label: 'Vendors',    Icon: Package    },
+  { to: '/waste',     label: 'Waste',      Icon: Trash2     },
 ];
 
 export default function Layout() {
@@ -20,20 +20,21 @@ export default function Layout() {
           <p className="text-xs text-zinc-500 mt-0.5">Operations Platform</p>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map(({ to, label }) => (
+          {NAV.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `block px-3 py-2 rounded-lg text-sm transition-colors ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive
                     ? 'bg-amber-500/20 text-amber-400 font-medium'
                     : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
                 }`
               }
             >
-              {label}
+              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{label}</span>
             </NavLink>
           ))}
         </nav>

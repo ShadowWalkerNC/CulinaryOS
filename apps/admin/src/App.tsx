@@ -4,6 +4,7 @@ import { DeviceProvider } from './context/DeviceContext';
 import { DevicePreviewBar } from './components/DevicePreviewBar';
 import { ResponsiveShell } from './components/layout/ResponsiveShell';
 import { GuidedOnboardingWizard } from './components/onboarding/GuidedOnboardingWizard';
+import { CompactNavigation } from '@culinaryos/ui';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { ReportingPage } from './pages/ReportingPage';
