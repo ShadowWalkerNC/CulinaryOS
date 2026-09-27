@@ -34,6 +34,7 @@ import {
   Usb,
   Bluetooth,
   Wifi,
+  KeypadModal,
 } from '@culinaryos/ui';
 
 const METHODS = ['card', 'tap', 'scan', 'cash', 'comp'] as const;
@@ -44,6 +45,7 @@ export function CheckoutView() {
   const [method, setMethod] = useState<string>('card');
   const [tipPercent, setTipPercent] = useState<number | 'custom'>(0);
   const [customTip, setCustomTip] = useState('0');
+  const [customTipModalOpen, setCustomTipModalOpen] = useState(false);
   const [cashTendered, setCashTendered] = useState<string>('');
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -678,7 +680,10 @@ export function CheckoutView() {
               })}
               <button
                 type="button"
-                onClick={() => setTipPercent('custom')}
+                onClick={() => {
+                  setTipPercent('custom');
+                  setCustomTipModalOpen(true);
+                }}
                 className={`min-h-[48px] py-3 px-1.5 rounded-xl font-bold transition-all border-2 flex flex-col items-center justify-center active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${
                   tipPercent === 'custom'
                     ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-md'
@@ -686,18 +691,23 @@ export function CheckoutView() {
                 }`}
               >
                 <span className="text-xs font-black">Custom</span>
-                <span className="text-[10px] font-mono opacity-80">$$</span>
+                <span className="text-[10px] font-mono opacity-80">
+                  {tipPercent === 'custom' && parseFloat(customTip || '0') > 0 ? `$${parseFloat(customTip).toFixed(2)}` : '$$'}
+                </span>
               </button>
             </div>
             {tipPercent === 'custom' && (
-              <div className="pt-2 animate-fadeIn">
-                <input
-                  type="number"
-                  value={customTip}
-                  onChange={(e) => setCustomTip(e.target.value)}
-                  placeholder="Enter custom tip in dollars ($)"
-                  className="w-full bg-[#f8f9fa] border-2 border-[#cbd5e1] focus:border-[#0f172a] focus:bg-white outline-none rounded-xl p-3 text-xs text-[#1f2937] font-mono font-bold shadow-inner"
-                />
+              <div className="pt-2 animate-fadeIn flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCustomTipModalOpen(true)}
+                  className="flex-1 min-h-[48px] bg-[#f8f9fa] hover:bg-white border-2 border-[#cbd5e1] hover:border-[#0f172a] rounded-xl p-3 text-xs text-[#1f2937] font-mono font-bold shadow-inner flex items-center justify-between text-left cursor-pointer transition-colors active:scale-[0.98]"
+                >
+                  <span className="text-[#6b7280] font-sans font-semibold">Custom Tip Keypad:</span>
+                  <span className="text-sm font-black font-mono text-[#0f172a]">
+                    ${parseFloat(customTip || '0').toFixed(2)}
+                  </span>
+                </button>
               </div>
             )}
           </div>
@@ -976,6 +986,23 @@ export function CheckoutView() {
           </div>
         </div>
       )}
+
+      {/* 48px Tactile Custom Tip Keypad Modal */}
+      <KeypadModal
+        open={customTipModalOpen}
+        onOpenChange={setCustomTipModalOpen}
+        title="Enter Custom Tip"
+        subtitle="Add gratuity for server staff"
+        mode="currency"
+        subtotalCents={taxableSubtotal}
+        presets={[15, 18, 20, 25]}
+        presetUnit="%"
+        value={customTip ? String(Math.round(parseFloat(customTip || '0') * 100)) : ''}
+        onConfirm={(_val, cents) => {
+          const tipDollars = ((cents ?? 0) / 100).toFixed(2);
+          setCustomTip(tipDollars);
+        }}
+      />
     </div>
   );
 }

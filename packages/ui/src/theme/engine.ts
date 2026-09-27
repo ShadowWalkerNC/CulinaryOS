@@ -34,6 +34,8 @@ export function applyTheme(config: ThemeConfig, target: HTMLElement = document.d
   target.style.setProperty('--border', colors.border);
   target.style.setProperty('--input', colors.input);
   target.style.setProperty('--ring', colors.ring);
+  if (colors.success) target.style.setProperty('--success', colors.success);
+  if (colors.warning) target.style.setProperty('--warning', colors.warning);
 
   // Radius
   const radiusMap = {

@@ -9,6 +9,7 @@ export * from './components/Label';
 export * from './components/Dialog';
 export * from './components/Tabs';
 export * from './components/Table';
+export * from './components/KeypadModal';
 export * from './components/Separator';
 export * from './components/Skeleton';
 export * from './components/Sheet';
@@ -158,6 +159,7 @@ export {
   Lightbulb,
   PauseCircle,
   Flag,
+  Delete,
 } from 'lucide-react';
 
 

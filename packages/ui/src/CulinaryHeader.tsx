@@ -64,7 +64,7 @@ export const CulinaryHeader: React.FC<CulinaryHeaderProps> = ({
           title="CulinaryOS Platform Home"
         >
           <div className="w-7 h-7 bg-[#0f172a] text-white rounded-lg flex items-center justify-center shadow-xs group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-            <span className="material-symbols-outlined filled text-[16px]">skillet</span>
+            <ChefHat className="w-4 h-4" />
           </div>
           <span className="font-black text-xs text-slate-950 uppercase tracking-wider group-hover:text-amber-600 transition-colors hidden sm:inline">
             CulinaryOS

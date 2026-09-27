@@ -22,19 +22,22 @@ import { cn } from '../lib/utils';
  * handheld POS / kitchen-rail contexts.
  */
 export const buttonVariants = cva(
-  'relative inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-bold transition-all duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.97] cursor-pointer',
+  'relative inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-bold transition-all duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.97] cursor-pointer',
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 active:bg-primary/95',
+        primary: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 active:bg-primary/95',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/90',
+        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-xs active:bg-accent/80',
+        ghost: 'hover:bg-accent hover:text-accent-foreground active:bg-accent/80',
         destructive: 'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 active:bg-destructive/95',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-xs',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        amber: 'bg-[#f59e0b] text-[#090d16] font-extrabold shadow-xs hover:bg-[#d97706] active:bg-[#b45309]',
+        ember: 'bg-[#ff6b35] text-white font-extrabold shadow-xs hover:bg-[#ea580c] active:bg-[#c2410c]',
         link: 'text-primary underline-offset-4 hover:underline',
         success: 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 active:bg-emerald-800',
-        warning: 'bg-amber-600 text-white shadow-xs hover:bg-amber-700 active:bg-amber-800',
-        brand: 'bg-[#0f172a] text-white shadow-xs hover:bg-[#1e293b] active:bg-[#090d16]',
+        warning: 'bg-[#f59e0b] text-[#090d16] shadow-xs hover:bg-[#d97706] active:bg-[#b45309]',
+        brand: 'bg-[#0f172a] text-white shadow-xs hover:bg-[#182030] active:bg-[#000000] dark:bg-[#090d16]',
       },
       size: {
         default: 'h-10 min-h-[40px] px-4 py-2',

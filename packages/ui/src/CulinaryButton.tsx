@@ -12,7 +12,7 @@ export const CulinaryButton: React.FC<CulinaryButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyle = 'font-black uppercase tracking-wider transition-all rounded-xl border flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50 select-none';
+  const baseStyle = 'font-black uppercase tracking-wider transition-transform duration-75 ease-out rounded-xl border flex items-center justify-center gap-2 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer';
   
   const variants = {
     primary: 'bg-[#0f172a] hover:bg-[#1e293b] text-white border-[#0f172a] shadow-xs',

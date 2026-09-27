@@ -45,7 +45,7 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
         {/* Brand Logo & Wordmark */}
         <a href="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="w-9 h-9 rounded-xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors">
-            <span className="material-symbols-outlined filled text-[20px]">skillet</span>
+            <ChefHat className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">

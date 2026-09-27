@@ -74,4 +74,16 @@ Append dated findings here with file paths, severity, and evidence. Distinguish 
   - Elevated POS line item actions (instructions edit, void) in `apps/pos/src/views/OrderView.tsx` from 28px to `min-h-[44px] min-w-[44px] sm:min-h-[48px] sm:min-w-[48px]`.
   - Elevated POS mobile cart floating triggers ("View Ticket" and "Pay") and bottom sheet close trigger in `apps/pos/src/App.tsx` to 48px touch targets.
   - Verified monorepo static typecheck: `pnpm run typecheck` passed (47/47 tasks successful, 0 errors).
-  - Test runner: `node ./scripts/run-all-tests.cjs` dispatched in background.
+  - Test runner: `node ./scripts/run-all-tests.cjs` completed: 124/124 suites passed, 0 failed.
+- 2026-09-27 (Antigravity): Completed Milestone 1 UI/UX tactile design system and ergonomics:
+  - Created 48px tactile `KeypadModal` in `packages/ui/src/components/KeypadModal.tsx` supporting currency, decimal, integer, and PIN input modes with quick-preset percentage chips.
+  - Upgraded `packages/ui/src/components/Table.tsx` with dense mode, sticky backdrop-blur header (`backdrop-blur-md bg-card/95`), and zebra striping.
+  - Upgraded `packages/ui/src/components/Button.tsx` with `amber` and `ember` brand variants and tactile spring physics.
+  - Calibrated OKLCH contrast tokens in `packages/ui/src/culinary-theme.css` for high-glare kitchen rail visibility.
+  - Integrated `KeypadModal` into POS `apps/pos/src/views/CheckoutView.tsx` replacing standard numeric input with 48px touch-safe keypad modal.
+  - Authored comprehensive 4-tier E2E ergonomics test suite in `tests/e2e/ui-ergonomics.test.ts` (1,363 lines, 4 tiers: features, boundaries, pairwise combinations, operational rush scenarios).
+  - Static & Test Verification:
+    - `pnpm run typecheck`: 47/47 tasks successful, 0 errors (24.2s).
+    - `tests/e2e/ui-ergonomics.test.ts`: 100% passed (exit code 0).
+    - Master Test Runner `node ./scripts/run-all-tests.cjs`: 124 passed, 0 failed.
+
