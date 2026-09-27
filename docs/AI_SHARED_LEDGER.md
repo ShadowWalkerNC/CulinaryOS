@@ -103,3 +103,22 @@ Append dated findings here with file paths, severity, and evidence. Distinguish 
     - Master Test Runner `node ./scripts/run-all-tests.cjs`: 124 passed, 0 failed.
 
 
+
+- 2026-09-27 (Codex): Claimed user-requested typesafe-ai skill installation from typesafe-ai/skills. Scope: project skill directory, installer-generated skill lock metadata, and this ledger. Preserve existing Web edits and audit document. Verification: installer exit status and Codex skill listing.
+- 2026-09-27 (Codex): Complete. Installed typesafe-ai for Codex at .agents/skills/typesafe-ai using the requested npx installer with --agent codex --yes. Installer exited 0; skills list --agent codex --json confirms project scope, Codex association, and typesafe-ai/skills source. Installer generated skills-lock.json. Existing Web edits and audit document preserved; no application tests needed for this skill-only installation. Ownership released.
+- 2026-09-27 (Antigravity): Executed Milestone 4 2026 Industrial Hospitality Public Experience:
+  - Scope: `apps/web/src/pages/LandingPage.tsx`, `apps/web/src/index.css`.
+  - Transformed public landing from generic cards into an authoritative 2026 industrial hospitality design system experience.
+  - Added real-time operational telemetry strip (latency <1.2ms, offline buffer status, raw ESC/POS support, MIT license).
+  - Built commanding asymmetric architectural hero with live Workstation HUD preview across all 4 operational station roles with 1-click zoom.
+  - Upgraded interactive in-browser restaurant simulator with tactile POS table order entry (seats S1-S4, station tags, dynamic totals) firing directly to the live BOH Cook Rail with 1-second aging timers, severity color grading, station filters, and bump action.
+  - Integrated adaptive station engineering matrix (Mobile Handheld, Counter Terminal, Kitchen KDS, Back-Office Admin) with detailed technical specs and verified hardware capabilities.
+  - Added dedicated hardware bill of materials (Star TSP143IV, Epson TM-m30, 24V RJ11/RJ12 drawer kick, Stripe S700/WisePOS E) with zero proprietary lock-in.
+  - Included radical cost transparency matrix (CulinaryOS vs Toast / Clover / Square).
+  - Upgraded Turnkey Local Restaurant Deployment modal with 1-click clipboard launch commands and local Wi-Fi pairing guide.
+  - Enforced 48px physical touch-target minimums (Rule 13) and WCAG AA contrast standards.
+  - Verification:
+    - `@culinaryos/app-web` production build passed cleanly (`vite build` in 11.75s).
+    - Monorepo typecheck: `pnpm run typecheck` passed (47/47 tasks successful, 0 errors in 38.1s).
+    - Master Test Runner `node ./scripts/run-all-tests.cjs`: 124 passed, 0 failed.
+
