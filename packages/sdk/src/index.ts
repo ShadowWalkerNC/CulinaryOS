@@ -163,6 +163,47 @@ export class CulinaryOSClient {
     },
   };
 
+  // --- Menu & Catalog ---
+  readonly menu = {
+    get: (itemId?: string) => (itemId ? this.request<any>(`/v1/menu/${itemId}`) : this.request<any>('/v1/menu')),
+    list: () => this.request<any[]>('/v1/menu'),
+  };
+
+  // --- Inventory & Pantry ---
+  readonly inventory = {
+    get: (itemId: string) => this.request<any>(`/v1/pantry/items/${itemId}`),
+    list: () => this.request<any[]>('/v1/pantry/items'),
+    adjust: (params: { itemId: string; amountChangeGrams: number; reason: string }) =>
+      this.request<any>('/v1/pantry/adjust', { method: 'POST', body: JSON.stringify(params) }),
+  };
+
+  // --- Prep & Recipes ---
+  readonly prep = {
+    tasks: {
+      list: (params: { shift?: string } = {}) =>
+        this.request<any[]>(`/v1/ops/prep-tasks${params.shift ? `?shift=${params.shift}` : ''}`),
+    },
+    recipes: {
+      get: (recipeId: string) => this.request<any>(`/v1/ops/recipes/${recipeId}`),
+    },
+  };
+
+  // --- Marketing & Campaigns ---
+  readonly marketing = {
+    posts: {
+      schedule: (post: { channel: string; content: string; scheduledAt: string }) =>
+        this.request<any>('/v1/marketing/posts', { method: 'POST', body: JSON.stringify(post) }),
+    },
+  };
+
+  // --- Intelligence & Analytics ---
+  readonly analytics = {
+    query: (params: { metric?: string; date?: string } = {}) => {
+      const q = params.date ? `?date=${params.date}` : '';
+      return this.request<any>(`/v1/reports/sales${q}`);
+    },
+  };
+
   // --- Billing & Subscriptions ---
   readonly billing = {
     getSubscription: () => {
@@ -185,3 +226,5 @@ export class CulinaryOSClient {
 export function createClient(config: CulinaryOSClientConfig): CulinaryOSClient {
   return new CulinaryOSClient(config);
 }
+
+export const createCulinaryClient = createClient;

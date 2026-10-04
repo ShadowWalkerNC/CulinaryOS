@@ -1,90 +1,70 @@
 # CulinaryOS
 
-**The open operating system for restaurants** — humans on POS/KDS, agents on MCP, your Postgres. MIT licensed. AI never required for service.
+**The unified restaurant technology operating system.** Humans on POS/KDS, edge nodes on Raspberry Pi, agents on MCP, sovereign Postgres. MIT licensed.
 
-**Live Marketing Hub & Overview:** [https://culinary-os-marketing.vercel.app/](https://culinary-os-marketing.vercel.app/)
-
-[![Live Marketing](https://img.shields.io/badge/Live%20Site-culinary--os--marketing.vercel.app-000000?style=flat&logo=vercel)](https://culinary-os-marketing.vercel.app/)
-[![CI](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadowWalkerNC/CulinaryOS/actions/workflows/ci.yml)
-[![Tests: 121 Passing](https://img.shields.io/badge/Tests-121%20Passing-brightgreen.svg)](./tests/)
-[![Typecheck: 47/47 Passing](https://img.shields.io/badge/Typecheck-47%2F47%20Passing-blue.svg)](./turbo.json)
-[![UI: shadcn + Three.js](https://img.shields.io/badge/UI-shadcn%20%2B%20Three.js-purple.svg)](./packages/ui)
+[![Tests: Passing](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](./tests/)
+[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-Passing-blue.svg)](./turbo.json)
+[![UI: OKLCH + 6--State](https://img.shields.io/badge/UI-OKLCH%20%2B%206--State-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/Version-1.2.1-orange.svg)](./CHANGELOG.md)
-
-The marketing site now includes an interactive POS→KDS demo, blog, careers page, and privacy/terms — all at the link above.
-
-<p align="center">
-  <img src="docs/screenshots/floor_map_3d.png" alt="CulinaryOS 3D Spatial Floor Plan" width="49%" />
-  <img src="docs/screenshots/kds_station_board.png" alt="CulinaryOS KDS Kitchen Display" width="49%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/pos_ticket_menu.png" alt="CulinaryOS POS Multi-Seat Ticket Menu" width="49%" />
-  <img src="docs/screenshots/web_store_ordering.png" alt="CulinaryOS Online Ordering Storefront" width="49%" />
-</p>
-
-<p align="center"><em>3D Spatial Floor Plan · Real-Time Kitchen Display (KitchenKit) · Multi-Seat POS Terminal · Online Ordering Storefront</em></p>
-
-> Not a cheaper Toast clone. A **protocol restaurant**: kitchen state is a versioned contract that operators *and* AI agents can drive — with sovereign data and a closed economic loop (recipe → fire → waste/cost).
+[![Version](https://img.shields.io/badge/Version-1.3.0-orange.svg)](./CHANGELOG.md)
 
 ---
 
-## 🧭 Current Focus
+## 🍽️ Target Product Family
 
-The project is in a **security-first hardening phase**: no new features until money-integrity and access-control work is closed. In flight:
+CulinaryOS is the single primary restaurant technology monorepo, consolidating the full spectrum of food-service operations into a coherent, modular platform:
 
-- **RBAC you can enforce** — a single namespaced permission registry (`module.action`), server-side authorization on every route, and penetration-style role tests (a cashier must not reach manager functionality via URL or API).
-- **Server-authoritative payments** — verified totals, idempotent writes, signed webhooks, integer-cents everywhere.
-- **Operational truth** — persistent business-day/drawer state, real KDS ticket lifecycle, and reports computed from real data.
-- **AI as an accessory** — provider-neutral (OpenAI, Gemini, bring-your-own-key), managers-only assistant ("Linda"), always behind flags and off by default. AI proposes; humans approve. It never moves money on its own.
+```text
+CulinaryOS
+├── Core           — Multi-tenant auth, session tokens, PostgreSQL RLS, offline event bus
+├── POS            — Front-of-House terminal (offline-first, table mapping, split checks)
+├── KDS            — Kitchen Display System (station routing, cook times, course pacing)
+├── Admin          — Back-office workstation (manager PIN gate, HACCP operations HUD)
+├── Ordering       — Omnichannel dining room, tableside QR, and online guest checkout
+├── Inventory      — Stock tracking, auto-depletion, vendor SKUs, and purchase orders
+├── Prep           — Batch prep planning & recipe vault (absorbs KitchenKit + RecipeOS)
+├── Ops            — Prime cost, actual vs. theoretical food cost, FLSA labor, waste (absorbs CulinaryOps)
+├── Marketing      — Autonomous campaigns, brand guardrails, review replies (absorbs Post-Pilot)
+├── Web            — Public restaurant experience & 8 Astro themes (absorbs Plated)
+├── Intelligence   — Vendor-neutral AI skills, 6 role agents, anomaly detection (absorbs RestRevive)
+├── Integrations   — Stripe Terminal/Connect, Star/Epson ESC/POS, Mercury, partner APIs
+├── Edge           — Raspberry Pi 5 / CM5 local appliance with Rust high-reliability services
+├── SDK            — Unified `@culinaryos/sdk` service boundary for first & third parties
+└── MCP            — Restaurant-specific Model Context Protocol tools for AI pairing
+```
+
+> **Ecosystem Boundaries:**
+> - **ShorelineOps:** Remains an independent specialized healthcare vertical; integrates via APIs, SDK, events, and MCP tools. Never coupled to internal database schemas.
+> - **MuseLab:** Experimental incubation environment for Meta Muse / XR prototypes; zero production dependencies in CulinaryOS.
+> - **ForgeSatchel & JOSH:** Decoupled developer framework and System 1 router; integrated via clean adapters.
 
 ---
 
-## ⚡ 1-Click Turnkey Installers & Desktop Shortcuts
+## 🧭 Current Architecture & Standards
 
-Install and launch CulinaryOS across any platform with zero manual configuration:
-
-### 🪟 Windows 10 / 11 (1-Click Desktop Installer)
-Double-click [**`Install-CulinaryOS.bat`**](Install-CulinaryOS.bat) in File Explorer (or run via PowerShell):
-```powershell
-.\Install-CulinaryOS.bat
-```
-- Automatically installs Node.js LTS (via `winget` if missing) and `pnpm`.
-- Creates a permanent **`CulinaryOS` shortcut on your Windows Desktop**.
-- **Auto-Updates on Launch:** Double-clicking the Desktop Icon automatically syncs to the latest repository commit via `git pull --rebase` before booting services!
-- To configure Windows Defender Firewall for local tablets/iPads, double-click [**`scripts/setup-firewall.bat`**](scripts/setup-firewall.bat).
-
-### 🍎 macOS & Linux (1-Click Bash Launcher)
-```bash
-./START_HERE.sh
-```
-
-### 📱 Connecting Tablets & Mobile Devices (Over Wi-Fi)
-All servers bind to `0.0.0.0` with dynamic LAN routing. Simply open `http://<YOUR_WIFI_IP>:5172` (e.g. `http://192.168.1.50:5172`) on any iPad, Android terminal, or kitchen TV display connected to your local network.
-
-### ☁️ Deploy Online (Render & Vercel)
-- **Render Blueprint:** Deploy the Unified API, Web Storefront, and Admin portals using the included [`render.yaml`](render.yaml).
-- **Vercel Frontend:** Deploy the guest digital ordering app with 1-click using [`vercel.json`](vercel.json).
+1. **Local-First & Offline Resilient:** Internet outages must never halt restaurant service. POS order entry, KDS ticket routing, local ESC/POS printing, and offline card intent queues run on local edge hardware and reconcile idempotently.
+2. **Industrial UI/UX Ergonomics:** 48px physical touch target minimums, 6-state button engine (`Idle`, `Hover`, `Focus-Visible`, `Active` scale physics, `Loading` fixed bounds, `Disabled`), and OKLCH color space with WCAG AA high-glare kitchen contrast.
+3. **Security & Money Integrity:** Every tenant-scoped table enforces PostgreSQL RLS. All payments calculated in integer cents. Cardholder data never touches application servers (Stripe Terminal SAQ-A outsourcing).
+4. **Vendor-Neutral AI:** Business logic is never coupled to Anthropic, Google, or OpenAI. Swappable via `ProviderAdapter`. AI is strictly additive, behind feature flags, and requires human-in-the-loop approvals for sensitive operations.
 
 ---
 
 ## What is CulinaryOS?
 
-CulinaryOS is a **complete, MIT-licensed restaurant operating system** built as a TypeScript monorepo. It covers every surface of a modern food-service operation:
+CulinaryOS covers every surface of modern hospitality:
 
 - **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F7 hotkeys, PIN manager, and full-screen Kiosk mode.
 - **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
-- **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode, sub-second course pacing, and 304 Not Modified polling.
-- **Admin Back-Office (`:5174`)** — Menu builder, 86ing, staff PINs, pantry par levels, purchase orders, business templates, and system settings.
-- **KitchenKit & Prep Planner (`:5175`)** — Recipe formulas, yield calculations, batch sizing, adhesive FIFO QR labels, and vendor POs.
-- **Online Storefront (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, buzzer requests, and checkout.
-- **CulinaryOps (`:5177`)** — Actual vs theoretical food cost variance, kitchen waste logging, labor % tracking, and daily ops coaching.
-- **Universal CLI Tool (`cli/`)** — Command-line interface across all 18 operational subsystems (100% terminal parity).
-- **RecipeOS Vault (`:5178`)** — Next.js recipe vault, ratio scaling engine, unit conversions, and shopping list.
-- **Android Mobile POS (`mobile/`)** — React Native + Expo companion app with offline SQLite cache.
+- **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode, and sub-second course pacing.
+- **Admin Back-Office (`:5174`)** — Manager PIN gated, dual-column HACCP operations hub, menu builder, staff PINs, and operations HUD.
+- **CulinaryOS Prep (`:5177`)** — Recipe formulas, ratio blueprints, batch sizing, FIFO QR labels, and shift prep lists.
+- **Online Storefront & Web (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, and Plated theme generator.
+- **CulinaryOS Ops (`:5178`)** — Actual vs theoretical food cost variance, kitchen scrap logging, FLSA tip pools, and labor % tracking.
+- **Marketing Studio (`:5179`)** — AI brand guardrails, 3-stage event campaign generator, and review response automation.
 - **Unified Hono API (`:3000`)** — Single source of truth for orders, inventory, ops, payments, and settings.
-- **MCP Agent Layer (`mcp/`)** — 9 specialized Model Context Protocol servers that let AI agents operate on live restaurant state.
+- **MCP Server (`mcp/`)** — Specialized Model Context Protocol servers exposing restaurant operations to AI agents.
+
 
 All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive and off by default** — every core operation works identically without external AI APIs.
 

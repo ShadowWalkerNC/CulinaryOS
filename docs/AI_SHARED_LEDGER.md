@@ -260,3 +260,51 @@ Append dated findings here with file paths, severity, and evidence. Distinguish 
     - `node -r ./scripts/test-hook.cjs --import tsx tests/admin/auth-gate.test.ts`: PASS (5/5 green).
     - `node -r ./scripts/test-hook.cjs --import tsx tests/ui/navigation.test.ts`: PASS (8/8 green).
   - All claims released.
+
+- 2026-10-04 (Codex): CLAIM — user-authorized demo hosting copy/link and Order Online visual consistency fixes. Scope apps/web/src/pages/LandingPage.tsx, MenuPage.tsx, components/ItemCard.tsx, scoped index.css if needed; docs stitch handoff and ledger. Preserve ForgeSatchel blueprint boundaries, routes, domain/payment/API contracts. Attached ZIP contains ShorelineOps designs; clarification pending. Muse read-only review owns no edits.
+
+- 2026-10-04 (Codex): RELEASE — demo hosting/storefront consistency fix complete locally. User confirmed Stitch ZIP was wrong project; no design imported. Updated landing hosting label and obsolete Vercel link to Railway demo, aligned guest page platform header/grid/layout/menu cards, 48px controls, pressed/focus/reduced-motion states and keyboard item details. Fixed category-chip shrinking found during phone inspection. Existing routes/cart/payment/domain contracts preserved; no blueprint structural migration. Verification: Web production build PASS (existing bundle-size warning), direct browser search -> salmon -> add -> bag PASS; widths 360/390/768/1440 show no document overflow and all visible storefront buttons >=48px. Corrected Railway link rendered. Muse read-only review failed before findings due subscription quota; Codex performed review. No pushes or deployment; local preview retained. Ownership released.
+
+- 2026-10-04 (Codex): CLAIM — user-authorized application-wide UI/UX consistency pass answering ergonomic rule 13 and current UI assessment. Scope shared UI Button/Input/theme/launcher, Ops and KitchenKit layout/navigation, POS lock-screen responsive header, existing web consistency files, UI tests and new docs/audits/ui-ux-consistency-2026-10-04.md. Preserve all auth/payment/data/realtime contracts and future ForgeSatchel structure. Muse unavailable per immediately preceding quota failure; direct targeted review/verification.
+
+- 2026-10-04 (Codex): UI claim extended to cli/src/commands/system.ts: doctor ui currently returns unconditional PASS without observations; replace with honest NOT RUN until measured evidence exists. No CLI operation contracts changed.
+
+- 2026-10-04 (Codex): Shared style claim extended to packages/ui/tailwind.preset.js: misplaced JSDoc fails to type the export, causing existing Next marketing/recipe Tailwind config errors. Attach Config type to named preset; preserve tokens.
+
+2026-10-04 Codex CLAIM P06 local auth containment: five existing paths AuthContext.tsx, RequireAuth.tsx, lib/supabase.ts, lib/auth.ts, AuthCallbackPage.tsx; new lib/auth-state.ts and tests/kitchenkit/auth-state.test.ts; STATUS.md and docs/AI_SHARED_LEDGER.md append. Preserves active UI owner paths and all unrelated dirty changes. Snapshot central baseline/snapshots/p06-auth-before. Owner standing change authorization activates this local fail-closed repair; no backend role/grant/provider/env/production changes or push.
+
+
+- 2026-10-04 (Codex): Claim extended to standalone Next globals for same control/focus/reduced-motion baseline; KitchenKit ES2022 library alignment and unused offline-store parameter rename solely unblock its strict typecheck (no behavior changes); Ops login email accessible name/error alert; existing ergonomic test updated to require physical bounds rather than obsolete pseudo-hit overlays.
+
+P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute transpiled route/callback components with controlled context/router fixtures. This is component decision verification, not live DOM/provider certification.
+
+- 2026-10-04 (Codex): UI verification handoff — shared interaction/mobile-shell changes implemented; all apps + UI + CLI typechecks PASS, navigation 8/8 PASS. Ergonomics retains two pre-existing Admin source assertion failures; no tests weakened. Sampled browser screens at 360/768/1440 have no overflow or visible sub-48px buttons/inputs; authenticated routes and Next browser views NOT RUN. Concurrent KitchenKit auth owner files preserved. POS/KDS/Admin/Desktop/UI builds PASS; Web/Ops/KitchenKit builds still running. Coverage: docs/audits/ui-ux-consistency-2026-10-04.md. No deployment/push or structural blueprint changes. Implementation claims released; build-result recording only remains.
+
+- 2026-10-04 (Antigravity): CLAIM & RELEASE — CulinaryOS Major Consolidation Baseline & Restructuring (Phase 0).
+  - Scope: Architecture, migration matrix, consolidation master plan, domain boundaries, hardware/edge specs, AI/MCP specifications, and ecosystem governance.
+  - Delivered:
+    1. Comprehensive Audits: Inspected CulinaryOS and 7 candidate repositories: KitchenKit, RecipeOS, CulinaryOps, Post-Pilot, Plated, RestRevive-AI, and ShorelineOps.
+    2. Migration Matrix & Consolidation Master Plan: Authored docs/MIGRATION_MATRIX.md and docs/CONSOLIDATION_PLAN.md tracking all 6 canonical absorption tracks:
+       - KitchenKit + RecipeOS -> CulinaryOS Prep (apps/prep & packages/prep, packages/recipes)
+       - CulinaryOps -> CulinaryOS Ops (apps/ops & packages/ops)
+       - Post-Pilot -> CulinaryOS Marketing (apps/marketing & services/marketing-python)
+       - Plated -> CulinaryOS Web (apps/web & packages/template-engine, asset-tools, seo-tools, pdf-tools)
+       - RestRevive-AI + Intelligence Addon -> CulinaryOS Intelligence (intelligence/ & packages/intelligence)
+    3. Explicit Non-Absorption Boundaries Formally Enforced:
+       - ShorelineOps: STAYS SEPARATE (Clinical/HIPAA vertical; integrates solely via API/SDK/Events/MCP).
+       - MuseLab: STAYS ISOLATED (Incubation lab for Meta Muse / XR prototypes; zero production dependencies in CulinaryOS).
+       - ForgeSatchel & JOSH: Decoupled developer framework and System 1 router; integrated via clean adapters.
+    4. Core Architecture Documents Authored/Updated:
+       - STRUCTURE.md (canonical monorepo tree & domain ownership)
+       - MIGRATION.md (6-step repository lifecycle: Audit -> Document -> Migrate -> Verify -> Deprecate -> Archive)
+       - DEVELOPMENT.md (dev setup, port matrix :3000 to :8100, offline demo mode)
+       - HARDWARE.md (certified BOM, ESC/POS, 24V RJ11 kick, Stripe WisePOS E/S700, BLE probes)
+       - EDGE.md (Raspberry Pi 5 / CM5 appliance, Rust low-level services, TS platform, offline continuity)
+       - AI.md (vendor-neutral ProviderAdapter, 12 skills, 6 agents, JOSH/MuseLab/ForgeSatchel boundaries)
+       - MCP.md (standard restaurant MCP tools: restaurant.get, menu.get, orders.list, inventory.adjust, prep.list, etc.)
+       - README.md, ARCHITECTURE.md, ROADMAP.md, SECURITY.md, AGENTS.md updated.
+  - Verification:
+    - pnpm run typecheck: 47/47 tasks PASS (exit 0 across all workspaces in 6m26s).
+    - tests/admin/auth-gate.test.ts: 5/5 PASS.
+    - tests/ui/navigation.test.ts: 8/8 PASS.
+  - All consolidation Phase 0 claims released.
