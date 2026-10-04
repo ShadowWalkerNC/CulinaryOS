@@ -183,5 +183,56 @@ describe('@culinaryos/sdk Client Suite', () => {
     const coordinator = client.hardware.createOfflineCoordinator({ kitchenPrinter: printer });
     expect(coordinator.getPendingCount()).toBe(0);
   });
+
+  it('supports Shoreline Care OS clinical nutrition integration with HIPAA isolation', async () => {
+    const shoreline = client.integrations.shoreline;
+
+    // 1. Dietary standard checks
+    expect(shoreline.isCardiacLowSodium({ calories: 350, proteinGrams: 25, carbsGrams: 30, fatGrams: 10, sodiumMg: 120 })).toBe(true);
+    expect(shoreline.isCardiacLowSodium({ calories: 350, proteinGrams: 25, carbsGrams: 30, fatGrams: 10, sodiumMg: 450 })).toBe(false);
+
+    expect(shoreline.isDiabeticCompliant({ calories: 400, proteinGrams: 30, carbsGrams: 35, fatGrams: 12, sodiumMg: 200 })).toBe(true);
+    expect(shoreline.isDiabeticCompliant({ calories: 400, proteinGrams: 30, carbsGrams: 65, fatGrams: 12, sodiumMg: 200 })).toBe(false);
+
+    // 2. Allergen conflict detection
+    const recipes = [
+      { recipeId: 'rec-1', recipeName: 'Peanut Crusted Salmon', allergens: ['fish', 'peanuts'] as any },
+      { recipeId: 'rec-2', recipeName: 'Steamed Broccoli', allergens: [] as any },
+    ];
+    const conflicts = shoreline.checkAllergenConflicts(recipes, ['peanuts', 'tree_nuts'] as any);
+    expect(conflicts).toHaveLength(2);
+    expect(conflicts[0]!.containsAllergen).toBe(true);
+    expect(conflicts[0]!.matchingAllergens).toEqual(['peanuts']);
+    expect(conflicts[1]!.containsAllergen).toBe(false);
+
+    // 3. Sanitized export dispatch
+    const exportData = {
+      recipeId: 'rec-101',
+      recipeName: 'Herb Grilled Chicken Breast',
+      servingSizeGrams: 180,
+      macros: {
+        calories: 220,
+        proteinGrams: 38,
+        carbsGrams: 2,
+        fatGrams: 6,
+        sodiumMg: 115,
+      },
+      allergens: [],
+      dietaryTags: ['cardiac_low_sodium', 'diabetic_compliant', 'gluten_free'] as any,
+      ingredientsList: ['Chicken Breast', 'Olive Oil', 'Rosemary', 'Thyme', 'Black Pepper'],
+      exportedAt: '2026-10-04T12:00:00Z',
+    };
+
+    const result = await shoreline.exportToShoreline(exportData);
+    expect(result.success).toBe(true);
+    expect(result.syncedRecipeId).toBe('rec-101');
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/integrations/shoreline/sync');
+    expect(lastRequest!.options.method).toBe('POST');
+
+    const sentPayload = JSON.parse(lastRequest!.options.body);
+    expect(sentPayload.recipeName).toBe('Herb Grilled Chicken Breast');
+    expect(sentPayload.macros.sodiumMg).toBe(115);
+  });
 });
+
 

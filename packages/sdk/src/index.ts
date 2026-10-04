@@ -11,6 +11,7 @@ import {
   EdgeOfflineCoordinator,
   type ReceiptPrinterDriver,
 } from '@culinaryos/hardware';
+import { ShorelineNutritionAdapter } from './integrations/shoreline.js';
 
 export interface CulinaryOSClientConfig {
   baseUrl?: string;
@@ -24,12 +25,19 @@ export class CulinaryOSClient {
   readonly tenantId: string;
   private apiKey?: string;
   private bearerToken?: string;
+  readonly integrations: { shoreline: ShorelineNutritionAdapter };
 
   constructor(config: CulinaryOSClientConfig) {
     this.baseUrl = (config.baseUrl || 'http://localhost:3000').replace(/\/$/, '');
     this.tenantId = config.tenantId;
     this.apiKey = config.apiKey;
     this.bearerToken = config.bearerToken;
+    this.integrations = {
+      shoreline: new ShorelineNutritionAdapter({
+        request: <T>(endpoint: string, options?: RequestInit) => this.request<T>(endpoint, options),
+        tenantId: this.tenantId,
+      }),
+    };
   }
 
   private headers(): Record<string, string> {
@@ -319,6 +327,7 @@ export class CulinaryOSClient {
 }
 
 export * from '@culinaryos/hardware';
+export * from './integrations/shoreline.js';
 
 export function createClient(config: CulinaryOSClientConfig): CulinaryOSClient {
   return new CulinaryOSClient(config);
