@@ -134,15 +134,31 @@ function isPlaceholder(val?: string): boolean {
     console.log(chalk.bold.hex('#F97316')('\n🎨 CulinaryOS UI/UX Ergonomics & Jakob\'s Law Auditor:'));
     console.log(chalk.gray('Auditing button physics, 48px touch targets, OKLCH tokens, and thumb-zone compliance...\n'));
 
+    const buttonPathCandidates = [
+      path.resolve(process.cwd(), 'packages/ui/src/components/Button.tsx'),
+      path.resolve(__dirname, '../../packages/ui/src/components/Button.tsx'),
+      path.resolve(__dirname, '../../../packages/ui/src/components/Button.tsx'),
+    ];
+    const buttonPath = buttonPathCandidates.find((p) => fs.existsSync(p));
+    const buttonSrc = buttonPath ? fs.readFileSync(buttonPath, 'utf-8') : '';
+
+    const themePathCandidates = [
+      path.resolve(process.cwd(), 'packages/ui/src/culinary-theme.css'),
+      path.resolve(__dirname, '../../packages/ui/src/culinary-theme.css'),
+      path.resolve(__dirname, '../../../packages/ui/src/culinary-theme.css'),
+    ];
+    const themePath = themePathCandidates.find((p) => fs.existsSync(p));
+    const themeSrc = themePath ? fs.readFileSync(themePath, 'utf-8') : '';
+
     const uiChecks = [
       {
         name: '48px Physical Touch Target Minimum',
-        ok: true,
+        ok: themeSrc.includes('48px') || buttonSrc.includes('48px') || buttonSrc.includes('h-12'),
         info: 'All interactive buttons & pills enforce h-12 (48px) bounding box with 8px spacing.',
       },
       {
         name: '6-State Button Engine with Active Spring',
-        ok: true,
+        ok: buttonSrc.includes('active:scale-[0.97]'),
         info: 'Active states implement active:scale-[0.97] transition-transform duration-75 physics.',
       },
       {
@@ -152,7 +168,7 @@ function isPlaceholder(val?: string): boolean {
       },
       {
         name: 'Perceptually Uniform OKLCH Design Tokens',
-        ok: true,
+        ok: themeSrc.includes('oklch'),
         info: 'Theme colors and M3 state overlays comply with WCAG 2.2 AA (>= 4.5:1) contrast.',
       },
       {
@@ -171,7 +187,7 @@ function isPlaceholder(val?: string): boolean {
     }
 
     if (allPassed) {
-      console.log(chalk.bold.green('\n✔ UI/UX ergonomics verified across all frontend surfaces.\n'));
+      console.log(chalk.bold.green('\n✔ Available UI/UX source tokens and ergonomics verified.\n'));
     } else {
       console.log(chalk.bold.red('\n✖ UI/UX ergonomics audit FAILED.\n'));
       process.exitCode = 1;

@@ -5,6 +5,14 @@
 
 :root { color-scheme: dark; }
 
+:root {
+  --cos-bg: #090d16;
+  --cos-surface: #18181b;
+  --cos-text: #f4f4f5;
+  --cos-text-muted: #a1a1aa;
+  --cos-brand: #f4f4f5;
+}
+
 body {
   @apply bg-zinc-950 text-zinc-100 antialiased;
 }

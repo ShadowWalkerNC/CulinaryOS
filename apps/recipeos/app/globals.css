@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CulinaryOS physical interaction baseline; preserve each workspace's surfaces. */
+button, [role="button"] { min-height: 48px; min-width: 48px; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select) { min-height: 48px; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 767px) { :where(input, select, textarea) { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

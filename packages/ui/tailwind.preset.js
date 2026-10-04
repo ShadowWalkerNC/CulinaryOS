@@ -10,7 +10,8 @@ const colorVar = (name, fallback) => ({ opacityValue }) => {
   return `var(${name}${fallback ? `, ${fallback}` : ''})`;
 };
 
-export default {
+/** @type {import('tailwindcss').Config} */
+const preset = {
   darkMode: ['class'],
   theme: {
     extend: {
@@ -134,3 +135,5 @@ export default {
   },
   plugins: [],
 };
+
+export default preset;

@@ -8,7 +8,18 @@ try {
     supabaseClient = createClient(url, key);
   }
 } catch {
-  // Supabase not configured — running offline/demo
+  // Invalid or absent configuration remains unavailable; never fabricate a session.
 }
 
-export const supabase = supabaseClient!;
+export const configuredSupabase = supabaseClient;
+
+function requireClient(): SupabaseClient {
+  if (!configuredSupabase) throw new Error('Sign-in is unavailable: authentication is not configured.');
+  return configuredSupabase;
+}
+
+// Keep query consumers stable without falsely typing an absent client as configured.
+export const supabase: Pick<SupabaseClient, 'auth' | 'from'> = {
+  get auth() { return requireClient().auth; },
+  get from() { const client = requireClient(); return client.from.bind(client); },
+};

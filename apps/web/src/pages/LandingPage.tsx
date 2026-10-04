@@ -1171,7 +1171,7 @@ export function LandingPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </span>
               <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">
-                Live on Vercel
+                Railway Demo
               </span>
             </div>
             <p className="text-xs text-slate-300">Mobile-first customer ordering with FDA Top 9 allergen filtering, dietary badges, and live prep status tracking.</p>
@@ -1549,12 +1549,12 @@ export function LandingPage() {
               </li>
               <li>
                 <a href="/menu/demo" className="hover:text-white transition-colors">
-                  Live Guest Storefront Demo
+                  Guest Storefront Demo
                 </a>
               </li>
               <li>
-                <a href="https://culinary-os-marketing.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  Production Cloud Instance
+                <a href="https://culinaryos-demo.up.railway.app" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  Railway Demo Instance
                 </a>
               </li>
             </ul>

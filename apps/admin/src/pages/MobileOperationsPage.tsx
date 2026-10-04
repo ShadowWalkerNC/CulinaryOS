@@ -67,7 +67,7 @@ export function MobileOperationsPage() {
     {
       id: 'haccp-1',
       category: 'Food Safety / HACCP',
-      task: 'Walk-in Cooler #01 Temperature Verification',
+      task: 'Walk-in Cooler temp verification',
       station: 'Walk-in & Storage',
       assignedTo: 'Maria S. (Sous Chef)',
       targetTime: '07:15 AM',
@@ -155,7 +155,7 @@ export function MobileOperationsPage() {
     {
       id: 'open-1',
       category: 'Opening Floor',
-      task: 'Cash Drawer Float Count (Drawer #01 & #02)',
+      task: 'Cash drawer float count',
       station: 'Front of House',
       assignedTo: 'Chef Gabriel M. (GM)',
       targetTime: '06:30 AM',
@@ -382,7 +382,7 @@ export function MobileOperationsPage() {
             <button
               type="button"
               onClick={() => setActiveTab('checklists')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 min-h-[44px] rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap active:scale-[0.97] ${
                 activeTab === 'checklists'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-[#262a33]'
@@ -395,7 +395,7 @@ export function MobileOperationsPage() {
             <button
               type="button"
               onClick={() => setActiveTab('approvals')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3.5 py-1.5 min-h-[44px] rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap active:scale-[0.97] ${
                 activeTab === 'approvals'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-[#262a33]'
@@ -413,7 +413,7 @@ export function MobileOperationsPage() {
             <button
               type="button"
               onClick={() => setActiveTab('scan')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3.5 py-1.5 min-h-[44px] rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap active:scale-[0.97] ${
                 activeTab === 'scan'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-[#262a33]'

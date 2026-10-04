@@ -498,7 +498,7 @@ export class LocalStorageOfflineBackend implements OfflineBackend {
     }
   }
 
-  private parsePartition(key: string, raw: string | null, scope: OfflineScope): DurableOfflineDelta[] {
+  private parsePartition(_key: string, raw: string | null, scope: OfflineScope): DurableOfflineDelta[] {
     if (raw === null || raw === '') return [];
     let parsed: unknown;
     try {

@@ -27,7 +27,7 @@ const NAV_ITEMS = [
 ];
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+  `min-h-[48px] flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 ${
     isActive
       ? 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]'
       : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)]'

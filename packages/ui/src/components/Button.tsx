@@ -40,10 +40,10 @@ export const buttonVariants = cva(
         brand: 'bg-[#0f172a] text-white shadow-xs hover:bg-[#182030] active:bg-[#000000] dark:bg-[#090d16]',
       },
       size: {
-        default: 'h-10 min-h-[40px] px-4 py-2',
-        sm: 'h-8 rounded-lg px-3 text-[11px] relative after:absolute after:-inset-1.5 after:content-[""]',
+        default: 'h-12 min-h-[48px] min-w-[48px] px-4 py-2',
+        sm: 'h-12 min-h-[48px] min-w-[48px] rounded-lg px-3 text-xs',
         lg: 'h-12 min-h-[48px] rounded-xl px-8 text-sm font-extrabold',
-        icon: 'h-11 w-11 min-h-[44px] min-w-[44px] sm:h-10 sm:w-10 sm:min-h-[40px] sm:min-w-[40px] p-0 relative after:absolute after:-inset-1 after:content-[""]',
+        icon: 'h-12 w-12 min-h-[48px] min-w-[48px] p-0',
         touch: 'h-12 min-h-[48px] min-w-[48px] px-6 text-sm font-black',
         fab: 'h-14 w-14 rounded-2xl shadow-lg',
         'kds-bump': 'h-16 min-h-[64px] min-w-[64px] rounded-xl px-6 text-base font-black tracking-wide',
@@ -110,8 +110,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {/* Content stays in the layout box (invisible when busy) so the
             button's bounds never change between idle / loading / success. */}
         <span
-          className={cn('inline-flex items-center justify-center gap-2', busy && 'invisible')}
-          aria-hidden={busy || undefined}
+          className={cn('inline-flex items-center justify-center gap-2', busy && 'opacity-0')}
         >
           {children}
         </span>

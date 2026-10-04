@@ -215,6 +215,21 @@ img { display: block; max-width: 100%; }
 /* — Buttons reset — */
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 
+/* Physical controls keep real bounds, rather than overlapping hit-area overlays. */
+button, [role="button"] { min-height: var(--touch-target-min); min-width: var(--touch-target-min); }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select) { min-height: var(--touch-target-min); }
+@media (max-width: 767px) {
+  :where(input, select, textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
 /* — Scrollbars — */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--cos-surface-2); }

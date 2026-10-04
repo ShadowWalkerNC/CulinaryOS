@@ -32,6 +32,7 @@ export default function Topbar() {
             size="sm"
             onClick={() => signOut()}
             title="Sign out"
+            aria-label="Sign out"
             className="text-xs text-zinc-400 hover:bg-surface-card hover:text-zinc-100"
           >
             <LogOut size={13} />

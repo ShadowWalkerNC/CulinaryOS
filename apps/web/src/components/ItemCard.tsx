@@ -30,7 +30,7 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
   return (
     <div
       onClick={() => !isUnavailable && onOpenModal(item)}
-      className={`group bg-white rounded-2xl border border-slate-200/90 hover:border-slate-400/80 p-4 transition-all duration-200 flex flex-col justify-between hover:shadow-md cursor-pointer relative overflow-hidden select-none ${
+      className={`group bg-white rounded-xl border border-slate-200/90 hover:border-slate-900 p-4 transition-all duration-200 flex flex-col justify-between hover:shadow-sm cursor-pointer relative overflow-hidden ${
         isUnavailable ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
       }`}
     >
@@ -73,8 +73,10 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
         {/* Item Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-sm text-slate-900 leading-snug group-hover:text-[#0f172a] transition-colors line-clamp-2">
-              {item.name}
+            <h3 className="font-bold text-base text-slate-900 leading-snug group-hover:text-[#0f172a] transition-colors line-clamp-2">
+              <button type="button" disabled={isUnavailable} onClick={(event) => { event.stopPropagation(); onOpenModal(item); }} className="min-h-[48px] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 disabled:opacity-50" aria-label={`View ${item.name}`}>
+                {item.name}
+              </button>
             </h3>
           </div>
 
@@ -115,6 +117,7 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
         {hasModifiers ? (
           <Button
             type="button"
+            disabled={isUnavailable}
             variant="ghost"
             size="sm"
             onClick={(e) => {
@@ -129,6 +132,7 @@ export function ItemCard({ item, onAddToCart, onOpenModal }: Props) {
         ) : (
           <Button
             type="button"
+            disabled={isUnavailable}
             variant="ghost"
             size="sm"
             onClick={handleQuickAdd}

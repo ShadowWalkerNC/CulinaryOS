@@ -249,7 +249,7 @@ describe('Tier 1: Feature Coverage (F1.1 - F5.5)', () => {
     });
 
     it('2.1.4 verifies State 5 (Loading) enforces fixed bounds with invisible content and centered spinner', () => {
-      expect(buttonSource).toContain('busy && \'invisible\'');
+      expect(buttonSource).toContain('busy && \'opacity-0\'');
       expect(buttonSource).toContain('absolute inset-0 inline-flex items-center justify-center');
       expect(buttonSource).toContain('animate-spin');
     });
@@ -313,8 +313,10 @@ describe('Tier 1: Feature Coverage (F1.1 - F5.5)', () => {
       expect(buttonSource).toContain('lg: \'h-12 min-h-[48px]');
     });
 
-    it('2.3.4 verifies sub-48px compact controls expand hit area via after pseudo-elements', () => {
-      expect(buttonSource).toContain('after:absolute after:-inset-1.5 after:content-[""]');
+    it('2.3.4 verifies compact controls use actual 48px bounds without overlapping hit overlays', () => {
+      expect(buttonSource).toContain("sm: 'h-12 min-h-[48px] min-w-[48px]");
+      expect(buttonSource).toContain("icon: 'h-12 w-12 min-h-[48px] min-w-[48px]");
+      expect(buttonSource).not.toContain('after:-inset');
     });
 
     it('2.3.5 verifies KDS bump size exceeds standard touch target reaching 64px min height', () => {

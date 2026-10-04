@@ -100,3 +100,17 @@
 .animate-pulse-glow {
   animation: pulseGlow 4s ease-in-out infinite;
 }
+
+/* Guest storefront uses the platform's industrial control rhythm. */
+.guest-storefront button { min-height: 48px; min-width: 48px; }
+.guest-storefront button:focus-visible { outline: 2px solid var(--cos-text); outline-offset: 2px; }
+.guest-storefront button:active:not(:disabled) { transform: scale(0.97); transition: transform 75ms ease-out; }
+.guest-storefront button:disabled { opacity: 0.5; }
+.guest-storefront { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .guest-storefront *, .guest-storefront *::before, .guest-storefront *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+
+.guest-storefront nav button { flex-shrink: 0; }
+.guest-storefront .section-anchor { scroll-margin-top: 190px; }
+@media (min-width: 640px) { .guest-storefront .section-anchor { scroll-margin-top: 140px; } }

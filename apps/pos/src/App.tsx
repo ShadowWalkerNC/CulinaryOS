@@ -42,7 +42,7 @@ export function App() {
   if (!employee) {
     return (
       <div className="h-screen w-screen bg-[#f8f9fa] text-[#1f2937] font-sans flex flex-col overflow-hidden animate-fadeIn select-none">
-        <header className="bg-slate-900 border-b border-slate-800 px-6 h-16 flex items-center justify-between shadow-md shrink-0 text-white">
+        <header className="bg-slate-900 border-b border-slate-800 px-3 sm:px-6 min-h-16 py-2 flex flex-wrap gap-2 items-center justify-between shadow-md shrink-0 text-white">
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined filled text-[20px]">skillet</span>

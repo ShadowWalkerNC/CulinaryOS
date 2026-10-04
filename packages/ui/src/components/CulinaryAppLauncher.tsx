@@ -49,7 +49,6 @@ export function CulinaryAppLauncher({
   telemetryOverrides,
 }: CulinaryAppLauncherProps) {
   const [open, setOpen] = React.useState(false);
-  const [highlightedIndex, setHighlightedIndex] = React.useState<number>(0);
   const apps = appIds
     ? CULINARY_APP_MODULES.filter((app) => appIds.includes(app.id))
     : CULINARY_APP_MODULES;
@@ -108,7 +107,8 @@ export function CulinaryAppLauncher({
                   {groupApps.map((app) => {
                     const Icon = app.icon;
                     const isActive = app.id === activeApp;
-                    const telemetry = telemetryOverrides?.[app.id] ?? DEFAULT_APP_TELEMETRY[app.id];
+                    // Only show metrics supplied by the host; sample figures are not live evidence.
+                    const telemetry = telemetryOverrides?.[app.id];
                     return (
                       <a
                         key={app.id}
