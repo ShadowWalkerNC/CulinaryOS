@@ -1,0 +1,38 @@
+{
+  "name": "@culinaryos/intelligence",
+  "version": "0.1.0",
+  "description": "Vendor-neutral restaurant AI layer: MCP server, skills, role agents, intent router, workflows, and approvals. Give any AI the skills to operate a restaurant.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "bin": {
+    "culinaryos": "./dist/cli.js",
+    "culinaryos-mcp": "./dist/mcp/serve.js"
+  },
+  "files": [
+    "dist",
+    "public",
+    "culinaryos_extension.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "demo": "node src/demo.ts",
+    "test": "node --test \"tests/*.test.ts\"",
+    "start": "node dist/cli.js serve",
+    "mcp": "node dist/mcp/serve.js",
+    "dev": "node src/cli.ts serve",
+    "dev:mcp": "node src/cli.ts mcp"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

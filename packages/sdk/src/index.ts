@@ -204,6 +204,30 @@ export class CulinaryOSClient {
     },
   };
 
+  readonly intelligence = {
+    route: (query: string) =>
+      this.request<any>('/v1/intelligence/route', {
+        method: 'POST',
+        body: JSON.stringify({ query }),
+      }),
+    skills: {
+      list: () => this.request<any[]>('/v1/intelligence/skills'),
+      run: (skillId: string, input: Record<string, any>) =>
+        this.request<any>(`/v1/intelligence/skills/${skillId}/run`, {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+    },
+    approvals: {
+      list: () => this.request<any[]>('/v1/intelligence/approvals'),
+      decide: (approvalId: string, decision: 'approved' | 'rejected', notes?: string) =>
+        this.request<any>(`/v1/intelligence/approvals/${approvalId}/decide`, {
+          method: 'POST',
+          body: JSON.stringify({ decision, notes }),
+        }),
+    },
+  };
+
   // --- Ops (Waste, Food Cost, Plate Economics) ---
   readonly ops = {
     waste: {

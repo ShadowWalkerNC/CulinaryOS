@@ -361,3 +361,17 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - pnpm --filter @culinaryos/template-engine typecheck: PASS (tsc --noEmit exit 0).
     - pnpm --filter @culinaryos/app-web typecheck: PASS (tsc --noEmit exit 0).
   - Web consolidation claim released. Ready for Phase 5 (CulinaryOS Intelligence / RestRevive-AI consolidation).
+
+- 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Intelligence Consolidation (RestRevive-AI & addon absorption).
+  - Scope: packages/intelligence, packages/sdk/src/index.ts, tests/sdk/sdk-client.test.ts.
+  - Ponytail protocol applied:
+    1. Absorbed vendor-neutral restaurant intelligence engine into packages/intelligence (@culinaryos/intelligence): 12 restaurant skills, 6 role agents, intent router, approval workflows, policies, and embedded MCP server. Zero external dependencies.
+    2. Wired public intelligence client methods into @culinaryos/sdk: client.intelligence.route(), client.intelligence.skills.list(), client.intelligence.skills.run(), client.intelligence.approvals.list(), and client.intelligence.approvals.decide().
+  - Verification:
+    - packages/intelligence/tests/: 31/31 PASS across 7 test suites (skills, connectors, mcp, policies, router, validate, workflow).
+    - tests/sdk/sdk-client.test.ts: 12/12 PASS (including intelligence routing, skills execution, and approvals).
+    - pnpm --filter @culinaryos/intelligence build: PASS (tsc exit 0).
+    - pnpm --filter @culinaryos/intelligence typecheck: PASS (tsc --noEmit exit 0).
+    - pnpm --filter @culinaryos/sdk build: PASS (tsc exit 0).
+    - pnpm --filter @culinaryos/sdk typecheck: PASS (tsc --noEmit exit 0).
+  - Intelligence consolidation claim released. All 5 consolidation modules (Prep, Ops, Marketing, Web, Intelligence) complete.

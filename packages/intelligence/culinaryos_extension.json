@@ -1,0 +1,67 @@
+{
+  "id": "com.culinaryos.ext.intelligence",
+  "name": "CulinaryOS Intelligence",
+  "version": "0.1.0",
+  "min_platform_version": "1.0.0",
+  "author": {
+    "name": "CulinaryOS Team",
+    "email": "dev@culinaryos.com",
+    "url": "https://culinaryos.com"
+  },
+  "description": "Vendor-neutral restaurant AI layer: MCP server, 12 reusable skills, 6 role agents, intent router, workflows, and approvals. Give any AI the skills to operate a restaurant.",
+  "category": "operations",
+  "entry_point": "dist/cli.js",
+  "repository": "",
+  "mcp": {
+    "server_name": "culinaryos-intelligence",
+    "transport": "stdio",
+    "hub_entry": "dist/mcp/serve.js",
+    "tools": [
+      "route",
+      "skill.list",
+      "skill.run",
+      "approval.list",
+      "approval.decide",
+      "workflow.list",
+      "workflow.run"
+    ]
+  },
+  "permissions": [
+    "recipes.read",
+    "menu.read",
+    "inventory.read",
+    "sales.read",
+    "schedule.read",
+    "prep.write",
+    "waste.write",
+    "purchase_order.write",
+    "haccp.write",
+    "temps.read",
+    "events.read"
+  ],
+  "hooks": [],
+  "settings_schema": [
+    {
+      "key": "mode",
+      "label": "Connector mode",
+      "type": "string",
+      "default": "mock"
+    },
+    {
+      "key": "data_dir",
+      "label": "Data directory (file mode)",
+      "type": "string",
+      "default": "./data"
+    },
+    {
+      "key": "api_url",
+      "label": "CulinaryOS API base URL (api mode)",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "pricing": {
+    "model": "free",
+    "price_cents": 0
+  }
+}

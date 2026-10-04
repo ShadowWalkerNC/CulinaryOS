@@ -138,4 +138,28 @@ describe('@culinaryos/sdk Client Suite', () => {
     await client.ops.plateEconomics.get({ order_id: 'order-123' });
     expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/plate-economics?order_id=order-123');
   });
+
+  it('supports intelligence routing, skills, and approval decisions', async () => {
+    await client.intelligence.route('what is the margin on burger?');
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/intelligence/route');
+    expect(lastRequest!.options.method).toBe('POST');
+    const routeBody = JSON.parse(lastRequest!.options.body);
+    expect(routeBody.query).toBe('what is the margin on burger?');
+
+    await client.intelligence.skills.list();
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/intelligence/skills');
+
+    await client.intelligence.skills.run('recipe-costing', { recipeId: 'rec-1' });
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/intelligence/skills/recipe-costing/run');
+    expect(lastRequest!.options.method).toBe('POST');
+
+    await client.intelligence.approvals.list();
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/intelligence/approvals');
+
+    await client.intelligence.approvals.decide('app-1', 'approved', 'Chef approved');
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/intelligence/approvals/app-1/decide');
+    expect(lastRequest!.options.method).toBe('POST');
+    const decisionBody = JSON.parse(lastRequest!.options.body);
+    expect(decisionBody.decision).toBe('approved');
+  });
 });
