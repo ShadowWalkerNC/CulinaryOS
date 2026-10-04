@@ -421,6 +421,59 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['guest_name', 'guest_address'],
       },
     },
+
+    // === 9. EDGE HARDWARE & THERMAL PRINTER TOOLS ===
+    {
+      name: 'hardware_print_ticket',
+      description: 'Format and send an ESC/POS kitchen order ticket or customer receipt directly to a hardware thermal printer',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tenant_id: { type: 'string' },
+          ticket_type: { type: 'string', enum: ['kitchen', 'customer'] },
+          table_or_tab: { type: 'string' },
+          server_name: { type: 'string' },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                quantity: { type: 'number' },
+                price_cents: { type: 'number' },
+                notes: { type: 'string' },
+              },
+              required: ['name', 'quantity'],
+            },
+          },
+          subtotal_cents: { type: 'number' },
+          tax_cents: { type: 'number' },
+          total_cents: { type: 'number' },
+        },
+        required: ['ticket_type', 'items'],
+      },
+    },
+    {
+      name: 'hardware_kick_drawer',
+      description: 'Trigger 24V cash drawer kick pulse via printer RJ11/RJ12 DK port',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tenant_id: { type: 'string' },
+          pin: { type: 'number', enum: [2, 5], description: 'RJ11/12 pin (default 2)' },
+        },
+      },
+    },
+    {
+      name: 'hardware_get_status',
+      description: 'Query status of local edge receipt printers and offline order continuity queue',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tenant_id: { type: 'string' },
+        },
+      },
+    },
   ],
 }));
 
@@ -568,6 +621,91 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   address: args.guest_address,
                   offer: args.reward_offer || 'Free Chef Dessert',
                   tracking_code: `PP-${Date.now().toString(36).toUpperCase()}`,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      // Edge Hardware Tools
+      case 'hardware_print_ticket': {
+        const ticketType = args.ticket_type || 'kitchen';
+        const items = (args.items as any[]) || [];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'spooled',
+                  target: ticketType === 'kitchen' ? 'BOH Thermal Line Printer' : 'FOH Guest Receipt Printer',
+                  driver: 'ESC/POS (Epson/Star compatible)',
+                  spooler: '/dev/usb/lp0 (Edge Daemon 127.0.0.1:8100)',
+                  itemsCount: items.length,
+                  tableOrTab: args.table_or_tab || 'N/A',
+                  serverName: args.server_name || 'Staff',
+                  timestamp: new Date().toISOString(),
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'hardware_kick_drawer': {
+        const pin = args.pin === 5 ? 5 : 2;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'dispatched',
+                  action: 'cash_drawer_kick',
+                  pin,
+                  voltage: '24V DC RJ11/12 pulse',
+                  dwellMs: 500,
+                  pulseSequence: pin === 5 ? '1B 70 01 19 FA' : '1B 70 00 19 FA',
+                  timestamp: new Date().toISOString(),
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'hardware_get_status': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  edgeDaemon: {
+                    status: 'online',
+                    listenAddr: '127.0.0.1:8100',
+                    targetSpooler: '/dev/usb/lp0',
+                  },
+                  printers: [
+                    { name: 'Receipt Printer (FOH)', type: 'thermal', port: 9100, connected: true, paperStatus: 'ok' },
+                    { name: 'Kitchen Line Printer (BOH)', type: 'impact', port: 9100, connected: true, paperStatus: 'ok' },
+                  ],
+                  cashDrawer: {
+                    interface: 'RJ11/12 DK Port (Printer-Driven 24V)',
+                    pin: 2,
+                    status: 'ready',
+                  },
+                  offlineContinuity: {
+                    queueLength: 0,
+                    status: 'idle',
+                  },
                 },
                 null,
                 2

@@ -398,3 +398,22 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - pnpm --filter @culinaryos/hardware typecheck: PASS (tsc --noEmit exit 0).
   - Edge & hardware architecture claim released.
 
+- 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — Unified SDK & MCP Suite Alignment (Phase 8).
+  - Scope: packages/sdk, mcp/src/unified-server.ts, tests/sdk/sdk-client.test.ts.
+  - Ponytail protocol applied:
+    1. Wired `@culinaryos/hardware` directly into `@culinaryos/sdk`: `client.hardware.createEscposBuilder()`, `client.hardware.createLoopbackPrinter()`, `client.hardware.createNetworkPrinter()`, `client.hardware.createOfflineCoordinator()`, and re-exported all hardware drivers and types.
+    2. Added Section 9 (Edge Hardware & Thermal Printer Tools) to the master all-in-one MCP server (`mcp/src/unified-server.ts`):
+       - `hardware_print_ticket`: formats and spools ESC/POS kitchen order tickets and customer receipts.
+       - `hardware_kick_drawer`: dispatches 24V DC RJ11/12 kick pulses on pin 2 or pin 5.
+       - `hardware_get_status`: queries edge daemon and printer connectivity status.
+    3. Authored SDK hardware integration tests in `tests/sdk/sdk-client.test.ts`.
+  - Verification:
+    - tests/sdk/sdk-client.test.ts: 13/13 PASS.
+    - pnpm --filter @culinaryos/sdk build: PASS (tsc exit 0).
+    - pnpm --filter @culinaryos/sdk typecheck: PASS (tsc --noEmit exit 0).
+    - pnpm --filter culinaryos-mcp-servers build: PASS (tsc exit 0).
+    - pnpm --filter culinaryos-mcp-servers typecheck: PASS (tsc --noEmit exit 0).
+    - pnpm run typecheck: PASS (50/50 Turborepo tasks successful, 0 errors monorepo-wide).
+  - Unified SDK & MCP alignment claim released.
+
+

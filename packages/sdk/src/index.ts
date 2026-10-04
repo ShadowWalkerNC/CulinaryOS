@@ -4,6 +4,14 @@
  * Connects directly to Hono API (:3000) or cloud instances.
  */
 
+import {
+  EscposBuilder,
+  LoopbackPrinterDriver,
+  NetworkPrinterDriver,
+  EdgeOfflineCoordinator,
+  type ReceiptPrinterDriver,
+} from '@culinaryos/hardware';
+
 export interface CulinaryOSClientConfig {
   baseUrl?: string;
   tenantId: string;
@@ -295,10 +303,26 @@ export class CulinaryOSClient {
       });
     },
   };
+
+  // --- Edge & Hardware Subsystem ---
+  readonly hardware = {
+    createEscposBuilder: () => new EscposBuilder(),
+    createLoopbackPrinter: (name?: string) => new LoopbackPrinterDriver(name),
+    createNetworkPrinter: (options: { host: string; port?: number; timeoutMs?: number; name?: string }) =>
+      new NetworkPrinterDriver(options),
+    createOfflineCoordinator: (options?: {
+      kitchenPrinter?: ReceiptPrinterDriver;
+      receiptPrinter?: ReceiptPrinterDriver;
+      initialOnlineState?: boolean;
+    }) => new EdgeOfflineCoordinator(options),
+  };
 }
+
+export * from '@culinaryos/hardware';
 
 export function createClient(config: CulinaryOSClientConfig): CulinaryOSClient {
   return new CulinaryOSClient(config);
 }
 
 export const createCulinaryClient = createClient;
+

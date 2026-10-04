@@ -162,4 +162,26 @@ describe('@culinaryos/sdk Client Suite', () => {
     const decisionBody = JSON.parse(lastRequest!.options.body);
     expect(decisionBody.decision).toBe('approved');
   });
+
+  it('supports hardware drivers, ESC/POS builder, and offline coordinator', async () => {
+    const builder = client.hardware.createEscposBuilder();
+    builder.line('SDK TEST PRINT').cut();
+    const bytes = builder.build();
+    expect(bytes.length).toBeGreaterThan(0);
+
+    const printer = client.hardware.createLoopbackPrinter('SDK Virtual Printer');
+    const status = await printer.status();
+    expect(status.connected).toBe(true);
+
+    const printSuccess = await printer.printRaw(bytes);
+    expect(printSuccess).toBe(true);
+
+    const kicked = await printer.kickDrawer(2);
+    expect(kicked).toBe(true);
+    expect(printer.getDrawerKickCount()).toBe(1);
+
+    const coordinator = client.hardware.createOfflineCoordinator({ kitchenPrinter: printer });
+    expect(coordinator.getPendingCount()).toBe(0);
+  });
 });
+
