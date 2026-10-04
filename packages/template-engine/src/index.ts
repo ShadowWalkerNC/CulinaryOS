@@ -13,6 +13,15 @@ export { resolveTokens };
 export { interpolate }     from './interpolate.js';
 export { evaluateConditional } from './conditional.js';
 export { renderTemplate }  from './renderTemplate.js';
+export { auditBrandGuard, formatSpecialPostCaption } from './marketing.js';
+export type {
+  AuditBrandGuardOptions,
+  BrandGuardAuditInput,
+  BrandGuardResult,
+  BrandGuardVerdict,
+  SpecialPostInput,
+} from './marketing.js';
+export * from './marketing.js';
 
 export interface SlotMap {
   [slotField: string]: unknown;

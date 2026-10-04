@@ -332,3 +332,17 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - pnpm --filter @culinaryos/sdk typecheck: PASS (tsc --noEmit exit 0).
     - pnpm --filter @culinaryos/sdk build: PASS (tsc exit 0).
   - Ops consolidation claim released. Ready for Phase 3 (CulinaryOS Marketing / Post-Pilot consolidation).
+
+- 2026-10-04 (Muse): CLAIM — Marketing skills TS port (Post-Pilot brand_guard + special_post). Scope: `packages/template-engine/src/marketing.ts` (new), `packages/template-engine/src/index.ts` (re-export lines only), `tests/marketing/marketing-skills.test.ts` (new), plus claim/release lines here. No Python skill edits, no other packages, no commits or pushes.
+
+- 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Marketing Consolidation (Post-Pilot absorption).
+  - Scope: services/marketing-python/skills, packages/template-engine, and tests/marketing/marketing-skills.test.ts.
+  - Ponytail protocol applied: Option A bilingual/polyglot architecture.
+    1. Preserved Post-Pilot's 5 operational marketing skills (brand_guard, special_post, event_campaign, review_reply, weekly_plan) and stdlib loader.py in services/marketing-python/skills/.
+    2. Implemented lightweight, zero-dependency TypeScript marketing execution in packages/template-engine/src/marketing.ts: auditBrandGuard() and formatSpecialPostCaption().
+    3. Re-exported marketing capabilities from @culinaryos/template-engine.
+  - Verification:
+    - tests/marketing/marketing-skills.test.ts: 3/3 PASS (voice check, banned terms, CTA validation, post formatting).
+    - pnpm --filter @culinaryos/template-engine build: PASS (tsc exit 0).
+    - pnpm --filter @culinaryos/template-engine typecheck: PASS (tsc --noEmit exit 0).
+  - Marketing consolidation claim released. Ready for Phase 4 (CulinaryOS Web / Plated consolidation).
