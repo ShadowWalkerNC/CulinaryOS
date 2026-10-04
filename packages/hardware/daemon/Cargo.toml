@@ -1,0 +1,12 @@
+[package]
+name = "culinaryos-edge-daemon"
+version = "0.1.0"
+edition = "2021"
+authors = ["CulinaryOS Architecture Team"]
+description = "Raspberry Pi 5 / CM5 hardware daemon for raw USB ESC/POS thermal printers, RJ11/12 drawer kicks, and GPIO sensors"
+
+[dependencies]
+# Dependencies kept minimal for fast cross-compilation on Raspberry Pi OS / ARM64
+tokio = { version = "1.38", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
