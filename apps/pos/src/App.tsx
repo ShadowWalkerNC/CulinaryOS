@@ -38,6 +38,10 @@ export function App() {
     setMobileCartOpen(false);
   }, [view]);
 
+  const isCheezies = typeof window !== 'undefined' ? (localStorage.getItem('culinaryos_active_profile') ?? 'cheezies') === 'cheezies' : true;
+  const brandName = isCheezies ? 'Cheezies Gourmet' : 'The Golden Fork Bistro';
+  const stationLabel = isCheezies ? 'Food Truck Terminal #1' : 'Station #1 (Main FOH)';
+
   // 1. Force Lock Screen if no employee session is active
   if (!employee) {
     return (
@@ -50,10 +54,10 @@ export function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-sm text-white uppercase tracking-wider">
-                  The Golden Fork Bistro
+                  {brandName}
                 </span>
                 <span className="text-[10px] font-mono bg-slate-800 text-orange-400 font-bold px-2 py-0.5 rounded border border-slate-700">
-                  Station #1 (Main FOH)
+                  {stationLabel}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-medium">
@@ -116,10 +120,10 @@ export function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-xs text-white uppercase tracking-wider hidden sm:inline">
-                  The Golden Fork
+                  {brandName}
                 </span>
                 <span className="text-[10px] font-mono bg-slate-800 text-orange-400 font-bold px-1.5 py-0.5 rounded border border-slate-700">
-                  Station #1
+                  {stationLabel}
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 font-medium block">

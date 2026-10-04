@@ -16,7 +16,6 @@ const MENU: MenuItem[] = [
 function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
-
 function formatElapsed(ms: number): string {
   const s = Math.floor(ms / 1000);
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -138,7 +137,7 @@ export default function DemoSection() {
                       onClick={() => adjust(item.id, -1)}
                       disabled={qty === 0 || sending}
                       aria-label={`Remove one ${item.name}`}
-                      className="w-10 h-10 min-w-[40px] rounded-lg glass border border-white/10 text-lg font-bold text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="w-12 h-12 min-w-[48px] rounded-lg glass border border-white/10 text-lg font-bold text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       −
                     </button>
@@ -148,7 +147,7 @@ export default function DemoSection() {
                       onClick={() => adjust(item.id, 1)}
                       disabled={qty >= 9 || sending}
                       aria-label={`Add one ${item.name}`}
-                      className="w-10 h-10 min-w-[40px] rounded-lg glass border border-white/10 text-lg font-bold text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="w-12 h-12 min-w-[48px] rounded-lg glass border border-white/10 text-lg font-bold text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       +
                     </button>

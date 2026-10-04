@@ -412,7 +412,7 @@ export function useMenu() {
     queryKey: ['menu', tenantId],
     queryFn: async () => {
       if (!supabase) {
-        const activeProfile = typeof window !== 'undefined' ? localStorage.getItem('culinaryos_active_profile') : null;
+        const activeProfile = typeof window !== 'undefined' ? (localStorage.getItem('culinaryos_active_profile') || 'cheezies') : 'cheezies';
         if (activeProfile === 'cheezies') {
           return CHEEZIES_POS_MENU;
         }
