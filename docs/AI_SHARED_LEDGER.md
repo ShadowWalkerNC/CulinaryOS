@@ -335,6 +335,8 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
 
 - 2026-10-04 (Muse): CLAIM — Marketing skills TS port (Post-Pilot brand_guard + special_post). Scope: `packages/template-engine/src/marketing.ts` (new), `packages/template-engine/src/index.ts` (re-export lines only), `tests/marketing/marketing-skills.test.ts` (new), plus claim/release lines here. No Python skill edits, no other packages, no commits or pushes.
 
+- 2026-10-04 (Muse): RELEASE — Marketing skills TS port complete; ownership released. Delivered `packages/template-engine/src/marketing.ts` (`auditBrandGuard` with banned-word/CTA/platform/tone/offer hard-fail checks per `brand_guard` guard_rules.md, `formatSpecialPostCaption` deterministic template fallback per `special_post` caption.md + special_rules.md), re-exports in `packages/template-engine/src/index.ts`, and `tests/marketing/marketing-skills.test.ts` (20 tests: banned words, CTA validation, platform limits, caption formatting, guard self-consistency). Verification: `node -r ./scripts/test-hook.cjs --import tsx tests/marketing/marketing-skills.test.ts` 20/20 PASS (exit 0; required workspace TEMP redirect — sandbox tsx cache EPERM, temp dir removed after); `tsc -p packages/template-engine/tsconfig.json` exit 0 with `marketing.js/.d.ts` emitted (pnpm/corepack unavailable under sandbox: pnpm not on PATH, corepack cache EPERM — ran the package's literal `build: tsc` script instead). `git status` NOT RUN (dubious-ownership fatal under sandbox user; no git config changed). No Python skill edits, no commits or pushes.
+
 - 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Marketing Consolidation (Post-Pilot absorption).
   - Scope: services/marketing-python/skills, packages/template-engine, and tests/marketing/marketing-skills.test.ts.
   - Ponytail protocol applied: Option A bilingual/polyglot architecture.
@@ -346,3 +348,16 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - pnpm --filter @culinaryos/template-engine build: PASS (tsc exit 0).
     - pnpm --filter @culinaryos/template-engine typecheck: PASS (tsc --noEmit exit 0).
   - Marketing consolidation claim released. Ready for Phase 4 (CulinaryOS Web / Plated consolidation).
+
+- 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Web Consolidation (Plated absorption).
+  - Scope: packages/template-engine/templates, tests/web/templates.test.ts, and apps/web.
+  - Ponytail protocol applied:
+    1. Audited candidate repository C:\Users\white\OneDrive\Documents\GitHub\Plated and verified that core tooling (@culinaryos/asset-tools, pdf-tools, seo-tools, template-engine, types) is already preserved in CulinaryOS monorepo.
+    2. Migrated all 8 restaurant themes from Plated into packages/template-engine/templates/: bakery, bar, cafe, catering, food-stand, food-truck, ghost-kitchen, and restaurant.
+    3. Authored tests/web/templates.test.ts verifying that loadManifest and resolveSlots parse and resolve all 8 themes against ProjectSchema contracts.
+  - Verification:
+    - tests/web/templates.test.ts: 2/2 PASS (all 8 theme manifests validated, slots resolved).
+    - pnpm --filter @culinaryos/template-engine build: PASS (tsc exit 0).
+    - pnpm --filter @culinaryos/template-engine typecheck: PASS (tsc --noEmit exit 0).
+    - pnpm --filter @culinaryos/app-web typecheck: PASS (tsc --noEmit exit 0).
+  - Web consolidation claim released. Ready for Phase 5 (CulinaryOS Intelligence / RestRevive-AI consolidation).
