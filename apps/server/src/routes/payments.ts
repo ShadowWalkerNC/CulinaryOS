@@ -37,6 +37,10 @@ function stripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key', { apiVersion: '2024-04-10' });
 }
 
+function isNonNegativeSafeInt(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
 // ============================================================
 // POST /v1/payments/terminal/connection-token
 // Generates secret connection token for Stripe Terminal smart readers (WisePOS E, S700, M2)
@@ -77,21 +81,21 @@ paymentsRoutes.post('/terminal/create-intent', async (c: Context) => {
 
   if (!body.order_id) return err(c, 'VALIDATION_ERROR', 'order_id is required', 400);
 
-  let orderTotal = 2500; // default for demo
-  if (supabase) {
-    const { data: order } = await supabase
-      .from('pos_orders')
-      .select('id, total, status')
-      .eq('id', body.order_id)
-      .eq('tenant_id', tenantId)
-      .single();
-    if (order) orderTotal = order.total;
-  }
-
-  const tipCents = (body.tip_cents ?? 0) + (body.auto_gratuity_cents ?? 0);
-  const totalCents = orderTotal + tipCents;
-
   if (!isStripeConfigured()) {
+    // Explicitly marked no-Stripe demo preview: never touches the provider.
+    let orderTotal = 2500; // default for demo
+    if (supabase) {
+      const { data: order } = await supabase
+        .from('pos_orders')
+        .select('id, total, status')
+        .eq('id', body.order_id)
+        .eq('tenant_id', tenantId)
+        .single();
+      if (order) orderTotal = order.total;
+    }
+
+    const tipCents = (body.tip_cents ?? 0) + (body.auto_gratuity_cents ?? 0);
+    const totalCents = orderTotal + tipCents;
     // Mock terminal intent for offline / demo mode
     const mockIntentId = `pi_term_demo_${Date.now()}`;
     return ok(c, {
@@ -101,6 +105,43 @@ paymentsRoutes.post('/terminal/create-intent', async (c: Context) => {
       tip_cents: tipCents,
       demo_mode: true,
     }, 201);
+  }
+
+  // Configured Stripe mode: fail closed before any provider request. Never
+  // fall back to a default/demo total when the tenant order is unavailable.
+  const tipInput = body.tip_cents ?? 0;
+  const gratuityInput = body.auto_gratuity_cents ?? 0;
+  if (!isNonNegativeSafeInt(tipInput) || !isNonNegativeSafeInt(gratuityInput)) {
+    return err(c, 'VALIDATION_ERROR', 'tip_cents and auto_gratuity_cents must be non-negative integer cents', 400);
+  }
+  const tipCents = tipInput + gratuityInput;
+  if (!Number.isSafeInteger(tipCents)) {
+    return err(c, 'VALIDATION_ERROR', 'tip_cents and auto_gratuity_cents must be non-negative integer cents', 400);
+  }
+
+  if (!supabase) {
+    return err(c, 'SERVICE_UNAVAILABLE', 'Database not configured', 503);
+  }
+
+  const { data: order, error: orderErr } = await supabase
+    .from('pos_orders')
+    .select('id, total, status')
+    .eq('id', body.order_id)
+    .eq('tenant_id', tenantId)
+    .single();
+  if (orderErr) return err(c, 'DB_ERROR', 'Order lookup failed', 500);
+  if (!order) return err(c, 'NOT_FOUND', 'Order not found', 404);
+  if (order.status === 'paid') return err(c, 'CONFLICT', 'Order already paid', 409);
+  if (order.status === 'voided') return err(c, 'CONFLICT', 'Order is voided', 409);
+  if (order.status === 'split') return err(c, 'CONFLICT', 'Order is split; pay resulting checks', 409);
+
+  if (typeof order.total !== 'number' || !Number.isSafeInteger(order.total) || order.total <= 0) {
+    return err(c, 'VALIDATION_ERROR', 'Order total must be a positive integer cents amount', 400);
+  }
+
+  const totalCents = order.total + tipCents;
+  if (!Number.isSafeInteger(totalCents) || totalCents <= 0) {
+    return err(c, 'VALIDATION_ERROR', 'Charge amount must be > 0', 400);
   }
 
   try {

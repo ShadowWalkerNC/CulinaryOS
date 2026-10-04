@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "domain/restaurants",
+  "kind": "domain",
+  "owner": "Core",
+  "purpose": "domain/restaurants target boundary; existing implementation stays in place.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [
+    "restaurant_configuration"
+  ],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/server/src/routes/settings.ts"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

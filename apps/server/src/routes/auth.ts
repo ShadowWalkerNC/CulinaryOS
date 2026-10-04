@@ -177,7 +177,12 @@ authRoutes.post('/pin-login', pinRateLimit, async (c) => {
     }
   }
 
-  // ---- Demo / offline path (no live service role) ----
+  // Missing credentials do not authorize demo PINs in a deployed process.
+  if (!isDemoAuthAllowed()) {
+    return err(c, 'SERVICE_UNAVAILABLE', 'Auth backend unavailable', 503);
+  }
+
+  // ---- Explicit local demo / isolated test path ----
   const demo = DEMO_STAFF.find((s) => s.pin === pin);
   if (!demo) {
     // Don't advertise which demo PINs exist.

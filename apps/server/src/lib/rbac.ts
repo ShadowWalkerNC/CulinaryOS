@@ -8,7 +8,9 @@ export function isManagerRole(role: string | undefined | null): boolean {
 
 /**
  * Gate for manager-only mutations.
- * - api_key / relaxed: allowed (terminals + local demo)
+ * - api_key: forbidden (device/service keys never confer human manager
+ *   privileges, even with a caller-supplied role)
+ * - relaxed: allowed (local demo only)
  * - jwt: only owner/manager
  * - anything else: forbidden
  */
@@ -16,7 +18,7 @@ export function managerGate(
   authMode: string | undefined | null,
   authRole: string | undefined | null
 ): 'ok' | 'forbidden' {
-  if (authMode === 'api_key' || authMode === 'relaxed') return 'ok';
+  if (authMode === 'relaxed') return 'ok';
   if (authMode === 'jwt' && isManagerRole(authRole)) return 'ok';
   return 'forbidden';
 }

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "integrations/payments",
+  "kind": "integrations",
+  "owner": "Core",
+  "purpose": "Payment adapter boundary; retain existing signed/authenticated payment implementation.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/server/src/routes/payments.ts"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

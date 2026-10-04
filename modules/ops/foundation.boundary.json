@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "modules/ops",
+  "kind": "modules",
+  "owner": "Ops",
+  "purpose": "Operational management boundary; CulinaryOps migration is P06 work.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [
+    "labor",
+    "vendors",
+    "purchasing",
+    "waste"
+  ],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/ops/package.json",
+    "packages/labor-engine/package.json",
+    "packages/waste-engine/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

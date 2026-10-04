@@ -6,9 +6,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   apiHeaders,
   getApiBase,
-  enqueueOfflineDelta,
-  flushOfflineQueue,
-  getPendingOfflineQueue,
+  enqueueDurableDelta,
+  flushDurableQueue,
+  getPendingDurableQueue,
+  markDurableDeltasSynced,
+  getPosDeviceId,
   ReceiptPayload,
   calculateDualPricing,
   calculateMultiRateTax,
@@ -50,8 +52,8 @@ export function CheckoutView() {
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
-  // Offline payments are queued, never captured — the success screen must
-  // never claim "Transaction Approved" for a payment that hasn't been captured.
+  // Local cash/comp records await server reconciliation. Card settlement
+  // requires the processor-backed checkout and never uses offline replay.
   const [paymentQueued, setPaymentQueued] = useState(false);
   const [queuedDeltaCount, setQueuedDeltaCount] = useState(0);
   const [receiptSent, setReceiptSent] = useState(false);
@@ -143,13 +145,41 @@ export function CheckoutView() {
     };
 
     try {
+      if (method === 'card' || method === 'tap' || method === 'scan') {
+        throw new Error('Card payments require verified processor settlement. Offline card payment is unavailable.');
+      }
+      // Tenant/device-partitioned durable queue (R4/P4a). The device ID and
+      // every enqueue below are awaited: persistence failure throws before
+      // any paid/queued state is set, so nothing reports success unsaved.
+      // The durable layer additionally rejects non-cash/comp methods and
+      // card-data fields before any write.
+      let deviceId: string;
+      try {
+        deviceId = getPosDeviceId();
+      } catch (err: any) {
+        throw new Error('Payment could not be saved on this device. No payment was recorded.');
+      }
+      const scope = { tenantId, deviceId };
       if (!navigator.onLine || !supabase) {
-        enqueueOfflineDelta({
-          tenant_id: tenantId,
-          order_id: order.id,
-          action: 'finalize_payment',
-          payload: { ...payload, allow_offline_card: method === 'card' },
-        });
+        let delta;
+        try {
+          delta = await enqueueDurableDelta(
+            {
+              tenant_id: tenantId,
+              device_id: deviceId,
+              order_id: order.id,
+              action: 'finalize_payment',
+              payload,
+            },
+            scope,
+          );
+        } catch (err: any) {
+          throw new Error('Payment could not be saved on this device. No payment was recorded.');
+        }
+        const pendingAfterEnqueue = await getPendingDurableQueue(scope).catch(() => null);
+        if (!pendingAfterEnqueue?.some((entry) => entry.id === delta.id)) {
+          throw new Error('Payment could not be saved on this device. No payment was recorded.');
+        }
         const mockDb = await import('../lib/mockDb');
         const orders = mockDb.getMockOrders();
         const mockOrder = orders.find((o: any) => o.id === order.id);
@@ -160,9 +190,9 @@ export function CheckoutView() {
           mockDb.saveMockOrders(orders);
         }
         qc.invalidateQueries({ queryKey: ['orders'] });
-        // Offline: the payment is queued for later capture, NOT approved.
+        // Cash/comp is recorded locally; replay acknowledgement remains pending.
         setPaymentQueued(true);
-        setQueuedDeltaCount(getPendingOfflineQueue().length);
+        setQueuedDeltaCount(pendingAfterEnqueue.length);
         setPaid(true);
         if (method === 'cash') {
           hardwarePrinter.kickCashDrawer().catch(() => {});
@@ -171,21 +201,38 @@ export function CheckoutView() {
       }
 
       // Online cash/comp: server is source of truth via sync-deltas
-      const delta = enqueueOfflineDelta({
-        tenant_id: tenantId,
-        order_id: order.id,
-        action: 'finalize_payment',
-        payload,
-      });
+      let delta;
+      try {
+        delta = await enqueueDurableDelta(
+          {
+            tenant_id: tenantId,
+            device_id: deviceId,
+            order_id: order.id,
+            action: 'finalize_payment',
+            payload,
+          },
+          scope,
+        );
+      } catch (err: any) {
+        throw new Error('Payment could not be saved on this device. No payment was recorded.');
+      }
 
-      const synced = await flushOfflineQueue(API, headers);
-      if (synced === 0) {
+      const flushResult = await flushDurableQueue(scope, API, headers);
+      if (!flushResult.acked.includes(delta.id)) {
         const res = await fetch(`${API}/v1/pos/sync-deltas`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ deltas: [delta] }),
         });
         if (!res.ok) throw new Error('Payment sync failed');
+        const result = await res.json();
+        const confirmedIds = result?.data?.confirmedIds;
+        if (!Array.isArray(confirmedIds) || !confirmedIds.includes(delta.id)) {
+          throw new Error('Payment was not confirmed. Reconcile the pending payment before retrying.');
+        }
+        // Ack only this submitted known ID for this tenant; the durable
+        // layer ignores any unknown IDs and never deletes queue evidence.
+        await markDurableDeltasSynced(scope, [delta.id]);
       }
 
       qc.invalidateQueries({ queryKey: ['orders'] });
@@ -196,7 +243,7 @@ export function CheckoutView() {
         hardwarePrinter.kickCashDrawer().catch(() => {});
       }
     } catch (err: any) {
-      setPaymentError('Payment failed: ' + (err?.message ?? err));
+      setPaymentError('Payment not confirmed: ' + (err?.message ?? err));
     } finally {
       setProcessing(false);
       setStripeSimState('idle');
@@ -314,7 +361,7 @@ export function CheckoutView() {
                     Payment Queued
                   </h2>
                   <p className="text-xs text-amber-700 font-bold">
-                    Payment queued — will capture on reconnect. This charge is not complete.
+                    Recorded on this device. Server reconciliation is pending.
                   </p>
                 </>
               ) : (
@@ -339,11 +386,11 @@ export function CheckoutView() {
                   Queued offline payment
                 </p>
                 <p className="text-sm font-bold text-amber-900 mt-1">
-                  ${(total / 100).toFixed(2)} via {method.toUpperCase()} — pending capture
+                  ${(total / 100).toFixed(2)} via {method.toUpperCase()} — pending reconciliation
                 </p>
                 <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
                   {queuedDeltaCount} unsynced transaction{queuedDeltaCount === 1 ? '' : 's'} in the offline queue.
-                  No funds are captured until this device reconnects and syncs.
+                  This is a local cash/comp record, not a card authorization.
                 </p>
               </div>
             )}

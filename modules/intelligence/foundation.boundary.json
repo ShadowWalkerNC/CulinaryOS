@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "modules/intelligence",
+  "kind": "modules",
+  "owner": "Intelligence",
+  "purpose": "Recommendation boundary; RestRevive concepts require evidence before implementation.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [
+    "recommendations"
+  ],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

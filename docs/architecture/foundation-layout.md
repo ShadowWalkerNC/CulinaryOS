@@ -1,0 +1,7 @@
+# CulinaryOS target layout
+
+The P05 target directory structure is prepared through33 content-bearing boundary descriptors. The canonical index is [foundation-layout.json](foundation-layout.json); ownership remains in [culinary-foundation.json](culinary-foundation.json). Each foundation.boundary.json names its responsibility, owner, owned data references, existing implementation references and dependency direction.
+
+These descriptors describe target boundaries. Existing applications, server routes, root mobile application, shared contracts and event-bus remain in place. New directories contain architecture metadata rather than copied implementations. No package manifests or workspace globs were added; no entrypoint, permission, provider or migration was activated. Python marketing, Muse, Mercury and deployment integration runtimes remain planned. Employee entity ownership mapping requires future inventory; the employee boundary records Core responsibility without inventing a table mapping.
+
+Validate with `node scripts/validate-foundation-layout.mjs` and `node --test tests/architecture/foundation-layout.test.mjs`. Checks cover exact target coverage, contained paths including realpath containment, source existence, ownership agreement and rejection of runtime/migration overclaims. They do not prove deployment, live authorization, feature parity or cross-module runtime enforcement. P06 must separately inventory features and establish migration/rollback evidence before moving code.

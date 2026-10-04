@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "domain/employees",
+  "kind": "domain",
+  "owner": "Core",
+  "purpose": "Core employees/auth responsibility; existing talent route is a source reference, entity mapping remains pending.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/server/src/routes/talent.ts"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

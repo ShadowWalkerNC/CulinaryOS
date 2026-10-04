@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "apps/customer-web",
+  "kind": "apps",
+  "owner": "Web",
+  "purpose": "Target customer surface; current Web app remains in place pending feature mapping.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/web/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

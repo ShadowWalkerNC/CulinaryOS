@@ -1,8 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiHeaders, getApiBase, enqueueOfflineDelta } from '@culinaryos/shared';
+import { apiHeaders, getApiBase, enqueueDurableDelta, getPosDeviceId, runCreateOrderCommand, runApplyDiscountCommand } from '@culinaryos/shared';
 import { supabase } from './supabase';
 import { usePOSStore } from './store';
 import { getMockOrders, saveMockOrders } from './mockDb';
+
+// Tenant/device scope for the durable offline queue (R4/P4a). Throws when
+// the device ID cannot be read or persisted; callers surface that as a
+// visible mutation failure with no local success recorded.
+function posOfflineScope(tenantId: string) {
+  return { tenantId, deviceId: getPosDeviceId() };
+}
 
 const MOCK_MENU = {
   id: 'demo-menu',
@@ -496,40 +503,28 @@ export function useCreateOrder() {
   const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
     mutationFn: async (payload: { table_number?: string; cover_count?: number; server_name?: string }) => {
-      const API = getApiBase();
-      try {
-        const res = await fetch(`${API}/v1/orders`, {
-          method: 'POST',
+      // Durable-first offline command (R4 follow-up): only a fetch throw
+      // (no HTTP response) falls back, and the fallback enqueues the
+      // create_order delta BEFORE any mock mutation. Any received error
+      // response (401/403/422/409/...) throws with no queue write and no
+      // mock row, so server denials are never disguised as offline.
+      // Stable IDs: <uuid> order ID shared by delta and mock row.
+      return runCreateOrderCommand(
+        {
+          fetchImpl: fetch,
+          apiBase: getApiBase(),
           headers: apiHeaders(tenantId),
-          body: JSON.stringify({
-            tableNumber: payload.table_number || '1',
-            coverCount: payload.cover_count || 1,
-            serverName: payload.server_name || 'Server',
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data) return json.data;
+          queue: { enqueue: enqueueDurableDelta },
+          resolveScope: () => posOfflineScope(tenantId),
+          store: { readMockOrders: getMockOrders, saveMockOrders },
+        },
+        {
+          tenantId,
+          table_number: payload.table_number,
+          cover_count: payload.cover_count,
+          server_name: payload.server_name,
         }
-      } catch {
-        // Fallback to local mockDb
-      }
-
-      const newOrder = {
-        id: `o-${Math.floor(1000 + Math.random() * 9000)}`,
-        tenant_id: tenantId,
-        status: 'open',
-        table_number: payload.table_number || null,
-        cover_count: payload.cover_count || 1,
-        server_name: payload.server_name || 'Server',
-        items: [],
-        total: 0,
-        created_at: new Date().toISOString()
-      };
-      const orders = getMockOrders();
-      orders.push(newOrder);
-      saveMockOrders(orders);
-      return newOrder;
+      );
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['orders'] });
@@ -599,28 +594,38 @@ export function useAddLineItem() {
           notes: item.notes || null,
           modifiers: item.selectedModifiers || []
         };
+        // Durable intent first (R4/P4a): persistence failure throws before
+        // any local success is recorded, so the mutation fails visibly and
+        // the mock view is left untouched for retry.
+        const scope = posOfflineScope(tenantId);
+        await enqueueDurableDelta(
+          {
+            tenant_id: tenantId,
+            device_id: scope.deviceId,
+            order_id: item.order_id,
+            action: 'add_line_item',
+            payload: {
+              id: newLineItem.id,
+              menu_item_id: item.menu_item_id,
+              name: item.name,
+              quantity: item.quantity,
+              unit_price: finalUnitPrice,
+              line_total,
+              station: item.station,
+              course_number: item.course_number ?? 1,
+              notes: item.notes ?? null,
+            },
+          },
+          scope,
+        ).catch((err) => {
+          throw new Error(
+            `Line item could not be saved on this device: ${(err as Error)?.message ?? err}`
+          );
+        });
         order.items = order.items || [];
         order.items.push(newLineItem);
         order.total = (order.total ?? 0) + line_total;
         saveMockOrders(orders);
-
-        // Enqueue delta so reconnection replays it deterministically
-        enqueueOfflineDelta({
-          tenant_id: tenantId,
-          order_id: item.order_id,
-          action: 'add_line_item',
-          payload: {
-            id: newLineItem.id,
-            menu_item_id: item.menu_item_id,
-            name: item.name,
-            quantity: item.quantity,
-            unit_price: finalUnitPrice,
-            line_total,
-            station: item.station,
-            course_number: item.course_number ?? 1,
-            notes: item.notes ?? null,
-          },
-        });
 
         return newLineItem;
       }
@@ -758,14 +763,25 @@ export function useVoidOrder() {
         const orders = getMockOrders();
         const order = orders.find(o => o.id === orderId);
         if (order) {
+          // Durable intent first (R4/P4a): persistence failure throws before
+          // the local void is recorded, so nothing reports success unsaved.
+          const scope = posOfflineScope(tenantId);
+          await enqueueDurableDelta(
+            {
+              tenant_id: tenantId,
+              device_id: scope.deviceId,
+              order_id: orderId,
+              action: 'void_order',
+              payload: { reasonCode: reasonCode || reason, isCooked, notes },
+            },
+            scope,
+          ).catch((err) => {
+            throw new Error(
+              `Void could not be saved on this device: ${(err as Error)?.message ?? err}`
+            );
+          });
           order.status = 'voided';
           saveMockOrders(orders);
-          enqueueOfflineDelta({
-            tenant_id: tenantId,
-            order_id: orderId,
-            action: 'void_order',
-            payload: { reasonCode: reasonCode || reason, isCooked, notes },
-          });
           return order;
         }
         throw new Error(body?.error?.message ?? 'Void failed');
@@ -819,15 +835,29 @@ export function useVoidLineItem() {
         const order = orders.find(o => o.id === orderId);
         const line = order?.items?.find((li: any) => li.id === itemId);
         if (line) {
+          // Durable intent first (R4/P4a): persistence failure throws before
+          // the local void is recorded, so nothing reports success unsaved.
+          // NOTE: the sync route currently has no void_line_item case, so the
+          // row stays pending as preserved evidence until the server owner
+          // adds replay support; it is never falsely acknowledged.
+          const scope = posOfflineScope(tenantId);
+          await enqueueDurableDelta(
+            {
+              tenant_id: tenantId,
+              device_id: scope.deviceId,
+              order_id: orderId,
+              action: 'void_line_item',
+              payload: { itemId, reasonCode: reasonCode || reason, isCooked, notes },
+            },
+            scope,
+          ).catch((err) => {
+            throw new Error(
+              `Item void could not be saved on this device: ${(err as Error)?.message ?? err}`
+            );
+          });
           line.is_voided = true;
           line.void_reason = reasonCode || reason || 'offline_void';
           saveMockOrders(orders);
-          enqueueOfflineDelta({
-            tenant_id: tenantId,
-            order_id: orderId,
-            action: 'void_line_item',
-            payload: { itemId, reasonCode: reasonCode || reason, isCooked, notes },
-          });
           return line;
         }
         throw new Error(body?.error?.message ?? 'Item void failed');
@@ -892,28 +922,23 @@ export function useApplyDiscount() {
   const tenantId = usePOSStore((s) => s.tenantId);
   return useMutation({
     mutationFn: async ({ orderId, discountPercent, discountFlat }: { orderId: string; discountPercent: number; discountFlat: number }) => {
-      const API = getApiBase();
-      try {
-        const res = await fetch(`${API}/v1/orders/${orderId}/discount`, {
-          method: 'POST',
+      // Durable-first offline command (R4 follow-up): only a fetch throw
+      // (no HTTP response) falls back, and the fallback enqueues the
+      // apply_discount delta BEFORE any mock mutation. Any received error
+      // response (401/403/422/409/...) throws with no queue write and no
+      // mock change. Unknown local orders and invalid discount values
+      // fail explicitly instead of reporting silent success.
+      return runApplyDiscountCommand(
+        {
+          fetchImpl: fetch,
+          apiBase: getApiBase(),
           headers: apiHeaders(tenantId),
-          body: JSON.stringify({ discountPercent, discountFlat }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          return json.data;
-        }
-      } catch {
-        // Fallback
-      }
-
-      const orders = getMockOrders();
-      const order = orders.find(o => o.id === orderId);
-      if (order) {
-        order.discount_percent = discountPercent;
-        order.discount_flat = discountFlat;
-        saveMockOrders(orders);
-      }
+          queue: { enqueue: enqueueDurableDelta },
+          resolveScope: () => posOfflineScope(tenantId),
+          store: { readMockOrders: getMockOrders, saveMockOrders },
+        },
+        { tenantId, orderId, discountPercent, discountFlat }
+      );
     },
     onSuccess: (_, { orderId }) => {
       qc.invalidateQueries({ queryKey: ['order', orderId] });

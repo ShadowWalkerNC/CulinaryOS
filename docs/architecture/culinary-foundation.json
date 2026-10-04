@@ -1,0 +1,767 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "status": "foundation-metadata-only",
+  "dataOwnership": [
+    {
+      "domain": "orders",
+      "owner": "Core",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "payments",
+      "owner": "Core",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "restaurant_configuration",
+      "owner": "Core",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "inventory",
+      "owner": "Core",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "recipes",
+      "owner": "Prep",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "prep_tasks",
+      "owner": "Prep",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "labor",
+      "owner": "Ops",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "vendors",
+      "owner": "Ops",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "purchasing",
+      "owner": "Ops",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "waste",
+      "owner": "Ops",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "campaigns",
+      "owner": "Marketing",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "social_publishing",
+      "owner": "Marketing",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "website_content",
+      "owner": "Web",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "website_themes",
+      "owner": "Web",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "recommendations",
+      "owner": "Intelligence",
+      "status": "target-not-runtime-enforced"
+    },
+    {
+      "domain": "resident_clinical_dining",
+      "owner": "ShorelineOps",
+      "status": "target-not-runtime-enforced"
+    }
+  ],
+  "contracts": {
+    "mcp": "mcp/src/api-headers.ts",
+    "eventBus": "packages/event-bus/src/types.ts",
+    "events": "packages/shared/src/types/events.ts",
+    "sdk": "packages/sdk/src/index.ts"
+  },
+  "eventEnvelope": {
+    "source": {
+      "path": "packages/shared/src/types/events.ts",
+      "line": 9
+    },
+    "name": "DomainEvent<T = unknown>",
+    "eventType": "EventType",
+    "schemaVersionField": {
+      "name": "version",
+      "observedType": "number",
+      "literalVersionEnforced": false
+    },
+    "tenantScope": {
+      "field": "tenantId",
+      "observedType": "string",
+      "authorizationEnforcedByType": false
+    },
+    "fields": [
+      "eventId",
+      "eventType",
+      "tenantId",
+      "source",
+      "timestamp",
+      "version",
+      "payload"
+    ],
+    "payloadTyping": "generic T default unknown; no per-event payload map"
+  },
+  "events": [
+    {
+      "wireName": "culinaryos:service:deregistered",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 40,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "culinaryos:service:registered",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 39,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "culinaryos:tenant:created",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 37,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "culinaryos:tenant:suspended",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 38,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "kds:course:fired",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 29,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 118,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 48,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 29,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "apps/server/src/routes/orders.ts",
+          "line": 603,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "KdsCourseFiredPayload"
+      }
+    },
+    {
+      "wireName": "kds:ticket:bumped",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 27,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 117,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 45,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 26,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "TicketBumpedPayload"
+      }
+    },
+    {
+      "wireName": "kds:ticket:fired",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 26,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/pos-order-created.ts",
+          "line": 91,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "TicketFiredPayload"
+      }
+    },
+    {
+      "wireName": "kds:ticket:held",
+      "observedCanonicalTypeMember": false,
+      "observedSurface": "pending_push outbox",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/event-bus/src/handlers/pos-order-created.ts",
+          "line": 91,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "wireVersion": "absent",
+        "payloadType": "LegacyHeldTicketOutbox",
+        "source": "packages/shared/src/types/legacy-outbox-contract.ts",
+        "status": "legacy-unversioned-profile-tested",
+        "runtimeConsumerAdoption": "NOT RUN",
+        "contractIdentifier": "culinaryos-held-outbox-v1",
+        "contractRevision": 1
+      }
+    },
+    {
+      "wireName": "kds:ticket:recalled",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 28,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "pos:menu:item-sold",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 31,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 116,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 47,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 27,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/pos-order-created.ts",
+          "line": 127,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "MenuItemSoldPayload"
+      }
+    },
+    {
+      "wireName": "pos:order:cancelled",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 23,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 115,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 46,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 25,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "OrderCancelledPayload"
+      }
+    },
+    {
+      "wireName": "pos:order:created",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 21,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 114,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 44,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 24,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "apps/server/src/routes/marketplace.ts",
+          "line": 386,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/orders.ts",
+          "line": 72,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/integrations/square.ts",
+          "line": 185,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/integrations/toast.ts",
+          "line": 78,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "OrderCreatedPayload"
+      }
+    },
+    {
+      "wireName": "pos:order:paid",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 24,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "pos:order:updated",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 22,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "pos:reservation:seated",
+      "observedCanonicalTypeMember": false,
+      "observedSurface": "untyped route domain envelope",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "apps/server/src/routes/reservations.ts",
+          "line": 299,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/reservations.ts",
+          "line": 343,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "version": 1,
+        "status": "additive-contract-tested",
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "ReservationSeatedPayloadV1"
+      }
+    },
+    {
+      "wireName": "pos:table:assistance",
+      "observedCanonicalTypeMember": false,
+      "observedSurface": "untyped route domain envelope",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "apps/server/src/routes/tables.ts",
+          "line": 564,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "version": 1,
+        "status": "additive-contract-tested",
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "TableAssistancePayloadV1"
+      }
+    },
+    {
+      "wireName": "pos:table:merged",
+      "observedCanonicalTypeMember": false,
+      "observedSurface": "untyped route domain envelope",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "apps/server/src/routes/tables.ts",
+          "line": 108,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/tables.ts",
+          "line": 214,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "version": 1,
+        "status": "additive-contract-tested",
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "TableMergedPayloadV1"
+      }
+    },
+    {
+      "wireName": "pos:table:transferred",
+      "observedCanonicalTypeMember": false,
+      "observedSurface": "untyped route domain envelope",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint section62: order/payment/configuration/event infrastructure and POS/KDS/table coordination remain Core.",
+      "sources": [
+        {
+          "path": "apps/server/src/routes/tables.ts",
+          "line": 421,
+          "kind": "route-observation"
+        },
+        {
+          "path": "apps/server/src/routes/tables.ts",
+          "line": 461,
+          "kind": "route-observation"
+        }
+      ],
+      "versionedContract": {
+        "version": 1,
+        "status": "additive-contract-tested",
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "TableTransferredPayloadV1"
+      }
+    },
+    {
+      "wireName": "recipeos:pantry:low-stock",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Core",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint sections62/68: base inventory belongs to Core despite legacy RecipeOS namespace.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 33,
+          "kind": "canonical-type"
+        },
+        {
+          "path": "packages/event-bus/src/binary-protocol.ts",
+          "line": 119,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/broker.ts",
+          "line": 49,
+          "kind": "event-bus-observation"
+        },
+        {
+          "path": "packages/event-bus/src/handlers/index.ts",
+          "line": 28,
+          "kind": "event-bus-observation"
+        }
+      ],
+      "versionedContract": {
+        "status": "additive-contract-tested",
+        "version": 1,
+        "runtimeConsumerAdoption": "NOT RUN",
+        "source": "packages/shared/src/types/event-contracts.ts",
+        "payloadType": "LowStockPayload"
+      }
+    },
+    {
+      "wireName": "recipeos:recipe:created",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Prep",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint sections63/68: recipes belong to Prep.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 34,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    },
+    {
+      "wireName": "recipeos:recipe:updated",
+      "observedCanonicalTypeMember": true,
+      "observedSurface": "typed domain event",
+      "proposedCanonicalOwner": "CulinaryOS Prep",
+      "ownershipStatus": "proposed-not-runtime-enforced",
+      "ownershipRationale": "Blueprint sections63/68: recipes belong to Prep.",
+      "sources": [
+        {
+          "path": "packages/shared/src/types/events.ts",
+          "line": 35,
+          "kind": "canonical-type"
+        }
+      ],
+      "versionedContract": {
+        "runtimeConsumerAdoption": "NOT RUN",
+        "status": "payload-contract-pending"
+      },
+      "disposition": {
+        "scope": "Literal references in internal apps/packages/cli/mcp/mobile TS/JS source only; dynamic absence not proven",
+        "reason": "No source-backed payload shape located; original union entry preserved",
+        "state": "declaration-only",
+        "specification": "pending"
+      }
+    }
+  ],
+  "dependencyDirection": [
+    "Apps",
+    "Modules",
+    "Domain / Contracts",
+    "Infrastructure"
+  ],
+  "dependencyEnforcement": "NOT RUN",
+  "limitations": [
+    "Five observed events are outside EventType; no wire rename authorized.",
+    "Numeric envelope version does not enforce a literal or per-event payload mapping.",
+    "SDK/MCP authentication parity and event-bus provider transition remain unverified.",
+    "No feature migration, runtime ownership enforcement or live acceptance."
+  ]
+}

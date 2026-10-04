@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { usePOSStore } from '../lib/store';
-import { flushOfflineQueue, apiHeaders, getApiBase } from '@culinaryos/shared';
+import {
+  flushDurableQueue,
+  migrateLegacyQueueToDurable,
+  getPosDeviceId,
+  apiHeaders,
+  getApiBase,
+} from '@culinaryos/shared';
 
 export function ConnectionStatus() {
   const tenantId = usePOSStore((s) => s.tenantId);
@@ -12,7 +18,25 @@ export function ConnectionStatus() {
     if (flushing.current) return;
     flushing.current = true;
     try {
-      await flushOfflineQueue(getApiBase(), apiHeaders(tenantId));
+      // Tenant/device-partitioned durable queue (R4/P4a). A device-ID
+      // failure skips this attempt; the queue is preserved for the next.
+      let deviceId: string;
+      try {
+        deviceId = getPosDeviceId();
+      } catch {
+        return;
+      }
+      const scope = { tenantId, deviceId };
+      // Best-effort safe legacy migration: failures preserve the legacy
+      // original for a later retry and never block the durable flush.
+      try {
+        await migrateLegacyQueueToDurable(scope);
+      } catch {
+        // keep legacy for next attempt
+      }
+      // Durable flush acks only submitted known IDs for this tenant and
+      // never submits card-like rows; failures preserve the queue.
+      await flushDurableQueue(scope, getApiBase(), apiHeaders(tenantId));
     } catch {
       // keep queue for next attempt
     } finally {

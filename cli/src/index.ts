@@ -24,6 +24,7 @@ import { commissaryCommand } from './commands/commissary';
 import { autopilotCommand } from './commands/autopilot';
 import { daypartsCommand } from './commands/dayparts';
 import { hardwareCommand } from './commands/hardware';
+import { databaseCommand } from './commands/database';
 
 const program = new Command();
 
@@ -54,6 +55,7 @@ program.addCommand(commissaryCommand);
 program.addCommand(autopilotCommand);
 program.addCommand(daypartsCommand);
 program.addCommand(hardwareCommand);
+program.addCommand(databaseCommand);
 
 // Top-Level Doctor Command (supports: culinary doctor security, culinary doctor ui)
 program

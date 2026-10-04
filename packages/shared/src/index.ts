@@ -1,4 +1,6 @@
 export * from './offline-sync.js';
+export * from './offline-store.js';
+export * from './offline-pos-commands.js';
 export * from './types/index.js';
 export * from './realtime/index.js';
 export * from './service-client/index.js';

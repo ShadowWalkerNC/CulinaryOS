@@ -1,6 +1,17 @@
 // ============================================================
 // @culinaryos/shared — Offline-First Transaction Delta Sync Engine
 // Instant local checkout queue with confirmed-ID replay
+//
+// LEGACY COMPATIBILITY LAYER (kept for existing tests):
+// These synchronous global-localStorage helpers preserve historical
+// behavior (global queue key, sync API, warn-and-continue on storage
+// errors). Production POS must NOT use them for acceptance; use the
+// durable API in ./offline-store.ts (enqueueDurableDelta /
+// flushDurableQueue with { tenantId, deviceId } scope), which persists
+// transactionally (IndexedDB in browsers), partitions by tenant/device,
+// fails explicitly on quota/corruption, and never replays cards.
+// See docs/POS_PILOT_CORRECTNESS_SPEC.md P4a/A02/A03 and
+// docs/ARCHITECTURE_RESILIENCE_PLAN.md R4.
 // ============================================================
 
 export interface TableSeatLock {
@@ -14,6 +25,7 @@ export interface TableSeatLock {
 export interface OfflineTransactionDelta {
   id: string;
   tenant_id: string;
+  device_id?: string;
   order_id: string;
   action:
     | 'create_order'
@@ -48,6 +60,11 @@ function writeQueue(queue: OfflineTransactionDelta[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
 }
 
+/**
+ * @deprecated Legacy test wrapper. Production POS must await
+ * enqueueDurableDelta(input, scope) from ./offline-store.ts and stop on
+ * failure instead of warn-and-continue.
+ */
 export function enqueueOfflineDelta(
   delta: Omit<OfflineTransactionDelta, 'id' | 'timestamp' | 'synced'>
 ): OfflineTransactionDelta {
@@ -69,18 +86,29 @@ export function enqueueOfflineDelta(
   return fullDelta;
 }
 
-/** Full queue including synced rows (for audit / debugging). */
+/**
+ * Full queue including synced rows (for audit / debugging).
+ * @deprecated Legacy test wrapper over the global key. Production code
+ * must use getDurableQueue(scope) with tenant/device partitioning.
+ */
 export function getOfflineQueue(): OfflineTransactionDelta[] {
   return readQueue();
 }
 
-/** Pending (unsynced) deltas only. */
+/**
+ * Pending (unsynced) deltas only.
+ * @deprecated Legacy test wrapper. Production code must use
+ * getPendingDurableQueue(scope).
+ */
 export function getPendingOfflineQueue(): OfflineTransactionDelta[] {
   return readQueue().filter((d) => !d.synced);
 }
 
 /**
  * Mark deltas as synced without deleting them (protocol: never delete from queue).
+ * @deprecated Legacy test wrapper. Production code must use
+ * markDurableDeltasSynced(scope, ids), which only acknowledges submitted
+ * known IDs for the matching tenant and ignores unknown/remote IDs.
  */
 export function markDeltasSynced(syncedIds: string[]) {
   try {
@@ -94,6 +122,12 @@ export function markDeltasSynced(syncedIds: string[]) {
   }
 }
 
+/**
+ * @deprecated Legacy test wrapper. Production POS must await
+ * flushDurableQueue(scope, apiUrl, headers), which snapshots pending
+ * under lock, submits only submittable (never card) rows, and acks only
+ * submitted known IDs for the matching tenant.
+ */
 export async function flushOfflineQueue(
   syncApiUrl: string,
   headers: Record<string, string> = {}
@@ -142,7 +176,14 @@ export async function flushOfflineQueue(
 }
 
 /**
- * Optimistic Table / Seat Locks for Multi-Terminal Edge Mesh
+ * Optimistic Table / Seat Locks for a single device's local UI only.
+ *
+ * LIMITATION: these locks live in this browser's localStorage and do NOT
+ * prove cross-device coordination. Two POS terminals do not observe each
+ * other's locks; conflicting table/order work across devices requires
+ * explicit server serialization semantics (version/precondition or
+ * equivalent). Do not treat a local lock as a distributed mutual
+ * exclusion guarantee.
  */
 export function getTableSeatLocks(): Record<string, TableSeatLock> {
   try {
@@ -210,10 +251,17 @@ export function releaseTableSeatLock(tableId: string, deviceId: string): boolean
 }
 
 /**
- * Deterministic Conflict Resolution:
+ * Deterministic local merge helper for display/queue assembly only.
  * When two terminals edit the same order line item offline:
  * - Quantities: additive merge (neither server drops an item)
  * - Discounts / Status: higher timestamp / manager authority wins
+ *
+ * LIMITATION: this client-side merge does NOT establish financial or
+ * kitchen truth. Money, sent tickets, settlement, and voids require
+ * explicit server conflict semantics (same operation ID / same payload
+ * returns prior result, same ID / different payload conflicts, stale
+ * preconditions rejected). Never treat this local merge as proof that
+ * a cross-device conflict was safely resolved.
  */
 export function resolveOrderDeltaConflict(
   existingDelta: OfflineTransactionDelta,
@@ -239,4 +287,3 @@ export function resolveOrderDeltaConflict(
     ? incomingDelta
     : existingDelta;
 }
-

@@ -32,15 +32,16 @@ function checkPort(port: number): Promise<boolean> {
 import fs from 'node:fs';
 import path from 'node:path';
 
-function auditRlsCoverage(): { ok: boolean; totalTables: number; rlsTables: number; missing: string[] } {
-  const candidateDirs = [
-    path.resolve(process.cwd(), 'supabase/migrations'),
-    path.resolve(__dirname, '../../supabase/migrations'),
-    path.resolve(__dirname, '../../../supabase/migrations'),
+export function auditRlsCoverage(candidateDirsOverride?: string[]): { ok: boolean; totalTables: number; rlsTables: number; missing: string[] } {
+  const migrationRelative = process.env.CULINARYOS_BACKEND === 'postgres' ? 'packages/db/migrations' : 'supabase/migrations';
+  const candidateDirs = candidateDirsOverride ?? [
+    path.resolve(process.cwd(), migrationRelative),
+    path.resolve(__dirname, '../..', migrationRelative),
+    path.resolve(__dirname, '../../..', migrationRelative),
   ];
   const migrationsDir = candidateDirs.find((d) => fs.existsSync(d));
   if (!migrationsDir) {
-    return { ok: true, totalTables: 47, rlsTables: 47, missing: [] };
+    return { ok: false, totalTables: 0, rlsTables: 0, missing: [] };
   }
 
   const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql'));
@@ -82,14 +83,14 @@ function isPlaceholder(val?: string): boolean {
       {
         name: 'service_role key isolation',
         ok: !process.env.VITE_SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
-        info: 'service_role key never exposed to client bundles or browser environment.',
+        info: 'No service_role key detected in the two checked public environment variables; bundle exposure is NOT VERIFIED.',
       },
       {
-        name: 'Row Level Security (RLS) enforcement',
+        name: 'Row Level Security (RLS) source coverage',
         ok: rlsAudit.ok,
         info: rlsAudit.ok
-          ? `All ${rlsAudit.totalTables} public schema tables enforce RLS policies (V1-V17 migrations verified).`
-          : `SECURITY BLOCKER: ${rlsAudit.missing.length} tables lack RLS: ${rlsAudit.missing.join(', ')}`,
+          ? `Source scan found RLS enable statements for ${rlsAudit.totalTables} tables. Applied policies and isolation are NOT VERIFIED.`
+          : `Source coverage unavailable or incomplete: ${rlsAudit.missing.length} tables have no detected RLS enable statement: ${rlsAudit.missing.join(', ')}`,
       },
       {
         name: 'Stripe webhook signature gate',
@@ -98,30 +99,30 @@ function isPlaceholder(val?: string): boolean {
           isPlaceholder(process.env.STRIPE_SECRET_KEY) ||
           process.env.AUTH_RELAXED === 'true' ||
           process.env.NODE_ENV === 'test',
-        info: 'Webhook requests reject unverified signatures in live production mode (constructEvent enforced).',
+        info: 'Webhook secret configuration check only; processor signature behavior is NOT VERIFIED.',
       },
       {
         name: 'FLSA tip pool manager exclusion',
-        ok: true,
-        info: 'Hardcoded weight=0 for managers/supervisors in labor-engine.',
+        ok: null,
+        info: 'NOT RUN: manager/supervisor exclusion requires behavioral tests.',
       },
       {
         name: 'Offline queue idempotency keys',
-        ok: true,
-        info: 'All transaction deltas tagged with client UUIDv4 idempotency keys.',
+        ok: null,
+        info: 'NOT RUN: durable replay/idempotency requires failure and integration tests.',
       },
     ];
 
     let allPassed = true;
     for (const chk of checks) {
-      const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
+      const symbol = chk.ok === null ? chalk.yellow('NOT RUN') : chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
       console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
       console.log(`         ${chalk.gray(chk.info)}`);
-      if (!chk.ok) allPassed = false;
+      if (chk.ok === false) allPassed = false;
     }
 
     if (allPassed) {
-      console.log(chalk.bold.green('\n✔ Security posture verified. No cross-tenant leak vectors detected.\n'));
+      console.log(chalk.bold.green('\n✔ Available source/configuration checks passed. Live tenant isolation and payment/offline behavior are NOT VERIFIED.\n'));
     } else {
       console.log(chalk.bold.red('\n✖ Security posture audit FAILED. Address violations above.\n'));
       process.exitCode = 1;
@@ -163,10 +164,10 @@ function isPlaceholder(val?: string): boolean {
 
     let allPassed = true;
     for (const chk of uiChecks) {
-      const symbol = chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
+      const symbol = chk.ok === null ? chalk.yellow('NOT RUN') : chk.ok ? chalk.green('✔ PASS') : chalk.red('✖ FAIL');
       console.log(`  [${symbol}] ${chalk.bold(chk.name)}`);
       console.log(`         ${chalk.gray(chk.info)}`);
-      if (!chk.ok) allPassed = false;
+      if (chk.ok === false) allPassed = false;
     }
 
     if (allPassed) {

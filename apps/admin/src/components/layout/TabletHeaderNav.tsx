@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   Activity,
   ClipboardList,
@@ -17,11 +18,13 @@ import {
   SlidersHorizontal,
   ShieldCheck,
   Radio,
+  LogOut,
 } from '@culinaryos/ui';
 
 export function TabletHeaderNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
+  const { session, logout } = useAuth();
 
   const primaryTabletTabs = [
     { to: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
@@ -143,9 +146,26 @@ export function TabletHeaderNav() {
               })}
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 text-xs text-slate-500">
-              <p className="font-bold text-slate-700">CulinaryOS Tablet Console</p>
-              <p>Optimized for on-the-floor manager oversight</p>
+            <div className="p-4 border-t border-slate-200 bg-slate-50 text-xs text-slate-500 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-slate-700">CulinaryOS Tablet Console</p>
+                  <p className="text-[11px] text-slate-500">
+                    {session?.displayName || 'Manager'} ({session?.role || 'staff'})
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    logout();
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-all flex items-center gap-1.5 active:scale-[0.96]"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "modules/prep",
+  "kind": "modules",
+  "owner": "Prep",
+  "purpose": "Recipe/prep boundary; KitchenKit and RecipeOS source migrations are P06 work.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [
+    "recipes",
+    "prep_tasks"
+  ],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/kitchenkit/package.json",
+    "apps/recipeos/package.json",
+    "packages/prep-engine/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

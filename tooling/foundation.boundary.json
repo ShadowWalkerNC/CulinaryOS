@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "tooling",
+  "kind": "tooling",
+  "owner": "Core",
+  "purpose": "Foundation verification boundary; standalone checks do not modify pipeline configuration.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "scripts/validate-portfolio-foundation.mjs",
+    "scripts/check-portfolio-dependencies.mjs"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "apps/mobile",
+  "kind": "apps",
+  "owner": "Core",
+  "purpose": "Target mobile surface; existing root mobile implementation remains in place.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "mobile/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

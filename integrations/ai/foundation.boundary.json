@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "integrations/ai",
+  "kind": "integrations",
+  "owner": "Core",
+  "purpose": "Capability adapter boundary; application requirements and SDK decisions must precede adoption.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

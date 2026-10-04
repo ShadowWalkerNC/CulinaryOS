@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "packages/events",
+  "kind": "packages",
+  "owner": "Core",
+  "purpose": "Target event boundary; existing event-bus and shared contracts remain authoritative implementations.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "packages/event-bus/src/types.ts",
+    "packages/shared/src/types/legacy-outbox-contract.ts"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

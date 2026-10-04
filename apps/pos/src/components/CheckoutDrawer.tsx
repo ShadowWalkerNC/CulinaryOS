@@ -95,22 +95,22 @@ function PaymentForm({
   const chargeCents = totalCents + tipCents;
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <PaymentElement />
       {error && (
-        <div style={{ color: '#ef4444', fontSize: '13px', padding: '8px 12px', background: '#ef444420', borderRadius: '6px' }}>
+        <div className="text-[#ef4444] text-[13px] px-3 py-2 bg-[#ef444420] rounded-md">
           {error}
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
+      <div className="flex justify-between text-[13px] text-[#6b7299]">
         <span>Order total</span><span>${(totalCents / 100).toFixed(2)}</span>
       </div>
       {tipCents > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
+        <div className="flex justify-between text-[13px] text-[#6b7299]">
           <span>Tip</span><span>${(tipCents / 100).toFixed(2)}</span>
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '16px', borderTop: '1px solid #2e3150', paddingTop: '12px' }}>
+      <div className="flex justify-between font-bold text-base border-t border-[#2e3150] pt-3">
         <span>Charge total</span><span>${(chargeCents / 100).toFixed(2)}</span>
       </div>
       <Button
@@ -118,14 +118,11 @@ function PaymentForm({
         variant="brand"
         isLoading={busy}
         disabled={!stripe}
-        className="w-full"
-        style={{
-          padding: '14px', borderRadius: '8px', border: 'none',
-          background: busy ? '#2e3150' : '#7c6aff',
-          color: busy ? '#6b7299' : '#fff',
-          fontWeight: 700, fontSize: '15px',
-          cursor: busy ? 'not-allowed' : 'pointer',
-        }}
+        className={`w-full min-h-[48px] py-3.5 px-5 rounded-lg font-bold text-[15px] ${
+          busy
+            ? 'bg-[#2e3150] text-[#6b7299] cursor-not-allowed'
+            : 'bg-[#7c6aff] text-white hover:bg-[#6b5ce7] cursor-pointer'
+        }`}
       >
         {`Charge $${(chargeCents / 100).toFixed(2)}`}
       </Button>
@@ -180,90 +177,84 @@ export function CheckoutDrawer({ orderId, totalCents, onSuccess, onClose }: Chec
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.6)' }}
+      className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm transition-opacity duration-200"
       onClick={onClose}
     >
       <div
-        style={{ width: '420px', maxWidth: '100vw', background: '#12141f', padding: '28px 24px', height: '100dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}
+        className="w-[440px] max-w-[100vw] bg-[#12141f]/95 backdrop-blur-xl border-l border-white/10 px-6 py-7 h-dvh overflow-y-auto flex flex-col gap-6 shadow-2xl text-[#e8eaf0]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#e8eaf0' }}>Checkout</h2>
+        <div className="flex justify-between items-center pb-2 border-b border-white/5">
+          <div>
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 block">Payment Tender</span>
+            <h2 className="m-0 text-xl font-bold tracking-tight text-white">Checkout</h2>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
             aria-label="Close checkout"
-            className="min-w-[48px] min-h-[48px] p-0 text-[#e8eaf0] text-[20px] cursor-pointer hover:bg-slate-800"
-            style={{ background: 'none', border: 'none' }}
+            className="min-w-[48px] min-h-[48px] rounded-full p-0 text-neutral-400 hover:text-white hover:bg-white/10 active:scale-[0.95] transition-all cursor-pointer"
           >
-            ×
+            <span className="text-xl leading-none">✕</span>
           </Button>
         </div>
 
         <div>
-          <label style={{ fontSize: '12px', color: '#6b7299', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Tip</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <label className="text-[11px] text-neutral-400 font-semibold uppercase tracking-wider block mb-2.5">Tip Gratuity</label>
+          <div className="flex gap-2">
             {TIP_PRESETS.map((pct) => (
               <Button
                 key={pct}
                 variant="outline"
                 aria-pressed={tipPct === pct}
                 onClick={() => setTipPct(pct)}
-                className="flex-1 min-h-[48px] text-xs font-bold"
-                style={{
-                  padding: '8px 4px',
-                  borderRadius: '6px',
-                  border: `1px solid ${tipPct === pct ? '#7c6aff' : '#2e3150'}`,
-                  background: tipPct === pct ? '#7c6aff22' : 'transparent',
-                  color: tipPct === pct ? '#7c6aff' : '#6b7299',
-                  fontWeight: tipPct === pct ? 700 : 400,
-                  fontSize: '13px', cursor: 'pointer',
-                }}
+                className={`flex-1 min-h-[48px] px-2 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all active:scale-[0.96] ${
+                  tipPct === pct
+                    ? 'border-[#7c6aff] bg-[#7c6aff]/25 text-[#a294ff] font-bold shadow-xs hover:bg-[#7c6aff]/35 hover:text-white'
+                    : 'border-white/10 bg-white/5 text-neutral-400 font-medium hover:bg-white/10 hover:text-neutral-200'
+                }`}
               >
-                {pct === 0 ? 'No tip' : `${pct}%`}
+                {pct === 0 ? 'No Tip' : `${pct}%`}
               </Button>
             ))}
           </div>
           {tipCents > 0 && (
-            <div style={{ fontSize: '12px', color: '#6b7299', marginTop: '6px' }}>
-              Tip: ${(tipCents / 100).toFixed(2)} · Total: ${(chargeCents / 100).toFixed(2)}
+            <div className="text-xs text-neutral-400 mt-2 flex justify-between font-medium">
+              <span>Tip Amount: ${(tipCents / 100).toFixed(2)}</span>
+              <span className="text-neutral-300 font-semibold">Total: ${(chargeCents / 100).toFixed(2)}</span>
             </div>
           )}
         </div>
 
-        {loading   && <div style={{ color: '#6b7299' }}>Initialising payment…</div>}
-        {initError && <div style={{ color: '#ef4444' }}>{initError}</div>}
+        {loading   && <div className="text-neutral-400 text-sm animate-pulse">Initialising payment gateway…</div>}
+        {initError && <div className="text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl">{initError}</div>}
         {!loading && clientSecret && (
           isLiveStripe && stripePromise ? (
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
               <PaymentForm orderId={orderId} totalCents={totalCents} tipCents={tipCents} tenantId={tenantId} onSuccess={onSuccess} />
             </Elements>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: '#1a1d27', padding: '16px', borderRadius: '8px', border: '1px solid #2e3150' }}>
-              <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                <span style={{ display: 'inline-block', background: '#7c6aff22', color: '#7c6aff', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, fontSize: '11px', marginRight: '6px' }}>DEMO TENDER</span>
+            <div className="flex flex-col gap-4 bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/10">
+              <div className="text-xs text-neutral-300 leading-relaxed">
+                <span className="inline-block bg-[#7c6aff]/20 text-[#a294ff] px-2 py-0.5 rounded-full font-bold text-[10px] tracking-wide mr-1.5 border border-[#7c6aff]/30">DEMO TENDER</span>
                 Stripe is unconfigured. This is a checkout preview only; no card is charged or recorded.
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
-                <span>Order total</span><span>${(totalCents / 100).toFixed(2)}</span>
+              <div className="flex justify-between text-xs text-neutral-400 pt-1">
+                <span>Order subtotal</span><span className="tabular-nums font-medium text-neutral-200">${(totalCents / 100).toFixed(2)}</span>
               </div>
               {tipCents > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7299' }}>
-                  <span>Tip</span><span>${(tipCents / 100).toFixed(2)}</span>
+                <div className="flex justify-between text-xs text-neutral-400">
+                  <span>Selected tip</span><span className="tabular-nums font-medium text-neutral-200">${(tipCents / 100).toFixed(2)}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '16px', borderTop: '1px solid #2e3150', paddingTop: '12px' }}>
-                <span>Charge total</span><span>${(chargeCents / 100).toFixed(2)}</span>
+              <div className="flex justify-between font-bold text-base border-t border-white/10 pt-3 text-white">
+                <span>Charge total</span><span className="tabular-nums text-lg font-black">${(chargeCents / 100).toFixed(2)}</span>
               </div>
               <button
                 type="button"
                 onClick={() => onSuccess({ mode: 'demo' })}
-                style={{
-                  padding: '14px', borderRadius: '8px', border: 'none',
-                  background: '#7c6aff', color: '#fff',
-                  fontWeight: 700, fontSize: '15px', cursor: 'pointer',
-                }}
+                className="w-full min-h-[48px] py-3.5 px-5 rounded-xl bg-[#7c6aff] text-white font-bold text-sm cursor-pointer hover:bg-[#6b5ce7] active:scale-[0.97] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c6aff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#12141f] shadow-lg shadow-[#7c6aff]/25"
               >
                 Finish Demo Preview — No Charge
               </button>

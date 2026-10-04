@@ -54,6 +54,11 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
     }
 
     try {
+      if (delta.action === 'finalize_payment' &&
+          !['cash', 'comp'].includes(delta.payload?.method ?? 'cash')) {
+        failures.push({ id: delta.id, error: 'Only cash/comp payments may be finalized through offline replay; card payments require verified processor settlement' });
+        continue;
+      }
       if (!supabase) {
         // Demo mode — accept all deltas for the tenant
         confirmedIds.push(delta.id);
@@ -64,11 +69,6 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
         case 'finalize_payment': {
           // Only cash/comp offline finalize — card must go through Stripe capture
           const method = delta.payload?.method ?? 'cash';
-          if (method === 'card' && !delta.payload?.allow_offline_card) {
-            failures.push({ id: delta.id, error: 'card payments require online capture' });
-            break;
-          }
-
           const amount = delta.payload?.amount ?? delta.payload?.total ?? 0;
           const tip = delta.payload?.tip_amount ?? delta.payload?.tip_cents ?? 0;
 

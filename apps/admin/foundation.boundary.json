@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "apps/admin",
+  "kind": "apps",
+  "owner": "Core",
+  "purpose": "apps/admin target boundary; existing implementation stays in place.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/admin/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

@@ -352,7 +352,7 @@ export function MenuView() {
   const currentTotalItemPrice = modifyingItem ? (modifyingItem.price + currentModPrice) * quantity : 0;
 
   return (
-    <div className="flex h-full bg-[#f8f9fa] relative overflow-hidden">
+    <div className="flex h-full bg-background relative overflow-hidden">
       {notice && (
         <div role="alert" className="absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-3 max-w-[90%]">
           <span className="truncate">{notice}</span>
@@ -445,7 +445,7 @@ export function MenuView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search dishes, pizzas, steaks, cocktails, desserts..."
-              className="w-full bg-muted/40 border border-border focus:border-foreground focus:bg-card outline-none rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground font-semibold transition-all shadow-inner"
+              className="w-full bg-muted/40 border border-border focus-visible:border-foreground focus-visible:bg-card outline-none rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground font-semibold transition-all shadow-inner"
             />
             {searchQuery && (
               <Button
@@ -491,7 +491,7 @@ export function MenuView() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-2xl p-4 text-left border-2 border-slate-200/90 hover:border-slate-900 hover:shadow-lg transition-all duration-150 flex flex-col justify-between min-h-[168px] shadow-xs group ${
+                  className={`bg-white rounded-3xl p-4 text-left border border-slate-200/80 hover:border-slate-900/40 hover:shadow-xl transition-all duration-200 ease-out flex flex-col justify-between min-h-[172px] shadow-xs group ${
                     item.status === 'unavailable' ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                   }`}
                 >
@@ -499,24 +499,24 @@ export function MenuView() {
                     type="button"
                     variant="ghost"
                     onClick={() => openModifierModal(item)}
-                    className="text-left w-full h-auto p-0 rounded-none hover:bg-transparent [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch"
+                    className="text-left w-full h-auto p-0 rounded-none hover:bg-transparent [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch cursor-pointer"
                   >
                     <div className="flex justify-between items-start gap-2">
-                      <p className="text-slate-900 font-black text-sm leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+                      <p className="text-slate-900 font-bold text-sm tracking-tight leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
                         {item.name}
                       </p>
-                      <span className="text-[10px] font-black bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full border border-orange-200 shrink-0">
+                      <span className="text-[10px] font-semibold tracking-wide bg-orange-50 text-orange-700 px-2.5 py-0.5 rounded-full border border-orange-200/80 shrink-0">
                         {activeSeat > 0 ? `Seat ${activeSeat}` : 'Shared'}
                       </span>
                     </div>
                     {item.description && (
-                      <p className="text-slate-500 text-xs mt-1.5 leading-snug line-clamp-2 font-medium">{item.description}</p>
+                      <p className="text-slate-500 text-xs mt-1.5 leading-relaxed line-clamp-2 font-normal">{item.description}</p>
                     )}
                   </Button>
 
                   {/* Inline Fast Modifier Chips (Toast Go / M3 Ergonomics) */}
                   {quickModifiers.length > 0 && (
-                    <div className="mt-2.5 pt-2 border-t border-dashed border-slate-200 flex flex-wrap gap-1">
+                    <div className="mt-2.5 pt-2 border-t border-dashed border-slate-200/80 flex flex-wrap gap-1.5">
                       {quickModifiers.map((qm: any) => (
                         <Button
                           key={qm.id}
@@ -540,29 +540,29 @@ export function MenuView() {
                               }],
                             });
                           }}
-                          className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 active:scale-95 flex items-center gap-1"
+                          className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100/80 hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 active:scale-[0.95] transition-all flex items-center gap-1 cursor-pointer"
                           title={`Quick add ${item.name} with ${qm.name}`}
                         >
                           <span>{qm.name}</span>
                           {((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) > 0) && (
-                            <span className="font-mono text-slate-400 group-hover:text-slate-300">+${((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) / 100).toFixed(2)}</span>
+                            <span className="font-mono tabular-nums text-slate-400 group-hover:text-slate-300">+${((qm.price_adjustment_cents ?? qm.price_adjustment ?? qm.priceAdjustmentCents ?? qm.priceAdjustment ?? 0) / 100).toFixed(2)}</span>
                           )}
                         </Button>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center pt-3 border-t border-slate-200 mt-2.5">
-                    <span className="text-slate-900 font-black font-mono text-sm">
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-100 mt-2.5">
+                    <span className="text-slate-900 font-bold font-mono tabular-nums text-sm tracking-tight">
                       ${(item.price / 100).toFixed(2)}
                     </span>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => openModifierModal(item)}
-                      className="min-h-[48px] px-4 py-2.5 text-xs font-black text-slate-900 bg-slate-50 hover:bg-orange-50 hover:text-orange-900 hover:border-orange-500 border-2 border-slate-300 rounded-xl shadow-xs active:scale-[0.97] transition-all"
+                      className="min-h-[48px] px-3.5 py-2 text-xs font-semibold text-slate-900 bg-slate-50 hover:bg-orange-50 hover:text-orange-900 hover:border-orange-400/80 border border-slate-200/90 rounded-2xl shadow-2xs active:scale-[0.96] transition-all cursor-pointer"
                     >
-                      <Plus className="w-4 h-4 text-orange-600" />
+                      <Plus className="w-3.5 h-3.5 text-orange-600 mr-1" />
                       <span>{item.modifier_groups?.length > 0 ? 'Customize' : 'Add to Seat'}</span>
                     </Button>
                   </div>
@@ -618,7 +618,7 @@ export function MenuView() {
                       type="button"
                       variant="ghost"
                       onClick={() => setItemCourse(c.num)}
-                      className={`py-2 px-2.5 h-auto rounded-xl text-xs font-black flex-col text-center [&>span]:flex-col [&>span]:items-center [&>span]:gap-0.5 ${
+                      className={`min-h-[48px] py-2 px-2.5 h-auto rounded-xl text-xs font-black flex-col text-center [&>span]:flex-col [&>span]:items-center [&>span]:gap-0.5 ${
                         itemCourse === c.num
                           ? 'bg-slate-900 text-white shadow-xs hover:bg-slate-900 hover:text-white'
                           : 'bg-card text-foreground hover:bg-muted hover:text-foreground border border-border'
@@ -639,7 +639,7 @@ export function MenuView() {
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
                   placeholder="e.g. Allergy alert, dressing on side, extra crispy..."
-                  className="w-full bg-muted/40 border border-border focus:border-foreground focus:bg-card rounded-xl p-3 text-xs text-foreground font-semibold outline-none shadow-inner"
+                  className="w-full bg-muted/40 border border-border focus-visible:border-foreground focus-visible:bg-card rounded-xl p-3 text-xs text-foreground font-semibold outline-none shadow-inner"
                 />
               </div>
 
@@ -720,7 +720,7 @@ export function MenuView() {
                   value={openItemName}
                   onChange={(e) => setOpenItemName(e.target.value)}
                   placeholder="e.g. Daily Scone, Soup of the Day, Custom Salad..."
-                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
+                  className="w-full bg-muted/40 border border-border focus-visible:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
                   autoFocus
                 />
               </div>
@@ -733,7 +733,7 @@ export function MenuView() {
                   value={openItemPriceDollars}
                   onChange={(e) => setOpenItemPriceDollars(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-sm font-mono font-black outline-none"
+                  className="w-full bg-muted/40 border border-border focus-visible:border-foreground rounded-xl p-3 text-sm font-mono font-black outline-none"
                 />
               </div>
 
@@ -743,7 +743,7 @@ export function MenuView() {
                   <select
                     value={openItemStation}
                     onChange={(e) => setOpenItemStation(e.target.value)}
-                    className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-2.5 text-xs font-semibold outline-none"
+                    className="w-full bg-muted/40 border border-border focus-visible:border-foreground rounded-xl p-2.5 text-xs font-semibold outline-none"
                   >
                     <option value="expo">Expo / Counter</option>
                     <option value="grill">Grill</option>
@@ -767,7 +767,7 @@ export function MenuView() {
                   value={openItemNotes}
                   onChange={(e) => setOpenItemNotes(e.target.value)}
                   placeholder="e.g. Extra hot, sauce on side, allergy alert..."
-                  className="w-full bg-muted/40 border border-border focus:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
+                  className="w-full bg-muted/40 border border-border focus-visible:border-foreground rounded-xl p-3 text-xs font-semibold outline-none"
                 />
               </div>
             </div>

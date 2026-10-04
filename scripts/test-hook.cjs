@@ -2,6 +2,10 @@ const fs = require('fs');
 const Module = require('module');
 const path = require('path');
 
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'test';
+}
+
 if (!process.env.ESBUILD_BINARY_PATH) {
   const pnpmDir = path.resolve(__dirname, '..', 'node_modules', '.pnpm');
   if (fs.existsSync(pnpmDir)) {

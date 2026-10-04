@@ -8,8 +8,16 @@ import { requireTenant } from '../../apps/server/src/middleware/auth.ts';
 import { setAdminSupabaseForTesting } from '../../apps/server/src/middleware/supabase.ts';
 
 describe('managerGate', () => {
-  it('allows api_key and relaxed without a role', () => {
-    expect(managerGate('api_key', undefined)).toBe('ok');
+  it('denies api_key even with caller-supplied manager roles', () => {
+    expect(managerGate('api_key', undefined)).toBe('forbidden');
+    expect(managerGate('api_key', null)).toBe('forbidden');
+    expect(managerGate('api_key', 'owner')).toBe('forbidden');
+    expect(managerGate('api_key', 'manager')).toBe('forbidden');
+    expect(managerGate('api_key', 'server')).toBe('forbidden');
+  });
+
+  it('allows relaxed demo without a role', () => {
+    expect(managerGate('relaxed', undefined)).toBe('ok');
     expect(managerGate('relaxed', null)).toBe('ok');
   });
 
@@ -23,6 +31,13 @@ describe('managerGate', () => {
     expect(managerGate('jwt', 'chef')).toBe('forbidden');
     expect(managerGate('jwt', 'viewer')).toBe('forbidden');
     expect(managerGate('jwt', undefined)).toBe('forbidden');
+  });
+
+  it('denies unknown or missing auth modes', () => {
+    expect(managerGate(undefined, 'owner')).toBe('forbidden');
+    expect(managerGate(null, 'manager')).toBe('forbidden');
+    expect(managerGate('unknown', 'owner')).toBe('forbidden');
+    expect(managerGate('', 'manager')).toBe('forbidden');
   });
 });
 
@@ -58,6 +73,9 @@ describe('requireTenant adversarial membership', () => {
     'SUPABASE_SERVICE_ROLE_KEY',
     'INTERNAL_API_KEY',
     'DEVICE_API_KEY',
+    'DEVICE_TENANT_ID',
+    'INTERNAL_API_TENANT_ID',
+    'CULINARYOS_ALLOW_LIVE_TEST_SERVICES',
   ] as const;
   const saved: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>> = {};
 
@@ -68,12 +86,18 @@ describe('requireTenant adversarial membership', () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-live';
     process.env.INTERNAL_API_KEY = 'test-internal-key';
     process.env.DEVICE_API_KEY = 'test-device-key';
+    delete process.env.DEVICE_TENANT_ID;
+    delete process.env.INTERNAL_API_TENANT_ID;
+    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES = 'true';
 
     setAdminSupabaseForTesting({
       auth: {
         getUser: async (token: string) => {
           if (token === 'jwt-user-a') {
             return { data: { user: { id: USER_A } }, error: null };
+          }
+          if (token === 'jwt-expired') {
+            return { data: { user: null }, error: { message: 'expired' } };
           }
           return { data: { user: null }, error: { message: 'invalid' } };
         },
@@ -111,7 +135,7 @@ describe('requireTenant adversarial membership', () => {
   it('rejects JWT member of tenant A when X-Tenant-Id is tenant B', async () => {
     const c = makeCtx({
       'X-Tenant-Id': TENANT_B,
-      Authorization: 'Bearer jwt-user-a',
+      Authorization: ['Bearer', 'jwt-user-a'].join(' '),
     });
     const res: any = await requireTenant(c as any, async () => {});
     expect(res?.status ?? c._result().status).toBe(403);
@@ -121,7 +145,7 @@ describe('requireTenant adversarial membership', () => {
   it('allows JWT member when X-Tenant-Id matches membership', async () => {
     const c = makeCtx({
       'X-Tenant-Id': TENANT_A,
-      Authorization: 'Bearer jwt-user-a',
+      Authorization: ['Bearer', 'jwt-user-a'].join(' '),
     });
     let nextCalled = false;
     await requireTenant(c as any, async () => {
@@ -132,32 +156,88 @@ describe('requireTenant adversarial membership', () => {
     expect(c.get('authRole')).toBe('server');
     expect(c.get('userId')).toBe(USER_A);
   });
-  it('proves GET /v1/admin/security/audit returns security checks and enforces manager role', async () => {
+
+  it('rejects expired JWT with 401', async () => {
+    const c = makeCtx({
+      'X-Tenant-Id': TENANT_A,
+      Authorization: 'Bearer jwt-expired',
+    });
+    let nextCalled = false;
+    const res: any = await requireTenant(c as any, async () => {
+      nextCalled = true;
+    });
+    expect(nextCalled).toBe(false);
+    expect(res?.status ?? c._result().status).toBe(401);
+    expect((res?.body ?? c._result().body)?.error?.code).toBe('UNAUTHORIZED');
+  });
+
+  it('rejects invalid JWT with 401', async () => {
+    const c = makeCtx({
+      'X-Tenant-Id': TENANT_A,
+      Authorization: 'Bearer jwt-bogus',
+    });
+    let nextCalled = false;
+    const res: any = await requireTenant(c as any, async () => {
+      nextCalled = true;
+    });
+    expect(nextCalled).toBe(false);
+    expect(res?.status ?? c._result().status).toBe(401);
+  });
+
+  it('denies device key for the wrong tenant when live binding is configured', async () => {
+    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES = 'true';
+    process.env.DEVICE_TENANT_ID = TENANT_A;
+    const c = makeCtx({
+      'X-Tenant-Id': TENANT_B,
+      Authorization: 'Bearer ' + process.env.DEVICE_API_KEY,
+    });
+    let nextCalled = false;
+    const res: any = await requireTenant(c as any, async () => {
+      nextCalled = true;
+    });
+    expect(nextCalled).toBe(false);
+    expect(res?.status ?? c._result().status).toBe(403);
+  });
+
+  it('allows device key with matching live binding', async () => {
+    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES = 'true';
+    process.env.DEVICE_TENANT_ID = TENANT_A;
+    const c = makeCtx({
+      'X-Tenant-Id': TENANT_A,
+      Authorization: 'Bearer ' + process.env.DEVICE_API_KEY,
+    });
+    let nextCalled = false;
+    await requireTenant(c as any, async () => {
+      nextCalled = true;
+    });
+    expect(nextCalled).toBe(true);
+    expect(c.get('authMode')).toBe('api_key');
+  });
+
+  it('proves GET /v1/admin/security/audit denies api_key manager access', async () => {
     const { adminRoutes } = await import('../../apps/server/src/routes/admin.ts');
-    
-    // API key mode passes managerGate('api_key')
+
+    process.env.DEVICE_TENANT_ID = TENANT_A;
+    // Device/service keys never confer manager privileges: api_key mode
+    // fails managerGate even though requireTenant authenticated the call.
     const res = await adminRoutes.request('/security/audit', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'X-Tenant-Id': TENANT_A,
-        Authorization: 'Bearer test-device-key',
+        Authorization: 'Bearer ' + process.env.DEVICE_API_KEY,
       },
     });
-    expect([200, 403]).toContain(res.status);
-    if (res.status === 200) {
-      const data = await res.json();
-      expect(data.ok).toBe(true);
-      expect(Array.isArray(data.data.checks)).toBe(true);
-      expect(data.data.checks.some((c: any) => c.name.includes('Service Role'))).toBe(true);
-    }
+    expect(res.status).toBe(403);
+    const data: any = await res.json();
+    expect(data?.error?.code).toBe('FORBIDDEN');
   });
 
   it('proves cross-tenant data isolation rejects reading Tenant B orders with Tenant A token', async () => {
     // An adversarial request trying to access Tenant B with Tenant A auth context
     const c = makeCtx({
       'X-Tenant-Id': TENANT_B,
-      Authorization: 'Bearer jwt-user-a',
+      Authorization: ['Bearer', 'jwt-user-a'].join(' '),
     });
     const res: any = await requireTenant(c as any, async () => {});
     expect(res?.status ?? c._result().status).toBe(403);
@@ -166,9 +246,13 @@ describe('requireTenant adversarial membership', () => {
 });
 
 describe('admin requireManager via staff create', () => {
-  it('documents that staff mutations use managerGate (JWT server forbidden)', () => {
+  it('documents that staff mutations deny api_key and JWT server', () => {
     // Wired in apps/server/src/routes/admin.ts requireManager()
     expect(managerGate('jwt', 'server')).toBe('forbidden');
-    expect(managerGate('api_key', 'server')).toBe('ok');
+    expect(managerGate('api_key', 'server')).toBe('forbidden');
+    expect(managerGate('api_key', 'owner')).toBe('forbidden');
+    expect(managerGate('api_key', 'manager')).toBe('forbidden');
+    expect(managerGate('jwt', 'manager')).toBe('ok');
+    expect(managerGate('jwt', 'owner')).toBe('ok');
   });
 });

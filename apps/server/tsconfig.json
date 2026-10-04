@@ -25,6 +25,7 @@
     "../../packages/food-cost-engine/src",
     "../../packages/waste-engine/src",
     "../../packages/labor-engine/src",
-    "../../packages/event-bus/src"
+    "../../packages/event-bus/src",
+    "../../packages/db/src"
   ]
 }

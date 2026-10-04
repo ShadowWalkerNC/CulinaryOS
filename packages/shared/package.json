@@ -10,6 +10,7 @@
     "./realtime": "./src/realtime/index.ts",
     "./service-client": "./src/service-client/index.ts",
     "./offline-sync": "./src/offline-sync.ts",
+    "./offline-store": "./src/offline-store.ts",
     "./course-engine": "./src/course-engine.ts",
     "./mappers": "./src/mappers.ts",
     "./stations": "./src/stations.ts",

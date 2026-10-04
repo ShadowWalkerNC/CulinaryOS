@@ -119,7 +119,7 @@ export function TicketCard({
         ? 'bg-red-500'
         : elapsed >= 300
           ? 'bg-amber-500'
-          : 'bg-[#16a34a]';
+          : 'bg-emerald-600';
 
   async function handleQuickScrapSubmit(
     itemName: string,
@@ -167,17 +167,17 @@ export function TicketCard({
       <div className="flex justify-between items-start pt-1">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-black text-base text-[#0b1c30] uppercase tracking-tight">
+            <span className="font-black text-base text-foreground uppercase tracking-tight">
               {ticket.tableLabel}
             </span>
             {ticket.stationName && (
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-[#f3f4f6] text-[#4b5563] border border-[#e5e7eb] rounded uppercase tracking-wider">
+              <span className="text-[10px] font-bold px-2 py-0.5 bg-muted text-muted-foreground border-border rounded uppercase tracking-wider">
                 {ticket.stationName}
               </span>
             )}
           </div>
           {ticket.seatNumber != null && (
-            <div className="text-[11px] font-medium text-[#6b7280] mt-0.5">
+            <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
               Seat #{ticket.seatNumber}
             </div>
           )}
@@ -205,11 +205,11 @@ export function TicketCard({
       </div>
 
       {/* Status indicator bar */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#f3f4f6] text-[10px]">
-        <span className="text-[#9ca3af] font-mono uppercase">
+      <div className="flex items-center justify-between pb-2 border-b border-border text-[10px]">
+        <span className="text-muted-foreground font-mono uppercase">
           ID: {(ticket.id ?? '').slice(-6).toUpperCase()}
         </span>
-        <span className="font-bold uppercase tracking-wider text-[#4b5563]">
+        <span className="font-bold uppercase tracking-wider text-muted-foreground">
           {STATUS_LABEL[ticket.status] ?? (ticket.status ?? 'PENDING').toUpperCase()}
         </span>
       </div>
@@ -249,14 +249,14 @@ export function TicketCard({
                     {isCompleted && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                   </div>
 
-                  <span className="font-mono font-black text-xs bg-[#0f172a0d] text-[#0f172a] px-1.5 py-0.5 rounded border border-[#0f172a15] shrink-0">
+                  <span className="font-mono font-black text-xs bg-foreground/5 text-foreground px-1.5 py-0.5 rounded border border-foreground/10 shrink-0">
                     ×{item.quantity}
                   </span>
 
                   <div className="flex flex-col">
                     {/* Primary Name (Abbreviated or Translated) */}
                     <span
-                      className={`font-black text-sm text-[#1f2937] leading-snug tracking-tight ${
+                      className={`font-black text-sm text-foreground leading-snug tracking-tight ${
                         isCompleted ? 'line-through text-slate-400' : ''
                       }`}
                     >
@@ -328,7 +328,7 @@ export function TicketCard({
 
               {/* Modifiers (Dual-Language & Abbreviated) */}
               {item.modifiers && item.modifiers.length > 0 && (
-                <div className={`pl-8 text-[11px] text-[#6b7280] mt-1 font-bold ${isCompleted ? 'line-through text-slate-400' : ''}`}>
+                <div className={`pl-8 text-[11px] text-muted-foreground mt-1 font-bold ${isCompleted ? 'line-through text-slate-400' : ''}`}>
                   {translatedMods.join(' · ')}
                   {hasTranslation && (
                     <span className="block text-[10px] text-zinc-400 italic">
@@ -358,7 +358,7 @@ export function TicketCard({
       )}
 
       {/* Timer & Aging alert */}
-      <div className="flex justify-between items-center mt-auto pt-3 border-t border-[#f3f4f6]">
+      <div className="flex justify-between items-center mt-auto pt-3 border-t border-border">
         <CulinaryBadge variant={timer.badgeVariant}>
           {timer.alertName}
         </CulinaryBadge>

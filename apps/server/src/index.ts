@@ -9,7 +9,9 @@ import { cors }                from 'hono/cors';
 import { logger }              from 'hono/logger';
 import { requireApiKey }       from './middleware/auth';
 import { withSupabase }        from './middleware/supabase';
-import { isAuthRelaxed, isLiveSupabaseConfigured } from './lib/secrets';
+import { isNativePostgresEnabled } from './postgres/config.js';
+import { checkNativeHealth, setupNativePostgres } from './postgres/startup.js';
+import { assertProductionAuthConfiguration, isAuthRelaxed, isLocalDemoMode, isLiveSupabaseConfigured } from './lib/secrets';
 import {
   handleIncomingEvent,
   startRealtimeBridge,
@@ -44,6 +46,8 @@ import type { Env }            from './types';
 
 
 
+
+assertProductionAuthConfiguration();
 
 export const app = new Hono<Env>();
 
@@ -149,7 +153,7 @@ app.route('/v1/integrations/toast',  toastRoutes);
 app.route('/v1/jobs', talentPublicRoutes);
 app.route('/v1/talent', talentAdminRoutes);
 
-// ---- Health ----
+// ---- Health & Readiness ----
 
 app.get('/health', (c) => c.json({
   service:   'culinaryos-api',
@@ -158,6 +162,40 @@ app.get('/health', (c) => c.json({
   uptime:    Math.floor(process.uptime()),
   checkedAt: new Date().toISOString(),
 }));
+
+app.get('/ready', async (c) => {
+  if (isNativePostgresEnabled()) {
+    const health = await checkNativeHealth();
+    if (health.ok) {
+      return c.json({
+        ok: true,
+        status: 'ready',
+        database: 'postgres',
+        role: health.role,
+        latencyMs: health.latencyMs,
+        checkedAt: new Date().toISOString(),
+      }, 200);
+    }
+    return c.json({
+      ok: false,
+      status: 'unready',
+      database: 'postgres',
+      error: health.error,
+      checkedAt: new Date().toISOString(),
+    }, 503);
+  }
+
+  if (isLiveSupabaseConfigured()) {
+    return c.json({ ok: true, status: 'ready', database: 'supabase', mode: 'live', checkedAt: new Date().toISOString() });
+  }
+  if (isLocalDemoMode()) {
+    return c.json({ ok: true, status: 'ready', database: 'mock', mode: 'demo', checkedAt: new Date().toISOString() });
+  }
+  if (isAuthRelaxed()) {
+    return c.json({ ok: true, status: 'ready', database: 'none', mode: 'relaxed', checkedAt: new Date().toISOString() });
+  }
+  return c.json({ ok: false, status: 'unready', error: 'No backend configured', checkedAt: new Date().toISOString() }, 503);
+});
 
 // ---- Boot ----
 
@@ -171,17 +209,29 @@ if (isAuthRelaxed()) {
     '[culinaryos-api] ⚠️  AUTH MODE: RELAXED — authentication is DISABLED for every route. ' +
     'Local development/demo only. NEVER use AUTH_RELAXED=true with a live database.'
   );
-} else if (!isLiveSupabaseConfigured()) {
+} else if (isLocalDemoMode()) {
   console.warn(
     '[culinaryos-api] AUTH MODE: LOCAL DEMO — no live Supabase backend configured; ' +
     'serving mock data only. Demo PINs accepted. Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for live mode.'
   );
-} else {
+} else if (isLiveSupabaseConfigured()) {
   console.log('[culinaryos-api] AUTH MODE: LIVE — Supabase backend configured, full authentication enforced.');
+} else {
+  console.warn('[culinaryos-api] AUTH MODE: UNAVAILABLE - no backend configured; demo authentication is disabled.');
 }
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-  serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
-    console.log(`[culinaryos-api] listening on http://${HOST}:${PORT}`);
-  });
+  (async () => {
+    try {
+      if (isNativePostgresEnabled()) {
+        await setupNativePostgres(app);
+      }
+      serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
+        console.log(`[culinaryos-api] listening on http://${HOST}:${PORT}`);
+      });
+    } catch (err) {
+      console.error('[culinaryos-api] ❌ Failed to start server:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  })();
 }

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120" role="img" aria-label="CulinaryOS Logo">
+  <defs>
+    <linearGradient id="hPlateBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#F97316" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+
+    <linearGradient id="hPlateBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+
+    <linearGradient id="hFlameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#EA580C" />
+      <stop offset="50%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#FBBF24" />
+    </linearGradient>
+
+    <linearGradient id="hCoreGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#F97316" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E4E4E7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Icon Mark (Centered at x=60, y=60) -->
+  <g transform="translate(4, 0)">
+    <!-- Hex Plate -->
+    <polygon points="60,16 102,38 102,86 60,108 18,86 18,38"
+             fill="url(#hPlateBg)"
+             stroke="url(#hPlateBorder)"
+             stroke-width="2.5"
+             stroke-linejoin="round" />
+
+    <!-- Inset Dash -->
+    <polygon points="60,23 94,41 94,82 60,100 26,82 26,41"
+             fill="none"
+             stroke="#27272A"
+             stroke-width="1.2"
+             stroke-dasharray="2.5 2.5"
+             stroke-linejoin="round" />
+
+    <!-- Flame Left Arc -->
+    <path d="M 60,33 
+             C 58,42 50,50 47,61 
+             C 44,72 48,84 59,88 
+             C 52,83 51,75 54,68 
+             C 56,63 59,57 60,47 
+             Z" 
+          fill="url(#hFlameGrad)" />
+
+    <!-- Flame Right Arc -->
+    <path d="M 60,31 
+             C 63,39 71,46 73,57 
+             C 74,68 68,79 60,88 
+             C 68,82 69,70 66,63 
+             C 65,56 61,48 60,31 
+             Z" 
+          fill="url(#hFlameGrad)" />
+
+    <!-- Center Core -->
+    <path d="M 60,39
+             C 56,51 54,64 60,80
+             C 64,68 63,52 60,39
+             Z"
+          fill="url(#hCoreGrad)" />
+
+    <!-- Tech Pins -->
+    <circle cx="60" cy="23" r="2" fill="#38BDF8" />
+    <circle cx="94" cy="41" r="1.5" fill="#F97316" />
+    <circle cx="94" cy="82" r="1.5" fill="#F97316" />
+    <circle cx="60" cy="100" r="1.5" fill="#F97316" />
+    <circle cx="26" cy="82" r="1.5" fill="#F97316" />
+    <circle cx="26" cy="41" r="1.5" fill="#38BDF8" />
+  </g>
+
+  <!-- Wordmark Section -->
+  <g transform="translate(132, 0)">
+    <!-- "Culinary" -->
+    <text x="0" y="68"
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          font-size="44"
+          font-weight="800"
+          letter-spacing="-1"
+          fill="url(#textGrad)">Culinary</text>
+
+    <!-- "OS" Badge / Highlight -->
+    <text x="180" y="68"
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          font-size="44"
+          font-weight="900"
+          letter-spacing="1"
+          fill="#F97316">OS</text>
+
+    <!-- Subtitle / Tagline -->
+    <text x="2" y="94"
+          font-family="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"
+          font-size="12"
+          font-weight="600"
+          letter-spacing="2.8"
+          fill="#71717A">OPEN RESTAURANT SYSTEM</text>
+
+    <!-- Real-time Status Pip -->
+    <circle cx="282" cy="40" r="4" fill="#10B981" />
+  </g>
+</svg>

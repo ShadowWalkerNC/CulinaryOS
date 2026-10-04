@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "phase": "P05",
+  "path": "modules/web",
+  "kind": "modules",
+  "owner": "Web",
+  "purpose": "Website content/theme boundary; Plated migration is P06 work.",
+  "implementationStatus": "foundation-only",
+  "runtimeEntrypoint": null,
+  "grantedPermissions": [],
+  "dataDomainRefs": [
+    "website_content",
+    "website_themes"
+  ],
+  "ownershipSource": "docs/architecture/culinary-foundation.json",
+  "references": [
+    "docs/architecture/culinary-foundation.json",
+    "apps/web/package.json",
+    "packages/template-engine/package.json"
+  ],
+  "dependencyDirection": "surfaces -> modules -> domain/contracts -> infrastructure",
+  "runtimeOwnershipEnforcement": "NOT RUN",
+  "migrationAuthorized": false
+}

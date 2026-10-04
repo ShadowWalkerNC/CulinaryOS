@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDevice } from '../../context/DeviceContext';
+import { useAuth } from '../../context/AuthContext';
 import { DesktopSidebar } from './DesktopSidebar';
 import { TabletHeaderNav } from './TabletHeaderNav';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileQuickActionsSheet } from './MobileQuickActionsSheet';
-import { CulinaryAppLauncher, Bell, Sparkles } from '@culinaryos/ui';
+import { CulinaryAppLauncher, Bell, Sparkles, LogOut, Search } from '@culinaryos/ui';
 
 interface ResponsiveShellProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface ResponsiveShellProps {
 
 export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellProps) {
   const { effectiveDevice, previewMode } = useDevice();
+  const { session, logout } = useAuth();
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const location = useLocation();
 
@@ -25,43 +27,110 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
 
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           {/* Desktop Top Administrative Header */}
-          <header className="bg-white border-b border-slate-200 px-6 h-14 flex items-center justify-between shrink-0 shadow-2xs z-20">
+          {/* Desktop Top Administrative Header (PRD 1440px+ Workstation Layout) */}
+          <header className="bg-[#181c24] border-b border-slate-800 px-6 h-16 flex items-center justify-between shrink-0 shadow-[0_1px_8px_rgba(0,0,0,0.3)] z-20">
+            {/* Left: Location & Unit Switcher */}
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#262a33] border border-slate-700/60 text-left">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    Location
+                  </span>
+                  <span className="text-xs font-bold text-slate-100 mt-0.5">
+                    The Golden Fork — Unit #01 Downtown
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 ml-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-[10px] font-bold text-emerald-400">Online</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Center: Command Bar Quick Jump (⌘K) */}
+            <div className="flex-1 max-w-md mx-6">
+              <div className="relative flex items-center w-full">
+                <Search className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search apps, recipes, shifts..."
+                  className="w-full h-9 pl-9 pr-14 rounded-lg bg-[#0a0e16] border border-slate-800 text-slate-200 placeholder:text-slate-500 text-xs focus:outline-none focus:border-amber-500/80 transition-colors"
+                />
+                <kbd className="absolute right-2.5 px-1.5 py-0.5 rounded bg-[#1c2028] border border-slate-700 text-slate-400 text-[10px] font-mono font-bold">
+                  ⌘K
+                </kbd>
+              </div>
+            </div>
+
+            {/* Right: Station Mode, Apps Launcher & User Profile */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#262a33] border border-slate-700/60 text-left">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    Station Mode
+                  </span>
+                  <span className="text-xs font-semibold text-slate-200 mt-0.5">
+                    Shift: Lunch Service
+                  </span>
+                </div>
+              </div>
+
+              <CulinaryAppLauncher activeApp="admin" tone="dark" />
+
+              <div className="flex items-center gap-2.5 pl-2 border-l border-slate-800">
+                <div className="flex flex-col text-right">
+                  <span className="text-xs font-bold text-slate-100 leading-tight">
+                    {session?.displayName || 'Chef Gabriel M.'}
+                  </span>
+                  <span className="text-[10px] font-semibold text-amber-400 leading-none mt-0.5">
+                    {session?.role === 'owner' ? 'Owner / Operator' : 'Executive Chef & GM'}
+                  </span>
+                </div>
+                <div
+                  className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center ring-2 ring-amber-400/50 shadow-sm"
+                  title={`Signed in as ${session?.displayName || 'Manager'}`}
+                >
+                  {session?.role === 'owner' ? 'OW' : 'GM'}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={logout}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-700/60 hover:border-red-500/30 transition-all active:scale-[0.96] cursor-pointer"
+                title="Sign out of Admin console"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+
+          {/* Subheader Breadcrumb & Operational Nav Ribbon */}
+          <div className="bg-[#0f131c] border-b border-slate-800/80 px-6 h-12 flex items-center justify-between shrink-0 z-10 text-xs">
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="font-bold uppercase tracking-wider text-[11px] text-slate-500">
                 Admin Workspace
               </span>
-              <span className="text-slate-300">/</span>
-              <span className="text-xs font-extrabold text-slate-900 capitalize">
+              <span className="text-slate-600">/</span>
+              <span className="font-bold text-slate-200 capitalize">
                 {location.pathname.replace('/', '') || 'Dashboard'}
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={onOpenOnboarding}
-                className="px-3 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-800 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs active:scale-[0.97]"
-                title="Open guided first-run setup wizard"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-                <span>Setup Assistant</span>
-              </button>
-
-              <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg text-xs font-medium text-slate-700">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Downtown Location (Store #01)</span>
-              </div>
-
-              <CulinaryAppLauncher activeApp="admin" />
-
-              <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center ring-2 ring-slate-200">
-                GM
-              </div>
-            </div>
-          </header>
+            <button
+              type="button"
+              onClick={onOpenOnboarding}
+              className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-[0.97] cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Setup Assistant</span>
+            </button>
+          </div>
 
           {/* Desktop Main Content Canvas */}
-          <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#f8f9fa]">
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#0f131c]">
             <div className="max-w-7xl mx-auto">{children}</div>
           </main>
         </div>
@@ -128,11 +197,22 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
             <button
               type="button"
               className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-[0.97]"
+              aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
             </button>
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
           </div>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 flex items-center justify-center active:scale-[0.97] transition-all"
+            title="Sign out of Admin console"
+            aria-label="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </header>
 

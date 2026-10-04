@@ -14,12 +14,17 @@ function extractBearer(c: Context<Env>): string | null {
   return header.slice(7).trim() || null;
 }
 
-function isServiceOrDeviceKey(token: string): boolean {
-  const internal = process.env.INTERNAL_API_KEY;
-  const device = process.env.DEVICE_API_KEY;
-  if (internal && !isPlaceholderSecret(internal) && token === internal) return true;
-  if (device && !isPlaceholderSecret(device) && token === device) return true;
-  return false;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value: string | undefined | null): boolean {
+  return Boolean(value && UUID_RE.test(value));
+}
+
+function getConfiguredApiKey(kind: 'internal' | 'device'): string | null {
+  const raw = kind === 'internal' ? process.env.INTERNAL_API_KEY : process.env.DEVICE_API_KEY;
+  if (!raw || isPlaceholderSecret(raw)) return null;
+  return raw;
 }
 
 async function verifyTenantMembership(
@@ -45,8 +50,14 @@ async function verifyTenantMembership(
  * Accepts:
  *   1. Bearer Supabase JWT + X-Tenant-Id (membership verified)
  *   2. Bearer INTERNAL_API_KEY or DEVICE_API_KEY + X-Tenant-Id (terminals / MCP)
- *   3. X-Tenant-Id only when AUTH_RELAXED=true or no live Supabase backend
- *      is configured (local demo — serves mock data only, never live data)
+ *      Outside isDemoAuthAllowed(), a matching DEVICE_API_KEY requires
+ *      DEVICE_TENANT_ID (valid UUID) matching the requested tenant, and a
+ *      matching INTERNAL_API_KEY on tenant routes requires
+ *      INTERNAL_API_TENANT_ID matching the tenant. Missing/invalid/
+ *      mismatched binding denies access. An ambiguous same internal/device
+ *      key value outside demo denies rather than falling back.
+ *   3. X-Tenant-Id only when explicit local demo or isolated test mode
+ *      is permitted by isDemoAuthAllowed(). Never enabled by missing production credentials.
  */
 export async function requireTenant(c: Context<Env>, next: Next) {
   const tenantId = c.req.header('X-Tenant-Id');
@@ -79,7 +90,54 @@ export async function requireTenant(c: Context<Env>, next: Next) {
 
   const token = extractBearer(c);
 
-  if (token && isServiceOrDeviceKey(token)) {
+  const internalKey = getConfiguredApiKey('internal');
+  const deviceKey = getConfiguredApiKey('device');
+  const matchesInternal = Boolean(token && internalKey && token === internalKey);
+  const matchesDevice = Boolean(token && deviceKey && token === deviceKey);
+  if (process.env.CULINARYOS_DEBUG_AUTH === 'true') {
+    const codes = (s: string | null) => s === null ? null : { len: s.length, codes: [...s].map((ch) => ch.charCodeAt(0)) };
+    console.log('[auth-debug]', JSON.stringify({ token, internalKey, deviceKey, matchesInternal, matchesDevice, demo: isDemoAuthAllowed(), tCodes: codes(token), dCodes: codes(deviceKey), iCodes: codes(internalKey) }));
+  }
+
+  if (token && (matchesInternal || matchesDevice)) {
+    // Local demo compatibility: when the demo predicate permits, preserve
+    // the existing key behavior without tenant binding.
+    if (isDemoAuthAllowed()) {
+      c.set('authMode', 'api_key');
+      await next();
+      return;
+    }
+
+    // Outside demo, an ambiguous same value for both keys denies access
+    // rather than permitting a fallback scope.
+    if (matchesInternal && matchesDevice) {
+      return c.json(
+        { ok: false, error: { code: 'UNAUTHORIZED', message: 'Ambiguous API key configuration' } },
+        401
+      );
+    }
+
+    if (matchesDevice) {
+      const binding = process.env.DEVICE_TENANT_ID ?? '';
+      if (!isValidUuid(binding) || binding.toLowerCase() !== tenantId.toLowerCase()) {
+        return c.json(
+          { ok: false, error: { code: 'FORBIDDEN', message: 'API key not authorized for this tenant' } },
+          403
+        );
+      }
+      c.set('authMode', 'api_key');
+      await next();
+      return;
+    }
+
+    // Matching INTERNAL_API_KEY on tenant routes requires binding.
+    const binding = process.env.INTERNAL_API_TENANT_ID ?? '';
+    if (!isValidUuid(binding) || binding.toLowerCase() !== tenantId.toLowerCase()) {
+      return c.json(
+        { ok: false, error: { code: 'FORBIDDEN', message: 'API key not authorized for this tenant' } },
+        403
+      );
+    }
     c.set('authMode', 'api_key');
     await next();
     return;

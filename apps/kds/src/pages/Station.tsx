@@ -565,7 +565,8 @@ export function Station() {
               </div>
               <button
                 onClick={() => setShowSettingsModal(false)}
-                className="text-[#9ca3af] hover:text-[#0f172a] transition-colors"
+                aria-label="Close settings"
+                className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl text-[#9ca3af] hover:text-[#0f172a] hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 active:scale-[0.97] transition-all"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
@@ -682,7 +683,8 @@ export function Station() {
               </div>
               <button
                 onClick={() => setShow86Modal(false)}
-                className="text-[#9ca3af] hover:text-[#0f172a] transition-colors"
+                aria-label="Close 86 board"
+                className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl text-[#9ca3af] hover:text-[#0f172a] hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 active:scale-[0.97] transition-all"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
@@ -705,7 +707,7 @@ export function Station() {
                     <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
                       <button
                         onClick={() => handleSet86Count(item.id, Math.max(0, (item.countRemaining ?? 0) - 1))}
-                        className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100 rounded"
+                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-base font-bold text-slate-700 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 active:scale-[0.97] transition-all"
                       >
                         -
                       </button>
@@ -714,7 +716,7 @@ export function Station() {
                       </span>
                       <button
                         onClick={() => handleSet86Count(item.id, (item.countRemaining ?? 0) + 1)}
-                        className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100 rounded"
+                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-base font-bold text-slate-700 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 active:scale-[0.97] transition-all"
                       >
                         +
                       </button>

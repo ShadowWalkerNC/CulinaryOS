@@ -1,55 +1,71 @@
-/** Treat placeholder env values as unset so demo/mock paths stay available. */
+/** Placeholder values never enable live services or production authentication. */
 export { isPlaceholderSecret } from '@culinaryos/shared';
 import { isPlaceholderSecret } from '@culinaryos/shared';
 
 function isAutomatedTestEnvironment(): boolean {
-  return process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+  // A test-runner marker must never turn a production process into a demo.
+  return process.env.NODE_ENV !== 'production' &&
+    (process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST));
 }
 
-export function isLiveSupabaseConfigured(): boolean {
-  // Tests must not silently use a developer's configured Supabase project.
-  // A dedicated opt-in keeps integration tests explicit and auditable.
-  if (
-    isAutomatedTestEnvironment() &&
-    process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES !== 'true'
-  ) {
-    return false;
-  }
-
+function hasConfiguredSupabaseCredentials(): boolean {
   const url = process.env.SUPABASE_URL ?? '';
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
   return Boolean(url && key && !isPlaceholderSecret(url) && !isPlaceholderSecret(key));
 }
 
-/**
- * Explicit opt-in ONLY. AUTH_RELAXED=true disables authentication for every
- * route — it is for local development and demos, NEVER for production or any
- * deployment with a live database.
- */
-export function isAuthRelaxed(): boolean {
-  if (isLiveSupabaseConfigured()) return false;
-  return process.env.AUTH_RELAXED === 'true';
+export function isLiveSupabaseConfigured(): boolean {
+  // Ordinary automated tests must not contact a developer's live project.
+  if (isAutomatedTestEnvironment() && process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES !== 'true') {
+    return false;
+  }
+  return hasConfiguredSupabaseCredentials();
 }
 
-/**
- * True when no usable Supabase backend is configured. The API then serves
- * mock/demo data only. There is no real restaurant data at risk in this
- * state, so documented demo conveniences (demo PINs, header-only tenant)
- * are acceptable here.
- */
+/** Local demo access is explicit; missing backend configuration is not permission. */
 export function isLocalDemoMode(): boolean {
-  return !isLiveSupabaseConfigured();
+  const environment = process.env.NODE_ENV;
+  if (environment && environment !== 'development' && environment !== 'test') return false;
+  if (isLiveSupabaseConfigured()) return false;
+  // Keep isolated mock tests usable, without allowing a configured PostgreSQL
+  // deployment to masquerade as a demo before its adapter has been implemented.
+  if (isAutomatedTestEnvironment() && process.env.CULINARYOS_ALLOW_LIVE_TEST_SERVICES !== 'true') return true;
+  if (!isPlaceholderSecret(process.env.DATABASE_URL)) return false;
+  return process.env.CULINARYOS_DEMO_MODE === 'true' || process.env.AUTH_RELAXED === 'true';
 }
 
-/** Demo mode is possible only when live server credentials are absent. */
-export const isDemoMode = isLocalDemoMode;
+/** AUTH_RELAXED is honored only in an eligible, explicitly local demo. */
+export function isAuthRelaxed(): boolean {
+  return process.env.AUTH_RELAXED === 'true' && isLocalDemoMode();
+}
 
-/**
- * Single predicate for "may demo credentials be honored". Demo PINs and
- * header-only tenant access are accepted ONLY when explicitly relaxed or in
- * local demo mode — NEVER when a live backend is configured.
+export const isDemoMode = isLocalDemoMode;
+export const isDemoAuthAllowed = isLocalDemoMode;
+
+/** Validate the current Supabase runtime before starting listeners or workers.
+ * DATABASE_URL alone is not a replacement backend. Update this contract only
+ * when the PostgreSQL identity/data adapter is implemented and verified.
+ * Error messages contain variable names, never credential values.
  */
-export function isDemoAuthAllowed(): boolean {
-  if (isLiveSupabaseConfigured()) return false;
-  return isAuthRelaxed() || isLocalDemoMode();
+export function assertProductionAuthConfiguration(): void {
+  if (process.env.NODE_ENV !== 'production') return;
+  const problems: string[] = [];
+  if (process.env.AUTH_RELAXED === 'true' || process.env.CULINARYOS_DEMO_MODE === 'true') {
+    problems.push('demo authentication must be disabled');
+  }
+  if (process.env.VITEST) problems.push('VITEST must be unset');
+  for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'] as const) {
+    if (isPlaceholderSecret(process.env[name])) problems.push(`${name} is required`);
+  }
+  try {
+    const url = new URL(process.env.SUPABASE_URL ?? '');
+    if (url.protocol !== 'https:' || url.username || url.password) {
+      problems.push('SUPABASE_URL must be an HTTPS URL without embedded credentials');
+    }
+  } catch {
+    problems.push('SUPABASE_URL must be a valid HTTPS URL');
+  }
+  if (problems.length) {
+    throw new Error(`Production authentication configuration rejected: ${problems.join('; ')}`);
+  }
 }

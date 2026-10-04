@@ -15,13 +15,25 @@ export interface CulinaryAppLauncherProps {
   className?: string;
   tone?: 'dark' | 'light';
   appIds?: readonly CulinaryAppId[];
+  telemetryOverrides?: Partial<Record<CulinaryAppId, { badge: string; isAlert?: boolean }>>;
 }
 
 const groupLabels = {
-  operations: 'Operations',
-  guest: 'Guest and recipe',
-  platform: 'Platform',
+  operations: 'Core Operations & Live Service',
+  guest: 'Inventory, Production & Guest',
+  platform: 'Platform & Hardware Workstations',
 } as const;
+
+export const DEFAULT_APP_TELEMETRY: Record<CulinaryAppId, { badge: string; isAlert?: boolean }> = {
+  pos: { badge: '14 Active Tables • $4.2k Gross' },
+  kds: { badge: '6 Queued • 8m Avg Wait' },
+  admin: { badge: '1 Location • 4 Pending Approvals' },
+  kitchenkit: { badge: '3 Low Par Alerts', isAlert: true },
+  ops: { badge: '28.4% COGS (Target 28%)' },
+  web: { badge: '12 Pickup Orders' },
+  recipeos: { badge: '142 Active Recipes' },
+  desktop: { badge: '3 Devices Synced' },
+};
 
 const toneClasses = {
   dark: 'border-slate-700 bg-slate-800/80 text-slate-100 hover:bg-slate-700',
@@ -34,8 +46,10 @@ export function CulinaryAppLauncher({
   className,
   tone = 'light',
   appIds,
+  telemetryOverrides,
 }: CulinaryAppLauncherProps) {
   const [open, setOpen] = React.useState(false);
+  const [highlightedIndex, setHighlightedIndex] = React.useState<number>(0);
   const apps = appIds
     ? CULINARY_APP_MODULES.filter((app) => appIds.includes(app.id))
     : CULINARY_APP_MODULES;
@@ -94,6 +108,7 @@ export function CulinaryAppLauncher({
                   {groupApps.map((app) => {
                     const Icon = app.icon;
                     const isActive = app.id === activeApp;
+                    const telemetry = telemetryOverrides?.[app.id] ?? DEFAULT_APP_TELEMETRY[app.id];
                     return (
                       <a
                         key={app.id}
@@ -103,32 +118,49 @@ export function CulinaryAppLauncher({
                         onClick={() => setOpen(false)}
                         aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'min-h-[76px] rounded-2xl border p-3 text-left transition-colors transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 active:scale-[0.97] flex items-start gap-3',
+                          'min-h-[82px] rounded-2xl border p-3.5 text-left transition-colors transition-transform duration-75 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 active:scale-[0.97] flex items-start gap-3 relative',
                           isActive
-                            ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                            ? 'border-orange-500/80 bg-slate-900 text-white shadow-md ring-1 ring-orange-500/50'
                             : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-300',
                         )}
                       >
                         <span
                           className={cn(
                             'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-                            isActive ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700',
+                            isActive ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-slate-100 text-slate-700',
                           )}
                         >
                           <Icon className="h-5 w-5" aria-hidden="true" />
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center justify-between gap-1.5">
                             <span className="truncate text-xs font-black">{app.label}</span>
                             {isActive && (
-                              <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide">
-                                Current
+                              <span className="rounded-full bg-orange-500 text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 shadow-xs">
+                                Active Workspace
                               </span>
                             )}
                           </span>
-                          <span className={cn('mt-1 block text-[11px] leading-snug', isActive ? 'text-slate-300' : 'text-slate-500')}>
+                          <span className={cn('mt-0.5 block text-[11px] leading-snug', isActive ? 'text-slate-300' : 'text-slate-500')}>
                             {app.description}
                           </span>
+                          {telemetry && (
+                            <span className="mt-2 flex items-center gap-1.5">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-tight',
+                                  telemetry.isAlert
+                                    ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                                    : isActive
+                                    ? 'bg-slate-800 text-emerald-400 border border-slate-700'
+                                    : 'bg-slate-100 text-slate-600 border border-slate-200/80'
+                                )}
+                              >
+                                <span className={cn('w-1.5 h-1.5 rounded-full', telemetry.isAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500')} />
+                                <span>{telemetry.badge}</span>
+                              </span>
+                            </span>
+                          )}
                         </span>
                       </a>
                     );
