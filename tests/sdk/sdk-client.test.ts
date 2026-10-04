@@ -98,4 +98,44 @@ describe('@culinaryos/sdk Client Suite', () => {
     expect(lastRequest!.url).toBe('http://localhost:3000/v1/orders');
     expect(lastRequest!.options.method).toBe('POST');
   });
+
+  it('supports ops waste logging', async () => {
+    await client.ops.waste.log({
+      ingredient: 'Ribeye Steak',
+      quantity_grams: 500,
+      reason: 'burned',
+      cost_per_gram: 0.05,
+    });
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/waste');
+    expect(lastRequest!.options.method).toBe('POST');
+    const body = JSON.parse(lastRequest!.options.body);
+    expect(body.ingredient).toBe('Ribeye Steak');
+    expect(body.quantity_grams).toBe(500);
+    expect(body.reason).toBe('burned');
+  });
+
+  it('supports ops waste listing', async () => {
+    await client.ops.waste.list();
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/waste');
+
+    await client.ops.waste.list({ from: '2026-10-01', to: '2026-10-04' });
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/waste?from=2026-10-01&to=2026-10-04');
+  });
+
+  it('supports ops food-cost variance calculation', async () => {
+    await client.ops.foodCost.calculateVariance({ from: '2026-10-01', to: '2026-10-04' });
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/food-cost/variance');
+    expect(lastRequest!.options.method).toBe('POST');
+    const body = JSON.parse(lastRequest!.options.body);
+    expect(body.from).toBe('2026-10-01');
+    expect(body.to).toBe('2026-10-04');
+  });
+
+  it('supports ops plate economics lookup', async () => {
+    await client.ops.plateEconomics.get();
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/plate-economics');
+
+    await client.ops.plateEconomics.get({ order_id: 'order-123' });
+    expect(lastRequest!.url).toBe('http://localhost:3000/v1/ops/plate-economics?order_id=order-123');
+  });
 });

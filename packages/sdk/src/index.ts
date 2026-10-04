@@ -204,6 +204,56 @@ export class CulinaryOSClient {
     },
   };
 
+  // --- Ops (Waste, Food Cost, Plate Economics) ---
+  readonly ops = {
+    waste: {
+      log: (entry: {
+        ingredient: string;
+        quantity_grams: number;
+        reason: string;
+        cost_per_gram?: number;
+        log_date?: string;
+        notes?: string;
+      }) => {
+        return this.request<any>('/v1/ops/waste', {
+          method: 'POST',
+          body: JSON.stringify(entry),
+        });
+      },
+      list: (params: { from?: string; to?: string; reason?: string; ingredient?: string } = {}) => {
+        const sp = new URLSearchParams();
+        if (params.from) sp.set('from', params.from);
+        if (params.to) sp.set('to', params.to);
+        if (params.reason) sp.set('reason', params.reason);
+        if (params.ingredient) sp.set('ingredient', params.ingredient);
+        const q = sp.toString() ? `?${sp.toString()}` : '';
+        return this.request<any[]>(`/v1/ops/waste${q}`);
+      },
+    },
+    foodCost: {
+      calculateVariance: (params: {
+        from?: string;
+        to?: string;
+        theoreticalUsage?: any[];
+        actualUsage?: any[];
+        wasteLogs?: any[];
+      } = {}) => {
+        return this.request<any>('/v1/ops/food-cost/variance', {
+          method: 'POST',
+          body: JSON.stringify(params),
+        });
+      },
+    },
+    plateEconomics: {
+      get: (params: { order_id?: string } = {}) => {
+        const sp = new URLSearchParams();
+        if (params.order_id) sp.set('order_id', params.order_id);
+        const q = sp.toString() ? `?${sp.toString()}` : '';
+        return this.request<any>(`/v1/ops/plate-economics${q}`);
+      },
+    },
+  };
+
   // --- Billing & Subscriptions ---
   readonly billing = {
     getSubscription: () => {

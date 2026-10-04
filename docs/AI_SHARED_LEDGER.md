@@ -317,3 +317,18 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - pnpm --filter @culinaryos/prep-engine build: PASS (tsc exit 0).
     - pnpm --filter @culinaryos/prep-engine typecheck: PASS (tsc --noEmit exit 0).
   - Prep engine consolidation claim released. Ready for Phase 2 (CulinaryOS Ops Consolidation: food cost, waste, labor engines).
+
+- 2026-10-04 (Muse & Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Ops Consolidation (CulinaryOps absorption & SDK wiring).
+  - Scope: packages/sdk/src/index.ts, packages/food-cost-engine, packages/labor-engine, packages/waste-engine, apps/ops, and tests/sdk/sdk-client.test.ts.
+  - Ponytail protocol applied: audited candidate repository C:\Users\white\OneDrive\Documents\GitHub\CulinaryOps and verified that CulinaryOS already contains its superset engines (FLSA tip pooling, actual vs theoretical variance, void auto-waste debit).
+  - Wired public client operations under `client.ops`: `ops.waste.log()`, `ops.waste.list()`, `ops.foodCost.calculateVariance()`, and `ops.plateEconomics.get()`.
+  - Verification:
+    - tests/sdk/sdk-client.test.ts: 8/8 PASS (including new ops waste, food cost, plate economics tests).
+    - tests/inventory/food-cost-variance.test.ts: 2/2 PASS.
+    - tests/shared/labor-scheduling.test.ts: 4/4 PASS.
+    - tests/e2e/tier1-features/f2_4_waste_variance.test.ts: 5/5 PASS.
+    - tests/e2e/tier1-features/f3_2_void_auto_waste.test.ts: 5/5 PASS.
+    - tests/e2e/tier1-features/f3_4_tip_pooling.test.ts: 5/5 PASS.
+    - pnpm --filter @culinaryos/sdk typecheck: PASS (tsc --noEmit exit 0).
+    - pnpm --filter @culinaryos/sdk build: PASS (tsc exit 0).
+  - Ops consolidation claim released. Ready for Phase 3 (CulinaryOS Marketing / Post-Pilot consolidation).
