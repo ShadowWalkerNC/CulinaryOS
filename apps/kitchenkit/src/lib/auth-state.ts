@@ -32,8 +32,7 @@ export function observeAuth(client: AuthClient | null, publish: (state: AuthStat
   }
 
   if (!client) {
-    // If not configured, gracefully route to login with demo option instead of hard blocking
-    publish({ session: null, loading: false, error: null });
+    publish({ session: null, loading: false, error: 'Sign-in is unavailable: authentication is not configured.' });
     return () => {};
   }
   let active = true;
