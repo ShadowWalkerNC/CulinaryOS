@@ -441,5 +441,18 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - `node ./scripts/run-all-tests.cjs`: 158 passed, 0 failed across all suites.
     - `tests/shared/credit-memo.test.ts`: 2/2 PASS.
     - `tests/server/flsa-tip-engine.test.ts`: 38/38 PASS.
+- 2026-10-05 (Antigravity): CLAIM & RELEASE — Phase 4 Monorepo Consolidation: CulinaryOS Web (Plated) Storefront Studio, 8 Hospitality Themes, Schema.org SEO & QR Menu PDF Generator.
+  - Scope: `apps/web`, `packages/template-engine`, `packages/asset-tools`, `packages/pdf-tools`, `packages/ui`, `tests/shared/asset-tools.test.ts`.
+  - Features:
+    - Transformed `apps/web` into unified public guest storefront, online ordering engine, and restaurant website customizer studio (`/studio` and `/builder`).
+    - Integrated Plated's 8 restaurant themes (`restaurant`, `bakery`, `cafe`, `bar`, `food-truck`, `catering`, `ghost-kitchen`, `food-stand`) and 6 style archetypes (`hearth`, `canvas`, `midnight`, `market`, `coast`, `ember`) into typed browser-safe template catalog.
+    - Embedded Schema.org `Restaurant` JSON-LD rich snippets generator into `apps/web` with live search preview card and `<head>` tag injection on the guest menu page.
+    - Enabled physical print menu generation with embedded scannable tableside QR ordering codes via `@culinaryos/pdf-tools`.
+    - Resolved ESM `__dirname` resolution bug in `@culinaryos/asset-tools` for OpenGraph banner generation.
+  - Verification:
+    - `pnpm turbo run typecheck`: 52/52 successful, 0 errors monorepo-wide.
+    - `node ./scripts/run-all-tests.cjs`: 159 passed, 0 failed across all suites.
+    - `packages/pdf-tools/src/__tests__/menu-pdf.test.ts`: 20/20 PASS.
+    - `tests/shared/asset-tools.test.ts`: PASS (1200x630 OG image generated).
 
 

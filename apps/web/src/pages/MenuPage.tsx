@@ -7,6 +7,9 @@ import { CartDrawer } from '../components/CartDrawer';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 import type { CartItem, CartState, MenuItem, CartModifier, OrderMode } from '../types';
 import { nanoid } from '../lib/nanoid';
+import { generateSchemaOrg } from '@culinaryos/seo-tools';
+import { generateMenuPdf, generateQrDataUrl } from '@culinaryos/pdf-tools';
+import type { ProjectSchema, MenuSchema } from '@culinaryos/types';
 import {
   ShoppingBag,
   Search,
@@ -20,6 +23,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Button,
+  Printer,
 } from '@culinaryos/ui';
 
 function emptyCart(): CartState {
@@ -64,12 +68,127 @@ export function MenuPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDietary, setActiveDietary] = useState<DietaryFilter>('all');
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  // Dynamic Schema.org injection into document head
+  useEffect(() => {
+    if (menuResult.status !== 'success') return;
+    const { restaurant, menu } = menuResult.data;
+    try {
+      const schema = generateSchemaOrg({
+        id: slug || 'demo',
+        schemaVersion: '1.0',
+        businessType: 'restaurant',
+        styleTemplate: 'hearth',
+        colorTheme: 'terracotta',
+        darkMode: false,
+        business: {
+          name: restaurant.name,
+          tagline: restaurant.tagline || menu.description,
+          description: menu.description,
+          cuisineType: 'Contemporary American',
+        },
+        locations: [
+          {
+            id: 'loc-1',
+            name: restaurant.name,
+            address: {
+              street: restaurant.address || '142 Mercer Street',
+              city: 'New York',
+              state: 'NY',
+              zip: '10012',
+              country: 'US',
+            },
+            hours: {
+              mon: { open: '11:30', close: '22:30' },
+              tue: { open: '11:30', close: '22:30' },
+              wed: { open: '11:30', close: '22:30' },
+              thu: { open: '11:30', close: '22:30' },
+              fri: { open: '11:30', close: '23:30' },
+              sat: { open: '10:30', close: '23:30' },
+              sun: { open: '10:30', close: '22:00' },
+            },
+          },
+        ],
+        primaryLocationIndex: 0,
+        seo: {
+          siteTitle: `${restaurant.name} | Online Ordering`,
+          metaDescription: menu.description,
+        },
+        deployment: {
+          target: 'vercel',
+          subdomain: slug || 'demo',
+          customDomain: window.location.hostname,
+        },
+      } as unknown as ProjectSchema);
+
+      const scriptId = 'culinaryos-schema-org-jsonld';
+      let el = document.getElementById(scriptId) as HTMLScriptElement | null;
+      if (!el) {
+        el = document.createElement('script');
+        el.id = scriptId;
+        el.type = 'application/ld+json';
+        document.head.appendChild(el);
+      }
+      el.textContent = JSON.stringify(schema);
+    } catch {
+      // ignore in test / degraded environments
+    }
+  }, [menuResult, slug]);
+
+  async function handleDownloadMenuPdf() {
+    if (menuResult.status !== 'success') return;
+    const { restaurant, menu, sections } = menuResult.data;
+    setDownloadingPdf(true);
+    try {
+      const qrDataUrl = await generateQrDataUrl(window.location.href, { size: 300 });
+      const menuSchema: MenuSchema = {
+        categories: sections.map((sec: any, idx: number) => ({
+          id: sec.id,
+          name: sec.name,
+          displayOrder: idx + 1,
+          description: sec.description || undefined,
+          items: sec.menu_items.map((it: any, itemIdx: number) => ({
+            id: it.id,
+            name: it.name,
+            price: `$${(it.price / 100).toFixed(2)}`,
+            description: it.description || undefined,
+            available: it.available,
+            displayOrder: itemIdx + 1,
+            dietaryTags: (it.allergens || []) as any,
+          })),
+        })),
+      };
+
+      const pdfBytes = generateMenuPdf(menuSchema, {
+        restaurantName: restaurant.name,
+        tagline: restaurant.tagline || menu.description || undefined,
+        pageSize: 'letter',
+        qrDataUrl,
+        qrLabel: 'Scan for Online Ordering',
+      });
+
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${restaurant.name.toLowerCase().replace(/\s+/g, '-')}-menu.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to generate menu PDF:', e);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   // Sync cart with localStorage
   useEffect(() => {
@@ -201,9 +320,27 @@ export function MenuPage() {
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>CulinaryOS Platform</span>
             </a>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-mono font-semibold text-emerald-300">{slug === 'demo' ? 'Demo menu' : 'Online ordering'}</span>
+            <div className="flex items-center gap-3">
+              <a
+                href="/studio"
+                className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Storefront Studio</span>
+              </a>
+              <button
+                type="button"
+                onClick={handleDownloadMenuPdf}
+                disabled={downloadingPdf}
+                className="text-[11px] font-bold text-slate-300 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50"
+              >
+                <Printer className="w-3 h-3 text-slate-400" />
+                <span>{downloadingPdf ? 'Exporting...' : 'Print PDF'}</span>
+              </button>
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] font-mono font-semibold text-emerald-300">{slug === 'demo' ? 'Demo menu' : 'Online ordering'}</span>
+              </div>
             </div>
           </div>
         </div>

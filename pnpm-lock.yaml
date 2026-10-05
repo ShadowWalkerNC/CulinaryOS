@@ -625,9 +625,21 @@ importers:
       '@culinaryos/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@culinaryos/pdf-tools':
+        specifier: workspace:*
+        version: link:../../packages/pdf-tools
+      '@culinaryos/seo-tools':
+        specifier: workspace:*
+        version: link:../../packages/seo-tools
       '@culinaryos/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@culinaryos/template-engine':
+        specifier: workspace:*
+        version: link:../../packages/template-engine
+      '@culinaryos/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@culinaryos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -886,6 +898,15 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
 
+  packages/hardware:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
   packages/intelligence:
     devDependencies:
       '@types/node':
@@ -953,6 +974,9 @@ importers:
 
   packages/sdk:
     dependencies:
+      '@culinaryos/hardware':
+        specifier: workspace:*
+        version: link:../hardware
       '@culinaryos/shared':
         specifier: workspace:*
         version: link:../shared

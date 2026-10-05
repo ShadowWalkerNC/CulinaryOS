@@ -6,7 +6,7 @@
  * The IPC handler (ipc/pdf.ts) is responsible for writing to disk.
  *
  * Layout:
- *   Page 1: Cover — restaurant name + optional tagline
+ *   Page 1: Cover — restaurant name + optional tagline + optional table/online QR code
  *   Pages 2+: Menu categories, each with item rows
  *
  * Font: Helvetica (built-in jsPDF, no embed needed)
@@ -22,6 +22,10 @@ export interface MenuPdfOptions {
   /** Hex color for headings e.g. '#8a4b2f' */
   accentColor?: string;
   pageSize?: 'letter' | 'a4';
+  /** Optional base64/data URL for an ordering QR code */
+  qrDataUrl?: string;
+  /** Optional call-to-action text for the QR code */
+  qrLabel?: string;
 }
 
 const DIETARY_LABELS: Record<DietaryTag, string> = {
@@ -83,7 +87,20 @@ export function generateMenuPdf(
   doc.setLineWidth(0.4);
   doc.line(ml, 67, mr, 67);
 
-  let y = 78;
+  // Optional scannable QR Code on Cover
+  if (opts.qrDataUrl) {
+    try {
+      doc.addImage(opts.qrDataUrl, 'PNG', mr - 24, 50, 24, 24);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(ar, ag, ab);
+      doc.text(opts.qrLabel || 'Scan to Order', mr - 12, 78, { align: 'center' });
+    } catch {
+      // ignore image render failure
+    }
+  }
+
+  let y = opts.qrDataUrl ? 84 : 78;
 
   const categories = menu.categories
     .slice()

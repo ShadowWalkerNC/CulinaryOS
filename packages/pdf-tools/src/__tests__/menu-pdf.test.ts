@@ -1,5 +1,6 @@
 import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
 import { generateMenuPdf } from '../menu-pdf.js';
+import { generateQrDataUrl } from '../qr.js';
 import type { MenuSchema } from '@culinaryos/types';
 
 
@@ -194,5 +195,16 @@ describe('generateMenuPdf — content', () => {
   it('embeds page footer text with restaurant name', () => {
     const result = generateMenuPdf(FULL_MENU, { restaurantName: 'Fork House' });
     expect(pdfText(result)).toContain('Fork House');
+  });
+
+  it('embeds ordering QR code and label when provided', async () => {
+    const qrDataUrl = await generateQrDataUrl('https://culinaryos.app/menu/demo');
+    const result = generateMenuPdf(FULL_MENU, {
+      restaurantName: 'Fork House',
+      qrDataUrl,
+      qrLabel: 'Scan for Mobile Order',
+    });
+    expect(result.length).toBeGreaterThan(1000);
+    expect(pdfText(result)).toContain('Scan for Mobile Order');
   });
 });

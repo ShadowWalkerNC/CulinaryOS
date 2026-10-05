@@ -37,6 +37,7 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
     { name: 'Back-Office Admin & Pantry', port: ':5174', desc: 'Menu editor, staff PINs & auto-PO par levels', icon: Laptop, color: 'text-emerald-600 bg-emerald-50' },
     { name: 'KitchenKit Prep Planner', port: ':5175', desc: 'Shift prep lists & recipe scaling engine', icon: ChefHat, color: 'text-orange-600 bg-orange-50' },
     { name: 'Online Guest Storefront', port: ':5176', desc: 'Mobile-first ordering & live order tracker', icon: ShoppingBag, color: 'text-teal-600 bg-teal-50' },
+    { name: 'Storefront Studio & Builder', port: ':5176/studio', desc: '8 Plated themes, Schema.org SEO & QR print menus', icon: Sparkles, color: 'text-violet-600 bg-violet-50' },
   ];
 
   return (
@@ -84,7 +85,7 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
                   return (
                     <a
                       key={i}
-                      href="/#demo"
+                      href={prod.port.includes('/studio') ? '/studio' : '/#demo'}
                       onClick={() => setProductsOpen(false)}
                       className="p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group"
                     >
@@ -112,6 +113,18 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
           >
             <Sparkles className="w-4 h-4 text-indigo-600" />
             <span>Interactive Demo</span>
+          </a>
+
+          <a
+            href="/studio"
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              currentPath === '/studio'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-violet-500" />
+            <span>Storefront Studio</span>
           </a>
 
           <a
@@ -196,6 +209,13 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
               className="block px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-slate-100"
             >
               Platform & Interactive Demo
+            </a>
+            <a
+              href="/studio"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-slate-100"
+            >
+              Storefront Studio & Website Builder
             </a>
             <a
               href="/#hardware"

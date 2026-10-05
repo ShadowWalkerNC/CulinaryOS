@@ -1,13 +1,12 @@
-// @plated/template-engine — Phase 1
+// @plated/template-engine — Phase 1 & Phase 4
 // Reads plated.template.json manifests, maps ProjectSchema values into
 // content slots, and provides template string interpolation utilities.
 
-import { readFile } from 'node:fs/promises';
-import { join }     from 'node:path';
 import type { TemplateManifest, ProjectSchema } from '@culinaryos/types';
 import { resolveTokens } from './resolveTokens.js';
+import { BUILTIN_TEMPLATES } from './catalog.js';
 
-
+export { BUILTIN_TEMPLATES, getTemplateManifest, TEMPLATE_NAMES } from './catalog.js';
 export type { Condition }  from './conditional.js';
 export { resolveTokens };
 export { interpolate }     from './interpolate.js';
@@ -29,11 +28,17 @@ export interface SlotMap {
 
 /**
  * loadManifest — reads and parses a plated.template.json file.
- * Throws if the file is missing or not valid JSON.
+ * First checks in-memory built-in templates, falling back to dynamic filesystem read in Node.
  */
 export async function loadManifest(
   templateDir: string,
 ): Promise<TemplateManifest> {
+  const norm = templateDir.replace(/[\\/]+$/, '').split(/[\\/]/).pop();
+  if (norm && BUILTIN_TEMPLATES[norm]) {
+    return BUILTIN_TEMPLATES[norm];
+  }
+  const { readFile } = await import('node:fs/promises');
+  const { join }     = await import('node:path');
   const filePath = join(templateDir, 'plated.template.json');
   const raw = await readFile(filePath, 'utf-8');
   return JSON.parse(raw) as TemplateManifest;

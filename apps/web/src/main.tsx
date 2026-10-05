@@ -8,6 +8,7 @@ import { MenuPage } from './pages/MenuPage';
 import { TablesidePage } from './pages/TablesidePage';
 import { OrderStatusPage } from './pages/OrderStatusPage';
 import { JobsPage } from './pages/JobsPage';
+import { WebsiteStudioPage } from './pages/WebsiteStudioPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -20,6 +21,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/demo"                             element={<Navigate to="/menu/demo" replace />} />
           {/* Public CulinaryJobs Restaurant Career Board */}
           <Route path="/jobs"                             element={<JobsPage />} />
+          {/* Storefront Studio & Website Builder (Plated Phase 4) */}
+          <Route path="/studio"                           element={<WebsiteStudioPage />} />
+          <Route path="/builder"                          element={<Navigate to="/studio" replace />} />
           {/* :slug identifies the restaurant storefront — e.g. /menu/demo */}
           <Route path="/menu/:slug"                       element={<MenuPage />} />
           {/* Dedicated Tableside QR Route for View-Only, Pay-at-Table & Self-Ordering */}
