@@ -153,9 +153,27 @@ export function TablesView() {
   const [viewMode, setViewMode] = useState<'map' | 'grid' | '3d'>('map');
 
   const handleUpdateTable2DPosition = (tableId: string, x: number, y: number) => {
+    // 1. Update 2D floorTables
     setFloorTables((prev) => {
       const updated = prev.map((t) => (t.id === tableId ? { ...t, x, y } : t));
       localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+      return updated;
+    });
+
+    // 2. Bidirectional sync into 3D customPositions
+    const x3d = Math.round((((x / 100) * floorDimensions.width) - (floorDimensions.width / 2)) * 10) / 10;
+    const z3d = Math.round((((y / 100) * floorDimensions.depth) - (floorDimensions.depth / 2)) * 10) / 10;
+
+    setCustomPositions((prev) => {
+      const updated = {
+        ...prev,
+        [tableId]: {
+          ...(prev[tableId] || {}),
+          x: x3d,
+          z: z3d,
+        },
+      };
+      localStorage.setItem('culinaryos_3d_table_positions', JSON.stringify(updated));
       return updated;
     });
   };
@@ -324,6 +342,15 @@ export function TablesView() {
         rotation: rotation ?? prev[tableId]?.rotation ?? 0,
       },
     }));
+
+    // Bidirectional sync into 2D floorTables
+    const x2d = Math.round(((x + floorDimensions.width / 2) / floorDimensions.width) * 100);
+    const y2d = Math.round(((z + floorDimensions.depth / 2) / floorDimensions.depth) * 100);
+    setFloorTables((prev) => {
+      const updated = prev.map((t) => (t.id === tableId ? { ...t, x: x2d, y: y2d } : t));
+      localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // Add New Table
@@ -871,7 +898,58 @@ export function TablesView() {
             editMode={editMode}
             selectedTableId={editingTable?.id || selectedTable?.id}
             activeSection={activeSection}
+            onSelectSection={(sec) => setActiveSection(sec)}
             onUpdateTablePosition={handleUpdateTable2DPosition}
+            onUpdateTableRotation={(tableId, rot) => {
+              setCustomPositions((prev) => {
+                const updated = {
+                  ...prev,
+                  [tableId]: { ...(prev[tableId] || { x: 0, z: 0 }), rotation: rot },
+                };
+                localStorage.setItem('culinaryos_3d_table_positions', JSON.stringify(updated));
+                return updated;
+              });
+            }}
+            onAddTable={(shape, secId) => {
+              const newNum = String(floorTables.length + 1);
+              const sectionNames: Record<string, string> = {
+                main: 'Main Dining',
+                patio: 'Patio & Garden',
+                bar: 'Bar & Lounge',
+                vip: 'Private VIP',
+                rooftop: 'Skyline Rooftop',
+              };
+              const newTable: FloorTable = {
+                id: `tbl-${Date.now()}`,
+                number: newNum,
+                label: `T${newNum}`,
+                sectionId: secId,
+                sectionName: sectionNames[secId] || 'Main Dining',
+                capacity: shape === 'bar' ? 1 : shape === 'rectangle' ? 6 : 4,
+                shape,
+                defaultStatus: 'available',
+                x: 50,
+                y: 50,
+              };
+              const updated = [...floorTables, newTable];
+              setFloorTables(updated);
+              localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+              setEditingTable(newTable);
+            }}
+            onDeleteTable={(tableId) => {
+              const updated = floorTables.filter((t) => t.id !== tableId);
+              setFloorTables(updated);
+              localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+              setEditingTable(null);
+            }}
+            onUpdateTableCapacity={(tableId, delta) => {
+              const updated = floorTables.map((t) =>
+                t.id === tableId ? { ...t, capacity: Math.max(1, Math.min(20, t.capacity + delta)) } : t
+              );
+              setFloorTables(updated);
+              localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+            }}
+            customPositions={customPositions}
             onSelectTable={(table, activeOrder) => handleTableClick(table, activeOrder)}
           />
         </div>
