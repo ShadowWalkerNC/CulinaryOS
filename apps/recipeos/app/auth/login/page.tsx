@@ -54,13 +54,32 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="w-full max-w-sm">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50 text-gray-900">
+      <div className="w-full max-w-sm bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
         <h1 className="text-2xl font-bold text-center">Sign in to RecipeOS</h1>
         <p className="mt-2 text-center text-gray-500 text-sm">
-          Enter your email and we&apos;ll send you a magic link.
+          Culinary Ratio Blueprint & Recipe Vault
         </p>
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+
+        {/* 1-Click Demo Mode Button */}
+        <div className="mt-6 mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 mb-1">Local Development & Demo</p>
+          <p className="text-xs text-amber-700 mb-3">Bypass email magic link with 1-click Recipe Developer access.</p>
+          <a
+            href="/api/demo"
+            className="w-full py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold text-xs uppercase tracking-wider transition-colors shadow flex items-center justify-center gap-2"
+          >
+            <span>⚡ Enter Demo Mode (Recipe Vault)</span>
+          </a>
+        </div>
+
+        <div className="relative flex py-1 items-center mb-6">
+          <div className="flex-grow border-t border-gray-200"></div>
+          <span className="flex-shrink mx-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">Or Magic Link</span>
+          <div className="flex-grow border-t border-gray-200"></div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="email"
             placeholder="you@example.com"
@@ -73,7 +92,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || !email}
-            className="w-full rounded-lg bg-black px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-black px-4 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Sending...' : 'Send magic link'}
           </button>

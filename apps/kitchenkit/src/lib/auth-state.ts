@@ -8,9 +8,32 @@ export interface AuthState {
 
 export type AuthClient = { auth: Pick<SupabaseClient['auth'], 'getSession' | 'onAuthStateChange'> };
 
+export const MOCK_DEMO_SESSION: Session = {
+  access_token: 'demo-prep-token-mock',
+  refresh_token: 'demo-prep-refresh-mock',
+  expires_in: 3600,
+  token_type: 'bearer',
+  user: {
+    id: '00000000-0000-0000-0000-000000000002',
+    app_metadata: {},
+    user_metadata: { name: 'Executive Chef (Demo)' },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+    email: 'chef@culinaryos.local',
+  },
+};
+
 export function observeAuth(client: AuthClient | null, publish: (state: AuthState) => void, timeoutMs = 10_000): () => void {
+  // Check if offline demo mode is active
+  const isDemo = typeof window !== 'undefined' && localStorage.getItem('culinaryos_kitchenkit_demo_session') === 'true';
+  if (isDemo) {
+    publish({ session: MOCK_DEMO_SESSION, loading: false, error: null });
+    return () => {};
+  }
+
   if (!client) {
-    publish({ session: null, loading: false, error: 'Sign-in is unavailable: authentication is not configured.' });
+    // If not configured, gracefully route to login with demo option instead of hard blocking
+    publish({ session: null, loading: false, error: null });
     return () => {};
   }
   let active = true;

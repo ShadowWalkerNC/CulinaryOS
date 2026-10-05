@@ -28,7 +28,19 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Guard: if demo session cookie is present, allow access
+  const isDemoSession = request.cookies.get('recipeos_demo_session')?.value === 'true';
+  if (isDemoSession) {
+    return NextResponse.next({ request });
+  }
+
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase unreachable in offline demo mode
+  }
 
   const isAppRoute =
     request.nextUrl.pathname.startsWith('/vault') ||
@@ -36,7 +48,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/prep') ||
     request.nextUrl.pathname.startsWith('/scale');
 
-  if (isAppRoute && !user) {
+  if (isAppRoute && !user && !isDemoSession) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);

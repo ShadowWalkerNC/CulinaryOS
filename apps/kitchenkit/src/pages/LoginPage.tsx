@@ -91,8 +91,26 @@ export default function LoginPage() {
               Send magic link
             </Button>
 
+            {/* Offline / Local Demo Mode Quick Access */}
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-zinc-800" />
+              <span className="flex-shrink mx-3 text-[10px] uppercase font-bold text-zinc-500 font-mono">or local demo</span>
+              <div className="flex-grow border-t border-zinc-800" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem('culinaryos_kitchenkit_demo_session', 'true');
+                window.location.href = '/';
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm active:scale-98"
+            >
+              <span>👨‍🍳 Enter Demo Mode (Head Chef & Prep)</span>
+            </button>
+
             <p className="text-xs text-zinc-600 text-center">
-              No password required. We'll email you a one-click sign-in link.
+              No cloud configuration required for local demo mode.
             </p>
           </form>
         )}
