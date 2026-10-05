@@ -155,7 +155,7 @@ const mockClient: any = {
       },
       error: null,
     }),
-    onAuthStateChange: (cb: any) => {
+    onAuthStateChange: (_cb: any) => {
       return { data: { subscription: { unsubscribe: () => {} } } };
     },
     signInWithOtp: async () => ({ data: null, error: null }),

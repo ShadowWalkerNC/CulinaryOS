@@ -51,7 +51,7 @@ export function useDashboardStats(): { data: DashboardStats | undefined; isLoadi
         parItemCount:     parLevels.count    ?? 0,
         activePlansCount: activePlans.count  ?? 0,
         belowParCount:    parRows.filter(
-          (r) => Number(r.current_stock) < Number(r.par_amount)
+          (r: any) => Number(r.current_stock) < Number(r.par_amount)
         ).length,
         completedToday:   completedTodayRes.count ?? 0,
       };
