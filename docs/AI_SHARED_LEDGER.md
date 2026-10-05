@@ -428,6 +428,18 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
   - Verification:
     - `pnpm turbo run typecheck`: 50/50 successful, 0 errors monorepo-wide.
     - `node ./scripts/run-all-tests.cjs`: 157 passed, 0 failed across all suites.
-    - `tests/shared/recipe-scaling-allergens.test.ts`: 6/6 PASS.
+- 2026-10-05 (Antigravity): CLAIM & RELEASE — Phase 3 Monorepo Consolidation: CulinaryOps Prime Cost, FLSA Tip Pooling & Waste Credit Memos.
+  - Scope: `apps/ops/src/pages/LaborPage.tsx`, `apps/ops/src/pages/WastePage.tsx`, `apps/ops/src/pages/VendorPage.tsx`, `packages/waste-engine/src/credit-memo.ts`, `packages/waste-engine/src/index.ts`, `tests/shared/credit-memo.test.ts`.
+  - Features:
+    - FLSA-Compliant Tip Pooling Engine embedded in Ops with 4 distribution methods (Hours-weighted, Role-weighted, Keep-your-own, Percent-of-sales) and hardcoded manager/supervisor exclusions ($0.00 payout enforced).
+    - Tip Credit validation (FOH-only pool under tip credit vs full minimum wage FOH+BOH pool), 80/20 non-tipped duty warnings, and 1-click Gusto/ADP/Standard Payroll CSV export.
+    - Federal (40h) and Daily (8h) employee overtime audit and labor percentage of revenue target tracking.
+    - Supplier Credit Memo Generator integrating kitchen scrap and defective delivery logs with purveyor claims (Dennis, Sysco, US Foods), formatted claim dispatch letters, and Accounts Payable CSV export.
+    - Purveyor Credit Claim tracking in Vendor Management.
+  - Verification:
+    - `pnpm turbo run typecheck`: 50/50 successful, 0 errors monorepo-wide.
+    - `node ./scripts/run-all-tests.cjs`: 158 passed, 0 failed across all suites.
+    - `tests/shared/credit-memo.test.ts`: 2/2 PASS.
+    - `tests/server/flsa-tip-engine.test.ts`: 38/38 PASS.
 
 
