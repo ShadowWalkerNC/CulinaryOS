@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Scale, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRecipe, toEngineRecipe, useDeleteRecipe } from '@/hooks/useRecipes';
-import { scaleRecipe } from '@culinaryos/ratio-engine';
+import { scaleRecipe, evaluateDietaryAndAllergens } from '@culinaryos/ratio-engine';
 import { Button } from '@culinaryos/ui';
 import EditRecipeModal from '@/components/recipes/EditRecipeModal';
 
@@ -41,6 +41,9 @@ export default function RecipeDetailPage() {
 
   const engineRecipe = toEngineRecipe(recipe);
   const scaled = scaleRecipe(engineRecipe, baseWeight);
+  const dietaryProfile = evaluateDietaryAndAllergens(
+    (recipe.ingredients || []).map((i) => i.name)
+  );
 
   function handleDelete() {
     if (!confirm(`Delete "${recipe!.name}"? This cannot be undone.`)) return;
@@ -57,6 +60,13 @@ export default function RecipeDetailPage() {
           <ArrowLeft size={15} /> Recipes
         </Link>
         <div className="flex items-center gap-2">
+          <Link
+            to={`/scale?recipeId=${recipe.id}`}
+            className="min-h-[40px] px-3 py-1.5 rounded-lg bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+          >
+            <Scale size={14} />
+            Scale & Baker's Math
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -85,6 +95,18 @@ export default function RecipeDetailPage() {
           {recipe.is_public && (
             <span className="badge bg-emerald-600/20 text-emerald-400">public</span>
           )}
+          {dietaryProfile.isVegan && (
+            <span className="badge bg-emerald-500/20 text-emerald-300">🌱 Vegan</span>
+          )}
+          {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
+            <span className="badge bg-green-500/20 text-green-300">🥗 Vegetarian</span>
+          )}
+          {dietaryProfile.isGlutenFree && (
+            <span className="badge bg-amber-500/20 text-amber-300">🌾 Gluten-Free</span>
+          )}
+          {dietaryProfile.isDairyFree && (
+            <span className="badge bg-blue-500/20 text-blue-300">🥛 Dairy-Free</span>
+          )}
         </div>
         {recipe.description && (
           <p className="text-sm text-zinc-400 mt-1">{recipe.description}</p>
@@ -95,6 +117,22 @@ export default function RecipeDetailPage() {
           {' · '}
           <span className="text-zinc-500">yield unit: {recipe.yield_unit}</span>
         </p>
+
+        {/* Allergen chips */}
+        {dietaryProfile.matchedAllergens.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+            <span className="text-xs text-zinc-500 font-medium">Allergens:</span>
+            {dietaryProfile.matchedAllergens.map((alg) => (
+              <span
+                key={alg.id}
+                className="badge bg-red-500/15 text-red-300 border border-red-500/25"
+              >
+                <span>{alg.emoji}</span> {alg.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {recipe.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {recipe.tags.map((tag) => (

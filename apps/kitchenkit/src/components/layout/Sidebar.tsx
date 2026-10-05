@@ -12,18 +12,20 @@ import {
   LogOut,
   Store,
   Clock,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Button } from '@culinaryos/ui';
 
 const NAV_ITEMS = [
-  { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard',    end: true  },
-  { to: '/recipes',      icon: BookOpen,         label: 'Recipes',      end: false },
-  { to: '/prep',         icon: ClipboardList,    label: 'Prep Planner', end: true  },
-  { to: '/prep/history', icon: History,          label: 'Prep History', end: false },
-  { to: '/par-levels',   icon: Scale,            label: 'Par Levels',   end: false },
-  { to: '/vendors',      icon: Store,            label: 'Vendors',      end: false },
-  { to: '/shelf-life',   icon: Clock,            label: 'Shelf Life',   end: false },
+  { to: '/dashboard',    icon: LayoutDashboard,   label: 'Dashboard',         end: true  },
+  { to: '/recipes',      icon: BookOpen,          label: 'Recipes',           end: false },
+  { to: '/scale',        icon: Scale,             label: 'Scale & Allergens', end: false },
+  { to: '/prep',         icon: ClipboardList,     label: 'Prep Planner',      end: true  },
+  { to: '/prep/history', icon: History,           label: 'Prep History',      end: false },
+  { to: '/par-levels',   icon: SlidersHorizontal, label: 'Par Levels',        end: false },
+  { to: '/vendors',      icon: Store,             label: 'Vendors',           end: false },
+  { to: '/shelf-life',   icon: Clock,             label: 'Shelf Life',        end: false },
 ];
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>

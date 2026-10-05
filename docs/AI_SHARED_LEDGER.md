@@ -418,5 +418,16 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
 
 - 2026-10-04 (Muse): CLAIM — post-migration audit update to Phases 0–9. Scope: `docs/POST_MIGRATION_AUDIT.md` + claim/release lines here only. Verifying commits fe8074a (Hardware/Edge), 1976ef4 (Unified SDK/MCP), 7d336ab (Shoreline adapter). No application edits, installs, commits or pushes.
 - 2026-10-04 (Muse): RELEASE — post-migration audit updated to 100% Phases 0–9; ownership released. Rewrote `docs/POST_MIGRATION_AUDIT.md` (HEAD `7d336ab`): phase matrix 0–9, extended scorecard (Hardware/Edge, SDK/MCP, Shoreline rows), 9-commit trail incl. `fe8074a`/`1976ef4`/`7d336ab`, evidence log, deviation notes (Phase 9 GitHub archival = operator action; Shoreline path NIT; marketing 20/20 correction; intelligence 41/41 node --test basis; 50/50 typecheck carried from `1976ef4` + targeted SDK/HW re-check). First-hand verification: SDK 14/14, hardware 6/6+5/5, prep 4/4, web 2/2, marketing exit-0 (20 cases), intelligence 41/41, `tsc --noEmit` sdk+hardware exit 0, MCP Section 9 + Shoreline PHI-free design by inspection, `git diff --check` clean. Scratch `.tmp-test/` removed. No application edits, installs, commits or pushes.
+- 2026-10-04 (Antigravity): CLAIM & RELEASE — Phase 2 Monorepo Consolidation: KitchenKit Recipe Scaler & FDA FASTER Act Top 9 Allergen Matrix integration.
+  - Scope: `apps/kitchenkit/src/pages/RecipeScalerPage.tsx`, `apps/kitchenkit/src/pages/RecipeDetailPage.tsx`, `apps/kitchenkit/src/App.tsx`, `apps/kitchenkit/src/components/layout/Sidebar.tsx`, `packages/ratio-engine/src/index.ts`, `packages/prep-engine/src/index.ts`.
+  - Features:
+    - Integrated Digital Recipe Scaler (`/scale`) with dynamic portion servings multiplier and Baker's Math (% of flour basis = 100%).
+    - FDA FASTER Act Top 9 Allergen Engine with live allergen chips, dietary lifestyle badges (Vegan, Vegetarian, Gluten-Free, Dairy-Free, Nut-Free), commercial kitchen equipment cross-contact toggles (shared fryer, shared toaster, shared grill), and safe culinary substitution recommendations.
+    - Linked Recipe Detail directly to Scaler (`/scale?recipeId=...`) and exposed FDA Top 9 allergen badges on recipe cards.
+    - Added quick formula presets (Sourdough Boule, Brioche Buns, Neapolitan Pizza, Carbonara, Cheezies Cheddar Sauce) and 1-click printable prep sheet.
+  - Verification:
+    - `pnpm turbo run typecheck`: 50/50 successful, 0 errors monorepo-wide.
+    - `node ./scripts/run-all-tests.cjs`: 157 passed, 0 failed across all suites.
+    - `tests/shared/recipe-scaling-allergens.test.ts`: 6/6 PASS.
 
 

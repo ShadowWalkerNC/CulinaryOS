@@ -13,6 +13,7 @@ import ParLevelsPage from '@/pages/ParLevelsPage';
 import PrepHistoryPage from '@/pages/PrepHistoryPage';
 import VendorsPage from '@/pages/VendorsPage';
 import ShelfLifePage from '@/pages/ShelfLifePage';
+import RecipeScalerPage from '@/pages/RecipeScalerPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="dashboard"    element={<DashboardPage />} />
           <Route path="recipes"      element={<RecipesPage />} />
           <Route path="recipes/:id"  element={<RecipeDetailPage />} />
+          <Route path="scale"        element={<RecipeScalerPage />} />
           <Route path="prep"         element={<PrepPlannerPage />} />
           <Route path="par-levels"   element={<ParLevelsPage />} />
           <Route path="prep/history" element={<PrepHistoryPage />} />

@@ -8,7 +8,7 @@ import { scaleRecipe, type Recipe } from '@culinaryos/ratio-engine';
 // Consolidated Prep domain surface: scaling + baker's-ratio blueprints re-exported
 // alongside mise en place and adhesive label generators (see ./labels.js).
 export * from '@culinaryos/ratio-engine';
-export type { ShiftPrepPlan as RatioShiftPrepPlan } from '@culinaryos/ratio-engine';
+export type { ShiftPrepPlan as RatioShiftPrepPlan, BakersIngredient } from '@culinaryos/ratio-engine';
 
 export interface PrepItem {
   ingredient: string;
