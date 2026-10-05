@@ -2,10 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --cos-bg: #0f131c;
+  --cos-surface: #181c24;
+  --cos-surface-2: #262a33;
+  --cos-surface-hover: #1f242d;
+  --cos-border: #1e293b;
+  --cos-border-strong: #334155;
+  --cos-text: #f1f5f9;
+  --cos-text-muted: #94a3b8;
+  --cos-text-dim: #64748b;
+  --card: #181c24;
+  --card-foreground: #f1f5f9;
+  --background: #0f131c;
+  --foreground: #f1f5f9;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #f59e0b;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background: var(--cos-bg, #f8f9fa);
-  color: var(--cos-text, #1f2937);
+  background: var(--cos-bg, #0f131c);
+  color: var(--cos-text, #f1f5f9);
   font-family: var(--cos-font-sans, 'Inter', system-ui, sans-serif);
+}
+
+/* Dark theme card & text overrides for admin workstation visual parity */
+.bg-white {
+  background-color: #181c24 !important;
+  color: #f1f5f9 !important;
+  border-color: #1e293b !important;
+}
+
+.text-slate-900, .text-slate-950 {
+  color: #f8fafc !important;
+}
+
+.text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+.text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.border-slate-200, .border-slate-100 {
+  border-color: #1e293b !important;
+}
+
+.bg-slate-50, .bg-slate-100 {
+  background-color: #0d111a !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
 }

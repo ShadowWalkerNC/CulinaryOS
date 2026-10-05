@@ -19,14 +19,16 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const location = useLocation();
 
+  const activeProfile = typeof window !== 'undefined' ? (localStorage.getItem('culinaryos_active_profile') || 'cheezies') : 'cheezies';
+  const locationName = activeProfile === 'cheezies' ? 'Cheezies Gourmet — Ohio Pilot Unit #01' : 'Alley Katz & Half Baked — Unit #01 Downtown';
+
   // Desktop Shell Layout
   if (effectiveDevice === 'desktop') {
     return (
-      <div className="flex h-screen bg-[#f8f9fa] text-slate-900 overflow-hidden font-sans antialiased select-none">
+      <div className="flex h-screen bg-[#0f131c] text-slate-100 overflow-hidden font-sans antialiased select-none">
         <DesktopSidebar />
 
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          {/* Desktop Top Administrative Header */}
           {/* Desktop Top Administrative Header (PRD 1440px+ Workstation Layout) */}
           <header className="bg-[#181c24] border-b border-slate-800 px-6 h-16 flex items-center justify-between shrink-0 shadow-[0_1px_8px_rgba(0,0,0,0.3)] z-20">
             {/* Left: Location & Unit Switcher */}
@@ -37,7 +39,7 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
                     Location
                   </span>
                   <span className="text-xs font-bold text-slate-100 mt-0.5">
-                    The Golden Fork — Unit #01 Downtown
+                    {locationName}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 ml-1">
@@ -143,7 +145,7 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
     const isSimulated = previewMode === 'tablet';
 
     const content = (
-      <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans antialiased select-none">
+      <div className="min-h-screen bg-[#0f131c] text-slate-100 flex flex-col font-sans antialiased select-none">
         <TabletHeaderNav />
         <main className="flex-1 p-5 md:p-6 max-w-5xl w-full mx-auto overflow-y-auto">
           {children}
@@ -153,8 +155,8 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
 
     if (isSimulated) {
       return (
-        <div className="min-h-[calc(100vh-38px)] bg-slate-900/40 p-4 md:p-8 flex justify-center items-start overflow-y-auto">
-          <div className="w-full max-w-[834px] bg-[#f8f9fa] rounded-3xl shadow-2xl border-4 border-slate-800 overflow-hidden ring-1 ring-slate-700/50 min-h-[900px]">
+        <div className="min-h-[calc(100vh-38px)] bg-slate-950 p-4 md:p-8 flex justify-center items-start overflow-y-auto">
+          <div className="w-full max-w-[834px] bg-[#0f131c] rounded-3xl shadow-2xl border-4 border-slate-800 overflow-hidden ring-1 ring-slate-700/50 min-h-[900px]">
             {content}
           </div>
         </div>
