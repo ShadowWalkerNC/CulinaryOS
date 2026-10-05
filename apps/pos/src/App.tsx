@@ -12,6 +12,7 @@ import { SettingsView }  from './views/SettingsView';
 import { TabsView }      from './views/TabsView';
 import { ReportsView }   from './views/ReportsView';
 import { CFDView }       from './views/CFDView';
+import { ShiftOperationsView } from './views/ShiftOperationsView';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import {
   Button,
@@ -89,6 +90,7 @@ export function App() {
     { id: 'menu', label: 'Ticket', primary: true, disabled: !activeOrderId, icon: <span className="material-symbols-outlined text-[17px]">receipt_long</span> },
     { id: 'checkout', label: 'Pay', primary: true, disabled: !activeOrderId, icon: <span className="material-symbols-outlined text-[17px]">payments</span> },
     { id: 'tabs', label: 'Tabs', icon: <span className="material-symbols-outlined text-[17px]">local_bar</span> },
+    { id: 'shifts', label: 'Day / Shifts', icon: <span className="material-symbols-outlined text-[17px]">event_repeat</span> },
     { id: 'recall', label: 'Recall', icon: <span className="material-symbols-outlined text-[17px]">history</span> },
     { id: 'reports', label: 'Reports', icon: <span className="material-symbols-outlined text-[17px]">bar_chart</span> },
     { id: 'cfd', label: 'CFD Screen', icon: <span className="material-symbols-outlined text-[17px]">devices</span> },
@@ -191,6 +193,7 @@ export function App() {
           {view === 'menu' && <MenuView />}
           {view === 'checkout' && <CheckoutView />}
           {view === 'tabs' && <TabsView />}
+          {view === 'shifts' && <ShiftOperationsView />}
           {view === 'recall' && <RecallView />}
           {view === 'settings' && <SettingsView />}
           {view === 'reports' && <ReportsView />}

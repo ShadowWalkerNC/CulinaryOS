@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { setSession } from '@culinaryos/auth';
 
-export type POSView = 'dashboard' | 'tables' | 'menu' | 'checkout' | 'tabs' | 'staff' | 'recall' | 'settings' | 'reports' | 'cfd';
+export type POSView = 'dashboard' | 'tables' | 'menu' | 'checkout' | 'tabs' | 'shifts' | 'staff' | 'recall' | 'settings' | 'reports' | 'cfd';
 
 interface Employee {
   name: string;

@@ -33,12 +33,6 @@ export function DevicePreviewBar() {
       widthLabel: '834px · iPad / Floor',
       icon: <Tablet className="w-3.5 h-3.5" />,
     },
-    {
-      id: 'mobile',
-      label: 'Mobile',
-      widthLabel: '390px · iPhone / Line',
-      icon: <Smartphone className="w-3.5 h-3.5" />,
-    },
   ];
 
   if (isDismissed) {

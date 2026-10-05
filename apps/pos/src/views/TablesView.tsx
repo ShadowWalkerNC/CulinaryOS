@@ -49,6 +49,8 @@ import {
 } from '@culinaryos/ui';
 
 
+import { FloorMap2D } from '../components/FloorMap2D';
+
 export type TableStatus = 'available' | 'occupied' | 'reserved' | 'dirty' | 'paying';
 export type SectionId = 'all' | 'main' | 'patio' | 'bar' | 'vip' | 'rooftop';
 
@@ -61,32 +63,34 @@ export interface FloorTable {
   capacity: number;
   shape: 'square' | 'round' | 'rectangle' | 'booth' | 'bar' | 'oval';
   defaultStatus: TableStatus;
+  x?: number;
+  y?: number;
 }
 
 const DEFAULT_FLOOR_TABLES: FloorTable[] = [
-  // Main Dining
-  { id: 'tbl-1', number: '1', label: 'T1', sectionId: 'main', sectionName: 'Main Dining', capacity: 2, shape: 'square', defaultStatus: 'available' },
-  { id: 'tbl-2', number: '2', label: 'T2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available' },
-  { id: 'tbl-3', number: '3', label: 'T3', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'reserved' },
-  { id: 'tbl-4', number: '4', label: 'T4', sectionId: 'main', sectionName: 'Main Dining', capacity: 6, shape: 'rectangle', defaultStatus: 'available' },
-  { id: 'tbl-5', number: '5', label: 'T5', sectionId: 'main', sectionName: 'Main Dining', capacity: 8, shape: 'rectangle', defaultStatus: 'dirty' },
-  { id: 'tbl-12', number: '12', label: 'T12', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available' },
-  { id: 'tbl-b1', number: 'B1', label: 'Booth 1', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
-  { id: 'tbl-b2', number: 'B2', label: 'Booth 2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available' },
+  // Bar & Lounge (Top Left Rail)
+  { id: 'tbl-bar1', number: 'BAR1', label: 'Bar 1', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available', x: 18, y: 13 },
+  { id: 'tbl-bar2', number: 'BAR2', label: 'Bar 2', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available', x: 30, y: 13 },
+  { id: 'tbl-bar3', number: 'BAR3', label: 'Bar 3', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 4, shape: 'square', defaultStatus: 'available', x: 45, y: 13 },
 
-  // Patio & Garden
-  { id: 'tbl-p1', number: 'P1', label: 'Patio 1', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 2, shape: 'round', defaultStatus: 'available' },
-  { id: 'tbl-p2', number: 'P2', label: 'Patio 2', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'available' },
-  { id: 'tbl-p3', number: 'P3', label: 'Patio 3', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'reserved' },
-  { id: 'tbl-p4', number: 'P4', label: 'Patio 4', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 6, shape: 'round', defaultStatus: 'available' },
+  // Main Dining (Center & Left Booths)
+  { id: 'tbl-b1', number: 'B1', label: 'Booth 1', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available', x: 10, y: 40 },
+  { id: 'tbl-b2', number: 'B2', label: 'Booth 2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'booth', defaultStatus: 'available', x: 10, y: 68 },
+  { id: 'tbl-1', number: '1', label: 'T1', sectionId: 'main', sectionName: 'Main Dining', capacity: 2, shape: 'square', defaultStatus: 'available', x: 26, y: 42 },
+  { id: 'tbl-2', number: '2', label: 'T2', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available', x: 42, y: 42 },
+  { id: 'tbl-3', number: '3', label: 'T3', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'reserved', x: 26, y: 68 },
+  { id: 'tbl-4', number: '4', label: 'T4', sectionId: 'main', sectionName: 'Main Dining', capacity: 6, shape: 'rectangle', defaultStatus: 'available', x: 44, y: 68 },
+  { id: 'tbl-5', number: '5', label: 'T5', sectionId: 'main', sectionName: 'Main Dining', capacity: 8, shape: 'rectangle', defaultStatus: 'dirty', x: 38, y: 88 },
+  { id: 'tbl-12', number: '12', label: 'T12', sectionId: 'main', sectionName: 'Main Dining', capacity: 4, shape: 'square', defaultStatus: 'available', x: 18, y: 88 },
 
-  // Bar & Lounge
-  { id: 'tbl-bar1', number: 'BAR1', label: 'Bar 1', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available' },
-  { id: 'tbl-bar2', number: 'BAR2', label: 'Bar 2', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 1, shape: 'bar', defaultStatus: 'available' },
-  { id: 'tbl-bar3', number: 'BAR3', label: 'Bar 3', sectionId: 'bar', sectionName: 'Bar & Lounge', capacity: 4, shape: 'square', defaultStatus: 'available' },
+  // Patio & Garden (Right Terrace)
+  { id: 'tbl-p1', number: 'P1', label: 'Patio 1', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 2, shape: 'round', defaultStatus: 'available', x: 72, y: 22 },
+  { id: 'tbl-p2', number: 'P2', label: 'Patio 2', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'available', x: 88, y: 22 },
+  { id: 'tbl-p3', number: 'P3', label: 'Patio 3', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 4, shape: 'round', defaultStatus: 'reserved', x: 72, y: 48 },
+  { id: 'tbl-p4', number: 'P4', label: 'Patio 4', sectionId: 'patio', sectionName: 'Patio & Garden', capacity: 6, shape: 'round', defaultStatus: 'available', x: 88, y: 48 },
 
-  // VIP Suite
-  { id: 'tbl-vip1', number: 'VIP1', label: 'VIP Suite', sectionId: 'vip', sectionName: 'Private VIP', capacity: 10, shape: 'oval', defaultStatus: 'reserved' },
+  // VIP Suite (Bottom Right)
+  { id: 'tbl-vip1', number: 'VIP1', label: 'VIP Suite', sectionId: 'vip', sectionName: 'Private VIP', capacity: 10, shape: 'oval', defaultStatus: 'reserved', x: 80, y: 82 },
 ];
 
 const STATUS_THEME: Record<TableStatus, { bg: string; border: string; text: string; badge: string; ring: string; dot: string }> = {
@@ -145,8 +149,16 @@ export function TablesView() {
   const setView = usePOSStore((s) => s.setView);
   const employee = usePOSStore((s) => s.employee);
 
-  // View Mode: 2D Grid (Default for fast touch tablets) vs 3D Spatial Floor Plan
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  // View Mode: 2D Visual Map (Toast-style Default) vs 2D Grid vs 3D Spatial Floor Plan
+  const [viewMode, setViewMode] = useState<'map' | 'grid' | '3d'>('map');
+
+  const handleUpdateTable2DPosition = (tableId: string, x: number, y: number) => {
+    setFloorTables((prev) => {
+      const updated = prev.map((t) => (t.id === tableId ? { ...t, x, y } : t));
+      localStorage.setItem('culinaryos_pos_tables', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Edit Layout Mode State
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -696,31 +708,43 @@ export function TablesView() {
       <Card className="p-3.5 shadow-xs border-border bg-card">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* 2D / 3D Mode Toggle */}
+            {/* Floor View Mode Toggle */}
             <div className="flex bg-muted rounded-xl p-1 border border-border">
               <Button
                 variant="ghost"
+                onClick={() => setViewMode('map')}
+                className={`gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
+                  viewMode === 'map'
+                    ? 'bg-orange-600 text-white shadow-xs hover:bg-orange-600 hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Floor Map
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setViewMode('grid')}
+                className={`gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
+                  viewMode === 'grid'
+                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-muted-foreground" />
+                Table Grid
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => setViewMode('3d')}
-                className={`gap-1.5 px-3.5 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
+                className={`gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
                   viewMode === '3d'
                     ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Box className="w-4 h-4 text-sky-600" />
-                3D Spatial Map
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setViewMode('2d')}
-                className={`gap-1.5 px-3.5 py-1.5 h-auto rounded-lg text-xs font-black uppercase tracking-wider ${
-                  viewMode === '2d'
-                    ? 'bg-background text-foreground shadow-xs hover:bg-background hover:text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4 text-muted-foreground" />
-                2D Grid
+                3D Spatial
               </Button>
             </div>
 
@@ -781,8 +805,8 @@ export function TablesView() {
               </div>
             )}
 
-            {/* Section Tabs (2D Mode) */}
-            {viewMode === '2d' && (
+            {/* Section Tabs (Map & Grid Mode) */}
+            {viewMode !== '3d' && (
               <div className="flex bg-muted/80 rounded-xl p-1 gap-1 border border-border shrink-0">
                 {[
                   { id: 'all', label: 'All Floor' },
@@ -809,7 +833,7 @@ export function TablesView() {
           </div>
 
           {/* Status Filter Options */}
-          {viewMode === '2d' && (
+          {viewMode !== '3d' && (
             <div className="flex items-center gap-1.5 shrink-0 bg-muted/60 p-1 rounded-xl border border-border">
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-1">Status:</span>
               {(['all', 'available', 'occupied', 'paying', 'reserved', 'dirty'] as const).map((st) => (
@@ -838,6 +862,19 @@ export function TablesView() {
         </div>
       ) : error ? (
         <div className="text-center text-destructive mt-20 text-xs font-bold">Connection error: {error}</div>
+      ) : viewMode === 'map' ? (
+        /* Toast-Style 2D Architectural Floor Map Canvas */
+        <div className="animate-fadeIn space-y-2">
+          <FloorMap2D
+            tables={floorTables}
+            orders={orders}
+            editMode={editMode}
+            selectedTableId={editingTable?.id || selectedTable?.id}
+            activeSection={activeSection}
+            onUpdateTablePosition={handleUpdateTable2DPosition}
+            onSelectTable={(table, activeOrder) => handleTableClick(table, activeOrder)}
+          />
+        </div>
       ) : viewMode === '3d' ? (
         /* Three.js 3D Interactive Spatial Floor Plan & Layout Editor */
         <div className="animate-fadeIn space-y-2">

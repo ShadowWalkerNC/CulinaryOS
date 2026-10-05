@@ -164,86 +164,51 @@ export function ResponsiveShell({ children, onOpenOnboarding }: ResponsiveShellP
     return content;
   }
 
-  // Mobile Shell Layout (Thumb-Zone & Jakob's Law)
-  const isSimulated = previewMode === 'mobile';
-
-  const mobileContent = (
-    <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans antialiased select-none relative pb-24">
-      {/* Mobile Top App Bar */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-orange-600 text-white flex items-center justify-center font-black shadow-xs">
-            <span className="text-xs font-black">OS</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xs text-slate-950">The Golden Fork</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            </div>
-            <p className="text-[10px] text-slate-500 font-medium">Floor & Shift Pulse</p>
-          </div>
+  // Mobile Viewport Gate: Admin is Desktop & Tablet Only
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 text-center font-sans antialiased select-none">
+      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="w-16 h-16 rounded-2xl bg-orange-600/20 text-orange-400 border border-orange-500/30 flex items-center justify-center mx-auto shadow-inner">
+          <span className="material-symbols-outlined text-[32px]">devices</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setQuickActionsOpen(true)}
-            className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold flex items-center gap-1 active:scale-[0.97]"
+        <div>
+          <span className="text-[10px] font-mono bg-slate-800 text-orange-400 font-bold px-2.5 py-1 rounded-full border border-slate-700 uppercase tracking-wider">
+            Tablet & Desktop Workstation Only
+          </span>
+          <h2 className="text-xl font-black text-white uppercase tracking-wider mt-3">
+            CulinaryOS Admin Console
+          </h2>
+          <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+            Administrative management, reporting matrices, and scheduling are engineered exclusively for <strong>iPad, tablet terminals (≥768px)</strong>, and <strong>desktop workstations</strong>.
+          </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <a
+            href="http://localhost:5172"
+            className="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>86 / Ops</span>
-          </button>
-          <div className="relative">
-            <button
-              type="button"
-              className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-[0.97]"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-            </button>
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
-          </div>
+            <span>Switch to Mobile POS Terminal</span>
+          </a>
 
           <button
             type="button"
-            onClick={logout}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 flex items-center justify-center active:scale-[0.97] transition-all"
-            title="Sign out of Admin console"
-            aria-label="Sign out"
+            onClick={() => {
+              const deviceCtx = (window as any).__setAdminPreviewMode;
+              if (deviceCtx) deviceCtx('tablet');
+              else window.location.reload();
+            }}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition-all"
           >
-            <LogOut className="w-4 h-4" />
+            Force Tablet Layout
           </button>
         </div>
-      </header>
 
-      {/* Main Mobile Screen Area */}
-      <main className="flex-1 p-3.5 space-y-4 max-w-md mx-auto w-full">
-        {children}
-      </main>
-
-      {/* Fixed Thumb-Zone Bottom Navigation Bar */}
-      <MobileBottomNav
-        onOpenQuickActions={() => setQuickActionsOpen(true)}
-        pendingApprovalsCount={3}
-      />
-
-      {/* Mobile Quick Action Sheet */}
-      <MobileQuickActionsSheet
-        isOpen={quickActionsOpen}
-        onClose={() => setQuickActionsOpen(false)}
-      />
-    </div>
-  );
-
-  if (isSimulated) {
-    return (
-      <div className="min-h-[calc(100vh-38px)] bg-slate-900/40 p-4 md:p-8 flex justify-center items-start overflow-y-auto">
-        <div className="w-full max-w-[390px] bg-[#f8f9fa] rounded-[42px] shadow-2xl border-[6px] border-slate-800 overflow-hidden ring-1 ring-slate-700/50 min-h-[780px]">
-          {mobileContent}
+        <div className="pt-2 text-[10px] text-slate-500 font-mono">
+          Minimum viewport width: 768px • iOS / iPadOS / macOS / Windows
         </div>
       </div>
-    );
-  }
-
-  return mobileContent;
+    </div>
+  );
 }
