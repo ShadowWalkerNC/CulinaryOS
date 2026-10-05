@@ -454,5 +454,19 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
     - `node ./scripts/run-all-tests.cjs`: 159 passed, 0 failed across all suites.
     - `packages/pdf-tools/src/__tests__/menu-pdf.test.ts`: 20/20 PASS.
     - `tests/shared/asset-tools.test.ts`: PASS (1200x630 OG image generated).
+- 2026-10-05 (Antigravity): CLAIM & RELEASE — Phase 5 Monorepo Consolidation: CulinaryOS Marketing (Post-Pilot) Autonomous Social Studio, Brand Voice Guardrails & Python Pipeline Microservice.
+  - Scope: `apps/marketing`, `services/marketing-python`, `.gitignore`.
+  - Features:
+    - Absorbed Post-Pilot Python core into `services/marketing-python`: `core/business_brain` (models, service), `core/content` (generator, canonical 6-stage multi-platform pipeline).
+    - Ported and integrated CulinaryOS REST client normalizer (`integrations/culinaryos/client.py`) with menu, specials, events, hours normalization, and HMAC-SHA256 webhook signature verification.
+    - Implemented FastAPI microservice (`services/marketing-python/main.py`) exposing `/health`, `/skills`, `/skills/{name}/run`, `/brand-guard/audit`, `/campaigns/generate`, and `/sync/culinaryos`.
+    - Created autonomous Campaign Planning Studio (`apps/marketing/src/app/studio/page.tsx` & `/campaigns`) featuring 5 operational skill workflows (`special_post`, `event_campaign`, `weekly_plan`, `review_reply`, `brand_guard`), live Brand Guard compliance meter, real-time multi-platform preview cards (Instagram, Facebook, Google Business, TikTok, X), and 1-click platform copy / campaign export.
+    - Added "Campaign Studio" link in Marketing header navigation.
+  - Verification:
+    - Python pytest suite: 27/27 PASS (api, business_brain, content_pipeline, culinaryos_client, skills_loader).
+    - `apps/marketing` build (`next build`): PASS (19/19 static pages rendered cleanly, 0 errors).
+    - `pnpm turbo run typecheck`: 52/52 successful, 0 errors monorepo-wide.
+    - `node ./scripts/run-all-tests.cjs`: 159 passed, 0 failed across all suites.
+
 
 

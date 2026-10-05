@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 const nav = [
   { label: 'Features', href: '/features' },
+  { label: 'Campaign Studio', href: '/studio' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'RecipeOS', href: '/recipeos' },
   { label: 'Blog', href: '/blog' },
