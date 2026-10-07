@@ -233,6 +233,62 @@ describe('@culinaryos/sdk Client Suite', () => {
     expect(sentPayload.recipeName).toBe('Herb Grilled Chicken Breast');
     expect(sentPayload.macros.sodiumMg).toBe(115);
   });
+
+  it('supports diagnostics subsystem (RestRevive-AI + Intelligence Engine)', () => {
+    // 1. Waste anomaly detection
+    const wasteReport = client.diagnostics.detectWasteAnomalies(
+      [
+        {
+          station: 'Grill',
+          ingredient: 'Wagyu Trim',
+          quantityGrams: 1500,
+          costCents: 9000,
+        },
+      ],
+      [{ station: 'Grill', averageGrams: 500 }]
+    );
+    expect(wasteReport.anomalyCount).toBe(1);
+    expect(wasteReport.highestCostImpactStation).toBe('Grill');
+    expect(wasteReport.anomalies[0].isSpike).toBe(true);
+
+    // 2. Prime cost analysis
+    const primeCost = client.diagnostics.calculatePrimeCost({
+      revenueCents: 10000000, // $100k
+      cogsCents: 3500000,     // 35%
+      laborCents: 3500000,    // 35%
+    });
+    expect(primeCost.primeCostPercent).toBe(70);
+    expect(primeCost.severity).toBe('critical');
+    expect(primeCost.status).toBe('CRITICAL_RISK');
+
+    // 3. Kasavana & Smith menu matrix
+    const menuMatrix = client.diagnostics.analyzeMenuMatrix([
+      { itemId: '1', name: 'Signature Burger', salesCount: 120, priceCents: 2200, costCents: 550 },
+      { itemId: '2', name: 'Slow Salad', salesCount: 5, priceCents: 1200, costCents: 900 },
+    ]);
+    expect(menuMatrix.items.length).toBe(2);
+    expect(menuMatrix.summary.stars).toBe(1);
+    expect(menuMatrix.summary.dogs).toBe(1);
+
+    // 4. 30-day revival plan
+    const revivalPlan = client.diagnostics.generateRevivalPlan({
+      restaurantName: 'Alley Katz',
+      primeCost,
+      wasteReport,
+      menuMatrix,
+    });
+    expect(revivalPlan.restaurantName).toBe('Alley Katz');
+    expect(revivalPlan.weeks).toHaveLength(4);
+    expect(revivalPlan.immediateTop3Priorities.length).toBeGreaterThanOrEqual(1);
+
+    // 5. Multi-provider AI adapter creation
+    const provider = client.diagnostics.createProviderAdapter({
+      provider: 'local',
+      baseUrl: 'http://127.0.0.1:11434/v1',
+    });
+    expect(provider.id).toBe('local');
+    expect(provider.provider).toBe('local');
+  });
 });
 
 

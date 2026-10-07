@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@culinaryos/hardware": "workspace:*",
+    "@culinaryos/intelligence": "workspace:*",
     "@culinaryos/shared": "workspace:*"
   },
   "devDependencies": {

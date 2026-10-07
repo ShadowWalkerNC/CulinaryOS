@@ -11,6 +11,29 @@ import {
   EdgeOfflineCoordinator,
   type ReceiptPrinterDriver,
 } from '@culinaryos/hardware';
+import {
+  detectWasteAnomalies,
+  calculatePrimeCost,
+  analyzeMenuMatrix,
+  generateRevivalPlan,
+  createProviderAdapter,
+  ClaudeProviderAdapter,
+  GeminiProviderAdapter,
+  OpenAIProviderAdapter,
+  LocalProviderAdapter,
+  type WasteLogItem,
+  type StationHistoricalWaste,
+  type WasteAnomalyReport,
+  type WasteAnomalyOptions,
+  type PrimeCostInput,
+  type PrimeCostAnalysis,
+  type MenuItemSalesInput,
+  type MenuMatrixReport,
+  type RevivalPlanInput,
+  type FinancialRevivalPlan,
+  type ProviderConfig,
+  type ProviderAdapter,
+} from '@culinaryos/intelligence';
 import { ShorelineNutritionAdapter } from './integrations/shoreline.js';
 
 export interface CulinaryOSClientConfig {
@@ -324,9 +347,27 @@ export class CulinaryOSClient {
       initialOnlineState?: boolean;
     }) => new EdgeOfflineCoordinator(options),
   };
+
+  // --- Diagnostics & Financial Revival Subsystem (RestRevive-AI + Intelligence Engine) ---
+  readonly diagnostics = {
+    detectWasteAnomalies: (
+      logs: WasteLogItem[],
+      historical: StationHistoricalWaste[],
+      options?: WasteAnomalyOptions
+    ): WasteAnomalyReport => detectWasteAnomalies(logs, historical, options),
+    calculatePrimeCost: (input: PrimeCostInput): PrimeCostAnalysis =>
+      calculatePrimeCost(input),
+    analyzeMenuMatrix: (items: MenuItemSalesInput[]): MenuMatrixReport =>
+      analyzeMenuMatrix(items),
+    generateRevivalPlan: (input: RevivalPlanInput): FinancialRevivalPlan =>
+      generateRevivalPlan(input),
+    createProviderAdapter: (config: ProviderConfig): ProviderAdapter =>
+      createProviderAdapter(config),
+  };
 }
 
 export * from '@culinaryos/hardware';
+export * from '@culinaryos/intelligence';
 export * from './integrations/shoreline.js';
 
 export function createClient(config: CulinaryOSClientConfig): CulinaryOSClient {

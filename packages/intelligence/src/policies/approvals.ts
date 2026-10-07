@@ -26,14 +26,18 @@ export interface ApprovalInput {
 
 export class ApprovalQueue {
   private items = new Map<string, ApprovalRequest>();
+  private ttlMs: number;
+  private filePath?: string;
   /**
    * @param ttlMs pending approvals expire after this long (ms, 0 = never)
    * @param filePath optional JSON file for shared persistence
    */
   constructor(
-    private ttlMs = 0,
-    private filePath?: string,
+    ttlMs = 0,
+    filePath?: string,
   ) {
+    this.ttlMs = ttlMs;
+    this.filePath = filePath;
     if (filePath && existsSync(filePath)) {
       try {
         const saved = JSON.parse(readFileSync(filePath, 'utf8')) as ApprovalRequest[];

@@ -977,6 +977,9 @@ importers:
       '@culinaryos/hardware':
         specifier: workspace:*
         version: link:../hardware
+      '@culinaryos/intelligence':
+        specifier: workspace:*
+        version: link:../intelligence
       '@culinaryos/shared':
         specifier: workspace:*
         version: link:../shared

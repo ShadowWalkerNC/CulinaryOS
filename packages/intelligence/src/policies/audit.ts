@@ -18,7 +18,10 @@ export interface AuditInput {
 
 export class AuditLog {
   private memory: AuditEntry[] = [];
-  constructor(private filePath?: string) {}
+  private filePath?: string;
+  constructor(filePath?: string) {
+    this.filePath = filePath;
+  }
 
   record(input: AuditInput): AuditEntry {
     const entry: AuditEntry = redact({

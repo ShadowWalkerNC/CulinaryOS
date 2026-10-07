@@ -23,6 +23,8 @@ export * from './workflows/builtin.ts';
 export * from './adapters/types.ts';
 export * from './adapters/echo.ts';
 export * from './adapters/rest.ts';
+export * from './adapters/provider.ts';
+export * from './diagnostics/index.ts';
 export * from './mcp/capabilities.ts';
 export * from './mcp/server.ts';
 export * from './api/server.ts';
