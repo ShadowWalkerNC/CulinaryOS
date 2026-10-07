@@ -470,3 +470,6 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
 
 
 
+
+## 2026-10-07 ShadowWalker project declaration
+Codex ownership: root PROJECT.yaml only plus this evidence entry; completed in codex/shadowwalker-project-v1 dedicated worktree. Declares current package engines and pnpm pin without changing product source, runtime or providers. VERIFIED: Forge compiled project-contract reader returns valid for the actual CulinaryOS root manifest. Node 24 compatibility, product build/provider/payment/hardware/production acceptance NOT RUN. Shared central ledger records the Muse/Codex schema task and source ownership. Scope released after contract validation; no push.

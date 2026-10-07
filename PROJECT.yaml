@@ -1,0 +1,24 @@
+# DECLARED from package.json; Node >=20 is legacy compatibility, not an accepted future production baseline.
+# Schema validation does not prove Node 24, data migration, payment or provider acceptance.
+schemaVersion: shadowwalker.project/v1
+id: culinary
+name: CulinaryOS
+repository: ShadowWalkerNC/CulinaryOS
+kind: product
+lifecycle: ACTIVE
+ownership:
+  owner: ShadowWalkerNC
+  domains:
+    - restaurant-operations
+environments:
+  - windows
+runtimes:
+  node: ">=20.0.0"
+packageManager:
+  name: pnpm
+  version: "9.0.0"
+commands:
+  dev: pnpm dev
+  build: pnpm build
+  test: pnpm test
+  typecheck: pnpm typecheck
