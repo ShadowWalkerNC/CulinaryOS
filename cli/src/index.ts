@@ -25,6 +25,11 @@ import { autopilotCommand } from './commands/autopilot';
 import { daypartsCommand } from './commands/dayparts';
 import { hardwareCommand } from './commands/hardware';
 import { databaseCommand } from './commands/database';
+import { purchasingCommand } from './commands/purchasing';
+import { tablesCommand } from './commands/tables';
+import { marketplaceCommand } from './commands/marketplace';
+import { settingsCommand } from './commands/settings';
+import { diagnosticsCommand } from './commands/diagnostics';
 
 const program = new Command();
 
@@ -56,6 +61,11 @@ program.addCommand(autopilotCommand);
 program.addCommand(daypartsCommand);
 program.addCommand(hardwareCommand);
 program.addCommand(databaseCommand);
+program.addCommand(purchasingCommand);
+program.addCommand(tablesCommand);
+program.addCommand(marketplaceCommand);
+program.addCommand(settingsCommand);
+program.addCommand(diagnosticsCommand);
 
 // Top-Level Doctor Command (supports: culinary doctor security, culinary doctor ui)
 program

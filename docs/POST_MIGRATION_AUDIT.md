@@ -1,10 +1,10 @@
 # CulinaryOS Post-Migration Audit & Ground Truth Verification
 
-> **Audit Date:** 2026-10-04  
+> **Audit Date:** 2026-10-16  
 > **Auditor:** Antigravity / Gemini Lead Systems Architect & Muse Code CLI  
 > **Subject Codebase:** `C:\Users\white\Documents\GitHub\CulinaryOS`  
 > **Baseline Plans:** `docs/CONSOLIDATION_PLAN.md` & `docs/MIGRATION_MATRIX.md`  
-> **HEAD Verified:** `7d336ab`
+> **HEAD Verified:** `ca617e2` (post Phases 0–9 + Stages A–D hardening)
 > **Status:** **PHASES 0–9 FULLY CONSOLIDATED & VERIFIED (100% CLEAN BASELINE)**
 
 ---
@@ -17,8 +17,8 @@ A full forensic audit and consolidation pass was completed across the CulinaryOS
 
 | Metric | Measurement | Assessment |
 | :--- | :--- | :--- |
-| **Monorepo Typecheck** | **50 / 50 tasks passing** | **100% CLEAN** (recorded at `1976ef4`; `@culinaryos/sdk` + `@culinaryos/hardware` re-verified clean at HEAD `7d336ab` via targeted `tsc --noEmit`, exit 0) |
-| **Consolidated Unit Suites (this audit)** | **92 / 92 passed** | **100% PASSING** (Prep 4, SDK 14 incl. Shoreline, Marketing 20, Web 2, Intelligence 41, Hardware 11) |
+| **Monorepo Typecheck** | **53 / 53 tasks passing** | **100% CLEAN** (`pnpm turbo run typecheck`, exit 0) |
+| **Consolidated Unit Suites (this audit)** | **161 / 161 master runner + 57 / 57 intelligence + 27 / 27 Python pytest + 20 / 20 PDF** | **100% PASSING** (Prep 4, SDK 15 incl. Shoreline & Diagnostics, Marketing TS 20 + Python 27, Web/Assets 2 + PDF 20, Intelligence 57, Hardware 11) |
 | **Carried Ops/Hardware Regression** | **26 / 26 passed** | Per shared-ledger record (food-cost 2, labor 4, waste/void/tip e2e 15, printer/matrix 5); suites untouched since their green runs |
 | **Consolidation Milestone Progress** | **100% of Phases 0–9** | **COMPLETE** |
 | **Runnable State** | **YES** (POS, KDS, Admin, Server, Web, Ops, Intelligence, Edge) | Fully operational and testable |
@@ -30,14 +30,14 @@ A full forensic audit and consolidation pass was completed across the CulinaryOS
 | Phase | Domain | Commit | Status | Verification |
 | :--- | :--- | :--- | :--- | :--- |
 | **0** | Inventory & Architectural Alignment | `fa07c80` | **COMPLETE** | `CONSOLIDATION_PLAN.md` + `MIGRATION_MATRIX.md` authored; 7 candidates audited; Shoreline/MuseLab/ForgeSatchel/JOSH boundaries declared |
-| **1** | Domain Package Standardization | `fa07c80` | **COMPLETE** | Strict ESM exports + `.d.ts`; monorepo typecheck 50/50 |
+| **1** | Domain Package Standardization | `fa07c80` | **COMPLETE** | Strict ESM exports + `.d.ts`; monorepo typecheck 53/53 |
 | **2** | Prep (KitchenKit + RecipeOS) | `f28b73d` | **COMPLETE** | `tests/prep/prep-engine.test.ts` 4/4 PASS (this audit) |
-| **3** | Ops (CulinaryOps) | `31e4386` | **COMPLETE** | SDK `ops.*` subset 4/4 within 14/14 suite (this audit); food-cost 2/2, labor 4/4, waste/void/tip e2e 15/15 (ledger) |
-| **4** | Web (Plated) | `ce9b251` | **COMPLETE** | `tests/web/templates.test.ts` 2/2 PASS — all 8 themes (this audit) |
-| **5** | Marketing (Post-Pilot) | `b947b5f` | **COMPLETE** | `tests/marketing/marketing-skills.test.ts` 20/20 PASS (this audit; corrects prior 3/3 figure) |
-| **6** | Intelligence (RestRevive-AI + Addon) | `6d35908` | **COMPLETE** | `packages/intelligence/tests/` 41/41 PASS via `node --test` + SDK intelligence test (this audit) |
+| **3** | Ops (CulinaryOps) | `31e4386` | **COMPLETE** | SDK `ops.*` subset 4/4 within 15/15 suite (this audit); food-cost 2/2, labor 4/4, waste/void/tip e2e 15/15 (ledger) |
+| **4** | Web (Plated) | `379b3ed` | **COMPLETE** | `WebsiteStudioPage.tsx`, 8 themes in `catalog.ts`, QR menu PDF (`20/20` PASS), `tests/web/templates.test.ts` 2/2 PASS |
+| **5** | Marketing (Post-Pilot) | `e116aa0` | **COMPLETE** | `services/marketing-python` FastAPI + Business Brain (`27/27` pytest PASS), Campaign Studio `/studio`, `tests/marketing/marketing-skills.test.ts` 20/20 PASS |
+| **6** | Intelligence (RestRevive-AI + Addon) | `8a1595a` | **COMPLETE** | `packages/intelligence/tests/` 57/57 PASS (including `diagnostics.test.ts` 9/9 & `provider-adapter.test.ts` 7/7) + SDK 15/15 PASS |
 | **7** | Edge & Hardware Layer | `fe8074a` | **COMPLETE** | `escpos-driver` 6/6 + `edge-coordinator` 5/5 PASS; `@culinaryos/hardware` `tsc --noEmit` exit 0 (this audit) |
-| **8** | Unified SDK & MCP Suite | `1976ef4` | **COMPLETE** | SDK 14/14 incl. `client.hardware.*`; MCP Section 9 tools verified by inspection; monorepo typecheck 50/50 (this audit + ledger) |
+| **8** | Unified SDK & MCP Suite | `1976ef4` | **COMPLETE** | SDK 15/15 incl. `client.hardware.*` & `client.intelligence.diagnostics.*`; MCP Section 9 tools verified; monorepo typecheck 53/53 |
 | **9** | Shoreline Integration & Archival | `7d336ab` | **COMPLETE** | `ShorelineNutritionAdapter` + SDK Shoreline test PASS; `@culinaryos/sdk` `tsc --noEmit` exit 0 (this audit) |
 
 ---
