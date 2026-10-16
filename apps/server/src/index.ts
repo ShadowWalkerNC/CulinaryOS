@@ -10,7 +10,7 @@ import { logger }              from 'hono/logger';
 import { requireApiKey }       from './middleware/auth';
 import { withSupabase }        from './middleware/supabase';
 import { isNativePostgresEnabled } from './postgres/config.js';
-import { checkNativeHealth, setupNativePostgres } from './postgres/startup.js';
+import { checkNativeHealth, getNativeStartupState, setupNativePostgres } from './postgres/startup.js';
 import { assertProductionAuthConfiguration, isAuthRelaxed, isLocalDemoMode, isLiveSupabaseConfigured } from './lib/secrets';
 import {
   handleIncomingEvent,
@@ -115,6 +115,18 @@ app.get('/internal/events', async (c) => {
   const { data, error } = await q;
   if (error) return c.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: error.message } }, 500);
   return c.json({ ok: true, data });
+});
+
+// ---- Native PostgreSQL Priority Dispatcher (CULINARYOS_NATIVE_PG=true) ----
+app.use('/v1/*', async (c, next) => {
+  const nativeState = getNativeStartupState();
+  if (nativeState.enabled && nativeState.nativeApp) {
+    const res = await nativeState.nativeApp.fetch(c.req.raw);
+    if (res.status !== 404) {
+      return res;
+    }
+  }
+  await next();
 });
 
 app.route('/v1/auth',         authRoutes);

@@ -9,6 +9,7 @@ export interface NativeStartupState {
   enabled: boolean;
   pool: Pool | null;
   roleInfo: RuntimeDatabaseRoleInfo | null;
+  nativeApp: Hono<any> | null;
   error: Error | null;
 }
 
@@ -16,6 +17,7 @@ let state: NativeStartupState = {
   enabled: false,
   pool: null,
   roleInfo: null,
+  nativeApp: null,
   error: null,
 };
 
@@ -32,6 +34,7 @@ export function resetNativeStartupState(): void {
     enabled: false,
     pool: null,
     roleInfo: null,
+    nativeApp: null,
     error: null,
   };
 }
@@ -48,14 +51,14 @@ export async function setupNativePostgres(
 ): Promise<NativeStartupState> {
   const enabled = options?.enabled ?? isNativePostgresEnabled();
   if (!enabled) {
-    state = { enabled: false, pool: null, roleInfo: null, error: null };
+    state = { enabled: false, pool: null, roleInfo: null, nativeApp: null, error: null };
     return state;
   }
 
   const databaseUrl = options?.databaseUrl ?? getNativeDatabaseUrl();
   if (!databaseUrl && !options?.pool) {
     const error = new Error('Native PostgreSQL enabled (CULINARYOS_NATIVE_PG=true) but no valid DATABASE_URL configured');
-    state = { enabled: true, pool: null, roleInfo: null, error };
+    state = { enabled: true, pool: null, roleInfo: null, nativeApp: null, error };
     throw error;
   }
 
@@ -69,7 +72,6 @@ export async function setupNativePostgres(
 
   try {
     const roleInfo = await assertRuntimeDatabaseRole(pool);
-    state = { enabled: true, pool, roleInfo, error: null };
 
     console.log(
       `[culinaryos-api] DATABASE ROLE: RESTRICTED — login "${roleInfo.login}" is a verified member of culinaryos_app (0 public tables owned, NOBYPASSRLS).`
@@ -82,11 +84,12 @@ export async function setupNativePostgres(
       runAuth: createAuthRunner(pool),
     });
 
+    state = { enabled: true, pool, roleInfo, nativeApp, error: null };
     app.route('/', nativeApp);
     return state;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    state = { enabled: true, pool: null, roleInfo: null, error: err };
+    state = { enabled: true, pool: null, roleInfo: null, nativeApp: null, error: err };
     try {
       await pool.end();
     } catch {
