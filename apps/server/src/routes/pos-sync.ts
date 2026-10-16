@@ -18,6 +18,7 @@ interface OfflineDelta {
   action:
     | 'create_order'
     | 'add_line_item'
+    | 'void_line_item'
     | 'apply_discount'
     | 'finalize_payment'
     | 'void_order'
@@ -27,6 +28,15 @@ interface OfflineDelta {
   payload: Record<string, any>;
   timestamp: string;
   synced?: boolean;
+}
+
+function isNonNegativeIntCents(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    Number.isSafeInteger(value) &&
+    value >= 0
+  );
 }
 
 posSyncRoutes.post('/sync-deltas', async (c) => {
@@ -54,13 +64,36 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
     }
 
     try {
-      if (delta.action === 'finalize_payment' &&
-          !['cash', 'comp'].includes(delta.payload?.method ?? 'cash')) {
-        failures.push({ id: delta.id, error: 'Only cash/comp payments may be finalized through offline replay; card payments require verified processor settlement' });
-        continue;
+      if (delta.action === 'finalize_payment') {
+        const method = delta.payload?.method ?? 'cash';
+        if (!['cash', 'comp'].includes(method)) {
+          failures.push({
+            id: delta.id,
+            error: 'Only cash/comp payments may be finalized through offline replay; card payments require verified processor settlement',
+          });
+          continue;
+        }
+        const amount = delta.payload?.amount ?? delta.payload?.total ?? 0;
+        const tip = delta.payload?.tip_amount ?? delta.payload?.tip_cents ?? 0;
+        if (!isNonNegativeIntCents(amount) || !isNonNegativeIntCents(tip)) {
+          failures.push({
+            id: delta.id,
+            error: 'Payment amount and tip must be non-negative integer cents',
+          });
+          continue;
+        }
       }
+
+      if (delta.action === 'void_line_item') {
+        const itemId = delta.payload?.itemId ?? delta.payload?.item_id ?? delta.payload?.line_item_id;
+        if (typeof itemId !== 'string' || itemId.trim().length === 0) {
+          failures.push({ id: delta.id, error: 'itemId is required for void_line_item' });
+          continue;
+        }
+      }
+
       if (!supabase) {
-        // Demo mode — accept all deltas for the tenant
+        // Demo mode — accept valid non-card deltas for the tenant
         confirmedIds.push(delta.id);
         continue;
       }
@@ -71,6 +104,35 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
           const method = delta.payload?.method ?? 'cash';
           const amount = delta.payload?.amount ?? delta.payload?.total ?? 0;
           const tip = delta.payload?.tip_amount ?? delta.payload?.tip_cents ?? 0;
+
+          const ordersTable: any = supabase.from('pos_orders');
+          if (typeof ordersTable.select === 'function') {
+            const { data: existingOrder, error: fetchErr } = await ordersTable
+              .select('id, tenant_id, total')
+              .eq('id', delta.order_id)
+              .eq('tenant_id', tenantId)
+              .maybeSingle();
+
+            if (fetchErr) {
+              failures.push({ id: delta.id, error: fetchErr.message });
+              break;
+            }
+            if (!existingOrder) {
+              failures.push({ id: delta.id, error: 'Order not found for tenant' });
+              break;
+            }
+            if (
+              typeof existingOrder.total === 'number' &&
+              existingOrder.total > 0 &&
+              amount !== existingOrder.total
+            ) {
+              failures.push({
+                id: delta.id,
+                error: `Payment amount (${amount}) does not match authoritative order total (${existingOrder.total})`,
+              });
+              break;
+            }
+          }
 
           const { error: payErr } = await supabase.from('payments').insert({
             tenant_id: tenantId,
@@ -112,7 +174,7 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
             .from('pos_orders')
             .update({
               status: 'voided',
-              void_reason: delta.payload?.reason ?? 'offline_void',
+              void_reason: delta.payload?.reasonCode ?? delta.payload?.reason ?? 'offline_void',
             })
             .eq('id', delta.order_id)
             .eq('tenant_id', tenantId);
@@ -122,18 +184,51 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
         }
 
         case 'create_order': {
-          const { error } = await supabase.from('pos_orders').upsert({
+          const subtotal = delta.payload?.subtotal ?? 0;
+          const tax = delta.payload?.tax ?? 0;
+          const total = delta.payload?.total ?? 0;
+          if (
+            !isNonNegativeIntCents(subtotal) ||
+            !isNonNegativeIntCents(tax) ||
+            !isNonNegativeIntCents(total)
+          ) {
+            failures.push({ id: delta.id, error: 'Order totals must be non-negative integer cents' });
+            break;
+          }
+
+          const ordersTable: any = supabase.from('pos_orders');
+          if (typeof ordersTable.select === 'function') {
+            const { data: existingOrder, error: lookupErr } = await ordersTable
+              .select('id, tenant_id')
+              .eq('id', delta.order_id)
+              .maybeSingle();
+
+            if (lookupErr) {
+              failures.push({ id: delta.id, error: lookupErr.message });
+              break;
+            }
+            if (existingOrder && existingOrder.tenant_id !== tenantId) {
+              failures.push({ id: delta.id, error: 'Cross-tenant order ID collision rejected' });
+              break;
+            }
+          }
+
+          const orderRow = {
             id: delta.order_id,
             tenant_id: tenantId,
             table_number: delta.payload?.tableNumber ?? delta.payload?.table_number ?? null,
-            cover_count: delta.payload?.coverCount ?? 1,
-            server_name: delta.payload?.serverName ?? 'POS',
+            cover_count: delta.payload?.coverCount ?? delta.payload?.cover_count ?? 1,
+            server_name: delta.payload?.serverName ?? delta.payload?.server_name ?? 'POS',
             status: delta.payload?.status ?? 'open',
-            subtotal: delta.payload?.subtotal ?? 0,
-            tax: delta.payload?.tax ?? 0,
-            total: delta.payload?.total ?? 0,
+            subtotal,
+            tax,
+            total,
             notes: delta.payload?.notes ?? null,
-          }, { onConflict: 'id' });
+          };
+
+          const { error } = await supabase
+            .from('pos_orders')
+            .upsert(orderRow, { onConflict: 'id' });
           if (error) failures.push({ id: delta.id, error: error.message });
           else confirmedIds.push(delta.id);
           break;
@@ -141,15 +236,49 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
 
         case 'add_line_item': {
           const line = delta.payload ?? {};
+          const quantity = line.quantity ?? 1;
+          const unitPrice = line.unit_price ?? line.unitPrice ?? 0;
+          if (
+            typeof quantity !== 'number' ||
+            !Number.isInteger(quantity) ||
+            quantity <= 0 ||
+            !isNonNegativeIntCents(unitPrice)
+          ) {
+            failures.push({
+              id: delta.id,
+              error: 'Line item quantity (>0) and unit_price (>=0) must be integers',
+            });
+            break;
+          }
+
+          const ordersTable: any = supabase.from('pos_orders');
+          if (typeof ordersTable.select === 'function') {
+            const { data: parentOrder, error: parentErr } = await ordersTable
+              .select('id, tenant_id')
+              .eq('id', delta.order_id)
+              .eq('tenant_id', tenantId)
+              .maybeSingle();
+
+            if (parentErr) {
+              failures.push({ id: delta.id, error: parentErr.message });
+              break;
+            }
+            if (!parentOrder) {
+              failures.push({ id: delta.id, error: 'Parent order not found for tenant' });
+              break;
+            }
+          }
+
+          const computedLineTotal = unitPrice * quantity;
           const { error } = await supabase.from('pos_order_line_items').insert({
             id: line.id,
             tenant_id: tenantId,
             order_id: delta.order_id,
             menu_item_id: line.menu_item_id ?? line.menuItemId ?? null,
             name: line.name ?? 'Item',
-            quantity: line.quantity ?? 1,
-            unit_price: line.unit_price ?? line.unitPrice ?? 0,
-            line_total: line.line_total ?? line.lineTotal ?? 0,
+            quantity,
+            unit_price: unitPrice,
+            line_total: computedLineTotal,
             station: line.station ?? 'hot',
             course_number: line.course_number ?? line.courseNumber ?? 1,
             notes: line.notes ?? null,
@@ -162,14 +291,66 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
           break;
         }
 
+        case 'void_line_item': {
+          const itemId = String(
+            delta.payload?.itemId ?? delta.payload?.item_id ?? delta.payload?.line_item_id ?? ''
+          ).trim();
+          const reasonCode =
+            delta.payload?.reasonCode ?? delta.payload?.reason ?? 'offline_void';
+
+          const updateChain: any = supabase
+            .from('pos_order_line_items')
+            .update({ is_voided: true, void_reason: reasonCode })
+            .eq('id', itemId)
+            .eq('order_id', delta.order_id)
+            .eq('tenant_id', tenantId);
+
+          if (typeof updateChain.select === 'function') {
+            const { data: updatedRows, error: voidErr } = await updateChain.select('id');
+            if (voidErr) {
+              failures.push({ id: delta.id, error: voidErr.message });
+              break;
+            }
+            if (!updatedRows || updatedRows.length === 0) {
+              failures.push({ id: delta.id, error: 'Line item not found for tenant order' });
+              break;
+            }
+            confirmedIds.push(delta.id);
+          } else {
+            const { error: voidErr } = await updateChain;
+            if (voidErr) failures.push({ id: delta.id, error: voidErr.message });
+            else confirmedIds.push(delta.id);
+          }
+          break;
+        }
+
         case 'apply_discount': {
+          const discountPercent =
+            delta.payload?.discount_percent ?? delta.payload?.discountPercent ?? 0;
+          const discountFlat =
+            delta.payload?.discount_flat ?? delta.payload?.discountFlat ?? 0;
+          if (
+            typeof discountPercent !== 'number' ||
+            !Number.isFinite(discountPercent) ||
+            discountPercent < 0 ||
+            discountPercent > 100 ||
+            !isNonNegativeIntCents(discountFlat)
+          ) {
+            failures.push({ id: delta.id, error: 'Invalid discount values' });
+            break;
+          }
+
+          const updatePayload: Record<string, any> = {
+            discount_percent: discountPercent,
+            discount_flat: discountFlat,
+          };
+          if (isNonNegativeIntCents(delta.payload?.total)) {
+            updatePayload.total = delta.payload.total;
+          }
+
           const { error } = await supabase
             .from('pos_orders')
-            .update({
-              discount_percent: delta.payload?.discount_percent ?? delta.payload?.discountPercent ?? 0,
-              discount_flat: delta.payload?.discount_flat ?? delta.payload?.discountFlat ?? 0,
-              total: delta.payload?.total,
-            })
+            .update(updatePayload)
             .eq('id', delta.order_id)
             .eq('tenant_id', tenantId);
           if (error) failures.push({ id: delta.id, error: error.message });
