@@ -16,6 +16,7 @@ import {
   Sparkles,
   Printer,
   Code2,
+  Users,
 } from 'lucide-react';
 
 export interface MarketingHeaderProps {
@@ -148,6 +149,18 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
           </a>
 
           <a
+            href="/team"
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              currentPath === '/team'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="w-4 h-4 text-sky-500" />
+            <span>Team</span>
+          </a>
+
+          <a
             href="https://github.com/ShadowWalkerNC/CulinaryOS"
             target="_blank"
             rel="noopener noreferrer"
@@ -230,6 +243,13 @@ export const MarketingHeader: React.FC<MarketingHeaderProps> = ({
               className="block px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-slate-100"
             >
               Restaurant Careers Board
+            </a>
+            <a
+              href="/team"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-slate-100"
+            >
+              Leadership & Guild Team
             </a>
             <a
               href="https://github.com/ShadowWalkerNC/CulinaryOS"

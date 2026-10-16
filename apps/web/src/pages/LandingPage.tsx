@@ -33,6 +33,7 @@ import {
   QrCode,
   UtensilsCrossed,
   Package,
+  Users,
 } from '@culinaryos/ui';
 
 interface DeviceRole {
@@ -288,7 +289,7 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 text-emerald-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>CULINARYOS ENGINE v1.2.1</span>
+              <span>CULINARYOS ENGINE v1.3.0</span>
             </span>
             <span className="hidden md:inline text-slate-600">|</span>
             <span className="hidden md:inline text-slate-400">STATUS: PRODUCTION MONOREPO</span>
@@ -385,6 +386,14 @@ export function LandingPage() {
                 <Terminal className="w-4 h-4 text-slate-700" />
                 <span>Hardware Quickstart</span>
               </Button>
+
+              <a
+                href="/team"
+                className="min-h-[48px] px-4 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+              >
+                <Users className="w-4 h-4 text-sky-600" />
+                <span>Meet the Team</span>
+              </a>
 
               <a
                 href="https://github.com/ShadowWalkerNC/CulinaryOS"
@@ -1540,6 +1549,11 @@ export function LandingPage() {
               <li>
                 <a href="https://github.com/ShadowWalkerNC/CulinaryOS" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                   GitHub Monorepo
+                </a>
+              </li>
+              <li>
+                <a href="/team" className="hover:text-white transition-colors">
+                  Leadership &amp; Team Guild
                 </a>
               </li>
               <li>

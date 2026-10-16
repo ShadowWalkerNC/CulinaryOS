@@ -17,6 +17,12 @@ const footerLinks = {
     { label: 'GitHub Repository', href: 'https://github.com/ShadowWalkerNC/CulinaryOS', external: true },
     { label: 'Release Notes', href: 'https://github.com/ShadowWalkerNC/CulinaryOS/releases', external: true },
   ],
+  Company: [
+    { label: 'Leadership & Team', href: '/team' },
+    { label: 'Careers & Guild', href: '/careers' },
+    { label: 'Blog & Dispatches', href: '/blog' },
+    { label: 'GitHub Monorepo', href: 'https://github.com/ShadowWalkerNC/CulinaryOS', external: true },
+  ],
   Compliance: [
     { label: 'FLSA Tip Pool Standard', href: '/features#ops' },
     { label: 'Bring Your Own Stripe (SAQ-A)', href: '/pricing' },

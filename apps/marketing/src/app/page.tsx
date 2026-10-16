@@ -179,15 +179,15 @@ export default function HomePage() {
         </div>
 
         <div className="relative text-center max-w-5xl mx-auto">
-          {/* Eyebrow badge: Social Proof & Urgency */}
+          {/* Eyebrow badge: Social Proof & Pilot Status */}
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs sm:text-sm text-white/80 mb-8 backdrop-blur-md shadow-inner">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
             </span>
-            <span className="font-medium">Founding Operator Pilot</span>
+            <span className="font-medium">CulinaryOS Engine v1.3</span>
             <span className="text-white/30">•</span>
-            <span className="text-brand-orange font-semibold">Q3 2026 Cohort: 25 Spots Open</span>
+            <span className="text-brand-orange font-semibold">100% Sovereign &amp; Offline-First</span>
           </div>
 
           {/* Core Value Proposition Headline */}
@@ -198,7 +198,7 @@ export default function HomePage() {
 
           {/* Problem-Agitating & Outcome-Driven Subheadline */}
           <p className="text-lg sm:text-2xl text-white/70 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
-            Stop paying <strong className="text-white font-normal">$69/month per screen</strong>, 3% card markups, and 30% delivery kickbacks. Run POS, dual-language KDS, zero-commission online ordering, and BOH inventory on one open, offline-first platform.
+            Stop paying <strong className="text-white font-normal">$69/month per screen</strong>, 3% card markups, and 30% delivery kickbacks. Run POS, dual-language KDS, lowest-cost MRP purchasing, and FLSA tip pooling on one open, offline-first operating system.
           </p>
 
           {/* Dual Action Buttons with Haptic Button-in-Button Ergonomics */}
@@ -220,6 +220,14 @@ export default function HomePage() {
               <span>Live POS → KDS Simulator</span>
               <span className="text-brand-orange text-sm font-bold">▶</span>
             </a>
+
+            <Link
+              href="/team"
+              className="w-full sm:w-auto min-h-[56px] px-6 py-4 rounded-full bg-white/[0.03] border border-white/10 text-white/80 hover:text-white font-medium text-base flex items-center justify-center gap-2 hover:bg-white/10 active:scale-[0.97] transition-all"
+            >
+              <span>Meet the Team</span>
+              <span className="text-white/40">👥</span>
+            </Link>
           </div>
 
           {/* Micro-Copy Trust Assurance */}
@@ -228,7 +236,7 @@ export default function HomePage() {
             <span>•</span>
             <span>✓ Setup takes &lt; 15 minutes</span>
             <span>•</span>
-            <span>✓ Keep your existing tablets &amp; printers</span>
+            <span>✓ Keep your existing tablets &amp; thermal printers</span>
           </p>
 
           {/* Trust Highlights Grid (Double-Bezel Micro-Architecture) */}

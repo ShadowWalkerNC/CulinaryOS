@@ -59,9 +59,9 @@ CulinaryOS covers every surface of modern hospitality:
 - **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode, and sub-second course pacing.
 - **Admin Back-Office (`:5174`)** — Manager PIN gated, dual-column HACCP operations hub, menu builder, staff PINs, and operations HUD.
 - **CulinaryOS Prep (`:5177`)** — Recipe formulas, ratio blueprints, batch sizing, FIFO QR labels, and shift prep lists.
-- **Online Storefront & Web (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, and Plated theme generator.
+- **Online Storefront & Web (`:5176`)** — Guest ordering with FDA Top 9 dietary filtering, allergen matrices, tableside QR pay, Storefront Studio (`/studio`), and Team Guild (`/team`).
 - **CulinaryOS Ops (`:5178`)** — Actual vs theoretical food cost variance, kitchen scrap logging, FLSA tip pools, and labor % tracking.
-- **Marketing Studio (`:5179`)** — AI brand guardrails, 3-stage event campaign generator, and review response automation.
+- **Marketing Studio & Team (`:5179`)** — Sovereign landing engine, AI brand guardrails, 3-stage event campaign generator, and Team & Leadership Guild (`/team`).
 - **Unified Hono API (`:3000`)** — Single source of truth for orders, inventory, ops, payments, and settings.
 - **MCP Server (`mcp/`)** — Specialized Model Context Protocol servers exposing restaurant operations to AI agents.
 
@@ -452,6 +452,7 @@ We welcome contributions! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) befor
 
 ## Community & Support
 
+- **Leadership & Engineering Guild:** [Meet the Team](file:///c:/Users/white/Documents/GitHub/CulinaryOS/apps/marketing/src/app/team/page.tsx) (`/team` across marketing and web)
 - **Bug reports & feature requests:** [GitHub Issues](https://github.com/ShadowWalkerNC/CulinaryOS/issues)
 - **Questions & discussion:** [GitHub Discussions](https://github.com/ShadowWalkerNC/CulinaryOS/discussions)
 - **Architecture & API docs:** [`docs/`](docs/)

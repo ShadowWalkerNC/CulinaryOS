@@ -8,6 +8,7 @@ const nav = [
   { label: 'Campaign Studio', href: '/studio' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'RecipeOS', href: '/recipeos' },
+  { label: 'Team', href: '/team' },
   { label: 'Blog', href: '/blog' },
   { label: 'Docs', href: 'https://docs.culinaryos.io', external: true },
   { label: 'GitHub', href: 'https://github.com/ShadowWalkerNC/CulinaryOS', external: true },
@@ -30,7 +31,7 @@ export default function Header() {
                 Culinary<span className="text-brand-orange">OS</span>
               </span>
               <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/70">
-                v1.2
+                v1.3
               </span>
             </div>
           </Link>

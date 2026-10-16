@@ -129,6 +129,7 @@ export {
   ExternalLink,
   Activity,
   FileCode,
+  Code2,
   Copy,
   Terminal,
   Download,

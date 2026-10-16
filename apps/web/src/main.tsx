@@ -8,6 +8,7 @@ import { MenuPage } from './pages/MenuPage';
 import { TablesidePage } from './pages/TablesidePage';
 import { OrderStatusPage } from './pages/OrderStatusPage';
 import { JobsPage } from './pages/JobsPage';
+import { TeamPage } from './pages/TeamPage';
 import { WebsiteStudioPage } from './pages/WebsiteStudioPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -19,6 +20,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           {/* Landing / Marketing Page for CulinaryOS Platform */}
           <Route path="/"                                 element={<LandingPage />} />
           <Route path="/demo"                             element={<Navigate to="/menu/demo" replace />} />
+          {/* Team & Leadership Guild */}
+          <Route path="/team"                             element={<TeamPage />} />
           {/* Public CulinaryJobs Restaurant Career Board */}
           <Route path="/jobs"                             element={<JobsPage />} />
           {/* Storefront Studio & Website Builder (Plated Phase 4) */}
