@@ -6,7 +6,10 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import Stripe from 'stripe';
-import { stripeWebhook } from '../../apps/server/src/routes/stripe-webhook.ts';
+import {
+  stripeWebhook,
+  resetWebhookDedupeForTesting,
+} from '../../apps/server/src/routes/stripe-webhook.ts';
 import { setAdminSupabaseForTesting } from '../../apps/server/src/middleware/supabase.ts';
 
 const TENANT_A = '00000000-0000-0000-0000-0000000000aa';
@@ -27,6 +30,7 @@ describe('Stripe Webhook Signature Verification & Payment Isolation', () => {
   const saved: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>> = {};
 
   beforeEach(() => {
+    resetWebhookDedupeForTesting();
     for (const key of ENV_KEYS) saved[key] = process.env[key];
     process.env.AUTH_RELAXED = 'false';
     process.env.SUPABASE_URL = 'https://live.supabase.co';
@@ -34,6 +38,7 @@ describe('Stripe Webhook Signature Verification & Payment Isolation', () => {
   });
 
   afterEach(() => {
+    resetWebhookDedupeForTesting();
     setAdminSupabaseForTesting(null);
     for (const key of ENV_KEYS) {
       const value = saved[key];
@@ -244,6 +249,125 @@ describe('Stripe Webhook Signature Verification & Payment Isolation', () => {
 
     expect(res.status).toBe(200);
     // Order MUST NOT be marked paid because payment row tenant check returned 0 matches
+    expect(orderMarkedPaid).toBe(false);
+  });
+
+  it('6. Deduplicates replayed webhook events idempotently (BLOCKER-3)', async () => {
+    process.env.STRIPE_SECRET_KEY = TEST_STRIPE_KEY;
+    process.env.STRIPE_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
+
+    const payload = {
+      id: 'evt_dedupe_test_1',
+      object: 'event',
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_dedupe_1',
+          amount: 4200,
+          amount_received: 4200,
+          metadata: { tenant_id: TENANT_A, order_id: 'order_dedupe_1' },
+        },
+      },
+    };
+    const rawPayload = JSON.stringify(payload);
+    const signature = stripe.webhooks.generateTestHeaderString({
+      payload: rawPayload,
+      secret: TEST_WEBHOOK_SECRET,
+    });
+
+    let orderUpdates = 0;
+    setAdminSupabaseForTesting({
+      from: (table: string) => {
+        const chain: any = {
+          update: () => chain,
+          eq: () => chain,
+          select: () =>
+            Promise.resolve({
+              data: [{ id: 'pay_1', order_id: 'order_dedupe_1', amount: 4200 }],
+              error: null,
+            }),
+          then: (resolve: any) => {
+            if (table === 'pos_orders') orderUpdates++;
+            return Promise.resolve(resolve({ data: null, error: null }));
+          },
+        };
+        return chain;
+      },
+    });
+
+    const first = await stripeWebhook.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'stripe-signature': signature },
+      body: rawPayload,
+    });
+    expect(first.status).toBe(200);
+    expect(orderUpdates).toBe(1);
+
+    const second = await stripeWebhook.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'stripe-signature': signature },
+      body: rawPayload,
+    });
+    const secondBody = await second.json();
+    expect(second.status).toBe(200);
+    expect(secondBody.deduplicated).toBe(true);
+    expect(orderUpdates).toBe(1);
+  });
+
+  it('7. Blocks marking an order paid when stored payment row order_id or amount mismatches metadata (BLOCKER-3)', async () => {
+    process.env.STRIPE_SECRET_KEY = TEST_STRIPE_KEY;
+    process.env.STRIPE_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
+
+    const payload = {
+      id: 'evt_mismatch_order_amount',
+      object: 'event',
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_small_order',
+          amount: 1000,
+          amount_received: 1000,
+          metadata: {
+            tenant_id: TENANT_A,
+            order_id: 'order_expensive_999', // Metadata tries to settle expensive order
+          },
+        },
+      },
+    };
+    const rawPayload = JSON.stringify(payload);
+    const signature = stripe.webhooks.generateTestHeaderString({
+      payload: rawPayload,
+      secret: TEST_WEBHOOK_SECRET,
+    });
+
+    let orderMarkedPaid = false;
+    setAdminSupabaseForTesting({
+      from: (table: string) => {
+        const chain: any = {
+          update: () => chain,
+          eq: () => chain,
+          select: () =>
+            Promise.resolve({
+              // Stored payment row is actually bound to order_small_111
+              data: [{ id: 'pay_small', order_id: 'order_small_111', amount: 1000 }],
+              error: null,
+            }),
+          then: (resolve: any) => {
+            if (table === 'pos_orders') orderMarkedPaid = true;
+            return Promise.resolve(resolve({ data: null, error: null }));
+          },
+        };
+        return chain;
+      },
+    });
+
+    const res = await stripeWebhook.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'stripe-signature': signature },
+      body: rawPayload,
+    });
+
+    expect(res.status).toBe(200);
     expect(orderMarkedPaid).toBe(false);
   });
 });
