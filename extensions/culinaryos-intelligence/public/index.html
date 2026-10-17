@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CulinaryOS Intelligence</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <div class="brand-name">CulinaryOS Intelligence</div>
+        <div class="brand-sub" id="modeBadge">connecting…</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-tab="ask">Ask</button>
+      <button class="nav-btn" data-tab="skills">Skills</button>
+      <button class="nav-btn" data-tab="approvals">Approvals <span class="badge hidden" id="approvalBadge">0</span></button>
+      <button class="nav-btn" data-tab="workflows">Workflows</button>
+      <button class="nav-btn" data-tab="agents">Agents</button>
+    </nav>
+    <div class="sidebar-foot">Local-first · approvals on risky writes · <span id="versionBadge"></span></div>
+  </aside>
+
+  <main class="main">
+    <section class="tab active" id="tab-ask">
+      <h1>Ask the router</h1>
+      <p class="lede">Free text in, intent out. The fast System-1 router picks the agent and the minimum context needed.</p>
+      <div class="row">
+        <input id="askInput" type="text" placeholder="e.g. forecast production for tonight" autocomplete="off">
+        <button id="askBtn" class="primary">Route</button>
+      </div>
+      <div class="chips" id="askExamples">
+        <button>cost the margherita recipe</button>
+        <button>what is below par?</button>
+        <button>draft a purchase order</button>
+        <button>review temperature logs</button>
+        <button>write the shift handoff</button>
+      </div>
+      <div id="askResult" class="result hidden"></div>
+    </section>
+
+    <section class="tab" id="tab-skills">
+      <h1>Skills</h1>
+      <p class="lede">Twelve reusable skills grouped under six role agents. Pick one, fill inputs, run.</p>
+      <label class="field-label" for="skillSelect">Skill</label>
+      <select id="skillSelect"></select>
+      <div id="skillDetail" class="card hidden"></div>
+      <form id="skillForm" class="card hidden"></form>
+      <div id="skillResult" class="result hidden"></div>
+    </section>
+
+    <section class="tab" id="tab-approvals">
+      <h1>Approvals</h1>
+      <p class="lede">Risky writes pause here: money, purchases, schedules, employees, destructive or sensitive inventory changes.</p>
+      <div class="row"><button id="approvalRefresh">Refresh</button></div>
+      <div id="approvalList"></div>
+    </section>
+
+    <section class="tab" id="tab-workflows">
+      <h1>Workflows</h1>
+      <p class="lede">Small sequenced runs over skills. Halt on failure or pending approval.</p>
+      <div id="workflowList"></div>
+      <div id="workflowResult" class="result hidden"></div>
+    </section>
+
+    <section class="tab" id="tab-agents">
+      <h1>Agents</h1>
+      <p class="lede">Six roles. Agents carry voice and scope; skills carry behavior.</p>
+      <div id="agentList"></div>
+    </section>
+  </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

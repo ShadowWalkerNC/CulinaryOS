@@ -1,0 +1,38 @@
+// packages/recipes/src/ratio.ts
+// Pure TypeScript ratio engine re-export and mathematical helpers.
+// Zero external runtime dependencies.
+
+export {
+  scaleBlueprint,
+  computeCost,
+  fromTotalWeight,
+  scaleRecipeTree,
+  flattenScaledTree,
+  scaleByServings,
+  calculateRatio,
+  totalFormulaWeight,
+  formatAmount,
+  gramsToCups,
+  cupsToGrams,
+  computeRecipeCost,
+  calculateCostVariance,
+  summarizeWaste,
+  calculateWastePercentage,
+  generateShiftPrepPlan,
+  projectBatchRequirement,
+  scaleRecipe,
+  type MeasurementUnit,
+  type Ingredient,
+  type Recipe,
+  type RecipeIngredientItem,
+  type RecipeBlueprint,
+  type ScaledIngredientResult,
+  type ScaledRecipeTreeResult,
+  type ScaledIngredientSummary,
+  type InventoryStockItem,
+  type RecipeCostAnalysis,
+  type WasteLogEntry,
+  type WasteSummaryReport,
+  type ShiftPrepTask,
+  type ShiftPrepPlan,
+} from '@culinaryos/ratio-engine';
