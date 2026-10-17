@@ -66,6 +66,46 @@ paymentsRoutes.post('/terminal/connection-token', async (c: Context) => {
 });
 
 // ============================================================
+// POST /v1/payments/connect/link
+// Generates Stripe Connect Standard onboarding link for restaurant operator KYC
+// ============================================================
+paymentsRoutes.post('/connect/link', async (c: Context) => {
+  const tenantId = c.get('tenantId') as string;
+  const returnUrl = c.req.query('return_url') || 'http://localhost:5174/admin/settings';
+
+  if (!isStripeConfigured()) {
+    return ok(c, {
+      url: `https://connect.stripe.com/setup/s/mock_standard_account_${tenantId.slice(0, 8)}`,
+      account_id: `acct_mock_${tenantId.slice(0, 8)}`,
+      demo_mode: true,
+      message: 'Demo Stripe Connect onboarding URL generated.',
+    });
+  }
+
+  try {
+    const account = await stripe().accounts.create({
+      type: 'standard',
+      metadata: { tenant_id: tenantId },
+    });
+
+    const accountLink = await stripe().accountLinks.create({
+      account: account.id,
+      refresh_url: returnUrl,
+      return_url: returnUrl,
+      type: 'account_onboarding',
+    });
+
+    return ok(c, {
+      url: accountLink.url,
+      account_id: account.id,
+      demo_mode: false,
+    });
+  } catch (error: any) {
+    return err(c, 'STRIPE_ERROR', error.message || 'Failed to create Stripe Connect onboarding link', 500);
+  }
+});
+
+// ============================================================
 // POST /v1/payments/terminal/create-intent
 // Body: { order_id, tip_cents?, auto_gratuity_cents?, description? }
 // ============================================================

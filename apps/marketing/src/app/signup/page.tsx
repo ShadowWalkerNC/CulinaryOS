@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import SignupForm from '@/components/SignupForm';
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <SignupForm />
+        <Suspense fallback={<div className="p-12 text-center text-white/50 text-sm">Loading signup...</div>}>
+          <SignupForm />
+        </Suspense>
 
         <p className="text-center text-sm text-white/50 mt-6">
           Questions?{' '}

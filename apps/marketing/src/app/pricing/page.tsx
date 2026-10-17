@@ -16,7 +16,7 @@ const tiers = [
     badge: 'Food Trucks & Cafes',
     description: 'Everything you need to run high-volume counter service with zero hardware lock-in.',
     cta: 'Start 14-Day Free Trial',
-    ctaHref: '/signup',
+    ctaHref: '/signup?plan=starter',
     featured: false,
     features: [
       'Full Point of Sale (POS) on any tablet/PC',
@@ -36,7 +36,7 @@ const tiers = [
     badge: 'Most Popular for Full-Service',
     description: 'The complete restaurant operating system for dining rooms, bars, and multi-station kitchens.',
     cta: 'Start 14-Day Free Trial',
-    ctaHref: '/signup',
+    ctaHref: '/signup?plan=pro',
     featured: true,
     features: [
       'Everything in Starter',
