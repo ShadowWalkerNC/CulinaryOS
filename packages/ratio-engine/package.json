@@ -2,7 +2,7 @@
   "name": "@culinaryos/ratio-engine",
   "version": "0.1.0",
   "private": true,
-  "description": "Ratio Blueprint Engine — recipe scaling by ratio relationships, not fixed quantities",
+  "description": "Ratio Blueprint Engine: recipe scaling by ratio relationships, not fixed quantities",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types src/index.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

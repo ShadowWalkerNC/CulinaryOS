@@ -32,7 +32,7 @@
     "start:all": "turbo run dev --concurrency 25",
     "build": "turbo run build",
     "test": "turbo run test",
-    "//#test": "node ./scripts/run-all-tests.cjs",
+    "test:all": "node ./scripts/run-all-tests.cjs",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "supabase db push",

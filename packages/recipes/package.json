@@ -12,7 +12,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types src/ratio.test.ts"
   },
   "dependencies": {
     "@culinaryos/ratio-engine": "workspace:*"
