@@ -2,7 +2,7 @@
   "name": "@culinaryos/prep-engine",
   "version": "0.1.0",
   "private": true,
-  "description": "Shift prep planning — par levels, mise en place, batch projections",
+  "description": "Shift prep planning: par levels, mise en place, batch projections",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/index.test.js"
   },
   "dependencies": {
     "@culinaryos/ratio-engine": "workspace:*"
