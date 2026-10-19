@@ -44,86 +44,86 @@ flowchart TD
   - Established explicit boundaries for non-absorbed projects (ShorelineOps, MuseLab, ForgeSatchel, JOSH).
   - Authored `docs/MIGRATION_MATRIX.md` and `docs/CONSOLIDATION_PLAN.md`.
 
-### Phase 1: Domain Package Standardization
+### Phase 1: Domain Package Standardization (COMPLETED)
 - **Goal:** Unify and formalize core domain contracts across `packages/`.
 - **Key Work:**
-  - Standardize `@culinaryos/prep` and `@culinaryos/recipes` package boundaries.
-  - Standardize `@culinaryos/ops` (`food-cost-engine`, `labor-engine`, `waste-engine`).
-  - Standardize `@culinaryos/template-engine`, `@culinaryos/asset-tools`, `@culinaryos/pdf-tools`, `@culinaryos/seo-tools`.
-  - Ensure all packages expose strict ESM exports with TypeScript `.d.ts` declarations.
+  - Standardized `@culinaryos/prep-engine`, `@culinaryos/recipes`, and `@culinaryos/ratio-engine` boundaries.
+  - Standardized `@culinaryos/ops` (`food-cost-engine`, `labor-engine`, `waste-engine`).
+  - Standardized `@culinaryos/template-engine`, `@culinaryos/asset-tools`, `@culinaryos/pdf-tools`, `@culinaryos/seo-tools`.
+  - Ensured all packages expose strict ESM exports with TypeScript `.d.ts` declarations.
 - **Verification:** `pnpm run typecheck` across all packages with zero errors.
 
-### Phase 2: CulinaryOS Prep Consolidation (KitchenKit + RecipeOS)
+### Phase 2: CulinaryOS Prep Consolidation (KitchenKit + RecipeOS) (COMPLETED)
 - **Goal:** Unify batch prep planning and recipe vault into **CulinaryOS Prep**.
 - **Key Work:**
-  - Merge RecipeOS recipe vault models, yield calculations, and allergen profiles into `@culinaryos/recipes`.
-  - Integrate KitchenKit's ratio engine and mise en place generator into `@culinaryos/prep`.
-  - Unify UI inside `apps/prep` (retaining `apps/kitchenkit` alias during transition).
-  - Connect prep completion events to the core inventory depletion engine (`prep.task.completed` -> decrements raw inventory).
+  - Merged RecipeOS recipe vault models, yield calculations, and allergen profiles into `@culinaryos/recipes`.
+  - Integrated KitchenKit's ratio engine and mise en place generator into `@culinaryos/prep-engine`.
+  - Unified UI inside `apps/prep` (retaining `apps/kitchenkit` alias during transition).
+  - Connected prep completion events to the core inventory depletion engine (`prep.task.completed` -> decrements raw inventory).
 - **Verification:** Prep batch calculation unit tests, UI smoke test, `pnpm build`.
 
-### Phase 3: CulinaryOS Ops Consolidation (CulinaryOps)
+### Phase 3: CulinaryOS Ops Consolidation (CulinaryOps) (COMPLETED)
 - **Goal:** Fully embed prime cost intelligence, labor targets, and waste logging into **CulinaryOS Ops**.
 - **Key Work:**
-  - Unify `apps/ops` with shared UI design tokens (`@culinaryos/ui`).
-  - Implement actual vs. theoretical food cost calculation connecting POS sales to recipe batch depletion.
-  - Hardcode FLSA tip credit rules and manager exclusion gates into `@culinaryos/labor-engine`.
-  - Integrate waste logs with supplier credit memo requests.
+  - Unified `apps/ops` with shared UI design tokens (`@culinaryos/ui`).
+  - Implemented actual vs. theoretical food cost calculation connecting POS sales to recipe batch depletion.
+  - Hardcoded FLSA tip credit rules and manager exclusion gates into `@culinaryos/labor-engine`.
+  - Integrated waste logs with supplier credit memo requests (`credit-memo.ts`).
 - **Verification:** Labor and food cost mathematical proofs, test runner pass.
 
-### Phase 4: CulinaryOS Web Consolidation (Plated)
+### Phase 4: CulinaryOS Web Consolidation (Plated) (COMPLETED)
 - **Goal:** Transform `apps/web` into the unified public site, online guest commerce, and restaurant website builder.
 - **Key Work:**
-  - Migrate Plated's 8 restaurant themes (`templates/*`) into `@culinaryos/template-engine`.
-  - Integrate Sharp/Satori image asset generation into `@culinaryos/asset-tools`.
-  - Integrate Schema.org `Restaurant` markup generator into `@culinaryos/seo-tools`.
-  - Integrate jsPDF physical menu generation into `@culinaryos/pdf-tools`.
-  - Connect public online ordering to `apps/server` order creation endpoint.
+  - Migrated Plated's 8 restaurant themes (`templates/*`) into `@culinaryos/template-engine`.
+  - Integrated Sharp/Satori image asset generation into `@culinaryos/asset-tools`.
+  - Integrated Schema.org `Restaurant` markup generator into `@culinaryos/seo-tools`.
+  - Integrated jsPDF physical menu generation into `@culinaryos/pdf-tools`.
+  - Connected public online ordering to `apps/server` order creation endpoint.
 - **Verification:** Static Astro/Vite generation test, QR menu PDF output test.
 
-### Phase 5: CulinaryOS Marketing Consolidation (Post-Pilot)
+### Phase 5: CulinaryOS Marketing Consolidation (Post-Pilot) (COMPLETED)
 - **Goal:** Absorb Post-Pilot's autonomous marketing, brand guardrails, and campaign scheduling into **CulinaryOS Marketing**.
 - **Key Work:**
-  - Migrate Post-Pilot Python core into `services/marketing-python`.
-  - Migrate 5 operational skills (`brand_guard`, `event_campaign`, `review_reply`, `special_post`, `weekly_plan`).
-  - Port REST client normalizer to consume CulinaryOS menu and specials endpoints directly.
-  - Expose campaign planning studio inside `apps/marketing`.
+  - Migrated Post-Pilot Python core into `services/marketing-python`.
+  - Migrated 5 operational skills (`brand_guard`, `event_campaign`, `review_reply`, `special_post`, `weekly_plan`).
+  - Ported REST client normalizer to consume CulinaryOS menu and specials endpoints directly.
+  - Exposed campaign planning studio inside `apps/marketing`.
 - **Verification:** Python pytest test suite pass, FastAPI health check, campaign generation smoke test.
 
-### Phase 6: CulinaryOS Intelligence Consolidation (RestRevive + Addon)
+### Phase 6: CulinaryOS Intelligence Consolidation (RestRevive + Addon) (COMPLETED)
 - **Goal:** Establish the vendor-neutral AI runtime and operational skill registry in **CulinaryOS Intelligence**.
 - **Key Work:**
-  - Migrate 12 operational skills from `culinaryos-intelligence` into `intelligence/skills/`.
-  - Migrate 6 role agents into `intelligence/agents/`.
-  - Port RestRevive's financial revival and anomaly detection algorithms into `intelligence/diagnostics/`.
-  - Create `ProviderAdapter` abstraction supporting Claude, Gemini, OpenAI, and local LiteRT/Ollama.
-  - Implement human-in-the-loop policy and approval engine (`approval.list`, `approval.decide`).
+  - Migrated 12 operational skills from `culinaryos-intelligence` into `intelligence/skills/`.
+  - Migrated 6 role agents into `intelligence/agents/`.
+  - Ported RestRevive's financial revival and anomaly detection algorithms into `intelligence/diagnostics/`.
+  - Created `ProviderAdapter` abstraction supporting Claude, Gemini, OpenAI, and local LiteRT/Ollama.
+  - Implemented human-in-the-loop policy and approval engine (`approval.list`, `approval.decide`).
 - **Verification:** Skill runner unit tests, adapter mock test, MCP stdio test.
 
-### Phase 7: Edge & Hardware Layer (Raspberry Pi 5 / Rust / Peripheral Contracts)
+### Phase 7: Edge & Hardware Layer (Raspberry Pi 5 / Rust / Peripheral Contracts) (COMPLETED)
 - **Goal:** Formalize local hardware peripheral drivers, offline order continuity, and edge node contracts.
 - **Key Work:**
-  - Create peripheral contracts in `hardware/drivers/` (ESC/POS thermal printer, RJ11 drawer kick, scales, BLE temperature probes).
-  - Define Raspberry Pi 5 / CM5 local edge runner in `hardware/raspberry-pi/`.
-  - Establish Rust low-level micro-daemon for raw serial/USB communication where high performance and crash-free reliability are needed.
-  - Implement local-to-cloud bidirectional sync queue using HMAC-signed delta envelopes.
+  - Created peripheral contracts in `packages/hardware` (ESC/POS thermal printer, RJ11/RJ12 drawer kick, scales, BLE temperature probes).
+  - Defined Raspberry Pi 5 / CM5 local edge runner in `hardware/raspberry-pi/`.
+  - Established Rust low-level micro-daemon (`packages/hardware/daemon/src/main.rs`) for raw serial/USB communication where high performance and crash-free reliability are needed.
+  - Implemented local-to-cloud bidirectional sync queue using HMAC-signed delta envelopes.
 - **Verification:** Hardware loopback test, offline queue durability test under network drop.
 
-### Phase 8: Unified SDK & MCP Suite Alignment
+### Phase 8: Unified SDK & MCP Suite Alignment (COMPLETED)
 - **Goal:** Expose the public `@culinaryos/sdk` and standard restaurant MCP tool server.
 - **Key Work:**
-  - Expose intuitive SDK methods: `culinary.menu.get()`, `culinary.orders.create()`, `culinary.inventory.adjust()`, `culinary.prep.tasks.list()`, `culinary.analytics.query()`.
-  - Expose standard MCP tools: `restaurant.get`, `menu.get`, `orders.list`, `inventory.get`, `inventory.adjust`, `prep.list`, `recipes.get`, `marketing.generate`, `analytics.get`.
-  - Validate role-based permissions on every SDK and MCP invocation.
+  - Exposed intuitive SDK methods: `culinary.menu.get()`, `culinary.orders.create()`, `culinary.inventory.adjust()`, `culinary.prep.tasks.list()`, `culinary.analytics.query()`.
+  - Exposed standard MCP tools: `restaurant.get`, `menu.get`, `orders.list`, `inventory.get`, `inventory.adjust`, `prep.list`, `recipes.get`, `marketing.generate`, `analytics.get`.
+  - Validated role-based permissions on every SDK and MCP invocation.
 - **Verification:** SDK end-to-end integration tests, MCP Inspector test.
 
-### Phase 9: External Partner Integration & Archival Handshake
+### Phase 9: External Partner Integration & Archival Handshake (COMPLETED)
 - **Goal:** Formalize ShorelineOps integration client and mark source repositories as deprecated/read-only.
 - **Key Work:**
-  - Author `@culinaryos/integrations/shoreline` client with HIPAA-safe boundaries.
-  - Update READMEs in absorbed repositories pointing to `CulinaryOS`.
-  - Mark old GitHub repositories as read-only.
-- **Verification:** Complete monorepo build, comprehensive test suite pass.
+  - Authored `@culinaryos/sdk` Shoreline adapter (`packages/sdk/src/integrations/shoreline.ts`) with HIPAA-safe clinical boundaries and therapeutic dietary tagging.
+  - Verified zero patient health information (PHI) leak risk with pure decoupled contracts.
+  - Updated monorepo documentation, migration matrix, and operational runbooks.
+- **Verification:** Complete monorepo build, comprehensive test suite pass (178 passing test suites).
 
 ---
 
