@@ -2,12 +2,12 @@
 
 **The unified restaurant technology operating system.** Humans on POS/KDS, edge nodes on Raspberry Pi, agents on MCP, sovereign Postgres. MIT licensed.
 
-[![Tests: Passing](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](./tests/)
-[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-Passing-blue.svg)](./turbo.json)
+[![Tests: Passing](https://img.shields.io/badge/Tests-178%20Passing-brightgreen.svg)](./tests/)
+[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-54%2F54%20Tasks-blue.svg)](./turbo.json)
 [![UI: OKLCH + 6--State](https://img.shields.io/badge/UI-OKLCH%20%2B%206--State-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/Version-1.3.0-orange.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.3.1-orange.svg)](./CHANGELOG.md)
 
 ---
 
@@ -19,6 +19,8 @@ CulinaryOS is the single primary restaurant technology monorepo, consolidating t
 CulinaryOS
 ├── Core           — Multi-tenant auth, session tokens, PostgreSQL RLS, offline event bus
 ├── POS            — Front-of-House terminal (offline-first, table mapping, split checks)
+├── Handheld       — Native Swift 6 / iOS 17 tableside ordering app via xtool
+├── Mobile         — Universal Android & iOS companion via Expo SDK 52 + React Native
 ├── KDS            — Kitchen Display System (station routing, cook times, course pacing)
 ├── Admin          — Back-office workstation (manager PIN gate, HACCP operations HUD)
 ├── Ordering       — Omnichannel dining room, tableside QR, and online guest checkout
@@ -55,6 +57,8 @@ CulinaryOS
 CulinaryOS covers every surface of modern hospitality:
 
 - **Desktop Workstation (`:5180`)** — Unified restaurant workstation with F1–F7 hotkeys, PIN manager, and full-screen Kiosk mode.
+- **Native iOS Handheld (`apps/CulinaryOSHandheld`)** — Native Swift 6 / iOS 17 tableside terminal compiled on Windows via `xtool` with 78px thumb-zone numeric keypad, tableside cart, and 1-tap kitchen ticket fire.
+- **Android & Mobile Companion (`mobile/`)** — Universal Android & iOS manager companion built on Expo SDK 52 + React Native with live shift telemetry, 86 inventory toggles, and ticket bumping.
 - **POS Terminal (`:5172`)** — PIN-authenticated, offline-first, multi-tender (card, tap, QR, cash, comp) with ESC/POS hardware thermal printing.
 - **Kitchen Display System (`:5173`)** — Real-time ticket aging, station routing, multi-course hold/fire with high-contrast OLED mode, and sub-second course pacing.
 - **Admin Back-Office (`:5174`)** — Manager PIN gated, dual-column HACCP operations hub, menu builder, staff PINs, and operations HUD.
@@ -106,6 +110,12 @@ culinary billing status                        # Inspect Stripe Connect & subscr
 culinary pantry stock                          # Real-time pantry stock grams & par levels
 culinary tabs list                             # View active bar and dining tabs
 
+# Multi-Tenant Onboarding, Closed-Beta & Stripe Connect
+culinary tenant bootstrap --name "The Bistro" --email "chef@bistro.com" # Provision tenant & apply template
+culinary tenant invite --email "server@bistro.com" --role server        # Issue staff credentials & PIN
+culinary tenant stripe-connect                 # Generate Stripe Connect Standard onboarding URL
+culinary tenant statement                      # Inspect SaaS subscription and interchange fee statement
+
 # Multi-Unit Commissary, AI Kitchen Autopilot & Dynamic Dayparts
 culinary commissary transfers                  # View incoming/outgoing stock transfers
 culinary commissary request "Patties" 100      # Place central replenishment order
@@ -135,13 +145,14 @@ graph TB
     subgraph Clients
         DSK["Desktop Workstation :5180\nReact + Vite + Dual Pane Split"]
         POS["POS Terminal :5172\nReact + Vite + Three.js"]
+        HND["iOS Handheld :xtool\nSwift 6 + SwiftUI"]
+        MOB["Mobile Companion\nExpo SDK 52 (Android/iOS)"]
         KDS["KDS Display :5173\nReact + Vite + KitchenKit"]
         ADM["Admin Portal :5174\nReact + Vite"]
         WEB["Online Storefront :5176\nReact + Vite"]
         KIT["KitchenKit :5175\nReact + Vite"]
         OPS["CulinaryOps :5177\nReact + Vite"]
         REC["RecipeOS :5178\nNext.js App Router"]
-        MOB["Mobile Companion\nReact Native + Expo (Android/iOS)"]
     end
 
     subgraph API["apps/server :3000 — Hono on Node.js 20"]
@@ -158,7 +169,7 @@ graph TB
         RE["@culinaryos/ratio-engine\nRecipe scaling & costing"]
         SH["@culinaryos/shared\nDietary engine, offline-sync"]
         UI["@culinaryos/ui\nshadcn/ui + Three.js + Theme Engine"]
-        DB["@culinaryos/db\nSupabase types V1–V14"]
+        DB["@culinaryos/db\nSupabase types V1–V17"]
     end
 
     subgraph Data["Data Layer"]
@@ -179,13 +190,14 @@ graph TB
     DSK --> KDS
     DSK --> ADM
     POS --> API
+    HND --> API
+    MOB --> API
     KDS --> API
     ADM --> API
     WEB --> API
     KIT --> API
     OPS --> API
     REC --> API
-    MOB --> API
 
     API --> Packages
     API --> Data
@@ -193,6 +205,27 @@ graph TB
 
     MCP --> API
 ```
+
+---
+
+## 📱 Native Mobile & Handheld Ecosystem (iOS via xtool + Android via Expo)
+
+CulinaryOS delivers zero-compromise physical ergonomics across both iOS and Android handheld surfaces:
+
+### 1. Native Swift 6 iOS Handheld (`apps/CulinaryOSHandheld`)
+- **Compilation Toolchain:** Native Swift 6.1 targeting iOS 17+, scaffolded and managed via `xtool` on Windows (`xtool.yml` bundle `com.shadowwalker.culinaryos.handheld`).
+- **Physical Touch Ergonomics (Jakob's Law):** 78px circular numeric keypad touch targets with system haptic feedback and instant 4-digit PIN authentication (`KeypadPinView`).
+- **Tableside Ordering & Cart:** Real-time table selection, dynamic menu filtering, modifier grouping, and ergonomic bottom-sticky "Send to Kitchen" action tray (`TablesideOrderView`).
+- **Live Ticket Status:** View active dining room and bar tickets with status pills (`PENDING`, `PREPARING`, `READY`), and one-tap "Mark Ready" or "Close & Pay" (`ActiveTicketsView`).
+- **Offline Seed Engine:** Fallback offline menu catalog, staff PINs, and table orders to guarantee non-stop tableside service during Wi-Fi dropouts.
+
+### 2. Universal Android & Manager Companion (`mobile/`)
+- **Framework:** Expo SDK 52 + React Native with TypeScript and Zustand store.
+- **Live Shift Telemetry:** Real-time dashboard with daily sales revenue, active covers, occupied tables, and average ticket pacing updated continuously.
+- **1-Tap Fast PIN Switcher:** Effortlessly switch active staff personas between Manager (`1234`), Server (`5678`), Chef (`9012`), and Bartender (`3456`).
+- **Kitchen Chit Bump Engine:** Interactive chit cards with visual status pills, modifier badges, and 1-tap ticket bump routing.
+- **Catalog 86 Control:** Instantly toggle `IN STOCK` vs `86'D` inventory statuses, immediately propagating locks across all POS terminals and customer tableside QR menus.
+- **Pantry Par Shortfall Audits:** View inventory levels against minimum par thresholds with unit cost metrics.
 
 ---
 
@@ -355,10 +388,10 @@ See [`docs/security.md`](docs/security.md) and `AGENTS.md` for the full ruleset.
 
 CulinaryOS enforces strict quality gates across the monorepo:
 ```bash
-# Run complete test suite (121 test suites across all packages and surfaces — 100% green)
+# Run complete test suite (178 test suites across all packages and surfaces — 100% green)
 node ./scripts/run-all-tests.cjs
 
-# Run workspace-wide typecheck (18 tasks across all packages — 0 errors)
+# Run workspace-wide typecheck (54 tasks across all packages — 0 errors)
 pnpm run typecheck
 
 # Build all packages and applications
@@ -379,25 +412,31 @@ pnpm doctor
 ```
 CulinaryOS/
 ├── apps/
-│   ├── server/          ← Unified Hono API (orders, KDS, pantry, ops, payments)
-│   ├── pos/             ← POS terminal (React / Vite / shadcn / Three.js)
-│   ├── kds/             ← Kitchen Display client (React / Vite)
-│   ├── admin/           ← Admin / pantry portal (React / Vite)
-│   └── web/             ← Online ordering storefront (React / Vite)
-├── packages/            ← shared, event-bus, auth, db, ui, config, ratio-engine
-├── mcp/                 ← 9 MCP servers — AI agent tool layer
-├── extensions/          ← First-party extension manifests
-├── extension_template/  ← Public contract for third-party extensions
-├── mobile/              ← React Native + Expo companion (stub)
-├── supabase/            ← Migrations + seeds (V1–V14)
-├── cli/                 ← Operator CLI tool
-├── tests/               ← Integration + e2e tests
-├── docs/                ← Technical documentation
-├── scripts/             ← quickstart, seed, doctor, simulate, ops-audit
-├── docker-compose.yml   ← Production container build
-├── pnpm-workspace.yaml  ← Monorepo workspace config
-├── turbo.json           ← Turborepo pipeline config
-└── .env.example         ← All required env vars
+│   ├── server/             ← Unified Hono API (orders, KDS, pantry, ops, payments)
+│   ├── pos/                ← POS terminal (React / Vite / shadcn / Three.js)
+│   ├── kds/                ← Kitchen Display client (React / Vite)
+│   ├── admin/              ← Admin / pantry portal (React / Vite)
+│   ├── web/                ← Online ordering storefront & Studio (React / Vite)
+│   ├── ops/                ← CulinaryOS Ops (food cost, prime cost, waste, labor)
+│   ├── marketing/          ← Marketing site, SaaS features & Leadership Guild (Next.js 15)
+│   ├── desktop/            ← Workstation desktop container with hotkeys (React / Vite)
+│   ├── recipeos/           ← Recipe scaling, ratios, and formula vault (Next.js)
+│   ├── kitchenkit/         ← Prep station, batch calculators, thermal labels (React / Vite)
+│   └── CulinaryOSHandheld/ ← Native Swift 6 / iOS 17 handheld terminal via xtool
+├── packages/               ← shared, event-bus, auth, db, ui, config, ratio-engine, sdk, intelligence
+├── mcp/                    ← 9 MCP servers — AI agent tool layer
+├── mobile/                 ← Universal Android & iOS companion (Expo SDK 52 + React Native)
+├── extensions/             ← First-party extension manifests
+├── extension_template/     ← Public contract for third-party extensions
+├── supabase/               ← Migrations + seeds (V1–V17)
+├── cli/                    ← Operator CLI tool (10 command groups, 100% route parity)
+├── tests/                  ← 178 integration, empirical, adversarial & e2e test suites
+├── docs/                   ← Technical documentation & SaaS runbooks
+├── scripts/                ← quickstart, seed, doctor, simulate, ops-audit
+├── docker-compose.yml      ← Production container build
+├── pnpm-workspace.yaml     ← Monorepo workspace config
+├── turbo.json              ← Turborepo pipeline config
+└── .env.example            ← All required env vars
 ```
 
 ---

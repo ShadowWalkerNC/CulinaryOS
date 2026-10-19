@@ -135,3 +135,54 @@ A `render.yaml` is included in the repository root for multi-service Render depl
 4. Select or pair your **WisePOS E** or **BBPOS Chipper**.
 5. Connect USB/Network thermal receipt printers.
 
+---
+
+## 8. Native Handheld Mobile Deployment (iOS via xtool & Android via Expo)
+
+### 8.1 Native iOS Handheld Terminal (`apps/CulinaryOSHandheld`)
+The iOS tableside ordering app is built using Swift 6.1 with SwiftUI and configured for cross-platform compilation on Windows using `xtool`.
+
+1. **Verify xtool environment:**
+   ```bash
+   xtool doctor
+   ```
+2. **Run local dev & hot-reload:**
+   ```bash
+   cd apps/CulinaryOSHandheld
+   xtool dev
+   ```
+3. **Inspect connected iOS devices over USB:**
+   ```bash
+   xtool devices
+   ```
+4. **Provision and install onto device:**
+   ```bash
+   xtool install
+   xtool launch
+   ```
+5. **Configuration (`xtool.yml`):**
+   - Bundle ID: `com.shadowwalker.culinaryos.handheld`
+   - Target: iOS 17.0+
+   - API Endpoint: Configured in `APIClient.swift` (`http://<local-lan-ip>:3000` or production URL).
+
+### 8.2 Universal Android & Manager Companion (`mobile/`)
+Built with Expo SDK 52 and React Native, targeting physical Android handheld terminals (e.g. Elo, Sunmi, Clover, or commodity Android tablets/phones).
+
+1. **Local Development (Expo Go / Dev Client):**
+   ```bash
+   cd mobile
+   pnpm start
+   ```
+2. **Android Standalone Production Build (EAS CLI):**
+   ```bash
+   cd mobile
+   pnpm exec eas build --platform android --profile production
+   ```
+3. **Local APK Preview Generation:**
+   ```bash
+   cd mobile
+   pnpm exec eas build --platform android --profile preview --local
+   ```
+4. **Environment Configuration:**
+   - Configure `EXPO_PUBLIC_API_URL` to point to the production Hono API (`https://api.yourdomain.com`).
+   - Configure `EXPO_PUBLIC_TENANT_ID` with the restaurant tenant UUID.

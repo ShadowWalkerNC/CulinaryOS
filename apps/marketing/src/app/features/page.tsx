@@ -131,6 +131,37 @@ const categories = [
       },
     ],
   },
+  {
+    id: 'mobile',
+    label: 'Mobile & Handhelds (iOS & Android)',
+    icon: '📱',
+    features: [
+      {
+        title: 'Native iOS Tableside (xtool)',
+        desc: 'Pure Swift 6 SwiftUI client compiled natively on Windows via xtool for iPhones and iPad Minis. Features 120Hz scrolling, 78px tactile haptic keypad, and Bluetooth card reader pairing.',
+      },
+      {
+        title: 'Android Hardware Terminals (Expo)',
+        desc: 'Universal companion app targeting commercial Android handhelds (Sunmi V2s, Clover Flex, PAX) and Android tablets with offline SQLite caching.',
+      },
+      {
+        title: 'Tableside Ordering & Line-Busting',
+        desc: 'Take orders directly at tableside with 48px touch targets, modifier tags, and 1-tap dispatch to kitchen stations via the local LAN event bus.',
+      },
+      {
+        title: 'Staff Quick PIN Switching',
+        desc: 'Fast 4-digit PIN authentication switching seamlessly between Server (1234) and General Manager (5678) with hardcoded FLSA supervisor gates.',
+      },
+      {
+        title: 'Live Shift Telemetry',
+        desc: 'Real-time shift dashboard in the palm of your hand: active kitchen tickets, today’s net sales, active floor tables, and par level alerts.',
+      },
+      {
+        title: 'Instant 86 Depletion Control',
+        desc: 'Toggle item availability directly from the dining room floor to lock depleted items on all POS terminals and customer QR menus instantly.',
+      },
+    ],
+  },
 ];
 
 export default function FeaturesPage() {

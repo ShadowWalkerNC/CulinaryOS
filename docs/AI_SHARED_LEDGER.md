@@ -481,3 +481,17 @@ P06 auth test claim extended to tests/kitchenkit/auth-gate.test.cjs: execute tra
 
 ## 2026-10-07 ShadowWalker project declaration
 Codex ownership: root PROJECT.yaml only plus this evidence entry; completed in codex/shadowwalker-project-v1 dedicated worktree. Declares current package engines and pnpm pin without changing product source, runtime or providers. VERIFIED: Forge compiled project-contract reader returns valid for the actual CulinaryOS root manifest. Node 24 compatibility, product build/provider/payment/hardware/production acceptance NOT RUN. Shared central ledger records the Muse/Codex schema task and source ownership. Scope released after contract validation; no push.
+
+- 2026-10-19 (Antigravity): CLAIM & RELEASE — SaaS Deployment Stabilization, Multi-Tenant Closed Beta & Native Mobile Handheld Ecosystem (iOS via xtool + Android via Expo).
+  - Scope: `apps/CulinaryOSHandheld/`, `mobile/`, `tests/mobile/`, `cli/src/commands/tenant.ts`, `apps/marketing/`, `README.md`, `docs/DEPLOYMENT.md`, `docs/AI_SHARED_LEDGER.md`.
+  - Features:
+    - Built and verified native iOS 17 tableside terminal (`apps/CulinaryOSHandheld`) in Swift 6.1 cross-compiled via `xtool` with 78px circular numeric keypad, tableside cart, modifier groupings, active chit tracking, and offline seed resilience.
+    - Integrated universal Android & iOS companion (`mobile/`) powered by Expo SDK 52 with live shift revenue/covers telemetry, 1-tap fast staff PIN switcher (`1234`/`5678`/`9012`/`3456`), interactive kitchen chit bump cards, and instant `IN STOCK` / `86'D` inventory locks.
+    - Shipped 1-command SaaS closed-beta venue onboarding CLI: `culinary tenant bootstrap`, `invite`, `stripe-connect`, and `statement`.
+    - Updated marketing surfaces (`apps/marketing/src/app/page.tsx` and `features/page.tsx`) with mobile handheld bento cards and competitor comparison row.
+    - Authored native mobile deployment runbook in `docs/DEPLOYMENT.md` (Section 8).
+  - Verification:
+    - Full test suite: 178 passing test suites, 0 failed (`tests/mobile/mobile-api.test.ts` 6/6 PASS).
+    - Monorepo typecheck: 54/54 Turborepo tasks successful with 0 errors.
+    - Marketing static compilation: Next.js 15 production build passes (20/20 static pages rendered cleanly).
+  - All claims released.

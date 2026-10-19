@@ -86,12 +86,20 @@ const bentoFeatures = [
     description: 'Automated end-of-day reconciliation: cash float audit, over/short variance, multi-rate sales tax (prepared food vs alcohol), and sealed Z-Reports.',
     bullets: ['Hours & point-weighted tip pooling', 'One-click Gusto & ADP payroll CSV export', 'Double-entry QuickBooks IIF & Xero output'],
   },
+  {
+    icon: '📲',
+    tag: 'Mobile & Handhelds',
+    title: 'Native iOS & Android Handhelds',
+    description: 'Empower servers with Swift 6 native iOS handhelds (compiled via xtool) and Expo SDK 52 Android companions for rapid tableside ordering and live bump routing.',
+    bullets: ['78px thumb-zone numeric keypad & PIN auth', 'Instant tableside cart with kitchen ticket fire', 'Live 86 status toggles & par inventory audit'],
+  },
 ];
 
 const competitorMatrix = [
   { feature: 'Open-Core / Source-Available Architecture', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Bring Your Own Stripe (Direct Interchange)', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Zero Hardware Lock-In (Any iPad/Android/PC)', culinary: true, toast: false, square: false, clover: false },
+  { feature: 'Native iOS (xtool Swift 6) & Android Handhelds', culinary: true, toast: false, square: false, clover: false },
   { feature: '100% Offline-First with Local LAN Sync', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Flat SaaS Pricing (No Per-Screen Multipliers)', culinary: true, toast: false, square: false, clover: false },
   { feature: 'BOH Dual-Language KDS (Spanish & French)', culinary: true, toast: false, square: false, clover: false },
