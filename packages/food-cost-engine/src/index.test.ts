@@ -41,4 +41,26 @@ describe('Food Cost Engine: Recipe Costing and Variance Calculation', () => {
     assert.equal(result.unexplainedQuantity, 0.5);
     assert.equal(result.status, 'ok');
   });
+
+  it('calculates AP/EP butcher trim yield and thermal cooking shrinkage with 72% GP target', () => {
+    const result = costRecipe(
+      [
+        // Whole ribeye bought at $10/lb with 75% trim yield (AP vs EP) and 20% cooking moisture shrinkage
+        { name: 'Ribeye Sub-Primal', quantity: 1, unit: 'lb', costPerUnit: 10.00, trimYieldPct: 75, cookShrinkPct: 20 },
+        { name: 'House Herb Butter', quantity: 0.1, unit: 'lb', costPerUnit: 5.00 }
+      ],
+      1,
+      45.00,
+      72
+    );
+
+    // Yield combined = 0.75 * 0.80 = 0.60. Effective ribeye cost = 10 / 0.60 = $16.67
+    assert.equal(result.totalCost, 17.17);
+    assert.equal(result.costPerServing, 17.17);
+    assert.equal(result.foodCostPct, 38.16); // 17.17 / 45.00
+    assert.equal(result.grossProfitPct, 61.84);
+    assert.equal(result.minMenuPrice72Gp, 61.32); // 17.17 / 0.28
+    assert.ok(result.dominantCostAlerts && result.dominantCostAlerts.length > 0);
+    assert.match(result.dominantCostAlerts![0]!, /Ribeye Sub-Primal represents 97.09% of dish cost/);
+  });
 });
