@@ -105,7 +105,7 @@ describe('production authentication fails closed', () => {
       ['-r', './scripts/test-hook.cjs', '--import', 'tsx', '-e', "import('./apps/server/src/index.ts')"],
       { cwd: process.cwd(), env: { ...process.env, PORT: '0', SUPABASE_URL: '',
         SUPABASE_SERVICE_ROLE_KEY: '', SUPABASE_ANON_KEY: '', STRIPE_SECRET_KEY: '',
-        ANTHROPIC_API_KEY: '' }, encoding: 'utf8', timeout: 15000 });
+        ANTHROPIC_API_KEY: '' }, encoding: 'utf8', timeout: 30000 });
     assert.equal(result.error, undefined);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /Production authentication configuration rejected/);

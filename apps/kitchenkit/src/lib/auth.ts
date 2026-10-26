@@ -14,10 +14,12 @@ export async function signInWithMagicLink(email: string): Promise<{ error: strin
 }
 
 export async function signOut(): Promise<void> {
+  if (!configuredSupabase) return;
   await supabase.auth.signOut();
 }
 
 export async function getSession() {
+  if (!configuredSupabase) return null;
   const { data } = await supabase.auth.getSession();
   return data.session;
 }

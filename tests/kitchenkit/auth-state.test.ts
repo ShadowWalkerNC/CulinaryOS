@@ -103,3 +103,45 @@ test('a synchronous hydration failure cannot overwrite an observed sign-in', () 
   assert.equal(f.states.at(-1)?.session, session);
   assert.equal(f.states.at(-1)?.error, null);
 });
+
+function installStaleDemoFlag() {
+  const g = globalThis as unknown as Record<string, unknown>;
+  const hadWindow = 'window' in g;
+  const hadStorage = 'localStorage' in g;
+  const prevWindow = g.window;
+  const prevStorage = g.localStorage;
+  g.window = {};
+  g.localStorage = { getItem: (key: string) => (key === 'culinaryos_kitchenkit_demo_session' ? 'true' : null) };
+  return () => {
+    g.window = hadWindow ? prevWindow : undefined;
+    g.localStorage = hadStorage ? prevStorage : undefined;
+  };
+}
+
+test('stale demo localStorage cannot grant a session when unconfigured', () => {
+  const restore = installStaleDemoFlag();
+  try {
+    const states: AuthState[] = [];
+    observeAuth(null, value => states.push(value))();
+    assert.equal(states[0]?.session, null);
+    assert.equal(states[0]?.loading, false);
+    assert.match(states[0]?.error ?? '', /not configured/);
+  } finally {
+    restore();
+  }
+});
+
+test('stale demo localStorage cannot override an empty hydration', async t => {
+  t.after(installStaleDemoFlag());
+  const f = fixture(); t.after(observeAuth(f.client, f.publish));
+  f.resolve({ data: { session: null }, error: null }); await flush();
+  assert.deepEqual(f.states.at(-1), { session: null, loading: false, error: null });
+});
+
+test('expired session error fails closed without exposing provider error text', async t => {
+  const f = fixture(); t.after(observeAuth(f.client, f.publish));
+  f.resolve({ data: { session: null }, error: new Error('jwt expired') as never }); await flush();
+  assert.equal(f.states.at(-1)?.session, null);
+  assert.equal(f.states.at(-1)?.loading, false);
+  assert.equal(f.states.at(-1)?.error, 'Sign-in could not be checked. Please try again.');
+});

@@ -1,54 +1,65 @@
 import { useEffect, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { configuredSupabase } from '../lib/supabase';
 
-export const MOCK_OPS_SESSION: Session = {
-  access_token: 'demo-ops-token-mock',
-  refresh_token: 'demo-ops-refresh-mock',
-  expires_in: 3600,
-  token_type: 'bearer',
-  user: {
-    id: '00000000-0000-0000-0000-000000000003',
-    app_metadata: {},
-    user_metadata: { name: 'Operations Director (Demo)' },
-    aud: 'authenticated',
-    created_at: new Date().toISOString(),
-    email: 'ops@culinaryos.local',
-  },
-};
+if (typeof window !== 'undefined') {
+  try { window.localStorage?.removeItem('culinaryos_ops_demo_session'); } catch {}
+}
+
+export interface OpsSessionState {
+  session: Session | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export type OpsAuthClient = { auth: Pick<SupabaseClient['auth'], 'getSession' | 'onAuthStateChange'> };
+
+export function observeOpsSession(client: OpsAuthClient | null, publish: (state: OpsSessionState) => void, timeoutMs = 10_000): () => void {
+  try {
+    const storage = (globalThis as { localStorage?: { removeItem(key: string): void } }).localStorage;
+    storage?.removeItem('culinaryos_ops_demo_session');
+  } catch {}
+  if (!client) {
+    publish({ session: null, loading: false, error: 'Sign-in is unavailable: authentication is not configured.' });
+    return () => {};
+  }
+  let active = true;
+  let changed = false;
+  let unsubscribe = () => {};
+  const finish = (session: Session | null, error: string | null = null) => {
+    if (!active) return;
+    clearTimeout(timer);
+    publish({ session, loading: false, error });
+  };
+  const timer = setTimeout(() => {
+    changed = true;
+    finish(null, 'Sign-in could not be checked. Please try again.');
+  }, timeoutMs);
+  try {
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      changed = true;
+      finish(session);
+    });
+    unsubscribe = () => subscription.unsubscribe();
+    void client.auth.getSession().then(({ data, error }) => {
+      if (!changed) finish(error ? null : data.session, error ? 'Sign-in could not be checked. Please try again.' : null);
+    }).catch(() => {
+      if (!changed) finish(null, 'Sign-in could not be checked. Please try again.');
+    });
+  } catch {
+    if (!changed) finish(null, 'Sign-in could not be checked. Please try again.');
+  }
+  return () => { active = false; clearTimeout(timer); unsubscribe(); };
+}
 
 export function useSession() {
-  const [session, setSession] = useState<Session | null>(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('culinaryos_ops_demo_session') === 'true') {
-      return MOCK_OPS_SESSION;
-    }
-    return null;
+  const [state, setState] = useState<OpsSessionState>({
+    session: null,
+    loading: Boolean(configuredSupabase),
+    error: configuredSupabase ? null : 'Sign-in is unavailable: authentication is not configured.',
   });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('culinaryos_ops_demo_session') === 'true') {
-      setSession(MOCK_OPS_SESSION);
-      setLoading(false);
-      return;
-    }
+  useEffect(() => observeOpsSession(configuredSupabase, setState), []);
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (typeof window !== 'undefined' && localStorage.getItem('culinaryos_ops_demo_session') === 'true') {
-        setSession(MOCK_OPS_SESSION);
-      } else {
-        setSession(s);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  return { session, loading };
+  return { session: state.session, loading: state.loading, error: state.error };
 }
