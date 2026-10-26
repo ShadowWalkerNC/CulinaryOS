@@ -23,6 +23,7 @@ import { PurchasingPage } from './pages/Purchasing';
 import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
+import { DisplaysPage } from './pages/DisplaysPage';
 
 export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -50,6 +51,7 @@ export function App() {
                 <Route path="/staff" element={<StaffPage />} />
                 <Route path="/purchasing" element={<PurchasingPage />} />
                 <Route path="/pantry" element={<PantryPage />} />
+                <Route path="/displays" element={<DisplaysPage />} />
                 <Route path="/tools" element={<ToolsPage />} />
                 <Route path="/integrations" element={<IntegrationsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

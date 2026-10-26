@@ -495,3 +495,21 @@ Codex ownership: root PROJECT.yaml only plus this evidence entry; completed in c
     - Monorepo typecheck: 54/54 Turborepo tasks successful with 0 errors.
     - Marketing static compilation: Next.js 15 production build passes (20/20 static pages rendered cleanly).
   - All claims released.
+
+
+- 2026-10-26 (Antigravity): CLAIM COMPLETE & RELEASED — CulinaryOS Display Platform, Cheezies Android TV Views & Monorepo Finalization.
+  - Scope: `supabase/migrations/V18__display_devices_platform.sql`, `packages/shared/src/types/display.ts`, `packages/display/*`, `apps/display/*`, `apps/android-tv/*`, `apps/server/src/routes/displays.ts`, `apps/server/src/lib/mock-display.ts`, `apps/admin/src/pages/DisplaysPage.tsx`, `cli/src/commands/display.ts`, `tests/display/*`, `tests/server/display-platform.test.ts`, `tests/cli/display-cli.test.ts`.
+  - Deliverables:
+    1. Multi-Tenant Database Migration (`V18__display_devices_platform.sql`): `display_devices` and `display_playlists` with strict RLS (`tenant_id = public.my_tenant_id()`) and service_role bypass.
+    2. Shared Display Platform Package (`@culinaryos/display`): Full 10-foot TV UI system with Android TV remote D-pad navigation (`useRemoteDpadNavigation`, `useLinearDpadGrid`), 16:9 safe-area shells, `TvTicketCard` with color-coded timers and prominent FDA allergen warnings, `MetricCard`, `TvAlertStrip`, `TvQRCodeCard`, and persistent `DisplayClient` with 15s heartbeats.
+    3. Web/PWA Display Application (`@culinaryos/app-display` at port 5178): 12 dedicated views spanning CulinaryOS (Kitchen KDS, Manager Wallboard, Staff Shift Board, Digital Menu, Pickup Status, Marketing Promo) and Cheezies Gourmet (Truck Ops, Owner Wallboard, Customer Menu, Pickup, Promo).
+    4. Backend Service (`/v1/displays` in `apps/server`): Device registration, 6-digit code pairing, scoped token authentication, 15-second heartbeat loop, real-time projections, fast ticket bump, and offline mock fallback.
+    5. Admin Hub Integration (`apps/admin/src/pages/DisplaysPage.tsx`): Pairing modal, live TV status matrix, and 1-click remote view switcher.
+    6. CLI Parity (`cli/src/commands/display.ts`): Commands `culinary display [list|pair|switch|refresh|unpair|projection]`.
+    7. Android TV Kiosk Shell (`apps/android-tv`): Lean (~1.8MB) native shell for Walmart onn. 4K Android TV with `BootReceiver` (auto-boot into kiosk mode), hardware-accelerated WebView, and DPAD keycode bridge.
+  - Verification & Full Suite Acceptance:
+    - Display tests: `tests/display/display-dpad.test.ts` (3/3 PASS), `tests/server/display-platform.test.ts` (12/12 PASS), `tests/cli/display-cli.test.ts` (3/3 PASS).
+    - Monorepo full test suite runner (`node ./scripts/run-all-tests.cjs`): 189/189 test files PASS, 0 failures (100% pass rate).
+    - Turborepo typecheck (`pnpm run typecheck`): 59/59 tasks successful, 0 errors across all monorepo packages.
+    - Production builds: `@culinaryos/display`, `@culinaryos/app-display`, `@culinaryos/admin`, `@culinaryos/server` all compile cleanly.
+  - All claims released. Monorepo finalized and production ready.

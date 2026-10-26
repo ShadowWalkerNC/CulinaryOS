@@ -42,6 +42,8 @@ import { reservationRoutes }   from './routes/reservations';
 import { commissaryRoutes }    from './routes/commissary';
 import { autopilotRoutes }     from './routes/autopilot';
 import { purchasingRoutes }    from './routes/purchasing';
+import { gastronomyRoutes }    from './routes/gastronomy';
+import { displaysRoutes }      from './routes/displays';
 import type { Env }            from './types';
 
 
@@ -149,6 +151,8 @@ app.route('/v1/online-orders', onlineOrdersRoutes);
 app.route('/v1/tables',   tablesRoutes);
 app.route('/v1/dayparts', daypartsRoutes);
 app.route('/v1/purchasing', purchasingRoutes);
+app.route('/v1/gastronomy', gastronomyRoutes);
+app.route('/v1/displays',   displaysRoutes);
 
 // Stripe webhook — no tenant middleware (signature-verified)
 app.route('/v1/webhooks/stripe', stripeWebhook);

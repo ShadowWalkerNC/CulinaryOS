@@ -20,6 +20,7 @@
     "server": "pnpm --filter @culinaryos/server dev",
     "pos": "pnpm --filter @culinaryos/app-pos dev",
     "kds": "pnpm --filter @culinaryos/app-kds dev",
+    "display": "pnpm --filter @culinaryos/app-display dev",
     "admin": "pnpm --filter @culinaryos/admin dev",
     "web": "pnpm --filter @culinaryos/app-web dev",
     "ops": "pnpm --filter @culinaryos/app-ops dev",

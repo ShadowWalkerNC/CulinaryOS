@@ -7,3 +7,4 @@ export * from './order.js';
 export * from './menu.js';
 export * from './reports.js';
 export * from './tables.js';
+export * from './display.js';
