@@ -16,7 +16,8 @@
       "@culinaryos/event-bus": ["../../packages/event-bus/src/index.ts"],
       "@culinaryos/config": ["../../packages/config/src/index.ts"],
       "@culinaryos/db": ["../../packages/db/src/index.ts"],
-      "@culinaryos/auth": ["../../packages/auth/src/index.ts"]
+      "@culinaryos/auth": ["../../packages/auth/src/index.ts"],
+      "@culinaryos/gastronomy-engine": ["../../packages/gastronomy-engine/src/index.ts"]
     }
   },
   "include": [
@@ -26,6 +27,7 @@
     "../../packages/waste-engine/src",
     "../../packages/labor-engine/src",
     "../../packages/event-bus/src",
-    "../../packages/db/src"
+    "../../packages/db/src",
+    "../../packages/gastronomy-engine/src"
   ]
 }

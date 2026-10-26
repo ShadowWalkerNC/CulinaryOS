@@ -26,6 +26,7 @@
     "@culinaryos/event-bus": "workspace:*",
     "@culinaryos/food-cost-engine": "workspace:*",
     "@culinaryos/forecast-engine": "workspace:^",
+    "@culinaryos/gastronomy-engine": "workspace:*",
     "@culinaryos/labor-engine": "workspace:*",
     "@culinaryos/pdf-tools": "workspace:^",
     "@culinaryos/shared": "workspace:*",

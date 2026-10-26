@@ -1,0 +1,20 @@
+{
+  "name": "@culinaryos/gastronomy-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CulinaryOS Modernist Gastronomy & Food Science Mathematical Engine — Hydrocolloids, Sous-Vide Baldwin Curves, PAC/POD Cryo-Formulation, Equilibrium Brines, and Molecular Pairing",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node -r ../../scripts/test-hook.cjs --import tsx src/index.test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
