@@ -93,6 +93,20 @@ const bentoFeatures = [
     description: 'Empower servers with Swift 6 native iOS handhelds (compiled via xtool) and Expo SDK 52 Android companions for rapid tableside ordering and live bump routing.',
     bullets: ['78px thumb-zone numeric keypad & PIN auth', 'Instant tableside cart with kitchen ticket fire', 'Live 86 status toggles & par inventory audit'],
   },
+  {
+    icon: '📺',
+    tag: 'Television & Displays',
+    title: 'Android TV & Wallboard Displays',
+    description: 'Transform inexpensive $19.88 Walmart onn. 4K Android TV boxes into dedicated Kitchen KDS screens, Executive Manager Wallboards, and Cheezies truck displays.',
+    bullets: ['Instant 6-digit code pairing & zero password storage', 'Remote D-pad navigation with color-coded timers', 'Allergen flags & live operational health monitoring'],
+  },
+  {
+    icon: '🧪',
+    tag: 'Culinary Science',
+    title: 'Modernist Gastronomy Engine',
+    description: 'Professional food science algorithms built directly into the kitchen OS for precision hydrocolloids, cryo-gastronomy, thermal sous-vide, and equilibrium curing.',
+    bullets: ['Gelatin Bloom square-root mass conversion', 'Baldwin conduction sous-vide pasteurization curves', 'PAC/POD gelato freezing point & Brix balancing'],
+  },
 ];
 
 const competitorMatrix = [
@@ -105,6 +119,8 @@ const competitorMatrix = [
   { feature: 'BOH Dual-Language KDS (Spanish & French)', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Lowest-Cost Multi-Distributor MRP Optimizer', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Hardcoded FLSA Tip Pool Legal Gates', culinary: true, toast: false, square: false, clover: false },
+  { feature: 'Android TV Displays (Walmart onn. 4K & Digital Boards)', culinary: true, toast: false, square: false, clover: false },
+  { feature: 'Modernist Gastronomy & Computational Food Science', culinary: true, toast: false, square: false, clover: false },
 ];
 
 const testimonials = [

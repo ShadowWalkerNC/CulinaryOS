@@ -162,6 +162,68 @@ const categories = [
       },
     ],
   },
+  {
+    id: 'tv-display',
+    label: 'Android TV & Display Platform',
+    icon: '📺',
+    features: [
+      {
+        title: 'Walmart onn. 4K Integration',
+        desc: 'Turn inexpensive $19.88 Walmart onn. 4K Android TV boxes into commercial-grade KDS screens, wallboards, and digital menu boards.',
+      },
+      {
+        title: 'Instant 6-Digit PIN Pairing',
+        desc: 'Pair any TV in 10 seconds from your phone or desktop. The TV receives only scoped credentials with zero restaurant passwords stored on-device.',
+      },
+      {
+        title: 'Hardware Remote D-Pad Navigation',
+        desc: 'Full remote control navigation (Left/Right ticket select, OK to bump, Back to undo) with 10-foot viewing ergonomics and zero touch requirements.',
+      },
+      {
+        title: 'Executive Manager Wallboard',
+        desc: 'Real-time operational summary: live net sales, open orders, kitchen velocity, 86 countdowns, low-stock warnings, and device health.',
+      },
+      {
+        title: 'Staff Shift Board (FLSA Safe)',
+        desc: 'Staff shift priorities, opening/closing prep lists, 86 countdowns, and daily specials strictly isolated from sensitive financial margins.',
+      },
+      {
+        title: 'Cheezies Food Truck Suite',
+        desc: 'Dedicated food truck views: Split Grill/Fry ops, Owner Live Board, Customer Menu, and Order Ready pickup queue.',
+      },
+    ],
+  },
+  {
+    id: 'gastronomy',
+    label: 'Modernist Gastronomy & Food Science',
+    icon: '🧪',
+    features: [
+      {
+        title: 'Hydrocolloid & Bloom Inversion',
+        desc: 'Convert gelatin mass across Bloom strengths using square-root scaling, calculate agar-agar fluid gels, and formulate spherification with acidity buffers.',
+      },
+      {
+        title: 'Thermal Pasteurization Kinetics',
+        desc: 'Baldwin conduction curves calculating exact time-temperature combinations for 7D Salmonella and 6D Listeria reduction, plus egg yolk rheology.',
+      },
+      {
+        title: 'Cryo-Gastronomy (PAC / POD)',
+        desc: 'Balance gelato and sorbet freezing point depression, anti-freezing power (PAC), sweetness index (POD), and refractometer Brix with simple syrup.',
+      },
+      {
+        title: 'Equilibrium Brining & Nitrite Gates',
+        desc: 'Closed-system salt diffusion calculations and USDA FSIS 9 CFR § 424.21 compliant curing salts (Prague Powder #1/#2) nitrite PPM safety validation.',
+      },
+      {
+        title: 'Computational Flavor Pairing',
+        desc: 'Molecular aroma compound affinity matching based on volatile organic chemical families (pyrazines, terpenes, esters, lactones).',
+      },
+      {
+        title: 'Emulsion HLB Stability',
+        desc: 'Surfactant Hydrophilic-Lipophilic Balance (HLB) blending calculations with xanthan gum steric hindrance stabilization for zero oil separation.',
+      },
+    ],
+  },
 ];
 
 export default function FeaturesPage() {

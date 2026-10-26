@@ -2,8 +2,8 @@
 
 **The unified restaurant technology operating system.** Humans on POS/KDS, edge nodes on Raspberry Pi, agents on MCP, sovereign Postgres. MIT licensed.
 
-[![Tests: Passing](https://img.shields.io/badge/Tests-178%20Passing-brightgreen.svg)](./tests/)
-[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-54%2F54%20Tasks-blue.svg)](./turbo.json)
+[![Tests: Passing](https://img.shields.io/badge/Tests-189%20Passing-brightgreen.svg)](./tests/)
+[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-59%2F59%20Tasks-blue.svg)](./turbo.json)
 [![UI: OKLCH + 6--State](https://img.shields.io/badge/UI-OKLCH%20%2B%206--State-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -33,6 +33,8 @@ CulinaryOS
 ├── Integrations   — Stripe Terminal/Connect, Star/Epson ESC/POS, Mercury, partner APIs
 ├── Edge           — Raspberry Pi 5 / CM5 local appliance with Rust high-reliability services
 ├── SDK            — Unified `@culinaryos/sdk` service boundary for first & third parties
+├── Display        — Purpose-specific TV display system for Walmart onn. 4K & webboards
+├── Gastronomy     — Modernist food science (hydrocolloids, cryo-balancing, Baldwin sous-vide)
 └── MCP            — Restaurant-specific Model Context Protocol tools for AI pairing
 ```
 
@@ -67,6 +69,9 @@ CulinaryOS covers every surface of modern hospitality:
 - **CulinaryOS Ops (`:5178`)** — Actual vs theoretical food cost variance, kitchen scrap logging, FLSA tip pools, and labor % tracking.
 - **Marketing Studio & Team (`:5179`)** — Sovereign landing engine, AI brand guardrails, 3-stage event campaign generator, and Team & Leadership Guild (`/team`).
 - **Unified Hono API (`:3000`)** — Single source of truth for orders, inventory, ops, payments, and settings.
+- **TV Display Platform (`:5178` / `apps/display`)** — Purpose-built TV platform for Walmart onn. 4K Android TV boxes and web displays with 6-digit PIN pairing, remote D-pad navigation, Kitchen KDS with allergen flags, Manager Wallboards, Staff Shift Boards (FLSA/financial safe), Digital Menu Boards, and Cheezies Food Truck ops.
+- **Android TV Kiosk Shell (`apps/android-tv`)** — Lean (~1.8MB) native Android TV kiosk client with `BootReceiver` auto-launch on power-up, hardware-accelerated WebView, and DPAD keycode bridge.
+- **Modernist Gastronomy Engine (`@culinaryos/gastronomy-engine`)** — Computational food science suite featuring gelatin Bloom square root conversions, agar-agar fluid gels, Baldwin conduction pasteurization kinetics, PAC/POD cryo-balancing for gelatos, and USDA FSIS nitrite PPM equilibrium brining.
 - **MCP Server (`mcp/`)** — Specialized Model Context Protocol servers exposing restaurant operations to AI agents.
 
 
@@ -125,6 +130,20 @@ culinary autopilot forecast --daypart dinner   # Predictive rush covers & revenu
 culinary autopilot tokens                      # Inspect ai_prompt_log token burn & cost
 culinary dayparts list                         # View scheduled daypart & happy hour rules
 culinary dayparts active                       # View currently effective pricing window
+
+# Android TV Displays & Digital Board Management
+culinary display list                          # View registered TVs & online heartbeats
+culinary display pair 726419 --mode kitchen    # Pair TV using 6-digit PIN with assigned station
+culinary display switch disp-1 --mode manager  # Remotely change TV view to Manager Wallboard
+culinary display refresh disp-1                # Dispatch instant remote refresh command to TV
+culinary display projection --mode guest       # Inspect live JSON projection payload
+
+# Modernist Gastronomy & Computational Food Science
+culinary gastronomy bloom 200 160 10           # Convert gelatin mass across Bloom strengths
+culinary gastronomy agar 500 1.2               # Calculate agar-agar fluid gel formulation
+culinary gastronomy pasteurize 63 35 poultry   # Compute Baldwin sous-vide pasteurization time
+culinary gastronomy gelato 1000                # Balance gelato freezing point depression (PAC/POD)
+culinary gastronomy brine 1200 1.8 150         # Calculate equilibrium curing brine & nitrite PPM
 
 # System Diagnostics, Security & Hardware Certification
 culinary system doctor                         # Port scan & health diagnostic
