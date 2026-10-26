@@ -23,11 +23,12 @@
     "dev-unified": "node --import tsx src/unified-server.ts"
   },
   "dependencies": {
+    "@culinaryos/prep-engine": "workspace:*",
     "@culinaryos/ratio-engine": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.1",
+    "@supabase/supabase-js": "^2.99.3",
     "dotenv": "^16.4.5",
-    "zod": "*",
-    "@supabase/supabase-js": "*"
+    "zod": "^3.25.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

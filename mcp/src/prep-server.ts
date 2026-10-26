@@ -4,18 +4,25 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { buildShiftPrep, type PrepItem } from "@culinaryos/prep-engine";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
-const server = new Server(
-  {
-    name: "PrepEngine",
-    version: "1.0.0",
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
+export interface PrepServerDeps {
+  buildShiftPrep?: typeof buildShiftPrep | null;
+}
+
+const ALLOWED_SHIFTS = [
+  "morning",
+  "afternoon",
+  "evening",
+  "AM",
+  "PM",
+  "Brunch",
+  "Dinner",
+  "Overnight",
+  "Custom",
+];
 
 const MOCK_STATION_PREP = {
   hot: [
@@ -38,90 +45,179 @@ const MOCK_STATION_PREP = {
   ]
 };
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: "build_shift_prep",
-        description: "Builds a complete shift prep execution sheet based on target covers and shift type",
-        inputSchema: {
-          type: "object",
-          properties: {
-            shift: { type: "string", enum: ["morning", "evening"], description: "Shift type" },
-            expectedCovers: { type: "number", description: "Expected covers for shift" }
-          },
-          required: ["shift", "expectedCovers"]
-        }
+function isValidPrepItem(item: unknown): item is PrepItem {
+  if (typeof item !== "object" || item === null) return false;
+  const candidate = item as Record<string, unknown>;
+  return (
+    typeof candidate["ingredient"] === "string" &&
+    candidate["ingredient"].trim().length > 0 &&
+    typeof candidate["currentStock"] === "number" &&
+    Number.isFinite(candidate["currentStock"]) &&
+    candidate["currentStock"] >= 0 &&
+    typeof candidate["parLevel"] === "number" &&
+    Number.isFinite(candidate["parLevel"]) &&
+    candidate["parLevel"] > 0 &&
+    typeof candidate["unit"] === "string" &&
+    candidate["unit"].trim().length > 0
+  );
+}
+
+function isValidIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+export function createPrepServer(deps: PrepServerDeps = {}): Server {
+  const runBuildShiftPrep =
+    "buildShiftPrep" in deps ? deps.buildShiftPrep : buildShiftPrep;
+
+  const server = new Server(
+    {
+      name: "PrepEngine",
+      version: "1.0.0",
+    },
+    {
+      capabilities: {
+        tools: {},
       },
-      {
-        name: "get_mise_en_place",
-        description: "Retrieves active mise en place prep items status for a specific station",
-        inputSchema: {
-          type: "object",
-          properties: {
-            stationId: { type: "string", description: "Station ID: hot, cold, fry, or bar" }
-          },
-          required: ["stationId"]
-        }
-      }
-    ]
-  };
-});
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-
-  try {
-    if (name === "build_shift_prep") {
-      const { shift, expectedCovers } = args as { shift: "morning" | "evening"; expectedCovers: number };
-      const multiplier = expectedCovers / 100;
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              shift,
-              expectedCovers,
-              generatedAt: new Date().toISOString(),
-              prepTasks: Object.entries(MOCK_STATION_PREP).flatMap(([station, items]) =>
-                items.map(item => ({
-                  station,
-                  item: item.item,
-                  adjustedQuantity: `${(parseFloat(item.qty) * multiplier).toFixed(1)} ${item.qty.split(" ")[1] || ""}`,
-                  assignedTo: item.assignedTo
-                }))
-              )
-            }, null, 2)
-          }
-        ]
-      };
-    } else if (name === "get_mise_en_place") {
-      const { stationId } = args as { stationId: string };
-      const key = stationId.toLowerCase() as keyof typeof MOCK_STATION_PREP;
-      const prepList = MOCK_STATION_PREP[key] || MOCK_STATION_PREP.hot;
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              stationId,
-              miseEnPlaceList: prepList
-            }, null, 2)
-          }
-        ]
-      };
-    } else {
-      throw new Error(`Tool not found: ${name}`);
     }
-  } catch (error: any) {
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-      content: [{ type: "text", text: `Error executing tool: ${error.message}` }],
-      isError: true
+      tools: [
+        {
+          name: "build_shift_prep",
+          description: "Builds a complete shift prep execution sheet based on target covers and shift type",
+          inputSchema: {
+            type: "object",
+            properties: {
+              shift: {
+                type: "string",
+                enum: ["morning", "afternoon", "evening", "AM", "PM", "Brunch", "Dinner", "Overnight", "Custom"],
+                description: "Shift to build the prep plan for",
+              },
+              prepItems: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    ingredient: { type: "string", description: "Ingredient name" },
+                    currentStock: { type: "number", description: "Current stock on hand" },
+                    parLevel: { type: "number", description: "Par level target" },
+                    unit: { type: "string", description: "Unit of measure" },
+                  },
+                  required: ["ingredient", "currentStock", "parLevel", "unit"],
+                },
+                description: "Prep items with current stock and par levels",
+              },
+              date: {
+                type: "string",
+                description: "ISO date for the prep plan (defaults to today)",
+              },
+            },
+            required: ["shift", "prepItems"],
+          },
+        },
+        {
+          name: "get_mise_en_place",
+          description: "Retrieves active mise en place prep items status for a specific station",
+          inputSchema: {
+            type: "object",
+            properties: {
+              stationId: { type: "string", description: "Station ID: hot, cold, fry, or bar" }
+            },
+            required: ["stationId"]
+          }
+        }
+      ]
     };
-  }
-});
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+
+    try {
+      if (name === "build_shift_prep") {
+        const { shift, prepItems, date } = (args ?? {}) as {
+          shift?: unknown;
+          prepItems?: unknown;
+          date?: unknown;
+        };
+
+        if (typeof shift !== "string" || !ALLOWED_SHIFTS.includes(shift)) {
+          throw new Error(
+            `Invalid shift: expected one of ${ALLOWED_SHIFTS.join(", ")}`
+          );
+        }
+        if (!Array.isArray(prepItems) || prepItems.length === 0 || !prepItems.every(isValidPrepItem)) {
+          throw new Error(
+            "Invalid or missing prepItems: expected a non-empty array of { ingredient, currentStock >= 0, parLevel > 0, unit }; refusing to fabricate shift prep from hardcoded demo data"
+          );
+        }
+        if (date !== undefined && (typeof date !== "string" || !isValidIsoDate(date))) {
+          throw new Error("Invalid date: expected a valid YYYY-MM-DD calendar date string");
+        }
+        if (typeof runBuildShiftPrep !== "function") {
+          throw new Error("buildShiftPrep engine unavailable");
+        }
+
+        const normalizedItems: PrepItem[] = prepItems.map((item) => ({
+          ingredient: item.ingredient.trim(),
+          currentStock: item.currentStock,
+          parLevel: item.parLevel,
+          unit: item.unit.trim(),
+        }));
+
+        const plan = runBuildShiftPrep(
+          normalizedItems,
+          shift,
+          typeof date === "string" ? date : new Date().toISOString().slice(0, 10)
+        );
+        if (!plan || !Array.isArray(plan.items)) {
+          throw new Error("Prep engine returned an invalid shift prep plan");
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(plan, null, 2),
+            },
+          ],
+        };
+      } else if (name === "get_mise_en_place") {
+        const { stationId } = args as { stationId: string };
+        const key = stationId.toLowerCase() as keyof typeof MOCK_STATION_PREP;
+        const prepList = MOCK_STATION_PREP[key] || MOCK_STATION_PREP.hot;
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                stationId,
+                miseEnPlaceList: prepList
+              }, null, 2)
+            }
+          ]
+        };
+      } else {
+        throw new Error(`Tool not found: ${name}`);
+      }
+    } catch (error: any) {
+      return {
+        content: [{ type: "text", text: `Error executing tool: ${error.message}` }],
+        isError: true
+      };
+    }
+  });
+
+  return server;
+}
+
+export const server = createPrepServer();
 
 async function main() {
   const transport = new StdioServerTransport();
@@ -129,7 +225,9 @@ async function main() {
   console.error("PrepEngine MCP Server running on STDIO");
 }
 
-main().catch((err) => {
-  console.error("Fatal error starting PrepEngine MCP Server:", err);
-  process.exit(1);
-});
+if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("Fatal error starting PrepEngine MCP Server:", err);
+    process.exit(1);
+  });
+}

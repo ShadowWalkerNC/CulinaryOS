@@ -224,10 +224,37 @@ export function scaleByServings<T extends { amount: number }>(
   }));
 }
 
+export type RatioMode = 'percentage' | 'fraction' | 'legacy';
+
+export interface RatioCalculationOptions {
+  mode?: RatioMode;
+  allowNegative?: boolean;
+}
+
+export interface TotalFormulaWeightOptions {
+  mode?: RatioMode;
+  allowNonPositiveTarget?: boolean;
+}
+
 /**
- * Calculates baker's percentage (base ingredient = 100%).
+ * Calculates baker's percentage (base ingredient = 100%) or decimal fraction (0.0 - 1.0+).
+ * Supports standard bakers' percentages (default 'percentage') and KitchenKit decimal fraction inputs ('fraction' / 'legacy').
  */
-export function calculateRatio(ingredientWeight: number, baseWeight: number): number {
+export function calculateRatio(
+  ingredientWeight: number,
+  baseWeight: number,
+  modeOrOptions?: RatioMode | RatioCalculationOptions
+): number {
+  const mode = typeof modeOrOptions === 'string' ? modeOrOptions : modeOrOptions?.mode ?? 'percentage';
+
+  if (mode === 'fraction' || mode === 'legacy') {
+    if (baseWeight === 0) {
+      throw new Error('Base weight cannot be zero');
+    }
+    return ingredientWeight / baseWeight;
+  }
+
+  // Standard RecipeOS Baker's Percentage (0-100%):
   if (baseWeight <= 0) {
     throw new Error('baseWeight must be > 0');
   }
@@ -238,13 +265,46 @@ export function calculateRatio(ingredientWeight: number, baseWeight: number): nu
 }
 
 /**
+ * Explicit helper for KitchenKit decimal fraction ratio calculation (0.0 - 1.0+).
+ */
+export const calculateRatioFraction = (
+  ingredientWeight: number,
+  baseWeight: number
+): number => calculateRatio(ingredientWeight, baseWeight, 'fraction');
+
+/**
+ * Explicit helper for KitchenKit legacy ratio calculation.
+ */
+export const calculateRatioLegacy = (
+  ingredientWeight: number,
+  baseWeight: number
+): number => calculateRatio(ingredientWeight, baseWeight, 'legacy');
+
+/**
  * Calculates total formula dough weight given base ingredient weight.
- * Handles both RecipeBlueprint and legacy RatioBlueprint objects.
+ * Handles RecipeBlueprint, legacy RatioBlueprint, and standard Recipe objects.
+ * Supports mode ('percentage' | 'fraction' | 'legacy') and auto-detects decimal fraction ratios (<= 2.0).
  */
 export function totalFormulaWeight(
-  recipe: RecipeBlueprint | RatioBlueprint,
-  targetBaseWeight: number
+  recipe: RecipeBlueprint | RatioBlueprint | Recipe | any,
+  targetBaseWeight: number,
+  modeOrOptions?: RatioMode | TotalFormulaWeightOptions
 ): number {
+  const mode = typeof modeOrOptions === 'string' ? modeOrOptions : modeOrOptions?.mode ?? 'percentage';
+
+  if (mode === 'legacy' || mode === 'fraction') {
+    if (!recipe || !recipe.ingredients || recipe.ingredients.length === 0) {
+      return 0;
+    }
+    const getRatio = (i: any) =>
+      i.ratio !== undefined ? i.ratio : i.ratioWeight !== undefined ? i.ratioWeight : 0;
+    return recipe.ingredients.reduce(
+      (sum: number, ing: any) => sum + getRatio(ing) * targetBaseWeight,
+      0
+    );
+  }
+
+  // Standard RecipeOS normalized formula weight:
   if (targetBaseWeight <= 0) {
     throw new Error('targetBaseWeight must be > 0');
   }
@@ -252,21 +312,53 @@ export function totalFormulaWeight(
     return 0;
   }
 
-  const getRatio = (i: any) => (i.ratio !== undefined ? i.ratio : i.ratioWeight !== undefined ? i.ratioWeight : 0);
-  const baseIngredientName = (recipe as RecipeBlueprint).baseIngredient;
+  const getRatio = (i: any) =>
+    i.ratio !== undefined ? i.ratio : i.ratioWeight !== undefined ? i.ratioWeight : 0;
+  const baseIngredientName = (recipe as any).baseIngredient;
 
   const baseIng = recipe.ingredients.find(
-    (i: any) => i.id === baseIngredientName || i.name === baseIngredientName || getRatio(i) === 100
+    (i: any) =>
+      (baseIngredientName && (i.id === baseIngredientName || i.name === baseIngredientName)) ||
+      getRatio(i) === 100
   );
-  const baseRatio = baseIng ? getRatio(baseIng) : 100;
+
+  let fallbackRatio = 100;
+  if (!baseIng && recipe.ingredients.length > 0) {
+    // Detect when recipe ingredients use decimal ratios (<= 2.0) with unmatched base names
+    const allDecimal = recipe.ingredients.every((i: any) => getRatio(i) <= 2.0);
+    if (allDecimal) {
+      fallbackRatio = 1.0;
+    }
+  }
+
+  const baseRatio = baseIng ? getRatio(baseIng) : fallbackRatio;
   if (baseRatio <= 0) {
     throw new Error('Base ingredient ratio must be > 0');
   }
 
-  const ratioSum = recipe.ingredients.reduce((sum: number, ing: any) => sum + getRatio(ing), 0);
+  const ratioSum = recipe.ingredients.reduce(
+    (sum: number, ing: any) => sum + getRatio(ing),
+    0
+  );
   const unitWeight = targetBaseWeight / baseRatio;
   return ratioSum * unitWeight;
 }
+
+/**
+ * Explicit helper for KitchenKit legacy total formula weight calculation.
+ */
+export const totalFormulaWeightLegacy = (
+  recipe: RecipeBlueprint | RatioBlueprint | Recipe | any,
+  targetBaseWeight: number
+): number => totalFormulaWeight(recipe, targetBaseWeight, 'legacy');
+
+/**
+ * Explicit helper for KitchenKit decimal fraction total formula weight calculation.
+ */
+export const totalFormulaWeightFraction = (
+  recipe: RecipeBlueprint | RatioBlueprint | Recipe | any,
+  targetBaseWeight: number
+): number => totalFormulaWeight(recipe, targetBaseWeight, 'fraction');
 
 /**
  * Formats a numeric portion quantity cleanly (integers -> whole, >=1 -> 1dp, <1 -> 2dp).
