@@ -1,5 +1,15 @@
 # CulinaryOS shared AI ledger
 
+## 2026-10-28 Production Railway deployment & live endpoint verification — completed
+
+- Status: Production deployments live on Railway (project 9d7feb1d-d852-4c93-a2a8-75de59bf43a0, env 4ae790c9-f85c-43d5-9dfa-394bb6dccfff).
+- Deployments & Verification:
+  - culinaryos-web (e3aafea5-d836-4cf4-8dd8-e9aeb48fc192): SUCCESS at https://culinaryos-demo.up.railway.app — HTTP 200 live.
+  - culinaryos-admin (14aa8552-52a7-4fd3-ac47-a0b2c157b879): SUCCESS at https://culinaryos-admin.up.railway.app — HTTP 200 live.
+  - Postgres (7f55a328-0cd7-4a35-9ae2-ecdbfb85de08): SUCCESS with mounted volume.
+  - culinaryos-api (6c39eaf3-4eea-4ed7-97aa-c8c8017ae679): Built successfully on Node 22.23.3 (mise) with zero-lockfile-drift; runtime fail-closed security gate assertProductionAuthConfiguration() active awaiting operator SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY credentials.
+- Repository: main branch up-to-date with origin/main (commit 8c2befd).
+
 ## 2026-10-28 End-to-end project validation & main branch unification — completed
 
 - Status: End-to-end monorepo build, test, and typecheck execution verified across all apps and packages.
