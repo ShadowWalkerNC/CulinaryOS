@@ -1,5 +1,15 @@
 # CulinaryOS shared AI ledger
 
+## 2026-10-28 End-to-end project validation & main branch unification — completed
+
+- Status: End-to-end monorepo build, test, and typecheck execution verified across all apps and packages.
+- Branch integration: codex/interagency-read-bridge merged into main via fast-forward (c29b317). Branch deleted after clean integration. main is current, clean, and ready for operator push.
+- Verification evidence:
+  - Test Runner: node ./scripts/run-all-tests.cjs — 193/193 test files passed (0 failed). Full coverage across accounting, commissary, food-cost, forecast, modernist gastronomy, intelligence, labor, loyalty, prep, ratio, recipes, shared, CLI, and server routes.
+  - Static Typecheck: pnpm run typecheck — 59/59 Turborepo tasks successful (40 packages in scope, 0 errors).
+  - Production Build: pnpm run build — 37/37 Turborepo tasks successful (all Next.js apps, Vite SPAs, desktop, mobile, CLI, server, and libraries built cleanly).
+- Locks & ownership: All task locks released. No uncommitted modifications. Zero blocking defects.
+
 ## 2026-10-27 CulinaryOS Interagency read bridge & display platform — completed (handoff)
 
 DISPATCH COMPLETE: CulinaryOS v2 Interagency Read Bridge and Display Platform verified and finalized.
