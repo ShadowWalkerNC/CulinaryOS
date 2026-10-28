@@ -8,6 +8,7 @@ import { Hono }                from 'hono';
 import { cors }                from 'hono/cors';
 import { logger }              from 'hono/logger';
 import { requireApiKey }       from './middleware/auth';
+import {interagencyRoutes} from './routes/interagency.js';
 import { withSupabase }        from './middleware/supabase';
 import { isNativePostgresEnabled } from './postgres/config.js';
 import { checkNativeHealth, getNativeStartupState, setupNativePostgres } from './postgres/startup.js';
@@ -82,6 +83,8 @@ app.use('*', cors({
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
 app.use('*', withSupabase);
+// Explicitly opted-in read grants use their own signed-in and scoped-token checks.
+app.route('/v1/interagency',interagencyRoutes);
 
 // ---- Internal routes (API key protected) ----
 

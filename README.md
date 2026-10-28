@@ -2,7 +2,7 @@
 
 **The unified restaurant technology operating system.** Humans on POS/KDS, edge nodes on Raspberry Pi, agents on MCP, sovereign Postgres. MIT licensed.
 
-[![Tests: Passing](https://img.shields.io/badge/Tests-189%20Passing-brightgreen.svg)](./tests/)
+[![Tests: Passing](https://img.shields.io/badge/Tests-193%20Passing-brightgreen.svg)](./tests/)
 [![Typecheck: Passing](https://img.shields.io/badge/Typecheck-59%2F59%20Tasks-blue.svg)](./turbo.json)
 [![UI: OKLCH + 6--State](https://img.shields.io/badge/UI-OKLCH%20%2B%206--State-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
@@ -35,6 +35,7 @@ CulinaryOS
 ├── SDK            — Unified `@culinaryos/sdk` service boundary for first & third parties
 ├── Display        — Purpose-specific TV display system for Walmart onn. 4K & webboards
 ├── Gastronomy     — Modernist food science (hydrocolloids, cryo-balancing, Baldwin sous-vide)
+├── Interagency    — Zero-PII OAuth2 PKCE read projections for Axom AI & external tools
 └── MCP            — Restaurant-specific Model Context Protocol tools for AI pairing
 ```
 
@@ -73,6 +74,7 @@ CulinaryOS covers every surface of modern hospitality:
 - **Android TV Kiosk Shell (`apps/android-tv`)** — Lean (~1.8MB) native Android TV kiosk client with `BootReceiver` auto-launch on power-up, hardware-accelerated WebView, and DPAD keycode bridge.
 - **Modernist Gastronomy Engine (`@culinaryos/gastronomy-engine`)** — Computational food science suite featuring gelatin Bloom square root conversions, agar-agar fluid gels, Baldwin conduction pasteurization kinetics, PAC/POD cryo-balancing for gelatos, and USDA FSIS nitrite PPM equilibrium brining.
 - **MCP Server (`mcp/`)** — Specialized Model Context Protocol servers exposing restaurant operations to AI agents.
+- **Interagency Read Bridge (`:3000` / `/interagency/consent`)** — Off-by-default, read-only OAuth 2.0 PKCE data bridge allowing kitchen analytics, recipe costing, and Axom AI to consume stable projections (menus, recipes, inventory, sales totals) with strict RLS enforcement and zero exposure of payment card, customer PII, or staff payroll data.
 
 
 All surfaces share a single Supabase PostgreSQL backend with Row Level Security (RLS) enforcing strict multi-tenant isolation. The AI layer is **strictly additive and off by default** — every core operation works identically without external AI APIs.
@@ -81,7 +83,7 @@ All surfaces share a single Supabase PostgreSQL backend with Row Level Security 
 
 ## 🛠️ Universal CLI Tool (`culinary`)
 
-CulinaryOS includes a full-featured CLI offering **100% parity across all 18 operational subsystems**:
+CulinaryOS includes a full-featured CLI offering **100% parity across all 19 operational subsystems**:
 
 ```bash
 # Build the CLI tool
@@ -144,6 +146,12 @@ culinary gastronomy agar 500 1.2               # Calculate agar-agar fluid gel f
 culinary gastronomy pasteurize 63 35 poultry   # Compute Baldwin sous-vide pasteurization time
 culinary gastronomy gelato 1000                # Balance gelato freezing point depression (PAC/POD)
 culinary gastronomy brine 1200 1.8 150         # Calculate equilibrium curing brine & nitrite PPM
+
+# Interagency Read Bridge (Zero-PII OAuth 2.0 PKCE Projections)
+culinary interagency status                     # Check bridge enablement and loopback rules
+culinary interagency grants                     # List active third-party token authorizations
+culinary interagency revoke <grant-id>          # Terminate third-party access grant
+culinary interagency snapshot menus --token <t> # Fetch read-only projection snapshot
 
 # System Diagnostics, Security & Hardware Certification
 culinary system doctor                         # Port scan & health diagnostic

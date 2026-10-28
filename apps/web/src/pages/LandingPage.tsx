@@ -1212,6 +1212,52 @@ export function LandingPage() {
               <Terminal className="w-3.5 h-3.5 text-slate-500" /> Tap to inspect launch guide
             </span>
           </div>
+
+          {/* 7. Android TV & Wallboard Displays */}
+          <div
+            onClick={() =>
+              setQuickstartModal({
+                title: 'TV Display Platform & Wallboards',
+                port: '5178',
+                role: 'Walmart onn. 4K, KDS Rails & Wallboards',
+                description: 'Run the TV display platform on Walmart onn. 4K Android TV boxes or web displays with 6-digit PIN pairing, remote DPAD controls, and kitchen chits.',
+                screenshot: '/screenshots/kds_station_routing.png',
+              })
+            }
+            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-900 shadow-2xs hover:shadow-md transition-all space-y-2.5 group cursor-pointer"
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-sm text-slate-900 group-hover:text-amber-600 transition-colors">TV Display Platform</span>
+              <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">Port :5178</span>
+            </div>
+            <p className="text-xs text-slate-600">6-digit PIN pairing for $19.88 Walmart onn. 4K boxes, remote D-pad navigation, Manager Wallboards, and Staff Shift boards.</p>
+            <span className="text-[11px] font-mono font-semibold text-slate-900 flex items-center gap-1.5 pt-1">
+              <Terminal className="w-3.5 h-3.5 text-slate-500" /> Tap to inspect launch guide
+            </span>
+          </div>
+
+          {/* 8. Interagency Read Bridge */}
+          <div
+            onClick={() =>
+              setQuickstartModal({
+                title: 'Interagency Read Bridge & Integrations',
+                port: '3000',
+                role: 'OAuth 2.0 PKCE Data Bridge & Consent HUD',
+                description: 'Manage read-only third-party authorizations (Axom AI, Chef’s Intelligence) with zero customer PII, zero payment cards, and zero payroll access.',
+                screenshot: '/screenshots/admin_pantry_inventory.png',
+              })
+            }
+            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-900 shadow-2xs hover:shadow-md transition-all space-y-2.5 group cursor-pointer"
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-sm text-slate-900 group-hover:text-amber-600 transition-colors">Interagency Bridge</span>
+              <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">OAuth PKCE</span>
+            </div>
+            <p className="text-xs text-slate-600">Zero-PII read bridge with interactive manager consent portal (/interagency/consent) and stable SQL projections (V20-V21).</p>
+            <span className="text-[11px] font-mono font-semibold text-slate-900 flex items-center gap-1.5 pt-1">
+              <Terminal className="w-3.5 h-3.5 text-slate-500" /> Tap to inspect launch guide
+            </span>
+          </div>
         </div>
       </section>
 
@@ -1222,14 +1268,14 @@ export function LandingPage() {
             <span>Programmable Restaurant Protocol</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-            Universal CLI, REST API, 9 MCP Servers & SDK
+            Universal CLI, REST API, 9 MCP Servers, SDK & Interagency Bridge
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto">
-            CulinaryOS is an open protocol. Automate restaurant tasks via terminal, orchestrate with REST endpoints, or let AI models manage recipes and inventory via Model Context Protocol.
+            CulinaryOS is an open protocol. Automate restaurant tasks via terminal, orchestrate with REST endpoints, integrate third-party agents with zero-PII OAuth2 PKCE, or let AI models manage recipes via Model Context Protocol.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <div className="bg-[#090d16] text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -1287,6 +1333,21 @@ export function LandingPage() {
             </div>
             <code className="text-[11px] font-mono bg-slate-900 p-2 rounded text-emerald-300 block truncate border border-slate-800">
               @culinaryos/shared, ratio-engine
+            </code>
+          </div>
+
+          <div className="bg-[#090d16] text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3 flex flex-col justify-between shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <h4 className="font-bold text-sm text-white">Interagency Bridge</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Secure read-only OAuth 2.0 PKCE data projections for third-party tools with zero customer, card, or payroll PII.
+              </p>
+            </div>
+            <code className="text-[11px] font-mono bg-slate-900 p-2 rounded text-amber-300 block truncate border border-slate-800">
+              GET /v1/interagency/snapshots
             </code>
           </div>
         </div>

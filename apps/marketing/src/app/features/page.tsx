@@ -224,6 +224,37 @@ const categories = [
       },
     ],
   },
+  {
+    id: 'interagency-bridge',
+    label: 'Interagency Read Bridge & Integrations',
+    icon: '🔌',
+    features: [
+      {
+        title: 'Off-by-Default Security Gate',
+        desc: 'Interagency endpoints require explicit tenant opt-in (INTERAGENCY_READ_ENABLED=true). Inactive tenants return 404 with zero route leakage.',
+      },
+      {
+        title: 'OAuth 2.0 PKCE S256 Handshake',
+        desc: 'RFC 7636 compliant Proof Key for Code Exchange with cryptographically random codes and loopback redirect URI enforcement.',
+      },
+      {
+        title: 'Zero PII, Zero Card & Zero Payroll Guarantee',
+        desc: 'Cardholder PAN/CVV, customer personal identifiable information, and staff wage/payroll records are excluded at the SQL projection layer.',
+      },
+      {
+        title: 'Manager-Only Web Consent Portal',
+        desc: 'Interactive Admin consent screen (/interagency/consent) letting restaurant owners inspect exact scopes and revoke active third-party grants with 1 tap.',
+      },
+      {
+        title: 'Rotational Refresh & 15-Minute Access Tokens',
+        desc: 'Ephemeral 15-minute access tokens with single-use refresh tokens stored as SHA-256 hashes to prevent token replay or leakage.',
+      },
+      {
+        title: 'Universal CLI Interagency Control',
+        desc: 'Inspect grant statuses, list authorizations, revoke third-party access, and fetch projection snapshots directly from the terminal via culinary interagency.',
+      },
+    ],
+  },
 ];
 
 export default function FeaturesPage() {

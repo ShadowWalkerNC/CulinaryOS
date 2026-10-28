@@ -107,6 +107,13 @@ const bentoFeatures = [
     description: 'Professional food science algorithms built directly into the kitchen OS for precision hydrocolloids, cryo-gastronomy, thermal sous-vide, and equilibrium curing.',
     bullets: ['Gelatin Bloom square-root mass conversion', 'Baldwin conduction sous-vide pasteurization curves', 'PAC/POD gelato freezing point & Brix balancing'],
   },
+  {
+    icon: '🔌',
+    tag: 'Interoperability & Integrations',
+    title: 'Interagency Read Bridge',
+    description: 'Secure, read-only OAuth 2.0 PKCE data bridge for partner agents, Axom AI, and kitchen analytics with zero customer PII, zero payment cards, and zero payroll access.',
+    bullets: ['Manager-gated PKCE authorization & 15m token rotation', 'Strict loopback callbacks & RLS security-definer projections', 'Safe snapshots for menus, recipes, inventory & sales totals'],
+  },
 ];
 
 const competitorMatrix = [
@@ -121,6 +128,7 @@ const competitorMatrix = [
   { feature: 'Hardcoded FLSA Tip Pool Legal Gates', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Android TV Displays (Walmart onn. 4K & Digital Boards)', culinary: true, toast: false, square: false, clover: false },
   { feature: 'Modernist Gastronomy & Computational Food Science', culinary: true, toast: false, square: false, clover: false },
+  { feature: 'Interagency Read Bridge (Zero-PII OAuth2 PKCE)', culinary: true, toast: false, square: false, clover: false },
 ];
 
 const testimonials = [

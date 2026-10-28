@@ -24,6 +24,7 @@ import { ToolsPage } from './pages/Tools';
 import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
 import { DisplaysPage } from './pages/DisplaysPage';
+import { InteragencyConsentPage } from './pages/InteragencyConsentPage';
 
 export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -54,6 +55,8 @@ export function App() {
                 <Route path="/displays" element={<DisplaysPage />} />
                 <Route path="/tools" element={<ToolsPage />} />
                 <Route path="/integrations" element={<IntegrationsPage />} />
+                <Route path="/interagency/consent" element={<InteragencyConsentPage />} />
+                <Route path="/integrations/interagency" element={<InteragencyConsentPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
 
                 <Route path="/" element={<DashboardPage />} />

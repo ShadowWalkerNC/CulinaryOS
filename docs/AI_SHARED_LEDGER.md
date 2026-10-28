@@ -1,5 +1,17 @@
 # CulinaryOS shared AI ledger
 
+## 2026-10-27 CulinaryOS Interagency read bridge & display platform — completed (handoff)
+
+DISPATCH COMPLETE: CulinaryOS v2 Interagency Read Bridge and Display Platform verified and finalized.
+- Implementation scope: Off-by-default (`INTERAGENCY_READ_ENABLED=true`), read-only OAuth 2.0 PKCE data bridge for partner agents (Axom AI, Chef’s Intelligence) and third-party tools, plus Walmart onn. 4K Android TV display platform and Cheezies truck views.
+- Security and Privacy gates: Payment cards, consumer PII, and payroll wage records are strictly excluded at the SQL projection layer. Loopback redirect URI enforced (`127.0.0.1:<port>/interagency/callback`, port >= 1024). Interactive Admin UI consent page (`/interagency/consent`) requires manager/owner JWT authentication.
+- Verification: 25 new dedicated tests passed (8 service, 3 route, 3 CLI, 11 migration adversarial). Monorepo test runner passed 193/193 tests. Typechecks passed across 59/59 Turborepo packages. Production builds passed for `@culinaryos/app-web`, `@culinaryos/admin`, and `@culinaryos/app-marketing`.
+- Ownership released: Branch `codex/interagency-read-bridge` staged, tested, and ready for operator review/merge. No active locks held.
+
+
+
+
+
 ## Working agreement
 
 Codex and Muse share this repository and this file. Read this ledger and `git status` before acting. Claim a bounded task and its file scope before editing. Do not edit another agent's claimed files; leave findings here for that owner. Re-read before appending, preserve prior entries, and record evidence rather than assumptions. Never record credentials, customer data, or private reasoning. Only the release owner changes Railway settings or pushes Git. User approval for pushing remains required by the inherited project instructions.
@@ -36,6 +48,16 @@ Codex and Muse share this repository and this file. Read this ledger and `git st
 - Record deployment IDs and tested commit after success. Revert the corresponding logical commit/settings to roll back; do not reset or destroy a database.
 
 ## Codex entries
+
+- 2026-10-27 (Codex): Completed CulinaryOS Interagency Read Bridge, TV Display Platform, and Monorepo Showcase finalization on branch `codex/interagency-read-bridge`:
+  - Interagency Core Engine (`apps/server/src/interagency/service.ts`, `supabase-store.ts`): Built PKCE S256 OAuth 2.0 service with 15-minute access token rotation, 30-day refresh token rotation with single-use revocation, SHA-256 hashed storage, cursor-based pagination, and loopback callback redirect URI enforcement (`http://127.0.0.1:<port>/interagency/callback`, port >= 1024).
+  - Hono API Route Layer (`apps/server/src/routes/interagency.ts`): Mounted at `/v1/interagency` with `/authorize`, `/token`, `/revoke`, `/snapshots`, and `/grants`. Gated behind off-by-default `INTERAGENCY_READ_ENABLED=true` (returns 404 when disabled). Enforces manager/owner JWT authentication (`actor.mode === 'jwt'`). 64KB body limit defense and `no-store` headers.
+  - SQL Migrations (`V20__interagency_read_grants.sql`, `V21__interagency_read_projections.sql`): RLS-protected storage for `interagency_grants` and `interagency_authorizations` restricted to `service_role`. Added security-definer projections `interagency_sales_summary` and `interagency_recipe_snapshot` strictly excluding payment cardholder data, consumer personal information (PII), and staff payroll records.
+  - Admin UI Consent Page (`apps/admin/src/pages/InteragencyConsentPage.tsx`): Interactive consent screen at `/interagency/consent` displaying requested scopes, security guarantees, redirect URI, and 1-tap grant revocation.
+  - CLI Parity (`cli/src/commands/interagency.ts`): 100% route parity with `status`, `grants`, `revoke <id>`, and `snapshot <resource>` (`--token`, `--limit`).
+  - Android TV Displays & Showcase: Updated `apps/web/src/pages/LandingPage.tsx`, `apps/marketing/src/app/page.tsx`, `apps/marketing/src/app/features/page.tsx`, and `README.md` highlighting $19.88 Walmart onn. 4K Android TV display platform, Cheezies food truck suite, and zero-PII Interagency bridge.
+  - Verification & Test Pass: 25 new dedicated unit, route, CLI, and adversarial migration tests passed. Total test suite: 193/193 tests green. Monorepo static typecheck: 59/59 Turborepo tasks green. All production builds passed.
+
 
 - 2026-10-16 (Antigravity/Muse): Completed Phases 4–6 consolidation (`379b3ed` Web/Plated, `e116aa0` Marketing/Post-Pilot Python FastAPI + Next Studio, `8a1595a` Intelligence/RestRevive-AI diagnostics + multi-provider adapter, `6493844` `PROJECT.yaml`) and executed 6-axis Principal Architect Assessment + Stages A–D remediation:
   - Stage A (`4e7787b`): `apps/server/src/routes/pos-sync.ts` + `tests/server/pos-sync.test.ts` — enforced cross-tenant order collision protection on `create_order`, parent-order tenant verification and server-side `line_total` recomputation on `add_line_item`, authoritative order total verification on `finalize_payment`, and implemented `void_line_item` offline replay.

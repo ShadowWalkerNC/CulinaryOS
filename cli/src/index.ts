@@ -32,6 +32,7 @@ import { settingsCommand } from './commands/settings';
 import { diagnosticsCommand } from './commands/diagnostics';
 import { gastronomyCommand } from './commands/gastronomy';
 import { displayCommand } from './commands/display';
+import { interagencyCommand } from './commands/interagency';
 
 const program = new Command();
 
@@ -70,6 +71,7 @@ program.addCommand(settingsCommand);
 program.addCommand(diagnosticsCommand);
 program.addCommand(gastronomyCommand);
 program.addCommand(displayCommand);
+program.addCommand(interagencyCommand);
 
 // Top-Level Doctor Command (supports: culinary doctor security, culinary doctor ui)
 program
