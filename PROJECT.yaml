@@ -13,7 +13,7 @@ ownership:
 environments:
   - windows
 runtimes:
-  node: ">=20.0.0"
+  node: ">=22.0.0"
 packageManager:
   name: pnpm
   version: "9.0.0"
