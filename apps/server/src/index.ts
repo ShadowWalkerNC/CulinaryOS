@@ -45,6 +45,9 @@ import { autopilotRoutes }     from './routes/autopilot';
 import { purchasingRoutes }    from './routes/purchasing';
 import { gastronomyRoutes }    from './routes/gastronomy';
 import { displaysRoutes }      from './routes/displays';
+import { intelligenceRoutes }  from './routes/intelligence';
+import { marketingRoutes }     from './routes/marketing';
+import { hardwareRoutes }      from './routes/hardware';
 import type { Env }            from './types';
 
 
@@ -156,6 +159,9 @@ app.route('/v1/dayparts', daypartsRoutes);
 app.route('/v1/purchasing', purchasingRoutes);
 app.route('/v1/gastronomy', gastronomyRoutes);
 app.route('/v1/displays',   displaysRoutes);
+app.route('/v1/intelligence', intelligenceRoutes);
+app.route('/v1/marketing',    marketingRoutes);
+app.route('/v1/hardware',     hardwareRoutes);
 
 // Stripe webhook — no tenant middleware (signature-verified)
 app.route('/v1/webhooks/stripe', stripeWebhook);

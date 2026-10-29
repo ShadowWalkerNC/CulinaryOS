@@ -11,6 +11,7 @@ import { handleOrderCancelled } from './handlers/pos-order-cancelled';
 import { handleMenuItemSold }   from './handlers/pos-menu-item-sold';
 import { handleCourseFired }    from './handlers/kds-course-fired';
 import { handleLowStock }       from './handlers/recipeos-pantry-low-stock';
+import { handlePrepTaskCompleted } from './handlers/prep-task-completed';
 import type { DomainEvent }     from './types';
 
 export type EventHandler<T> = (
@@ -47,6 +48,7 @@ const HANDLERS: Record<string, EventHandler<any>> = {
   'pos:menu:item-sold':         handleMenuItemSold,
   'kds:course:fired':           handleCourseFired,
   'recipeos:pantry:low-stock':  handleLowStock,
+  'prep.task.completed':        handlePrepTaskCompleted,
 };
 
 export async function handleIncomingEvent(

@@ -130,6 +130,7 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
   app.use('/v1/drawers', requireNative as never);
   app.use('/v1/drawers/*', requireNative as never);
   app.use('/v1/checks/*', requireNative as never);
+  app.use('/v1/pos/*', requireNative as never);
 
   registerRoute('get', '/auth/me', (c) => {
     const auth = c.get('nativeAuth');
@@ -354,6 +355,84 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
       if (body.eventId !== undefined) args.eventId = body.eventId;
       const data = await withTenant(hash, (tx, identity) => sendOrderToKitchen(tx, identity.tenantId, id, body.operationId as string, args));
       return c.json({ ok: true, data: data });
+    } catch (error) {
+      return sendError(c, error);
+    }
+  });
+
+  registerRoute('patch', '/orders/:id/send', async (c) => {
+    try {
+      const auth = c.get('nativeAuth');
+      const denied = capabilityDenied(c, auth, 'orders:write');
+      if (denied) return denied;
+      const hash = c.get('tokenHash');
+      const id = c.req.param('id');
+      const body = await readBody<{ operationId?: string; eventId?: string }>(c);
+      const opId = body.operationId || c.req.header('Idempotency-Key') || `send-${id}`;
+      const args: { eventId?: string } = {};
+      if (body.eventId !== undefined) args.eventId = body.eventId;
+      const data = await withTenant(hash, (tx, identity) => sendOrderToKitchen(tx, identity.tenantId, id, opId, args));
+      return c.json({ ok: true, data: data });
+    } catch (error) {
+      return sendError(c, error);
+    }
+  });
+
+  registerRoute('post', '/pos/sync-deltas', async (c) => {
+    try {
+      const auth = c.get('nativeAuth');
+      const denied = capabilityDenied(c, auth, 'orders:write');
+      if (denied) return denied;
+      const hash = c.get('tokenHash');
+      const body = await readBody<{ deltas?: Array<{ id: string; tenant_id?: string; order_id: string; action: string; payload?: Record<string, any> }> }>(c);
+      const deltas = Array.isArray(body.deltas) ? body.deltas : [];
+      const confirmedIds: string[] = [];
+      const failures: Array<{ id: string; error: string }> = [];
+
+      await withTenant(hash, async (tx, identity) => {
+        for (const delta of deltas) {
+          if (delta.tenant_id && delta.tenant_id.toLowerCase() !== identity.tenantId.toLowerCase()) {
+            failures.push({ id: delta.id, error: 'tenant_id mismatch' });
+            continue;
+          }
+          try {
+            if (delta.action === 'create_order') {
+              await createOrder(tx, identity.tenantId, {
+                tableNumber: delta.payload?.tableNumber ?? delta.payload?.table_number ?? 'T-01',
+                coverCount: delta.payload?.coverCount ?? delta.payload?.cover_count ?? 1,
+                serverName: delta.payload?.serverName ?? delta.payload?.server_name ?? 'POS',
+                notes: delta.payload?.notes ?? null,
+              });
+              confirmedIds.push(delta.id);
+            } else if (delta.action === 'add_line_item') {
+              await addLineItem(tx, identity.tenantId, delta.order_id, {
+                menuItemId: String(delta.payload?.menu_item_id ?? delta.payload?.menuItemId ?? ''),
+                quantity: delta.payload?.quantity ?? 1,
+                ...(delta.payload?.unit_price !== undefined ? { unitPrice: delta.payload.unit_price } : {}),
+              });
+              confirmedIds.push(delta.id);
+            } else if (delta.action === 'finalize_payment') {
+              const method = String(delta.payload?.method ?? 'cash');
+              const amount = Number(delta.payload?.amount ?? delta.payload?.total ?? 0);
+              const tipCents = Number(delta.payload?.tip_cents ?? delta.payload?.tip_amount ?? 0);
+              await recordCashCompPayment(tx, auth, identity.tenantId, {
+                orderId: delta.order_id,
+                method,
+                amount,
+                tipCents,
+                operationId: delta.id,
+              });
+              confirmedIds.push(delta.id);
+            } else {
+              confirmedIds.push(delta.id);
+            }
+          } catch (err: any) {
+            failures.push({ id: delta.id, error: err?.message ?? 'delta replay failed' });
+          }
+        }
+      });
+
+      return c.json({ ok: true, data: { confirmedIds, applied: confirmedIds.length, failures } });
     } catch (error) {
       return sendError(c, error);
     }

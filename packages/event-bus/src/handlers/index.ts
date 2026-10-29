@@ -13,10 +13,11 @@ import { handleTicketBumped }   from './kds-ticket-bumped';
 import { handleMenuItemSold }   from './pos-menu-item-sold';
 import { handleLowStock }       from './recipeos-pantry-low-stock';
 import { handleCourseFired }    from './kds-course-fired';
+import { handlePrepTaskCompleted } from './prep-task-completed';
 
 export interface HandlerRegistration {
   name:      string;
-  eventType: EventType;
+  eventType: EventType | 'prep.task.completed';
   handle:    EventHandler<any>;
 }
 
@@ -27,4 +28,5 @@ export const handlers: HandlerRegistration[] = [
   { name: 'pos-menu-item-sold',         eventType: 'pos:menu:item-sold',         handle: handleMenuItemSold },
   { name: 'recipeos-pantry-low-stock',  eventType: 'recipeos:pantry:low-stock',  handle: handleLowStock },
   { name: 'kds-course-fired',           eventType: 'kds:course:fired',           handle: handleCourseFired },
+  { name: 'prep-task-completed',        eventType: 'prep.task.completed',        handle: handlePrepTaskCompleted },
 ];

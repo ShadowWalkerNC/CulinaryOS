@@ -138,7 +138,8 @@ program
     console.log(chalk.bold('  [2] Kitchen KDS:        ') + chalk.underline.hex('#38BDF8')('http://localhost:5173') + chalk.gray(' (Station Tabs & Timers)'));
     console.log(chalk.bold('  [3] Admin Back-Office:  ') + chalk.underline.hex('#38BDF8')('http://localhost:5174') + chalk.gray(' (Pantry, Menu, Tools)'));
     console.log(chalk.bold('  [4] Online Storefront:  ') + chalk.underline.hex('#38BDF8')('http://localhost:5176') + chalk.gray(' (Order Customizer)'));
-    console.log(chalk.bold('  [5] Unified Hono API:   ') + chalk.underline.hex('#38BDF8')('http://localhost:3000') + chalk.gray(' (Event Bus & Webhooks)\n'));
+    console.log(chalk.bold('  [5] Unified Hono API:   ') + chalk.underline.hex('#38BDF8')('http://localhost:3000') + chalk.gray(' (Event Bus & Webhooks)'));
+    console.log(chalk.bold('  [6] Android TV Display: ') + chalk.underline.hex('#38BDF8')('http://localhost:5181') + chalk.gray(' (Walmart onn. 4K & Wallboards)\n'));
     console.log(chalk.gray('Starting Turborepo pipeline... (Press Ctrl+C to stop)\n'));
 
     const isWindows = process.platform === 'win32';

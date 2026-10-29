@@ -1,5 +1,22 @@
 # CulinaryOS shared AI ledger
 
+## 2026-10-28 Stages 10-14: Event Bus Prep Depletion, Intelligence/Marketing/Hardware Routes, SDK & Native PG Parity — completed
+
+- Status: Completed and verified all remaining roadmap, SDK, hardware bridge, and native Postgres gaps (`tests/server/remaining-completion.test.ts` 5/5 passed, `turbo run typecheck` 60/60 passed).
+- Key Deliverables:
+  1. **Stage 10 — Event Bus `prep.task.completed` Inventory Depletion (`packages/event-bus/src/handlers/prep-task-completed.ts`):**
+     - Registered `'prep.task.completed'` in `packages/event-bus` broker and handlers (preserving `packages/shared/src/types/events.ts` hash invariant). Decrements raw ingredient inventory via `pantry_decrement_stock` RPC or direct `inventory_items` fallback and writes an `inventory_logs` audit entry (`reason: 'prep_consumption'`).
+  2. **Stage 11 — SDK & Server Route Parity (`apps/server/src/routes/intelligence.ts`, `apps/server/src/routes/marketing.ts`, `packages/sdk/src/index.ts`):**
+     - Added `/v1/intelligence` (skills catalog, intent routing, skill execution with `ai_prompt_log` recording, and human-in-the-loop approvals) and `/v1/marketing` (campaign scheduler & skills) to `apps/server` so `@culinaryos/sdk` has 100% server route parity.
+     - Added `readonly displays` (`discover`, `list`, `pair`, `switchMode`, `launcherConfig`, `bump`) and `hardware.registry` / `hardware.print` / `hardware.kickDrawer` to `@culinaryos/sdk`.
+  3. **Stage 12 — Hardware Bridge & Cash Drawer Honesty (`apps/server/src/routes/hardware.ts`, `apps/pos/src/lib/hardware-printer.ts`):**
+     - Mounted `/v1/hardware` (`/registry`, `/print`, `/kick-drawer`) with RFC1918/loopback TCP `:9100` ESC/POS socket relay.
+     - Updated `kickCashDrawer()` in `apps/pos/src/lib/hardware-printer.ts` to relay `network` transport via `POST /v1/hardware/print` and fail honestly (`success: false`) when no physical USB, Serial, or LAN printer is connected.
+  4. **Stage 13 — Native Postgres & Offline Replay Parity (`apps/server/src/postgres/app.ts`, `apps/server/src/routes/pos-sync.ts`):**
+     - Added `PATCH /v1/orders/:id/send` and `POST /v1/pos/sync-deltas` to `createPostgresCriticalApp`, and enforced authoritative `menu_items.price` lookup on `add_line_item` replay in `apps/server/src/routes/pos-sync.ts`.
+  5. **Stage 14 — Turnkey CLI Dashboard (`cli/src/index.ts`) & Verification (`tests/server/remaining-completion.test.ts`):**
+     - Added `[6] Android TV Display: http://localhost:5181` to `culinary start` banner and verified 5/5 integration tests in `tests/server/remaining-completion.test.ts`.
+
 ## 2026-10-28 Phases 6-9: Zero-Config LAN Discovery, Admin/Marketing Sync, Prep MCP Full Tooling & Android/iOS Packaging — completed
 
 - Status: Phases 6-9 completed and verified on top of Phases 1-5 (`GET /v1/displays/discover`, `culinary display discover`, `DisplaysPage.tsx` CleanMyTV Launcher v1 JSON preview + `:5181` + QR `?code=` autofill, `mcp/src/prep-server.ts` 6-tool surface, and `scripts/build-mobile-android.ps1`).

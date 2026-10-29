@@ -346,6 +346,50 @@ export class CulinaryOSClient {
       receiptPrinter?: ReceiptPrinterDriver;
       initialOnlineState?: boolean;
     }) => new EdgeOfflineCoordinator(options),
+    registry: () => this.request<any[]>('/v1/hardware/registry'),
+    print: (payload: { ip?: string; port?: number; rawBase64?: string; receipt?: any; loopback?: boolean }) =>
+      this.request<any>('/v1/hardware/print', { method: 'POST', body: JSON.stringify(payload) }),
+    kickDrawer: (payload: { ip?: string; port?: number; pin?: 2 | 5; loopback?: boolean } = {}) =>
+      this.request<any>('/v1/hardware/kick-drawer', { method: 'POST', body: JSON.stringify(payload) }),
+  };
+
+  // --- Display Platform & Android TV / CleanMyTV Subsystem ---
+  readonly displays = {
+    discover: () => this.request<any>('/v1/displays/discover'),
+    list: () => this.request<any[]>('/v1/displays'),
+    pair: (params: {
+      pairingCode: string;
+      name: string;
+      assignedMode: string;
+      assignedView?: string;
+      configuration?: Record<string, any>;
+    }) =>
+      this.request<any>('/v1/displays/pair', {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
+    switchMode: (displayId: string, assignedMode: string, assignedView = 'all') =>
+      this.request<any>(`/v1/displays/${encodeURIComponent(displayId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          assignedMode,
+          assignedView,
+          remoteCommand: { type: 'navigate', mode: assignedMode, view: assignedView },
+        }),
+      }),
+    launcherConfig: (params: { mode?: string; view?: string; brand?: string } = {}) => {
+      const sp = new URLSearchParams();
+      if (params.mode) sp.set('mode', params.mode);
+      if (params.view) sp.set('view', params.view);
+      if (params.brand) sp.set('brand', params.brand);
+      const q = sp.toString() ? `?${sp.toString()}` : '';
+      return this.request<any>(`/v1/displays/launcher-config${q}`);
+    },
+    bump: (ticketId: string) =>
+      this.request<any>('/v1/displays/bump', {
+        method: 'POST',
+        body: JSON.stringify({ ticketId }),
+      }),
   };
 
   // --- Diagnostics & Financial Revival Subsystem (RestRevive-AI + Intelligence Engine) ---

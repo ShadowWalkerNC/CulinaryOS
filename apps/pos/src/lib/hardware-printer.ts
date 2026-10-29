@@ -228,6 +228,34 @@ export class HardwarePrinterService {
     }
 
     // 4. Universal High-Fidelity Browser / OS Spooler (Thermal Print CSS Frame)
+    // 3b. Network TCP (:9100) Server Bridge Transport
+    if (activeConfig.transport === 'network' && activeConfig.networkIp) {
+      try {
+        const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'http://localhost:3000';
+        const res = await fetch(`${apiBase.replace(/\/$/, '')}/v1/hardware/print`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({
+            ip: activeConfig.networkIp,
+            port: activeConfig.networkPort || 9100,
+            receipt: payload,
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const data = json.data ?? json;
+          if (data?.status === 'sent') {
+            return { success: true, transport: 'Network', message: `Printed to ${activeConfig.networkIp}:${activeConfig.networkPort || 9100}` };
+          }
+        }
+      } catch (e: any) {
+        console.warn('[HardwarePrinter] Network bridge write failed, trying fallback:', e);
+      }
+    }
+
     return this.printViaBrowserThermalFrame(payload, activeConfig);
   }
 
@@ -299,7 +327,35 @@ export class HardwarePrinterService {
       await this.sendToSerial(bytes);
       return { success: true, message: 'Cash drawer trigger pulse sent (Serial)' };
     }
-    return { success: true, message: 'Cash drawer trigger registered (System)' };
+    if (this.config.transport === 'network' && this.config.networkIp) {
+      try {
+        const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'http://localhost:3000';
+        const res = await fetch(`${apiBase.replace(/\/$/, '')}/v1/hardware/kick-drawer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({
+            ip: this.config.networkIp,
+            port: this.config.networkPort || 9100,
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const data = json.data ?? json;
+          if (data?.status === 'sent') {
+            return { success: true, message: `Cash drawer trigger pulse sent (LAN ${this.config.networkIp})` };
+          }
+        }
+      } catch {
+        // Fall through to honest unavailable status
+      }
+    }
+    return {
+      success: false,
+      message: 'Cash drawer unavailable: no physical USB, Serial, or reachable LAN printer connected',
+    };
   }
 
   // --- Transport Helpers ---

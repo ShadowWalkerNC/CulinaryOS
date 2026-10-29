@@ -27,3 +27,5 @@ export type {
 }                                  from './types';
 
 export { handlers }                from './handlers/index';
+export { handlePrepTaskCompleted } from './handlers/prep-task-completed';
+export type { PrepTaskCompletedEventPayload, PrepTaskDecrementItem } from './handlers/prep-task-completed';

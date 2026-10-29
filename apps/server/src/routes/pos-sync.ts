@@ -269,7 +269,21 @@ posSyncRoutes.post('/sync-deltas', async (c) => {
             }
           }
 
-          const computedLineTotal = unitPrice * quantity;
+          let authoritativeUnitPrice = unitPrice;
+          const menuItemId = line.menu_item_id ?? line.menuItemId ?? null;
+          if (menuItemId) {
+            const menuTable: any = supabase.from('menu_items');
+            if (menuTable && typeof menuTable.select === 'function') {
+              const sel = menuTable.select('id, price').eq('id', menuItemId).eq('tenant_id', tenantId);
+              if (typeof sel.maybeSingle === 'function') {
+                const { data: menuRow } = await sel.maybeSingle();
+                if (menuRow && typeof menuRow.price === 'number' && menuRow.price > 0) {
+                  authoritativeUnitPrice = menuRow.price;
+                }
+              }
+            }
+          }
+          const computedLineTotal = authoritativeUnitPrice * quantity;
           const { error } = await supabase.from('pos_order_line_items').insert({
             id: line.id,
             tenant_id: tenantId,
