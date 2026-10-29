@@ -182,7 +182,7 @@ graph TB
         REC["RecipeOS :5178\nNext.js App Router"]
     end
 
-    subgraph API["apps/server :3000 — Hono on Node.js 20"]
+    subgraph API["apps/server :3000 — Hono on Node.js 22+"]
         AUTH["/v1/auth"]
         ORD["/v1/orders"]
         KDS_API["/v1/kds"]
@@ -318,7 +318,7 @@ Run the entire system locally in under 30 seconds with **zero database setup and
 
 ### Prerequisites
 
-- [Node.js 20+](https://nodejs.org/)
+- [Node.js 22+](https://nodejs.org/)
 - [pnpm 9+](https://pnpm.io/installation) (`npm install -g pnpm`)
 
 ### Boot

@@ -21,12 +21,20 @@ export default function TabLayout() {
         options={{ title: 'Orders', tabBarIcon: ({ color }) => <Ionicons name="receipt-outline" size={22} color={color} /> }}
       />
       <Tabs.Screen
+        name="scan"
+        options={{ title: 'Scan', tabBarIcon: ({ color }) => <Ionicons name="barcode-outline" size={22} color={color} /> }}
+      />
+      <Tabs.Screen
         name="inventory"
         options={{ title: 'Inventory', tabBarIcon: ({ color }) => <Ionicons name="cube-outline" size={22} color={color} /> }}
       />
       <Tabs.Screen
         name="menu"
         options={{ title: 'Menu', tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={22} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="displays"
+        options={{ title: 'TVs', tabBarIcon: ({ color }) => <Ionicons name="tv-outline" size={22} color={color} /> }}
       />
     </Tabs>
   );

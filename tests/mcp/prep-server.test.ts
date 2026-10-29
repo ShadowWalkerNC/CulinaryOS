@@ -269,6 +269,75 @@ describe("prep-server preserved workflows outside build_shift_prep", () => {
     assert.equal(fallbackBody.miseEnPlaceList[0]?.item, "Caramelized Onions");
   });
 
+  it("supports project_batch_size, complete_prep_item, save_prep_plan, and update_stock tools", async () => {
+    const { client } = await connect();
+
+    // 1. project_batch_size
+    const batchRes = (await client.callTool({
+      name: "project_batch_size",
+      arguments: { portionWeight: 180, covers: 100, wasteFactor: 1.1, unit: "g" },
+    })) as unknown as { content: Array<{ type: string; text?: string }>; isError?: boolean };
+    assert.equal(batchRes.isError, undefined);
+    const batchBody = JSON.parse(textOf(batchRes)) as { projectedBatchWeight: number; unit: string };
+    assert.equal(batchBody.projectedBatchWeight, 19800);
+    assert.equal(batchBody.unit, "g");
+
+    // 2. complete_prep_item
+    const completeRes = (await client.callTool({
+      name: "complete_prep_item",
+      arguments: {
+        taskId: "prep-task-01",
+        tenantId: "00000000-0000-0000-0000-000000000001",
+        decrements: [{ ingredient: "Diced Onions", quantity: 3, unit: "kg" }],
+        completedBy: "Chef Marco",
+      },
+    })) as unknown as { content: Array<{ type: string; text?: string }>; isError?: boolean };
+    assert.equal(completeRes.isError, undefined);
+    const completeBody = JSON.parse(textOf(completeRes)) as {
+      eventType: string;
+      payload: { taskId: string; decrements: Array<{ ingredient: string; quantity: number }> };
+    };
+    assert.equal(completeBody.eventType, "prep.task.completed");
+    assert.equal(completeBody.payload.taskId, "prep-task-01");
+    assert.equal(completeBody.payload.decrements[0]?.quantity, 3);
+
+    // 3. save_prep_plan
+    const saveRes = (await client.callTool({
+      name: "save_prep_plan",
+      arguments: {
+        tenantId: "00000000-0000-0000-0000-000000000001",
+        shift: "Dinner",
+        date: "2026-10-28",
+        items: [{ ingredient: "Diced Onions", prepAmount: 3, unit: "kg" }],
+      },
+    })) as unknown as { content: Array<{ type: string; text?: string }>; isError?: boolean };
+    assert.equal(saveRes.isError, undefined);
+    const saveBody = JSON.parse(textOf(saveRes)) as { saved: boolean; itemCount: number };
+    assert.equal(saveBody.saved, true);
+    assert.equal(saveBody.itemCount, 1);
+
+    // 4. update_stock
+    const stockRes = (await client.callTool({
+      name: "update_stock",
+      arguments: {
+        ingredient: "Diced Onions",
+        currentStock: 2,
+        delta: 1.5,
+        parLevel: 5,
+        unit: "kg",
+      },
+    })) as unknown as { content: Array<{ type: string; text?: string }>; isError?: boolean };
+    assert.equal(stockRes.isError, undefined);
+    const stockBody = JSON.parse(textOf(stockRes)) as {
+      updatedStock: number;
+      shortfall: number;
+      needsPrep: boolean;
+    };
+    assert.equal(stockBody.updatedStock, 3.5);
+    assert.equal(stockBody.shortfall, 1.5);
+    assert.equal(stockBody.needsPrep, true);
+  });
+
   it("returns isError for unknown tools", async () => {
     const { client } = await connect();
     const result = (await client.callTool({

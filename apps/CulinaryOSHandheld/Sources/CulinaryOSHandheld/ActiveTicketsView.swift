@@ -110,7 +110,9 @@ public struct ActiveTicketsView: View {
                                     
                                     if order.status == "fired" {
                                         Button(action: {
-                                            api.bumpOrderStatus(orderId: order.id, newStatus: "ready")
+                                            Task {
+                                                await api.bumpOrderStatus(orderId: order.id, newStatus: "ready")
+                                            }
                                         }) {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "checkmark.circle.fill")
@@ -119,13 +121,15 @@ public struct ActiveTicketsView: View {
                                             .font(.system(size: 13, weight: .bold))
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 14)
-                                            .padding(.vertical, 8)
+                                            .frame(minHeight: 48)
                                             .background(Color.green)
                                             .cornerRadius(8)
                                         }
                                     } else if order.status == "ready" {
                                         Button(action: {
-                                            api.bumpOrderStatus(orderId: order.id, newStatus: "paid")
+                                            Task {
+                                                await api.bumpOrderStatus(orderId: order.id, newStatus: "paid")
+                                            }
                                         }) {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "creditcard.fill")
@@ -134,7 +138,7 @@ public struct ActiveTicketsView: View {
                                             .font(.system(size: 13, weight: .bold))
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 14)
-                                            .padding(.vertical, 8)
+                                            .frame(minHeight: 48)
                                             .background(Color.blue)
                                             .cornerRadius(8)
                                         }

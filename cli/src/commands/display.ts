@@ -5,6 +5,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { table } from 'table';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { apiGet, apiPost, apiPatch, apiDelete } from '../lib/api-client';
 
 export const displayCommand = new Command('display')
@@ -172,5 +175,124 @@ displayCommand
       console.log(JSON.stringify(data.data ?? data, null, 2));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Projection fetch failed: ${err.message}\n`));
+    }
+  });
+
+// 6b. Zero-Config LAN & mDNS Discovery
+displayCommand
+  .command('discover')
+  .description('Discover local LAN IPv4 addresses, mDNS host, and surface ports for mobile & TV pairing')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (opts) => {
+    try {
+      const res: any = await apiGet('/v1/displays/discover', opts.tenant);
+      const info = res.data ?? res;
+      console.log(chalk.bold.hex('#F59E0B')('\n📡 CulinaryOS Zero-Config LAN Discovery:'));
+      console.log(chalk.white(`  Host:       ${info.hostname} (${info.mdnsHost})`));
+      console.log(chalk.white(`  Primary IP: ${info.primaryIp}`));
+      console.log(chalk.white(`  API URL:    ${info.surfaces?.api}`));
+      console.log(chalk.white(`  Display TV: ${info.surfaces?.display}`));
+      console.log(chalk.white(`  Cloud Demo: ${info.surfaces?.cloudDemo}\n`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Discovery failed: ${err.message}\n`));
+    }
+  });
+
+// 7. Generate CleanMyTV Launcher Engine v1 Config
+displayCommand
+  .command('launcher-config')
+  .description('Generate CleanMyTV Launcher Engine v1 JSON config for com.cleanmytv.launcher.culinaryos')
+  .option('--mode <mode>', 'Mode: kitchen|manager|staff|guest|pickup|marketing', 'kitchen')
+  .option('--view <view>', 'View/Station', 'all')
+  .option('--brand <brand>', 'Brand: culinaryos|cheezies', 'culinaryos')
+  .option('--out <file>', 'Optional output file path')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (opts) => {
+    try {
+      const res: any = await apiGet(
+        `/v1/displays/launcher-config?mode=${opts.mode}&view=${encodeURIComponent(opts.view)}&brand=${opts.brand}`,
+        opts.tenant
+      );
+      const payload = res.data ?? res;
+      const jsonStr = JSON.stringify(payload, null, 2);
+      if (opts.out) {
+        writeFileSync(resolve(opts.out), jsonStr, 'utf8');
+        console.log(chalk.bold.green(`\n✔ Wrote CleanMyTV launcher config to ${resolve(opts.out)}\n`));
+      } else {
+        console.log(jsonStr);
+      }
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Launcher config fetch failed: ${err.message}\n`));
+    }
+  });
+
+// 8. Sideload APK & Launcher Config via CleanMyTV ADB Toolchain
+displayCommand
+  .command('sideload')
+  .description('Build/stage CulinaryOS Android TV APK into CleanMyTV library and sideload via ADB')
+  .option('--device <serial>', 'ADB device serial or IP:5555')
+  .option('--url <displayUrl>', 'Display Web App URL (e.g. http://192.168.40.10:5181 or https://culinaryos-demo.up.railway.app)')
+  .option('--api <apiUrl>', 'Backend Hono API URL (e.g. http://192.168.40.10:3000)')
+  .option('--push-launcher', 'Also push launcher-config.json to com.cleanmytv.launcher.culinaryos and trigger hot reload', false)
+  .option('--brand <brand>', 'Brand for launcher config: culinaryos|cheezies', 'culinaryos')
+  .action(async (opts) => {
+    try {
+      const appData = process.env.APPDATA || '';
+      const adbCandidates = [
+        join(appData, 'cleanmytv', 'tools', 'platform-tools', 'adb.exe'),
+        'C:\\Users\\white\\Desktop\\CleanMyTV\\.cytv-build\\tools\\platform-tools\\adb.exe',
+        'adb',
+      ];
+      const adbBin = adbCandidates.find((p) => p === 'adb' || existsSync(p)) || 'adb';
+      const repoRoot = resolve(__dirname, '..', '..', '..');
+      const builtApk = join(repoRoot, 'apps', 'android-tv', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
+
+      if (!existsSync(builtApk)) {
+        console.log(chalk.yellow(`\n⚠ APK not found at ${builtApk}. Run: powershell -File ./scripts/build-android-tv.ps1\n`));
+        return;
+      }
+
+      if (appData) {
+        const cytvApksDir = join(appData, 'cleanmytv', 'apks');
+        mkdirSync(cytvApksDir, { recursive: true });
+        const stagedApk = join(cytvApksDir, 'culinaryos-display.apk');
+        copyFileSync(builtApk, stagedApk);
+        console.log(chalk.green(`✔ Staged APK in CleanMyTV library: ${stagedApk}`));
+      }
+
+      const baseArgs = opts.device ? ['-s', opts.device] : [];
+      console.log(chalk.cyan(`▶ Installing com.culinaryos.display via ${adbBin}...`));
+      execFileSync(adbBin, [...baseArgs, 'install', '-r', builtApk], { stdio: 'inherit' });
+
+      const launchArgs = [
+        ...baseArgs,
+        'shell',
+        'am',
+        'start',
+        '-n',
+        'com.culinaryos.display/.MainActivity',
+      ];
+      if (opts.url) launchArgs.push('--es', 'DISPLAY_URL', opts.url);
+      if (opts.api) launchArgs.push('--es', 'API_URL', opts.api);
+      execFileSync(adbBin, launchArgs, { stdio: 'inherit' });
+      console.log(chalk.bold.green('✔ Launched CulinaryOS Display on Android TV!'));
+
+      if (opts.pushLauncher) {
+        const res: any = await apiGet(`/v1/displays/launcher-config?brand=${opts.brand}`).catch(() => null);
+        if (res) {
+          const payload = res.data ?? res;
+          const tmpFile = join(repoRoot, 'apps', 'android-tv', 'build', 'launcher-config.json');
+          mkdirSync(join(repoRoot, 'apps', 'android-tv', 'build'), { recursive: true });
+          writeFileSync(tmpFile, JSON.stringify(payload, null, 2), 'utf8');
+          const remotePath = '/sdcard/Android/data/com.cleanmytv.launcher.culinaryos/files/launcher-config.json';
+          execFileSync(adbBin, [...baseArgs, 'push', tmpFile, remotePath], { stdio: 'inherit' });
+          execFileSync(adbBin, [...baseArgs, 'shell', 'am', 'broadcast', '-a', 'com.cleanmytv.launcher.RELOAD_CONFIG'], {
+            stdio: 'inherit',
+          });
+          console.log(chalk.bold.green('✔ Hot-reloaded com.cleanmytv.launcher.culinaryos layout!'));
+        }
+      }
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Sideload failed: ${err.message}\n`));
     }
   });

@@ -117,7 +117,7 @@ export function LandingPage() {
     {
       id: 'phone',
       deviceType: 'phone',
-      name: 'Mobile Handheld POS',
+      name: 'Mobile Handheld POS (iOS Swift 6 & Android Expo)',
       roleTitle: 'Smartphones & Tableside Handhelds',
       port: '5172',
       badge: 'Front of House · Tableside',
@@ -171,8 +171,8 @@ export function LandingPage() {
     {
       id: 'tv',
       deviceType: 'tv',
-      name: 'Kitchen Display System (KDS)',
-      roleTitle: 'Kitchen Touchscreens, Monitors & TV Rails',
+      name: '7-in-1 Android TV Display & KDS',
+      roleTitle: 'Walmart onn. 4K Boxes, CleanMyTV Kiosks & Kitchen Rails',
       port: '5173',
       badge: 'Back of House · Expediter & Line',
       headline: 'High-visibility kitchen tickets with 1-second aging timers and station routing.',

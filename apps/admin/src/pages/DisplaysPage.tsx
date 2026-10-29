@@ -39,6 +39,8 @@ export function DisplaysPage() {
   const [brandChoice, setBrandChoice] = useState<'culinaryos' | 'cheezies'>('culinaryos');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [pairingError, setPairingError] = useState<string | null>(null);
+  const [launcherConfigJson, setLauncherConfigJson] = useState<string | null>(null);
+  const [lanInfo, setLanInfo] = useState<{ primaryIp?: string; mdnsHost?: string; surfaces?: Record<string, string> } | null>(null);
 
   const fetchDisplays = useCallback(async () => {
     try {
@@ -59,9 +61,42 @@ export function DisplaysPage() {
 
   useEffect(() => {
     fetchDisplays();
+    fetch(`${API}/v1/displays/discover`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.data || j?.primaryIp) setLanInfo(j.data || j);
+      })
+      .catch(() => {});
+
+    // Auto-fill pairing code if navigated from TV QR code (?code=XXXXXX)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qrCode = params.get('code');
+      if (qrCode) {
+        setPairingCode(qrCode);
+        setShowPairModal(true);
+      }
+    }
+
     const interval = setInterval(fetchDisplays, 10000);
     return () => clearInterval(interval);
   }, [fetchDisplays]);
+
+  async function handleFetchLauncherConfig(brand: 'culinaryos' | 'cheezies' = brandChoice) {
+    try {
+      const res = await fetch(`${API}/v1/displays/launcher-config?brand=${brand}`, {
+        headers: apiHeaders(TENANT_ID),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const payload = json.data || json;
+        setLauncherConfigJson(JSON.stringify(payload, null, 2));
+        notify(`Generated CleanMyTV Launcher v1 config (${brand.toUpperCase()})`);
+      }
+    } catch {
+      notify('Failed to generate CleanMyTV launcher config');
+    }
+  }
 
   function notify(msg: string) {
     setActionMessage(msg);
@@ -198,14 +233,22 @@ export function DisplaysPage() {
 
         <div className="flex items-center gap-3">
           <a
-            href="http://localhost:5178"
+            href={lanInfo?.surfaces?.display || 'http://localhost:5181'}
             target="_blank"
             rel="noreferrer"
             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl flex items-center gap-2 transition"
           >
             <ExternalLink className="w-4 h-4" />
-            Launch Display App
+            Launch Display App (:5181)
           </a>
+
+          <button
+            onClick={() => handleFetchLauncherConfig(brandChoice)}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 text-sm font-bold rounded-xl flex items-center gap-2 transition"
+          >
+            <Tv className="w-4 h-4" />
+            CleanMyTV Config
+          </button>
 
           <button
             onClick={() => setShowPairModal(true)}
@@ -221,6 +264,59 @@ export function DisplaysPage() {
         <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2 animate-fade-in">
           <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           <span>{actionMessage}</span>
+        </div>
+      )}
+
+      {/* CleanMyTV & Zero-Config LAN Provisioning Bar */}
+      <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-wider">
+              CleanMyTV Launcher Engine v1
+            </span>
+            <span className="text-xs text-slate-400 font-mono">
+              LAN IP: {lanInfo?.primaryIp || '127.0.0.1'} ({lanInfo?.mdnsHost || 'culinaryos.local'})
+            </span>
+          </div>
+          <p className="text-sm font-bold text-slate-100">
+            1-Command ADB Sideload for Walmart onn. 4K ($19.88) &amp; Google TV Kiosks
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <code className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-amber-300">
+            culinary display sideload --push-launcher
+          </code>
+          <button
+            onClick={() => handleFetchLauncherConfig('culinaryos')}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition"
+          >
+            CulinaryOS JSON
+          </button>
+          <button
+            onClick={() => handleFetchLauncherConfig('cheezies')}
+            className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-xs font-bold text-amber-300 border border-amber-500/30 transition"
+          >
+            Cheezies JSON
+          </button>
+        </div>
+      </div>
+
+      {launcherConfigJson && (
+        <div className="bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+              /sdcard/Android/data/com.cleanmytv.launcher.culinaryos/files/launcher-config.json
+            </span>
+            <button
+              onClick={() => setLauncherConfigJson(null)}
+              className="text-xs text-slate-400 hover:text-white font-bold"
+            >
+              Close Preview
+            </button>
+          </div>
+          <pre className="text-xs font-mono text-emerald-300 overflow-x-auto max-h-56 p-3 bg-black/50 rounded-xl">
+            {launcherConfigJson}
+          </pre>
         </div>
       )}
 

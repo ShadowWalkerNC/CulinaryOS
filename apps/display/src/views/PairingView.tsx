@@ -67,7 +67,11 @@ export const PairingView: React.FC = () => {
     onOk: () => registerDevice(),
   });
 
-  const pairingUrl = 'https://culinaryos.app/displays';
+  const cleanCode = pairingCode.replace(/\s+/g, '');
+  const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://culinaryos.app';
+  const pairingUrl = cleanCode && cleanCode !== '------'
+    ? `${originUrl}/displays?code=${cleanCode}`
+    : `${originUrl}/displays`;
   const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
     pairingUrl
   )}&bgcolor=ffffff&color=000000&margin=2`;

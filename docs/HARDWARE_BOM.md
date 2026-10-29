@@ -16,6 +16,8 @@ Unlike legacy incumbent systems (such as Toast) which lock operators into \$800�
 | **Cash Drawer** | APG Vasario 1616 / CD4-1616 | 24V RJ12 Printer-Driven DK Port | \$95 – \$125 | \$170 |
 | **Card Reader (Card-Present)** | Stripe WisePOS E / S700 | Stripe Terminal SDK (EMV, NFC, Apple/Google Pay) | \$249 – \$349 | \$799 – \$999 (Locked terminal) |
 | **Terminal Tablet** | iPad 10.2 / Galaxy Tab A9+ | Universal PWA / React Chrome Browser | \$249 – \$329 | \$450 (Locked Android) |
+| **Kitchen KDS / Menu TV Box** | Walmart `onn. 4K` Streaming Box (Android TV 14) | Native `com.culinaryos.display` + CleanMyTV ADB Kiosk | \$19.88 | \$650 – \$900 (Proprietary KDS) |
+| **Tableside Handheld** | iPhone / iPod Touch (`xtool` Swift 6) or Android (`Expo`) | Native SwiftUI (`apps/CulinaryOSHandheld`) / React Native (`mobile/`) | \$199 – \$399 (BYOD) | \$699 + \$50/mo per handheld |
 
 **Total Hardware Cost:** **~\$884 total** per primary countertop station (vs. **\$1,800 – \$2,200+** for Toast).
 

@@ -186,3 +186,28 @@ Built with Expo SDK 52 and React Native, targeting physical Android handheld ter
 4. **Environment Configuration:**
    - Configure `EXPO_PUBLIC_API_URL` to point to the production Hono API (`https://api.yourdomain.com`).
    - Configure `EXPO_PUBLIC_TENANT_ID` with the restaurant tenant UUID.
+
+---
+
+## 9. Android TV Kiosk (`apps/android-tv`) & CleanMyTV Provisioning
+
+CulinaryOS ships a 7-in-1 TV Display web surface (`apps/display` on `:5181`) and a native Android TV Kiosk shell (`apps/android-tv`, package `com.culinaryos.display`) optimized for **Walmart `onn. 4K` Android TV 14** boxes and **CleanMyTV**.
+
+1. **Build APK & Stage into CleanMyTV Library (Zero Global SDK Install Required):**
+   Uses the portable JDK 17, Android SDK 34, and Gradle toolchain pre-installed in `%APPDATA%\cleanmytv\tools`:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File ./scripts/build-android-tv.ps1
+   ```
+   This compiles `apps/android-tv/app/build/outputs/apk/debug/app-debug.apk` and automatically copies it to `%APPDATA%\cleanmytv\apks\culinaryos-display.apk`.
+
+2. **One-Command ADB Sideload & Server Binding (`culinary display sideload`):**
+   ```bash
+   # Sideload APK onto Walmart onn. 4K box and point to Railway Cloud or LAN server
+   culinary display sideload --device adb-b289ed1e0bf02fbe --url https://culinaryos-demo.up.railway.app --push-launcher
+   ```
+
+3. **CleanMyTV Launcher Engine v1 (`com.cleanmytv.launcher.culinaryos`):**
+   Generate or push the live restaurant launcher layout (`version: 1`) directly from the API or CLI:
+   ```bash
+   culinary display launcher-config --brand culinaryos --mode kitchen --out launcher-config.json
+   ```

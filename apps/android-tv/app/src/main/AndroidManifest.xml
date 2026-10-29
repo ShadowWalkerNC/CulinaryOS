@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.culinaryos.display">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissions required for Android TV display -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -26,7 +25,7 @@
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher"
         android:banner="@drawable/tv_banner"
         android:label="CulinaryOS Display"
         android:theme="@style/Theme.CulinaryOS.Leanback"

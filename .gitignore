@@ -25,9 +25,17 @@ Thumbs.db
 .idea/
 *.swp
 
-# Android (mobile/recipeos uses its own .gitignore)
+# Android & Native Builds
 *.apk
 *.aab
+local.properties
+.gradle/
+apps/android-tv/build/
+apps/android-tv/app/build/
+apps/android-tv/gradle/
+apps/android-tv/gradlew
+apps/android-tv/gradlew.bat
+apps/CulinaryOSHandheld/.build/
 
 # Logs and Agent Scratch
 *.log

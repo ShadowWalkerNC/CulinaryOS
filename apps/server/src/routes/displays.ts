@@ -3,6 +3,7 @@
 // Android TV Device Registration, Pairing, Heartbeat & Projections
 // ============================================================
 
+import os from 'node:os';
 import { Hono } from 'hono';
 import { ok, err, requireTenant } from '../middleware/auth.js';
 import type { Env } from '../types.js';
@@ -32,6 +33,55 @@ export const displaysRoutes = new Hono<Env>();
 // ----------------------------------------------------------------------------
 // 1. PUBLIC DEVICE ENDPOINTS (Called by Android TV / Webview Client)
 // ----------------------------------------------------------------------------
+
+/**
+ * GET /v1/displays/discover
+ * Zero-config LAN & mDNS discovery endpoint for iOS Handhelds, Android Companions,
+ * and Android TV boxes to auto-discover the restaurant's local API & surface URLs.
+ */
+displaysRoutes.get('/discover', (c) => {
+  const nets = os.networkInterfaces();
+  const lanIps: string[] = [];
+  for (const entries of Object.values(nets)) {
+    if (!entries) continue;
+    for (const net of entries) {
+      if (net.family === 'IPv4' && !net.internal) {
+        lanIps.push(net.address);
+      }
+    }
+  }
+  const primaryIp = lanIps[0] || '127.0.0.1';
+  const apiPort = Number(process.env.PORT || 3000);
+
+  return ok(c, {
+    service: 'culinaryos-control-plane',
+    version: '1.2.1',
+    hostname: os.hostname(),
+    mdnsHost: 'culinaryos.local',
+    primaryIp,
+    lanIps,
+    ports: {
+      api: apiPort,
+      pos: 5172,
+      kds: 5173,
+      admin: 5174,
+      display: 5181,
+    },
+    surfaces: {
+      api: `http://${primaryIp}:${apiPort}`,
+      pos: `http://${primaryIp}:5172`,
+      kds: `http://${primaryIp}:5173`,
+      admin: `http://${primaryIp}:5174`,
+      display: `http://${primaryIp}:5181`,
+      cloudDemo: 'https://culinaryos-demo.up.railway.app',
+    },
+    adbProvisioning: {
+      launcherAppId: 'com.cleanmytv.launcher.culinaryos',
+      displayAppId: 'com.culinaryos.display',
+    },
+    discoveredAt: new Date().toISOString(),
+  });
+});
 
 /**
  * POST /v1/displays/register
@@ -242,6 +292,108 @@ displaysRoutes.get('/projection', async (c) => {
 
   const data = await getDisplayProjectionData(mode, view, tenantId, brand);
   return ok(c, data);
+});
+
+/**
+ * GET /v1/displays/launcher-config
+ * Generates a live CleanMyTV Launcher Engine v1 JSON configuration
+ * for `com.cleanmytv.launcher.culinaryos` on Android TV (e.g. Walmart onn. 4K).
+ */
+displaysRoutes.get('/launcher-config', async (c) => {
+  const mode = (c.req.query('mode') || 'kitchen') as DisplayMode;
+  const view = c.req.query('view') || 'all';
+  const brand = c.req.query('brand') || 'culinaryos';
+  const greetingOverride = c.req.query('greeting');
+  const tenantId = c.req.header('X-Tenant-Id') || '00000000-0000-0000-0000-000000000001';
+
+  const projection: any = await getDisplayProjectionData(mode, view, tenantId, brand);
+  const isCheezies = brand === 'cheezies';
+  const activeCount = Array.isArray(projection?.tickets) ? projection.tickets.length : 0;
+  const shiftNote = isCheezies
+    ? `CHEEZIES TRUCK OPS\nMode: ${mode.toUpperCase()} (${view})\nActive Queue: ${activeCount} Tickets`
+    : `CULINARYOS LINE STATUS\nStation: ${mode.toUpperCase()} (${view})\nOpen Kitchen Tickets: ${activeCount}`;
+
+  return ok(c, {
+    version: 1,
+    edition: 'culinaryos',
+    applicationId: 'com.cleanmytv.launcher.culinaryos',
+    targetConfigPath: '/sdcard/Android/data/com.cleanmytv.launcher.culinaryos/files/launcher-config.json',
+    reloadBroadcast: 'com.cleanmytv.launcher.RELOAD_CONFIG',
+    background: isCheezies ? '#140F05' : '#1A120B',
+    overscanMarginDp: 48,
+    grid: { columns: 12, rows: 8, gapDp: 12 },
+    regions: {
+      header: { col: 0, row: 0, colSpan: 12, rowSpan: 1 },
+      main: { col: 0, row: 1, colSpan: 9, rowSpan: 7 },
+      side: { col: 9, row: 1, colSpan: 3, rowSpan: 7 },
+    },
+    widgets: [
+      {
+        id: 'greeting',
+        type: 'greeting',
+        region: 'header',
+        col: 0,
+        row: 0,
+        colSpan: 8,
+        rowSpan: 1,
+        textColor: '#F7EDE0',
+        fontScale: 1.1,
+        daypart: false,
+        text: greetingOverride || (isCheezies ? 'Cheezies window open.' : 'Dinner service ready.'),
+      },
+      {
+        id: 'clock',
+        type: 'clock',
+        region: 'header',
+        col: 9,
+        row: 0,
+        colSpan: 3,
+        rowSpan: 1,
+        textColor: isCheezies ? '#FBBF24' : '#E86A33',
+        fontScale: 1.0,
+        format24h: true,
+        showDate: true,
+      },
+      {
+        id: 'apps',
+        type: 'app_grid',
+        region: 'main',
+        col: 0,
+        row: 0,
+        colSpan: 9,
+        rowSpan: 6,
+        textColor: '#F7EDE0',
+        fontScale: 1.1,
+        columns: 5,
+        showLabels: true,
+      },
+      {
+        id: 'dock',
+        type: 'dock',
+        region: 'main',
+        col: 0,
+        row: 6,
+        colSpan: 9,
+        rowSpan: 1,
+        textColor: '#F7EDE0',
+        fontScale: 1.0,
+        pinned: ['com.culinaryos.display', 'com.cleanmytv.companion'],
+        maxItems: 8,
+      },
+      {
+        id: 'note',
+        type: 'text',
+        region: 'side',
+        col: 0,
+        row: 0,
+        colSpan: 3,
+        rowSpan: 4,
+        textColor: '#F7EDE0',
+        fontScale: 0.95,
+        text: shiftNote,
+      },
+    ],
+  });
 });
 
 /**

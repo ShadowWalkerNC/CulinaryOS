@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Background Dark Slate -->
+    <path
+        android:fillColor="#090D16"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- Subtle Amber Accent Bar -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M0,172h320v8h-320z" />
+    <!-- CulinaryOS Emblem Badge -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M160,44 C182,44 200,62 200,84 C200,106 182,124 160,124 C138,124 120,106 120,84 C120,62 138,44 160,44 Z" />
+    <path
+        android:fillColor="#090D16"
+        android:pathData="M152,66 h16 v36 h-16 z" />
+</vector>

@@ -1,5 +1,28 @@
 # CulinaryOS shared AI ledger
 
+## 2026-10-28 Phases 6-9: Zero-Config LAN Discovery, Admin/Marketing Sync, Prep MCP Full Tooling & Android/iOS Packaging — completed
+
+- Status: Phases 6-9 completed and verified on top of Phases 1-5 (`GET /v1/displays/discover`, `culinary display discover`, `DisplaysPage.tsx` CleanMyTV Launcher v1 JSON preview + `:5181` + QR `?code=` autofill, `mcp/src/prep-server.ts` 6-tool surface, and `scripts/build-mobile-android.ps1`).
+
+## 2026-10-28 Native iOS (xtool), Android (Expo 52), Android TV APK & CleanMyTV Sideload — completed
+
+- Status: Full-system mobile, handheld, and Android TV overhaul completed, compiled, and sideloaded onto physical Walmart onn. 4K hardware (192.168.40.228:5555).
+- Key Deliverables:
+  1. **Android TV Native Kiosk (pps/android-tv & scripts/build-android-tv.ps1):**
+     - Added persistent SharedPreferences URL/API storage (culinaryos_tv_prefs) and D-Pad Remote Server Switcher overlay in MainActivity.kt.
+     - Added vector Leanback banner (	v_banner.xml) and launcher icon (ic_launcher.xml), compiled pp-debug.apk (4233.9 KB) via CleanMyTV portable JDK 17 + Android SDK 34, staged into %APPDATA%\cleanmytv\apks\culinaryos-display.apk, and sideloaded onto 192.168.40.228:5555 (onn_4k_gtv).
+  2. **CleanMyTV Launcher Engine v1 & CLI Bridge (pps/server/src/routes/displays.ts, cli/src/commands/display.ts):**
+     - Added GET /v1/displays/launcher-config, culinary display launcher-config, and culinary display sideload, and pushed launcher-config.json (2104 bytes) to /sdcard/Android/data/com.cleanmytv.launcher.culinaryos/files/launcher-config.json with RELOAD_CONFIG broadcast (esult=0).
+     - De-conflicted pps/display to port :5181 and added automatic LAN hostname API inference in packages/display/src/client/display-client.ts.
+  3. **Native iOS Handheld (pps/CulinaryOSHandheld via xtool Swift 6.1):**
+     - Upgraded APIClient.swift and Models.swift to live URLSession networking (POST /v1/auth/pin-login, POST /v1/orders + PATCH /v1/orders/:id/send, POST /v1/displays/bump) with UserDefaults offline outbox queuing (OfflineOrderEnvelope), seat/course pacing (S1-S4, C1/C2), and Server Settings sheet.
+  4. **Android & iOS Companion (mobile/ via Expo SDK 52):**
+     - Wired live /v1/pantry, /v1/menu/:id, /v1/displays, and /v1/displays/pair endpoints.
+     - Added ADR-0011 Barcode/SKU Scan & Par Adjustment screen (mobile/app/(tabs)/scan.tsx) and Mobile TV Display Pairing & Remote Control Hub (mobile/app/(tabs)/displays.tsx).
+  5. **Verification Evidence:**
+     - pnpm exec turbo run typecheck --concurrency=4: **60/60 tasks passed** across all 40 packages (including culinaryos-mobile:typecheck).
+     - Test Suite: **194/194 test suites passed** (including 	ests/server/mobile-tv-parity.test.ts).
+
 ## 2026-10-28 Production Railway deployment & live endpoint verification — completed
 
 - Status: Production deployments live on Railway (project 9d7feb1d-d852-4c93-a2a8-75de59bf43a0, env 4ae790c9-f85c-43d5-9dfa-394bb6dccfff).

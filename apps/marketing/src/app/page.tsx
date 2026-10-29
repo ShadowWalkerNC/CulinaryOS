@@ -91,14 +91,14 @@ const bentoFeatures = [
     tag: 'Mobile & Handhelds',
     title: 'Native iOS & Android Handhelds',
     description: 'Empower servers with Swift 6 native iOS handhelds (compiled via xtool) and Expo SDK 52 Android companions for rapid tableside ordering and live bump routing.',
-    bullets: ['78px thumb-zone numeric keypad & PIN auth', 'Instant tableside cart with kitchen ticket fire', 'Live 86 status toggles & par inventory audit'],
+    bullets: ['Seat (S1-S4) & Course (C1/C2) tableside offline outbox', 'ADR-0011 Barcode/SKU receiving & par stock scanner', 'Mobile TV pairing hub & 1-tap 86 menu sync'],
   },
   {
     icon: '📺',
     tag: 'Television & Displays',
     title: 'Android TV & Wallboard Displays',
     description: 'Transform inexpensive $19.88 Walmart onn. 4K Android TV boxes into dedicated Kitchen KDS screens, Executive Manager Wallboards, and Cheezies truck displays.',
-    bullets: ['Instant 6-digit code pairing & zero password storage', 'Remote D-pad navigation with color-coded timers', 'Allergen flags & live operational health monitoring'],
+    bullets: ['CleanMyTV Launcher Engine v1 + zero-bloat ADB sideload', 'D-Pad server switcher (Cloud Demo, Local LAN :5181, Emulator)', 'Instant 6-digit code pairing & FDA Top 9 allergen flags'],
   },
   {
     icon: '🧪',

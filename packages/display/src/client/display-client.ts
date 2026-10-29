@@ -26,8 +26,42 @@ export class DisplayClient {
   private onRemoteCommandCallback?: ((cmd: DisplayRemoteCommand) => void) | undefined;
 
   constructor(apiBase?: string, tenantId?: string) {
-    this.apiBase = apiBase || (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.API_BASE) || 'http://localhost:3000' : 'http://localhost:3000');
-    this.tenantId = tenantId || (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TENANT_ID) || '00000000-0000-0000-0000-000000000001' : '00000000-0000-0000-0000-000000000001');
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryApi = params.get('api');
+      const queryTenant = params.get('tenant');
+      if (queryApi) localStorage.setItem(STORAGE_KEYS.API_BASE, queryApi);
+      if (queryTenant) localStorage.setItem(STORAGE_KEYS.TENANT_ID, queryTenant);
+    }
+
+    const envApi = typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_API_URL : undefined;
+    const inferredHostApi =
+      typeof window !== 'undefined' && window.location.hostname
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : 'http://localhost:3000';
+
+    this.apiBase =
+      apiBase ||
+      (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.API_BASE) : null) ||
+      envApi ||
+      inferredHostApi;
+
+    this.tenantId =
+      tenantId ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.TENANT_ID) || '00000000-0000-0000-0000-000000000001'
+        : '00000000-0000-0000-0000-000000000001');
+  }
+
+  getApiBase(): string {
+    return this.apiBase;
+  }
+
+  setApiBase(url: string) {
+    this.apiBase = url;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.API_BASE, url);
+    }
   }
 
   getDeviceToken(): string | null {

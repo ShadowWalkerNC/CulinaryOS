@@ -1,47 +1,32 @@
-# CulinaryOS Application Surface Ownership
+# Application Surface Ownership Ledger
 
-> Status: Stage 0 baseline — 2026-09-09. This document is the transition map
-> for consolidation work; it does not delete or move any existing application.
+*Status: Production Monorepo v1.3.1 — Synchronized 2026-10-28*
 
-## Canonical active surfaces
+This document records the authoritative owner, runtime port/target, and operational status for every application surface in the CulinaryOS monorepo.
 
-| Surface | Directory | Runtime | Owner / purpose | Connectivity | Status |
-| --- | --- | --- | --- | --- | --- |
-| API | `apps/server` | Hono / Node | Tenant-scoped API, events, payments, integrations | Required by connected flows | Canonical |
-| POS | `apps/pos` | React / Vite | FOH order, payment and table terminal | Offline-first | Canonical |
-| KDS | `apps/kds` | React / Vite | Kitchen tickets and station routing | Offline-capable | Canonical |
-| Admin | `apps/admin` | React / Vite | Manager configuration and back office | Online preferred | Canonical |
-| Public web and guest commerce | `apps/web` | React / Vite | Public product site, menu, online ordering, order status, tableside, jobs | Online required | Canonical; destination for Marketing migration |
-| Operations | `apps/ops` | React / Vite | Food cost, labor, waste and vendors | Online preferred | Canonical; migrate to shared UI |
-| KitchenKit | `apps/kitchenkit` | React / Vite | Recipes, prep, pars, vendors and shelf life | Online preferred | Canonical; migrate to shared UI |
-| RecipeOS | `apps/recipeos` | Next.js | Standalone recipe vault and pantry application | Authenticated | Canonical; define shared-brand boundary |
-| Marketing | `apps/marketing` | Next.js | Legacy public brand, pricing, signup and blog pages | Public | Transitional; migrate unique content into `apps/web`, then archive in a dedicated change |
-| Desktop | `apps/desktop` | React / Vite | Local workstation shell and application switcher | Local network | Canonical shell; embeds active surfaces |
-| Mobile | `mobile` | React Native / Expo | Future companion application | Future | Stub; do not expand before operational web parity |
-| CLI | `cli` | Node | Terminal parity for server features | Local / connected | Canonical interface |
-| MCP | `mcp` | Node | Optional AI-additive tools over the canonical API | Connected | Canonical interface; no independent domain state |
+| Surface | Path | Port / Target | Owner | Build / Verification | Operational Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `server` | `apps/server` | `:3000` | Core | `pnpm --filter @culinaryos/server build` | **Active** — Unified Hono API Gateway (23 routes, RLS, Stripe, Display, Interagency) |
+| `pos` | `apps/pos` | `:5172` | Core | `pnpm --filter @culinaryos/app-pos build` | **Active** — FOH Terminal (2D/3D Floor Map, ESC/POS, Offline Event Bus) |
+| `kds` | `apps/kds` | `:5173` | Core | `pnpm --filter @culinaryos/app-kds build` | **Active** — Kitchen Display System (Station routing, course hold/fire, OLED contrast) |
+| `admin` | `apps/admin` | `:5174` | Core | `pnpm --filter @culinaryos/admin build` | **Active** — Back-Office Workstation (Menu builder, PINs, HACCP, Pantry POs) |
+| `kitchenkit` | `apps/kitchenkit` | `:5175` | Prep | `pnpm --filter @culinaryos/app-kitchenkit build` | **Active** — Station Prep Planner, FIFO Labels & Par Management |
+| `web` | `apps/web` | `:5176` | Web | `pnpm --filter @culinaryos/app-web build` | **Active** — Public Storefront, Tableside QR Pay, Storefront Studio (`/studio`), Team Guild (`/team`) |
+| `ops` | `apps/ops` | `:5177` | Ops | `pnpm --filter @culinaryos/app-ops build` | **Active** — Prime Cost, AvT Food Cost Variance, FLSA Tip Pool & Waste Ledger |
+| `recipeos` | `apps/recipeos` | `:5178` | Prep | `pnpm --filter @culinaryos/app-recipeos build` | **Active** — Next.js 15 Recipe Vault, Baker's % Ratio Engine & Costing |
+| `marketing` | `apps/marketing` | `:5179` | Marketing | `pnpm --filter @culinaryos/app-marketing build` | **Active** — Next.js 15 Autonomous Campaign Studio & Brand Guardrails |
+| `desktop` | `apps/desktop` | `:5180` | Core | `pnpm --filter @culinaryos/app-desktop build` | **Active** — Unified Desktop Workstation Hub (F1–F7 hotkeys, split-pane kiosk) |
+| `display` | `apps/display` | `:5181` | Display | `pnpm --filter @culinaryos/app-display build` | **Active** — 7-in-1 Android TV & Web Display Platform (KDS, Manager, Staff, Menu, Pickup, Promo, Cheezies) |
+| `android-tv` | `apps/android-tv` | Android TV APK (`com.culinaryos.display`) | Display | `powershell -File ./scripts/build-android-tv.ps1` | **Active** — Native Kotlin Android TV Kiosk Shell (`BootReceiver`, D-Pad bridge, CleanMyTV ADB staging) |
+| `CulinaryOSHandheld` | `apps/CulinaryOSHandheld` | iOS 17+ (`com.shadowwalker.culinaryos.handheld`) | Core / Mobile | `xtool dev` / `swift build` | **Active** — Native Swift 6.1 + SwiftUI Tableside POS & Ticket Runner (Offline Outbox + Seat/Course Pacing) |
+| `mobile` | `mobile/` | Android / iOS (`com.shadowwalker.culinaryos`) | Core / Mobile | `pnpm --dir mobile typecheck` | **Active** — Universal Expo SDK 52 Manager & Server Companion (Shift Telemetry, ADR-0011 Barcode Scan, 86 Toggles, TV Pairing Hub) |
 
-## Transitional artifacts
+---
 
-| Directory | Role | Rule |
-| --- | --- | --- |
-| `kds/` | Legacy Kotlin/KMP course-engine artifact | No new production logic. Extract any unique behavior into `packages/shared` before archival. |
-| `shared/` | Legacy Kotlin/KMP types, sync and realtime artifact | No new production logic. `packages/shared` is the TypeScript domain authority. |
-| `extensions/` | Extension manifests and one legacy Flutter entry point | Keep manifests; move runnable code behind versioned extension contracts. |
-| `extension_template/` | Third-party extension contract | Keep as the only public template. |
+## Foundation Boundary Markers (`tests/foundation/`)
 
-## Non-negotiable boundaries
+The following paths contain lightweight `foundation.boundary.json` metadata markers asserted by `tests/foundation/` against `docs/architecture/culinary-foundation.json`:
 
-1. `apps/web` is the public CulinaryOS site and guest-commerce shell. Do not add new public functionality to `apps/marketing`; migrate its unique content into `apps/web` before archival.
-2. No client surface talks directly to another client surface for business mutations. All POS/KDS/Admin/Web writes use `apps/server` routes and stable event contracts.
-3. `packages/ui` is the design-token and primitive owner. Client applications may compose it but must not establish competing palettes or base component contracts.
-4. `packages/shared` is the TypeScript domain-model and offline-sync owner. The root `shared/` directory is transitional only.
-5. MCP servers are accessories: they call the API using constrained credentials and may not become a second backend or bypass tenant isolation.
-
-## Consolidation exit checks
-
-- Each active surface appears once in local health, deployment, architecture and UI test manifests.
-- Every client consumes the shared design tokens and has no independent global palette.
-- Demo mode proves POS -> API -> KDS and public menu fallback without Supabase or Stripe.
-- Legacy paths have an explicit archive decision and zero imports from active production code.
-- The application launcher exposes canonical operational and guest surfaces only; transitional applications do not appear as active destinations.
+* `apps/mobile/foundation.boundary.json` — Architectural target marker referencing the live `mobile/` Expo SDK 52 workspace.
+* `apps/customer-web/foundation.boundary.json` — Architectural target marker referencing `apps/web/package.json`.
+* Top-level domain/module contract markers (`api/`, `domain/`, `modules/`, `services/`, `integrations/`, `shared/`, `extensions/`) — Preserved for `culinary-foundation.json` schema verification.
