@@ -121,9 +121,25 @@ fn try_open_native_app_window(url: &str) {
     #[cfg(target_os = "windows")]
     {
         let _ = Command::new("cmd")
-            .args(["/C", "start", "", &format!("msedge --app={url}")])
+            .args(["/C", "start", "msedge", &format!("--app={url}")])
             .spawn();
     }
+}
+
+fn resolve_bind_addr(args: &[String]) -> SocketAddr {
+    for i in 0..args.len() {
+        if args[i] == "--port" {
+            if let Some(p) = args.get(i + 1) {
+                if let Ok(port) = p.parse::<u16>() {
+                    return SocketAddr::from(([127, 0, 0, 1], port));
+                }
+            }
+        }
+    }
+    env::var("CULINARYOS_DESKTOP_BIND")
+        .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
+        .parse()
+        .expect("Valid CULINARYOS_DESKTOP_BIND socket address")
 }
 
 #[tokio::main]
@@ -143,11 +159,8 @@ async fn main() {
     let db_path = data_dir.join("culinaryos.db");
     let site_id = default_site_id();
     let saas_secret = env::var("CULINARYOS_SAAS_SIGNING_SECRET")
-        .unwrap_or_else(|_| "culinaryos-default-local-signing-secret-key".to_string());
-    let bind_addr: SocketAddr = env::var("CULINARYOS_DESKTOP_BIND")
-        .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
-        .parse()
-        .expect("Valid CULINARYOS_DESKTOP_BIND socket address");
+        .unwrap_or_else(|_| "6a2693f12117beb3a558bb30ed74efbcbee68a9ee927a4a28045026b892515f0".to_string());
+    let bind_addr: SocketAddr = resolve_bind_addr(&args);
 
     let service = StandaloneService::open(&db_path, site_id, saas_secret)
         .expect("Initialize CulinaryOS embedded database");

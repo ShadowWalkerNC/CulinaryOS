@@ -1,12 +1,14 @@
 use crate::{
     cloud_bridge::{
-        CloudBridge, CloudBridgeError, RelayedOnlineOrder, SignedSaasGrant,
+        sign_entitlement_payload, CloudBridge, CloudBridgeError, RelayedOnlineOrder,
+        SaasAddon, SaasEntitlementPayload, SignedSaasGrant,
     },
     local_store::{
         calculate_tip_pool, LocalStore, LocalStoreError, TipDistributionMethod,
         TipParticipantInput,
     },
 };
+use std::collections::BTreeSet;
 use axum::{
     extract::{DefaultBodyLimit, Path as AxumPath, Query, State},
     http::{header, StatusCode},
@@ -154,6 +156,7 @@ impl StandaloneService {
             .route("/v1/tips/calculate", post(calculate_tips))
             .route("/v1/cloud/status", get(cloud_status))
             .route("/v1/cloud/connect", post(cloud_connect))
+            .route("/v1/cloud/demo-enroll", post(cloud_demo_enroll))
             .route("/v1/cloud/sync", post(cloud_sync))
             .route("/v1/cloud/inbound-orders", post(cloud_inbound_order))
             .layer(DefaultBodyLimit::max(65536))
@@ -447,73 +450,396 @@ async fn cloud_inbound_order(
     )
 }
 
+async fn cloud_demo_enroll(State(svc): State<StandaloneService>) -> ApiReply {
+    let mut guard = svc
+        .inner
+        .lock()
+        .map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let site_id = guard.store.site_id();
+    let secret = guard.saas_signing_secret.clone();
+    let now = unix_now();
+    let mut addons = BTreeSet::new();
+    addons.insert(SaasAddon::CloudStorageSync);
+    addons.insert(SaasAddon::OnlineOrderingBridge);
+    addons.insert(SaasAddon::AiAutopilot);
+    addons.insert(SaasAddon::ManagedStripeConnect);
+    let payload = SaasEntitlementPayload {
+        grant_id: "alpha-pro-grant-001".to_string(),
+        customer_id: "cust-alley-katz-alpha".to_string(),
+        site_id,
+        plan_tier: "saas_pro".to_string(),
+        addons,
+        cloud_endpoint: "https://culinaryos-api.up.railway.app".to_string(),
+        issued_at_unix: now,
+        expires_at_unix: now + 30 * 86_400,
+        offline_grace_seconds: 86_400,
+    };
+    let sig = sign_entitlement_payload(&payload, &secret)
+        .map_err(|_| ApiError::from(CloudBridgeError::InvalidSignature))?;
+    let grant = SignedSaasGrant {
+        payload,
+        signature_hex: sig,
+    };
+    let connected_payload = guard
+        .cloud
+        .connect(grant.clone(), site_id, &secret, now)?
+        .clone();
+    ok(
+        StatusCode::OK,
+        json!({
+            "connected": true,
+            "signedGrant": grant,
+            "entitlement": connected_payload,
+        }),
+    )
+}
+
 const STANDALONE_WORKSTATION_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CulinaryOS — Native Rust Standalone Workstation</title>
+  <title>CulinaryOS v1.3.1 — Native Rust Standalone Desktop Workstation</title>
   <style>
     :root { color-scheme: dark; }
-    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #090d16; color: #f8fafc; }
-    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #111827; border-bottom: 1px solid #1f2937; }
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: 0.04em; }
-    .badge { background: #ea580c; color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 12px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; padding: 20px; }
-    .card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; }
-    button { min-height: 48px; min-width: 48px; padding: 10px 16px; border-radius: 10px; border: 1px solid #374151; background: #ea580c; color: white; font-weight: 700; cursor: pointer; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; background: #090d16; color: #f8fafc; }
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; background: #111827; border-bottom: 1px solid #1f2937; position: sticky; top: 0; z-index: 20; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 16px; letter-spacing: 0.02em; }
+    .badge { background: linear-gradient(135deg, #ff6b35, #e63946); color: #fff; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-family: monospace; letter-spacing: 0.06em; }
+    .status-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; font-family: monospace; }
+    .pill { padding: 6px 12px; border-radius: 999px; background: #1f2937; border: 1px solid #374151; }
+    .pill.ok { color: #34d399; border-color: rgba(52,211,153,0.35); background: rgba(16,185,129,0.1); }
+    .pill.saas { color: #fb923c; border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.12); }
+    .layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; padding: 20px; max-width: 1600px; margin: 0 auto; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .card h2 { margin: 0; font-size: 16px; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+    .sub { margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.45; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { min-height: 48px; min-width: 48px; padding: 10px 16px; border-radius: 12px; border: 1px solid #374151; background: #ea580c; color: white; font-weight: 700; font-size: 13px; cursor: pointer; transition: transform 75ms ease-out, opacity 120ms; }
+    button:hover { opacity: 0.94; }
     button:active { transform: scale(0.97); }
-    pre { background: #030712; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
+    button.secondary { background: #1f2937; color: #e2e8f0; }
+    button.green { background: #059669; border-color: #10b981; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 8px; }
+    .menu-btn { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; background: #1e293b; border: 1px solid #334155; padding: 12px; min-height: 74px; }
+    .menu-btn .price { color: #fb923c; font-family: monospace; font-size: 12px; margin-top: 6px; }
+    .ticket-list { display: flex; flex-direction: column; gap: 10px; }
+    .ticket { background: #0f172a; border: 1px solid #334155; border-left: 4px solid #fb923c; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .ticket.bumped { border-left-color: #10b981; opacity: 0.65; }
+    pre { margin: 0; background: #030712; border: 1px solid #1e293b; padding: 12px; border-radius: 10px; overflow: auto; font-size: 11.5px; max-height: 220px; color: #cbd5e1; }
+    input { min-height: 48px; padding: 8px 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 13px; }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">
-      <span class="badge">RUST STANDALONE</span>
-      <span>CulinaryOS Desktop Workstation &amp; Local Server</span>
+      <span class="badge">RUST DESKTOP v1.3.1</span>
+      <span>CulinaryOS Standalone Workstation &amp; Local LAN Server</span>
     </div>
-    <div id="cloud-pill" style="font-size:12px;color:#34d399;">Local Engine Ready (Offline-First)</div>
+    <div class="status-bar">
+      <span id="staff-pill" class="pill ok">Staff: Not Logged In</span>
+      <span id="cloud-pill" class="pill saas">Mode: Standalone Offline-First</span>
+    </div>
   </header>
-  <main class="grid">
+
+  <main class="layout">
+    <!-- 1. STAFF PIN & POS TERMINAL -->
     <section class="card">
-      <h3>1. POS Quick Order &amp; Send to Kitchen</h3>
-      <button onclick="ringOrder()">Ring 2x Margherita + Send to KDS</button>
-      <pre id="pos-out">Ready.</pre>
+      <h2><span>1. Staff PIN &amp; POS Terminal</span><span style="font-size:12px;color:#fb923c;">Integer-Cent Engine</span></h2>
+      <p class="sub">Authenticate with Staff PIN (<strong>1234</strong> Owner or <strong>5678</strong> Server), tap menu items to ring an order, fire to kitchen stations, and settle cash idempotently.</p>
+      <div class="btn-row">
+        <button class="secondary" onclick="loginPin('1234')">🔑 Login Owner (1234)</button>
+        <button class="secondary" onclick="loginPin('5678')">🔑 Login Server (5678)</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="table-input" value="Table 7" style="width:120px;" aria-label="Table Number" />
+        <button onclick="fireCurrentOrder()" style="flex:1;">🔥 Ring &amp; Send Cart to KDS (<span id="cart-count">0</span> items)</button>
+        <button class="green" onclick="settleLastOrderCash()">💵 Pay Cash</button>
+      </div>
+      <div id="menu-container" class="menu-grid"></div>
+      <pre id="pos-out">Tap a menu item above to build a POS check.</pre>
     </section>
+
+    <!-- 2. KITCHEN DISPLAY SYSTEM (KDS RAIL) -->
     <section class="card">
-      <h3>2. Kitchen Display System (KDS Rail)</h3>
-      <button onclick="refreshKds()">Refresh Active KDS Tickets</button>
-      <pre id="kds-out">No active tickets.</pre>
+      <h2><span>2. Kitchen Display System (KDS)</span><span id="kds-count" style="font-size:12px;color:#34d399;">0 Active</span></h2>
+      <p class="sub">Station-routed tickets generated by the local Rust engine. Tap <strong>BUMP</strong> to complete preparation with 0ms local LAN latency.</p>
+      <div class="btn-row">
+        <button class="secondary" onclick="refreshKds()">🔄 Refresh KDS Rail</button>
+      </div>
+      <div id="kds-tickets" class="ticket-list"></div>
+      <pre id="kds-out">Waiting for kitchen tickets...</pre>
     </section>
+
+    <!-- 3. FLSA TIP POOL & CASH DRAWER -->
     <section class="card">
-      <h3>3. SaaS Server Connection &amp; Add-Ons</h3>
-      <p style="font-size:13px;color:#94a3b8;">Connect this installed Rust app to CulinaryOS Cloud for remote storage backup, online ordering bridge, and AI Autopilot add-ons.</p>
-      <button onclick="checkCloud()">Check SaaS Bridge Status</button>
-      <pre id="cloud-out">Standalone Community Mode.</pre>
+      <h2><span>3. Hardcoded FLSA Tip Pool &amp; Drawer</span><span style="font-size:12px;color:#38bdf8;">29 U.S.C. 203(m)</span></h2>
+      <p class="sub">Verify that Owners/Managers with hiring/firing authority are strictly excluded ($0.00) from tip pools, and close the cash drawer shift.</p>
+      <div class="btn-row">
+        <button onclick="runFlsaTipCheck()">⚖️ Run FLSA Tip Pool ($300 Pool)</button>
+        <button class="secondary" onclick="closeCashDrawer()">🗄️ Close Cash Drawer ($250 Counted)</button>
+      </div>
+      <pre id="ops-out">Click "Run FLSA Tip Pool" to verify manager exclusion gate.</pre>
+    </section>
+
+    <!-- 4. SAAS CLOUD BRIDGE & ONLINE ORDER RELAY -->
+    <section class="card">
+      <h2><span>4. SaaS Cloud Bridge &amp; Add-Ons</span><span style="font-size:12px;color:#fb923c;">Railway Connected</span></h2>
+      <p class="sub">Link this installed Rust application to <strong>CulinaryOS SaaS</strong> (<code>https://culinaryos-api.up.railway.app</code>) to unlock Offsite Storage Sync, Online Ordering Bridge, and AI Autopilot.</p>
+      <div class="btn-row">
+        <button onclick="enrollSaasBridge()">☁️ 1. Connect SaaS Pro Grant</button>
+        <button class="green" onclick="syncToRailwayCloud()">⬆️ 2. Sync Outbox to Railway SaaS</button>
+        <button class="secondary" onclick="simulateInboundOnlineOrder()">📲 3. Relay Online Order → KDS</button>
+      </div>
+      <pre id="cloud-out">Checking local SaaS bridge state...</pre>
     </section>
   </main>
+
   <script>
-    async function ringOrder() {
+    let menuItems = [];
+    let cart = [];
+    let lastOrder = null;
+    let activeSignedGrant = null;
+
+    function fmtCents(c) {
+      return '$' + (Number(c || 0) / 100).toFixed(2);
+    }
+
+    async function loginPin(pin) {
+      const res = await fetch('/v1/auth/pin-login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ pin })
+      });
+      const body = await res.json();
+      if (body.ok) {
+        document.getElementById('staff-pill').textContent =
+          'Staff: ' + body.data.displayName + ' (' + body.data.role.toUpperCase() + ')';
+      }
+      document.getElementById('pos-out').textContent = JSON.stringify(body, null, 2);
+    }
+
+    async function loadMenu() {
+      const res = await fetch('/v1/menu');
+      const body = await res.json();
+      if (body.ok) {
+        menuItems = body.data;
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
+        menuItems.forEach((item) => {
+          const btn = document.createElement('button');
+          btn.className = 'menu-btn';
+          btn.innerHTML = '<span>' + item.name + ' <small style="color:#94a3b8">[' + item.station.toUpperCase() + ']</small></span>' +
+            '<span class="price">' + fmtCents(item.priceCents) + ' • Tap to Add</span>';
+          btn.onclick = () => addToCart(item);
+          container.appendChild(btn);
+        });
+      }
+    }
+
+    function addToCart(item) {
+      const existing = cart.find((c) => c.menuItemId === item.id);
+      if (existing) existing.quantity += 1;
+      else cart.push({ menuItemId: item.id, name: item.name, quantity: 1, seat: 1, course: 1 });
+      const totalItems = cart.reduce((acc, i) => acc + i.quantity, 0);
+      document.getElementById('cart-count').textContent = String(totalItems);
+      document.getElementById('pos-out').textContent = 'Current Cart:\n' + JSON.stringify(cart, null, 2);
+    }
+
+    async function fireCurrentOrder() {
+      if (cart.length === 0 && menuItems.length > 0) {
+        addToCart(menuItems[0]);
+      }
+      const tableNumber = document.getElementById('table-input').value || 'Table 7';
       const res = await fetch('/v1/orders', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ tableNumber: 'Table 7', items: [{ menuItemId: 'item-margherita', quantity: 2, seat: 1, course: 1 }] })
+        body: JSON.stringify({ tableNumber, items: cart })
       });
       const created = await res.json();
       if (created.ok) {
-        const sent = await fetch('/v1/orders/' + created.data.id + '/send', { method: 'PATCH' });
-        document.getElementById('pos-out').textContent = JSON.stringify(await sent.json(), null, 2);
-        refreshKds();
+        lastOrder = created.data;
+        cart = [];
+        document.getElementById('cart-count').textContent = '0';
+        const sent = await fetch('/v1/orders/' + lastOrder.id + '/send', { method: 'PATCH' });
+        const sentBody = await sent.json();
+        document.getElementById('pos-out').textContent = JSON.stringify({ order: lastOrder, kitchenDispatch: sentBody.data }, null, 2);
+        await refreshKds();
+        await checkCloud();
+      } else {
+        document.getElementById('pos-out').textContent = JSON.stringify(created, null, 2);
       }
     }
+
+    async function settleLastOrderCash() {
+      if (!lastOrder) {
+        document.getElementById('pos-out').textContent = 'Ring an order first before settling cash.';
+        return;
+      }
+      const res = await fetch('/v1/payments/cash', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          operationId: 'cash-op-' + lastOrder.id,
+          orderId: lastOrder.id,
+          tenderedCents: lastOrder.totalCents
+        })
+      });
+      const settled = await res.json();
+      document.getElementById('pos-out').textContent = JSON.stringify(settled, null, 2);
+      await checkCloud();
+    }
+
     async function refreshKds() {
       const res = await fetch('/v1/kds/tickets');
-      document.getElementById('kds-out').textContent = JSON.stringify(await res.json(), null, 2);
+      const body = await res.json();
+      const list = document.getElementById('kds-tickets');
+      list.innerHTML = '';
+      if (body.ok) {
+        const tickets = body.data;
+        const activeCount = tickets.filter((t) => t.status !== 'bumped').length;
+        document.getElementById('kds-count').textContent = activeCount + ' Active (' + tickets.length + ' Total)';
+        tickets.forEach((t) => {
+          const row = document.createElement('div');
+          row.className = 'ticket ' + (t.status === 'bumped' ? 'bumped' : '');
+          const summary = (t.items || []).map((i) => i.quantity + 'x ' + i.name).join(', ');
+          row.innerHTML = '<div><strong>[' + String(t.station).toUpperCase() + '] ' + t.tableNumber + '</strong>' +
+            '<div style="font-size:12px;color:#94a3b8;margin-top:3px;">' + summary + ' • Status: ' + t.status.toUpperCase() + '</div></div>';
+          if (t.status !== 'bumped') {
+            const btn = document.createElement('button');
+            btn.className = 'green';
+            btn.textContent = '✓ BUMP';
+            btn.onclick = () => bumpTicket(t.id);
+            row.appendChild(btn);
+          }
+          list.appendChild(row);
+        });
+      }
+      document.getElementById('kds-out').textContent = JSON.stringify(body, null, 2);
     }
+
+    async function bumpTicket(id) {
+      await fetch('/v1/kds/tickets/' + id + '/bump', { method: 'POST' });
+      await refreshKds();
+      await checkCloud();
+    }
+
+    async function runFlsaTipCheck() {
+      const res = await fetch('/v1/tips/calculate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          method: 'hours_weighted',
+          totalPoolCents: 30000,
+          paysFullMinimumWage: true,
+          participants: [
+            {
+              staffId: '00000000-0000-0000-0000-000000000001',
+              displayName: 'General Manager (Excluded by FLSA)',
+              role: 'manager',
+              hasHiringFiringAuthority: true,
+              hoursWorkedTenths: 80,
+              rolePointsTenths: 10,
+              directTipsCents: 0,
+              salesCents: 0
+            },
+            {
+              staffId: '00000000-0000-0000-0000-000000000002',
+              displayName: 'Lead Server (Eligible)',
+              role: 'server',
+              hasHiringFiringAuthority: false,
+              hoursWorkedTenths: 60,
+              rolePointsTenths: 10,
+              directTipsCents: 20000,
+              salesCents: 120000
+            },
+            {
+              staffId: '00000000-0000-0000-0000-000000000003',
+              displayName: 'Line Cook (Eligible w/ Full Min Wage)',
+              role: 'line_cook',
+              hasHiringFiringAuthority: false,
+              hoursWorkedTenths: 60,
+              rolePointsTenths: 10,
+              directTipsCents: 10000,
+              salesCents: 0
+            }
+          ]
+        })
+      });
+      document.getElementById('ops-out').textContent = JSON.stringify(await res.json(), null, 2);
+    }
+
+    async function closeCashDrawer() {
+      const res = await fetch('/v1/drawers/close', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ countedCents: 25000 })
+      });
+      document.getElementById('ops-out').textContent = JSON.stringify(await res.json(), null, 2);
+    }
+
     async function checkCloud() {
       const res = await fetch('/v1/cloud/status');
-      document.getElementById('cloud-out').textContent = JSON.stringify(await res.json(), null, 2);
+      const body = await res.json();
+      if (body.ok && body.data.cloudConnected) {
+        document.getElementById('cloud-pill').textContent =
+          'SaaS Connected: ' + body.data.entitlement.planTier.toUpperCase() + ' (' + body.data.pendingOutboxEvents + ' queued)';
+        document.getElementById('cloud-pill').className = 'pill ok';
+      }
+      document.getElementById('cloud-out').textContent = JSON.stringify(body, null, 2);
     }
+
+    async function enrollSaasBridge() {
+      const res = await fetch('/v1/cloud/demo-enroll', { method: 'POST' });
+      const body = await res.json();
+      if (body.ok) {
+        activeSignedGrant = body.data.signedGrant;
+      }
+      await checkCloud();
+      document.getElementById('cloud-out').textContent = JSON.stringify(body, null, 2);
+    }
+
+    async function syncToRailwayCloud() {
+      const res = await fetch('/v1/cloud/sync', { method: 'POST' });
+      const localSync = await res.json();
+      let railwayReply = null;
+      if (localSync.ok && activeSignedGrant) {
+        try {
+          const cloudRes = await fetch('https://culinaryos-api.up.railway.app/v1/cloud/storage/ingest', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ signedGrant: activeSignedGrant, envelope: localSync.data })
+          });
+          railwayReply = await cloudRes.json();
+        } catch (err) {
+          railwayReply = { note: 'Local batch sealed; Railway remote ingest skipped/offline', error: String(err) };
+        }
+      }
+      await checkCloud();
+      document.getElementById('cloud-out').textContent = JSON.stringify({ localBatch: localSync, railwayCloudBridge: railwayReply }, null, 2);
+    }
+
+    async function simulateInboundOnlineOrder() {
+      const res = await fetch('/v1/cloud/inbound-orders', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          externalOrderId: 'web-order-' + Math.floor(Math.random() * 9000 + 1000),
+          customerName: 'Online Guest (SaaS Bridge)',
+          fulfillmentMode: 'pickup',
+          items: [['item-margherita', 1], ['item-fries', 2]]
+        })
+      });
+      const body = await res.json();
+      document.getElementById('cloud-out').textContent = JSON.stringify(body, null, 2);
+      await refreshKds();
+      await checkCloud();
+    }
+
+    loginPin('1234');
+    loadMenu();
+    refreshKds();
     checkCloud();
   </script>
 </body>
@@ -523,12 +849,8 @@ const STANDALONE_WORKSTATION_HTML: &str = r#"<!DOCTYPE html>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cloud_bridge::{
-        sign_entitlement_payload, SaasAddon, SaasEntitlementPayload, SignedSaasGrant,
-    };
     use axum::body::Body;
     use axum::http::Request;
-    use std::collections::BTreeSet;
     use tower::ServiceExt;
 
     #[tokio::test]
