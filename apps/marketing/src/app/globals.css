@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+  --surface-0: oklch(0.13 0.005 260);
+  --surface-1: oklch(0.17 0.006 260);
+  --surface-2: oklch(0.22 0.008 260);
+  --border-subtle: oklch(0.28 0.008 260);
+  --accent-primary: oklch(0.68 0.19 42);
+  --accent-emerald: oklch(0.72 0.17 155);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0b0d10;
+  color: #f8fafc;
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Industrial panel utility */
+.glass {
+  background: #12151b;
+  border: 1px solid #232832;
+}
+
+/* High-contrast editorial accent text */
+.gradient-text {
+  color: #ff6b35;
+}
+
+/* Solid industrial primary button surface */
+.gradient-bg {
+  background-color: #ff6b35;
+}
+
+/* CulinaryOS physical interaction baseline (Rule 13: 48px touch targets + 6-state button physics) */
+button, [role="button"] { min-height: 48px; min-width: 48px; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select) { min-height: 48px; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 767px) { :where(input, select, textarea) { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

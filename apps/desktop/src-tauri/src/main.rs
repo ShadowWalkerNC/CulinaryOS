@@ -2,12 +2,12 @@
 
 use culinaryos_native::{
     local_store::{calculate_tip_pool, LocalStore, StaffRole, TipDistributionMethod, TipParticipantInput},
-    standalone::StandaloneService,
+    standalone::{diagnostics_router, spa_router, StandaloneService},
 };
 use std::{
     env,
     net::SocketAddr,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 use uuid::Uuid;
@@ -32,6 +32,41 @@ fn default_site_id() -> Uuid {
         .ok()
         .and_then(|v| v.parse::<Uuid>().ok())
         .unwrap_or_else(|| Uuid::from_u128(1))
+}
+
+fn locate_workspace_apps_dir() -> Option<PathBuf> {
+    if let Ok(custom) = env::var("CULINARYOS_APPS_DIR") {
+        let p = PathBuf::from(custom);
+        if p.is_dir() {
+            return Some(p);
+        }
+    }
+    if let Ok(cwd) = env::current_dir() {
+        let candidate = cwd.join("apps");
+        if candidate.join("desktop").join("dist").is_dir() {
+            return Some(candidate);
+        }
+    }
+    if let Ok(exe) = env::current_exe() {
+        let mut cur: Option<&Path> = exe.parent();
+        while let Some(dir) = cur {
+            let candidate = dir.join("apps");
+            if candidate.join("desktop").join("dist").is_dir() {
+                return Some(candidate);
+            }
+            cur = dir.parent();
+        }
+    }
+    let compile_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join("apps"));
+    if let Some(p) = compile_root {
+        if p.is_dir() {
+            return Some(p);
+        }
+    }
+    None
 }
 
 fn run_self_test() -> Result<(), String> {
@@ -165,12 +200,50 @@ async fn main() {
     let service = StandaloneService::open(&db_path, site_id, saas_secret)
         .expect("Initialize CulinaryOS embedded database");
 
-    let url = format!("http://{bind_addr}");
-    println!("[CulinaryOS Desktop] Native Rust Workstation listening at {url}");
+    let mut workstation_url = format!("http://{bind_addr}");
+
+    if let Some(apps_dir) = locate_workspace_apps_dir() {
+        let surfaces: [(&str, u16, &str); 8] = [
+            ("POS Terminal", 5172, "pos"),
+            ("KDS Kitchen", 5173, "kds"),
+            ("Back-Office Admin", 5174, "admin"),
+            ("KitchenKit", 5175, "kitchenkit"),
+            ("Guest Storefront", 5176, "web"),
+            ("CulinaryOps", 5177, "ops"),
+            ("Display & RecipeOS", 5178, "display"),
+            ("Master Workstation", 5180, "desktop"),
+        ];
+
+        for (label, port, folder) in surfaces {
+            let dist_path = apps_dir.join(folder).join("dist");
+            if dist_path.is_dir() {
+                let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                let router = spa_router(dist_path);
+                println!("[CulinaryOS Desktop] {label} GUI ready at http://localhost:{port}");
+                tokio::spawn(async move {
+                    let _ = axum_server::bind(addr)
+                        .serve(router.into_make_service())
+                        .await;
+                });
+            }
+        }
+
+        let diag_addr = SocketAddr::from(([127, 0, 0, 1], 5188));
+        tokio::spawn(async move {
+            let _ = axum_server::bind(diag_addr)
+                .serve(diagnostics_router().into_make_service())
+                .await;
+        });
+
+        workstation_url = "http://localhost:5180".to_string();
+    }
+
+    println!("[CulinaryOS Desktop] Native Rust API Gateway listening at http://{bind_addr}");
+    println!("[CulinaryOS Desktop] Master Workstation GUI listening at {workstation_url}");
     println!("[CulinaryOS Desktop] Embedded Database: {}", db_path.display());
 
     if !args.iter().any(|a| a == "--headless") {
-        try_open_native_app_window(&url);
+        try_open_native_app_window(&workstation_url);
     }
 
     axum_server::bind(bind_addr)

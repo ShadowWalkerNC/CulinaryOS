@@ -232,10 +232,17 @@ impl LocalStore {
         let mut menu = BTreeMap::new();
         for (id, name, cat, station, price) in [
             ("item-margherita", "Wood-Fired Margherita", "Pizza", "hot", 1800),
+            ("item-diavola", "Spicy Soppressata Diavola", "Pizza", "hot", 2100),
             ("item-ribeye", "Dry-Aged Ribeye 14oz", "Entrees", "grill", 4600),
+            ("item-smashburger", "Double Wagyu Smash Burger", "Entrees", "grill", 1950),
+            ("item-halibut", "Pan-Roasted Alaskan Halibut", "Entrees", "hot", 3400),
             ("item-caesar", "Little Gem Caesar", "Salads", "cold", 1400),
+            ("item-burrata", "Heirloom Tomato & Burrata", "Starters", "cold", 1650),
+            ("item-calamari", "Crispy Rhode Island Calamari", "Starters", "fry", 1550),
             ("item-fries", "Tallow Pommes Frites", "Sides", "fry", 900),
+            ("item-brussels", "Charred Brussels & Pancetta", "Sides", "hot", 1100),
             ("item-negroni", "Barrel-Aged Negroni", "Cocktails", "bar", 1600),
+            ("item-tiramisu", "Espresso Mascarpone Tiramisu", "Desserts", "cold", 1250),
         ] {
             menu.insert(
                 id.to_string(),
@@ -332,6 +339,76 @@ impl LocalStore {
 
     pub fn list_menu(&self) -> Vec<MenuItem> {
         self.state.menu.values().cloned().collect()
+    }
+
+    pub fn list_orders(&self) -> Vec<OrderRecord> {
+        self.state.orders.values().cloned().collect()
+    }
+
+    pub fn get_order(&self, order_id: &str) -> Option<OrderRecord> {
+        self.state.orders.get(order_id).cloned()
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_line_item(
+        &mut self,
+        order_id: &str,
+        menu_item_id: String,
+        custom_name: Option<String>,
+        custom_unit_price_cents: Option<i64>,
+        qty: i64,
+        station: Option<String>,
+        seat: u32,
+        course: u32,
+    ) -> Result<OrderLineItem, LocalStoreError> {
+        if qty <= 0 {
+            return Err(LocalStoreError::InvalidInput("Quantity must be >= 1"));
+        }
+        let (name, unit_price_cents, resolved_station) =
+            if let Some(menu_item) = self.state.menu.get(&menu_item_id) {
+                if !menu_item.available {
+                    return Err(LocalStoreError::Conflict("Menu item is 86'd / unavailable"));
+                }
+                (
+                    menu_item.name.clone(),
+                    custom_unit_price_cents.unwrap_or(menu_item.price_cents),
+                    station.unwrap_or_else(|| menu_item.station.clone()),
+                )
+            } else {
+                (
+                    custom_name.unwrap_or_else(|| "Custom Item".to_string()),
+                    custom_unit_price_cents.unwrap_or(0).max(0),
+                    station.unwrap_or_else(|| "hot".to_string()),
+                )
+            };
+
+        let line_total = unit_price_cents
+            .checked_mul(qty)
+            .ok_or(LocalStoreError::InvalidInput("Line total overflow"))?;
+
+        let order = self
+            .state
+            .orders
+            .get_mut(order_id)
+            .ok_or(LocalStoreError::NotFound("Order not found"))?;
+        let line_idx = order.items.len() + 1;
+        let line_item = OrderLineItem {
+            id: format!("{order_id}-line-{line_idx}"),
+            menu_item_id,
+            name,
+            quantity: qty,
+            unit_price_cents,
+            line_total_cents: line_total,
+            station: resolved_station,
+            seat: seat.max(1),
+            course: course.max(1),
+        };
+        order.items.push(line_item.clone());
+        order.subtotal_cents = order.items.iter().map(|i| i.line_total_cents).sum();
+        order.tax_cents = (order.subtotal_cents * 825 + 5000) / 10_000;
+        order.total_cents = order.subtotal_cents + order.tax_cents;
+        self.save()?;
+        Ok(line_item)
     }
 
     pub fn create_order(
