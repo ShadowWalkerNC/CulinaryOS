@@ -65,6 +65,8 @@ cargo test --workspace
 cargo run --bin culinaryos-desktop -- --self-test
 ```
 
+📖 **Full Rust Standalone & Cloud Bridge Documentation:** See [`docs/RUST_STANDALONE_DESKTOP_GUIDE.md`](./docs/RUST_STANDALONE_DESKTOP_GUIDE.md).
+
 ---
 
 ## 🧭 Current Architecture & Standards

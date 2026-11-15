@@ -1,7 +1,0 @@
-# Railway config overrides the dashboard builder for existing services.
-# Keep only the shared builder here; service-specific build/start commands,
-# healthchecks and SPA output variables live in the Railway dashboard.
-# See docs/DEPLOYMENT.md section 5. Build context is the repository root.
-
-[build]
-  builder = "railpack"
