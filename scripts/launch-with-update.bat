@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-title CulinaryOS Workstation — Auto-Updating Launcher
+title CulinaryOS Workstation
 
 cd /d "%~dp0\.."
 
@@ -10,18 +10,8 @@ echo        CulinaryOS — Turnkey Restaurant Workstation Launching
 echo ========================================================================
 echo.
 
-:: 1. Auto-update to newest repository version via git pull
-where git >nul 2>nul
-if %errorlevel% equ 0 (
-    echo [INFO] Checking for updates from newest repository...
-    git pull --rebase origin main >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo [SUCCESS] CulinaryOS updated to latest commit.
-    ) else (
-        echo [INFO] Continuing with local repository version.
-    )
-    echo.
-)
+:: Launch the installed checkout. Updates are a separate operator maintenance task.
+echo [INFO] Starting the installed version. No automatic updates are applied.
 
 :: 2. Ensure environment configuration
 if not exist ".env" (

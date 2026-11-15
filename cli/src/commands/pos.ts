@@ -149,3 +149,125 @@ posCommand
       console.error(chalk.red(`\n✖ Payment settlement failed: ${err.message}\n`));
     }
   });
+
+// 8. Record Cash/Comp Payment (native)
+posCommand
+  .command('cash-comp <orderId> <amountCents>')
+  .description('Record a native cash/comp payment for the exact order total')
+  .option('--method <method>', 'Payment method (cash|comp)', 'cash')
+  .option('--tip-cents <cents>', 'Tip in integer cents', '0')
+  .option('--tenant <id>', 'Tenant ID')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
+  .action(async (orderId, amountCents, opts) => {
+    try {
+      await apiPost(`/v1/payments/cash-comp`, {
+        orderId,
+        method: opts.method,
+        amount: parseInt(amountCents, 10),
+        tipCents: parseInt(opts.tipCents, 10),
+        operationId: opts.operationId ?? `cli-cash-${Date.now().toString(36)}`,
+      }, opts.tenant);
+      console.log(chalk.green(`✔ Order ${orderId} paid via ${String(opts.method).toUpperCase()} (${amountCents}c)`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Cash/comp payment failed: ${err.message}\n`));
+    }
+  });
+
+// 9. Refund Payment (native, manager session required)
+posCommand
+  .command('refund <paymentId> <amountCents> <reason>')
+  .description('Record a native partial/full refund against a completed payment')
+  .option('--tenant <id>', 'Tenant ID')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
+  .action(async (paymentId, amountCents, reason, opts) => {
+    try {
+      await apiPost(`/v1/payments/refund`, {
+        paymentId,
+        amountCents: parseInt(amountCents, 10),
+        reason,
+        operationId: opts.operationId ?? `cli-refund-${Date.now().toString(36)}`,
+      }, opts.tenant);
+      console.log(chalk.green(`✔ Refund of ${amountCents}c recorded on payment ${paymentId}`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Refund failed: ${err.message}\n`));
+    }
+  });
+
+// 10. Open Cash Drawer (native, manager session required)
+posCommand
+  .command('drawer-open')
+  .description('Open a native cash drawer session with an opening float')
+  .option('--drawer <name>', 'Drawer name', 'main')
+  .option('--float-cents <cents>', 'Opening float in integer cents', '0')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (opts) => {
+    try {
+      await apiPost(`/v1/drawers/open`, {
+        drawerName: opts.drawer,
+        openingFloatCents: parseInt(opts.floatCents, 10),
+      }, opts.tenant);
+      console.log(chalk.green(`✔ Drawer ${opts.drawer} opened (float ${opts.floatCents}c)`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Drawer open failed: ${err.message}\n`));
+    }
+  });
+
+// 11. Record Drawer Movement (native, manager session required)
+posCommand
+  .command('drawer-movement <kind> <amountCents>')
+  .description('Record a native drawer movement (paid_in|paid_out|cash_sale)')
+  .option('--drawer <name>', 'Drawer name', 'main')
+  .option('--tenant <id>', 'Tenant ID')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
+  .action(async (kind, amountCents, opts) => {
+    try {
+      await apiPost(`/v1/drawers/movement`, {
+        drawerName: opts.drawer,
+        kind,
+        amountCents: parseInt(amountCents, 10),
+        operationId: opts.operationId ?? `cli-move-${Date.now().toString(36)}`,
+      }, opts.tenant);
+      console.log(chalk.green(`✔ Drawer ${opts.drawer} ${kind} ${amountCents}c recorded`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Drawer movement failed: ${err.message}\n`));
+    }
+  });
+
+// 12. Close Cash Drawer (native, manager session required)
+posCommand
+  .command('drawer-close <countedCents>')
+  .description('Close a native drawer session with a counted total; reports expected/variance')
+  .option('--drawer <name>', 'Drawer name', 'main')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (countedCents, opts) => {
+    try {
+      const res: any = await apiPost(`/v1/drawers/close`, {
+        drawerName: opts.drawer,
+        countedCents: parseInt(countedCents, 10),
+      }, opts.tenant);
+      const data = res?.data ?? {};
+      console.log(chalk.green(`✔ Drawer ${opts.drawer} closed (expected ${data.expectedCents}c, variance ${data.varianceCents}c)`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Drawer close failed: ${err.message}\n`));
+    }
+  });
+
+// 13. Show Cash Drawer (native)
+posCommand
+  .command('drawer-show')
+  .description('Show the latest native drawer session for a drawer')
+  .option('--drawer <name>', 'Drawer name', 'main')
+  .option('--tenant <id>', 'Tenant ID')
+  .action(async (opts) => {
+    try {
+      const res: any = await apiGet(`/v1/drawers/${opts.drawer}`, opts.tenant);
+      const s = res?.data ?? res;
+      console.log(chalk.bold(`\nDrawer ${s.drawer_name} (${s.status})`));
+      console.log(table([
+        ['Float', 'Cash sales', 'Paid in', 'Paid out', 'Counted'],
+        [s.opening_float_cents, s.cash_sales_cents, s.paid_in_cents, s.paid_out_cents, s.counted_cents ?? '-'],
+      ]));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Drawer show failed: ${err.message}\n`));
+    }
+  });

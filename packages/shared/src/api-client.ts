@@ -2,11 +2,31 @@
 
 import { isPlaceholderSecret } from './secrets';
 
+// Static snapshot of the client env keys this module serves. Member access is
+// deliberately static: bundlers inline import.meta.env.KEY references, while
+// dynamic meta.env[key] lookups do not survive production builds.
+function staticViteEnv(): Record<string, string | undefined> {
+  try {
+    // NOTE: keep `import.meta.env` as the exact member expression — bundlers
+    // inline it, while aliased meta.env lookups do not survive builds.
+    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+    if (!env) return {};
+    return {
+      VITE_API_URL: env.VITE_API_URL,
+      VITE_TENANT_ID: env.VITE_TENANT_ID,
+      VITE_DEVICE_API_KEY: env.VITE_DEVICE_API_KEY,
+      VITE_INTERNAL_API_KEY: env.VITE_INTERNAL_API_KEY,
+    };
+  } catch {
+    return {};
+  }
+}
+
 function readEnv(key: string): string | undefined {
   try {
     // Vite / browser
-    const meta = import.meta as ImportMeta & { env?: Record<string, string | undefined> };
-    if (meta.env && key in meta.env) return meta.env[key];
+    const hit = staticViteEnv()[key];
+    if (typeof hit === 'string' && hit.length > 0) return hit;
   } catch {
     // ignore
   }
@@ -30,6 +50,8 @@ export function normalizeLocalApiBase(value: string): string {
 
 export function getApiBase(): string {
   const envUrl = readEnv('VITE_API_URL');
+  // Packaged clients use their own nginx /v1 proxy on any LAN IP or domain.
+  if (envUrl === '/') return '';
   // If explicitly configured with a non-localhost remote URL, honor it
   if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
     return envUrl;

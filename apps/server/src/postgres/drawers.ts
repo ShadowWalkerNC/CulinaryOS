@@ -1,6 +1,7 @@
 import { DomainError, integer, text, uuid } from './domain.js';
 import type { NativeExecutor, NativeVerifiedIdentity } from './executor.js';
 import { managerGateNative } from './identity.js';
+import { claimReceipt, finalizeReceipt, operationKey, requestFingerprint } from './receipts.js';
 
 export interface DrawerSessionRow {
   id: string;
@@ -52,13 +53,31 @@ export async function recordDrawerMovement(
   tx: NativeExecutor,
   auth: NativeVerifiedIdentity,
   tenantId: string,
-  input: { drawerName?: string; kind: 'paid_in' | 'paid_out' | 'cash_sale'; amountCents: number },
-): Promise<DrawerSessionRow> {
+  input: { drawerName?: string; kind: 'paid_in' | 'paid_out' | 'cash_sale'; amountCents: number; operationId?: string },
+): Promise<{ session: DrawerSessionRow; replayed: boolean }> {
   if (managerGateNative(auth) !== 'ok') {
     throw new DomainError('FORBIDDEN', 'Cash movements require a human manager session', 403);
   }
   const drawerName = input.drawerName === undefined ? 'main' : text(input.drawerName, 'drawer', 64);
   const amount = integer(input.amountCents, 'amount', 1);
+  if (input.kind !== 'paid_in' && input.kind !== 'paid_out' && input.kind !== 'cash_sale') {
+    throw new DomainError('VALIDATION_ERROR', 'Movement kind must be paid_in, paid_out, or cash_sale', 422);
+  }
+  // Cent conservation: a retried movement must not double-apply. With an
+  // operationId the increment is receipt-backed (same ID + same payload replays
+  // the stored session; same ID + different payload is a 409).
+  let key: string | null = null;
+  if (input.operationId !== undefined) {
+    key = operationKey(input.operationId);
+    const claim = await claimReceipt(tx, tenantId, key, requestFingerprint({ drawerName, kind: input.kind, amount }));
+    if (!claim.owned) {
+      const prior = claim.receipt.result as { session?: DrawerSessionRow };
+      if (!prior.session || typeof prior.session.id !== 'string') {
+        throw new DomainError('INTERNAL_ERROR', 'Stored movement receipt is incomplete', 500);
+      }
+      return { session: prior.session, replayed: true };
+    }
+  }
   const column = input.kind === 'paid_in' ? 'paid_in_cents' : input.kind === 'paid_out' ? 'paid_out_cents' : 'cash_sales_cents';
   const updated = await tx.query<DrawerSessionRow>(
     `UPDATE public.drawer_sessions SET ${column} = ${column} + $3
@@ -67,7 +86,10 @@ export async function recordDrawerMovement(
   );
   const row = updated.rows[0];
   if (!row) throw new DomainError('NOT_FOUND', 'Open drawer session not found', 404);
-  return row;
+  if (key) {
+    await finalizeReceipt(tx, tenantId, key, JSON.parse(JSON.stringify({ session: row })) as Record<string, unknown>);
+  }
+  return { session: row, replayed: false };
 }
 
 export async function closeDrawer(

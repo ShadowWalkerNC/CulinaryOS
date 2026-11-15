@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -10,7 +10,7 @@ ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_TENANT_ID
 ARG VITE_KDS_URL
-ARG VITE_API_URL
+ARG VITE_API_URL=/
 
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
@@ -22,7 +22,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/kds/package.json ./apps/kds/
 
-RUN pnpm install --frozen-lockfile --filter @culinaryos/app-kds
+RUN pnpm install --frozen-lockfile --filter @culinaryos/app-kds...
 
 COPY apps/kds/ ./apps/kds/
 RUN pnpm --filter @culinaryos/app-kds run build

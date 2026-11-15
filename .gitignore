@@ -11,6 +11,8 @@ dist/
 .env
 .env.local
 *.env.local
+.env.*
+!.env.example
 
 # Supabase
 supabase/.branches/
@@ -36,6 +38,13 @@ apps/android-tv/gradle/
 apps/android-tv/gradlew
 apps/android-tv/gradlew.bat
 apps/CulinaryOSHandheld/.build/
+target/
+**/target/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 # Logs and Agent Scratch
 *.log

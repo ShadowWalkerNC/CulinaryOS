@@ -40,13 +40,13 @@ export function resetNativeStartupState(): void {
 }
 
 /**
- * Perform startup role verification and mount native app if enabled.
+ * Perform startup role verification and prepare the native dispatcher app.
  * Must be called before server listener starts.
  * If native PostgreSQL is enabled and the role check fails, this throws
  * and prevents the server listener from starting.
  */
 export async function setupNativePostgres(
-  app: Hono<any>,
+  _app: Hono<any>,
   options?: { pool?: Pool; databaseUrl?: string; enabled?: boolean }
 ): Promise<NativeStartupState> {
   const enabled = options?.enabled ?? isNativePostgresEnabled();
@@ -85,7 +85,8 @@ export async function setupNativePostgres(
     });
 
     state = { enabled: true, pool, roleInfo, nativeApp, error: null };
-    app.route('/', nativeApp);
+    // The entrypoint dispatcher reads state; do not mutate its Hono router
+    // after a request has compiled the matcher (e.g. a readiness probe).
     return state;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

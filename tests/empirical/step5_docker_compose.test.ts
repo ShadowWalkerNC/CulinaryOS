@@ -36,7 +36,9 @@ describe('Step 5: Docker Compose Infrastructure Validation', () => {
     expect(composeContent).toContain('VITE_TENANT_ID: ${VITE_TENANT_ID}');
     expect(composeContent).toContain('VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}');
     expect(composeContent).toContain('VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}');
-    expect(composeContent).toContain('VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}');
+    // Packaged clients proxy /v1 on their own origin; tablet loopback is not the server.
+    expect(composeContent.match(/VITE_API_URL: \/(?:\r?\n|$)/g)?.length).toBe(4);
+    expect(composeContent).not.toContain('VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}');
   });
 
   it('validates backend service healthcheck configuration', () => {

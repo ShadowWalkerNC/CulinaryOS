@@ -44,6 +44,7 @@ if (-not $isAdmin) {
 }
 
 Write-Banner
+Write-Host "Development/demo setup only. Production self-host installation is not yet available." -ForegroundColor Yellow
 
 $repoRoot = (Get-Item $PSScriptRoot).Parent.FullName
 Set-Location $repoRoot
@@ -52,7 +53,7 @@ Set-Location $repoRoot
 if (-not $NoPrompt) {
     Write-Host "Please choose your installation profile:" -ForegroundColor White
     Write-Host "  [1] 🍽️  Demo Sandbox (Preloaded with 'The Golden Fork' bistro & sample menu)" -ForegroundColor Green
-    Write-Host "  [2] 🧼  Clean Production Slate (Blank catalog ready for live restaurant setup)" -ForegroundColor Cyan
+    Write-Host "  [2] 🧼  Clean development view (does not provision a production database)" -ForegroundColor Cyan
     Write-Host "  [3] 🚀  Marketing & Hub Showcase (Public ROI calculator & feature tour)" -ForegroundColor Magenta
     Write-Host ""
     $choice = Read-Host "Enter choice [1-3] (Default: 1)"
@@ -73,6 +74,7 @@ if (-not $nodeCmd) {
     $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
     if ($wingetCmd) {
         winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements --silent
+        if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
         Write-Host "✅ Node.js LTS installed successfully!" -ForegroundColor Green
     } else {
@@ -84,7 +86,14 @@ if (-not $nodeCmd) {
     }
 } else {
     $nodeVer = node -v
+    if ($LASTEXITCODE -ne 0) { throw "Node.js version check failed." }
     Write-Host "✅ Node.js detected: $nodeVer" -ForegroundColor Green
+}
+
+node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Node.js 22 or newer is required. Upgrade Node.js and rerun this installer." -ForegroundColor Red
+    exit 1
 }
 
 # 4. Check / Install pnpm
@@ -94,10 +103,12 @@ $pnpmCmd = Get-Command pnpm -ErrorAction SilentlyContinue
 if (-not $pnpmCmd) {
     Write-Host "⚡ Installing pnpm package manager globally via npm..." -ForegroundColor Yellow
     npm install -g pnpm
+    if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
     Write-Host "✅ pnpm installed successfully!" -ForegroundColor Green
 } else {
     $pnpmVer = pnpm -v
+    if ($LASTEXITCODE -ne 0) { throw "pnpm version check failed." }
     Write-Host "✅ pnpm detected: v$pnpmVer" -ForegroundColor Green
 }
 
@@ -123,13 +134,17 @@ if (Test-Path $envPath) {
 # 6. Install Monorepo Dependencies
 Write-Host "`n[STEP 5/8] Installing monorepo dependencies..." -ForegroundColor White
 pnpm install
+if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
 Write-Host "✅ All dependencies installed." -ForegroundColor Green
 
 # 7. Pre-build Core Calculation & UI Engines
 Write-Host "`n[STEP 6/8] Building core engines and shared packages..." -ForegroundColor White
 pnpm --filter @culinaryos/ratio-engine build
+if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
 pnpm --filter @culinaryos/shared build
+if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
 pnpm --filter @culinaryos/ui build
+if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
 Write-Host "✅ Core calculation engines compiled." -ForegroundColor Green
 
 # 8. Configure Windows Firewall
@@ -188,9 +203,10 @@ Write-Host "`n==================================================================
 Write-Host "🩺 Running Automated Diagnostics Preflight..." -ForegroundColor Cyan
 Write-Host "========================================================================" -ForegroundColor DarkCyan
 pnpm doctor
+if ($LASTEXITCODE -ne 0) { throw "Setup command failed (exit $LASTEXITCODE). Setup stopped; resolve the failure and rerun." }
 
 Write-Host "`n========================================================================" -ForegroundColor DarkCyan
-Write-Host "  🎉 CULINARYOS INSTALLATION COMPLETE!" -ForegroundColor Green
+Write-Host "  🎉 CULINARYOS DEVELOPMENT SETUP COMPLETE!" -ForegroundColor Green
 Write-Host "  Double-click 'CulinaryOS' on your Desktop at any time to launch." -ForegroundColor White
 Write-Host "========================================================================`n" -ForegroundColor DarkCyan
 
@@ -198,5 +214,6 @@ if ($AutoStart -or (-not $NoPrompt)) {
     $startChoice = Read-Host "Would you like to start CulinaryOS right now? (Y/N, Default: Y)"
     if ($startChoice -eq "" -or $startChoice -match "^[Yy]") {
         & "$targetScript" --profile=$Profile
+        if ($LASTEXITCODE -ne 0) { throw "Development launcher failed (exit $LASTEXITCODE)." }
     }
 }

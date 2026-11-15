@@ -2,6 +2,12 @@
 
 This guide covers deploying CulinaryOS for real-world restaurant operations.
 
+> Release status (2026-11-04): see [RELEASE_READINESS.md](RELEASE_READINESS.md) for the current three-deliverable plan and acceptance evidence. The existing compose/installers are still development/demo entrypoints, not a certified standalone live installation. Native PostgreSQL mode is explicitly selected with `CULINARYOS_NATIVE_PG=true` and a restricted runtime `DATABASE_URL`; startup verifies the role before listening. Unsupported native endpoints return unavailable, including public signup until its PostgreSQL implementation is complete. Do not connect the API using the migration-owner URL.
+
+Packaged POS/KDS/Admin/storefront builds use `VITE_API_URL=/` and forward `/v1/` through nginx to the compose backend. This keeps API requests on the address the client opened, including LAN IPs and HTTPS domains. It does not provide TLS certificates: a public installation still needs a TLS reverse proxy and DNS configuration. Independent cloud deployments continue to use an explicit API URL and CORS allowlist.
+
+Workstation startup uses the installed checkout without pulling `main`. Schedule upgrades deliberately with a database backup and a known rollback version.
+
 ---
 
 ## 1. Prerequisites & Environment Setup

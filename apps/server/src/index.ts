@@ -82,9 +82,28 @@ app.use('*', cors({
     }
     return corsAllowlist.includes(origin) ? origin : '';
   },
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id', 'X-Caller-Service', 'X-Request-Id'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id', 'X-Caller-Service', 'X-Request-Id', 'Idempotency-Key'],
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
+// Native mode owns the entire API boundary. Missing adapters must never fall
+// through into a legacy/demo identity or a second database backend.
+app.use('*', async (c, next) => {
+  const path = c.req.path;
+  const nativeState = getNativeStartupState();
+  if ((isNativePostgresEnabled() || nativeState.enabled) &&
+      (path === '/v1' || path.startsWith('/v1/') || path === '/internal' || path.startsWith('/internal/'))) {
+    if (!nativeState.nativeApp) {
+      return c.json({ ok: false, error: { code: 'NATIVE_BACKEND_UNAVAILABLE', message: 'PostgreSQL backend is not ready' } }, 503);
+    }
+    if (path === '/internal' || path.startsWith('/internal/')) {
+      return c.json({ ok: false, error: { code: 'NATIVE_FEATURE_UNAVAILABLE', message: 'This endpoint is not available with the PostgreSQL backend' } }, 503);
+    }
+    // The native router distinguishes an unsupported endpoint (503) from a
+    // supported endpoint reporting a missing domain record (404).
+    return nativeState.nativeApp.fetch(c.req.raw);
+  }
+  await next();
+});
 app.use('*', withSupabase);
 // Explicitly opted-in read grants use their own signed-in and scoped-token checks.
 app.route('/v1/interagency',interagencyRoutes);
@@ -123,18 +142,6 @@ app.get('/internal/events', async (c) => {
   const { data, error } = await q;
   if (error) return c.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: error.message } }, 500);
   return c.json({ ok: true, data });
-});
-
-// ---- Native PostgreSQL Priority Dispatcher (CULINARYOS_NATIVE_PG=true) ----
-app.use('/v1/*', async (c, next) => {
-  const nativeState = getNativeStartupState();
-  if (nativeState.enabled && nativeState.nativeApp) {
-    const res = await nativeState.nativeApp.fetch(c.req.raw);
-    if (res.status !== 404) {
-      return res;
-    }
-  }
-  await next();
 });
 
 app.route('/v1/auth',         authRoutes);
@@ -226,7 +233,7 @@ app.get('/ready', async (c) => {
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
-startRealtimeBridge();
+if (!isNativePostgresEnabled()) startRealtimeBridge();
 
 // Auth posture banner — make the server's security mode impossible to miss.
 if (isAuthRelaxed()) {

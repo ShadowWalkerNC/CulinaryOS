@@ -6,6 +6,8 @@ import {
   ReceiptPayload,
   PrinterConfig,
   DEFAULT_PRINTER_CONFIG,
+  getApiBase,
+  apiHeaders,
 } from '@culinaryos/shared';
 
 const STORAGE_KEY = 'culinaryos_printer_config';
@@ -231,13 +233,10 @@ export class HardwarePrinterService {
     // 3b. Network TCP (:9100) Server Bridge Transport
     if (activeConfig.transport === 'network' && activeConfig.networkIp) {
       try {
-        const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'http://localhost:3000';
+        const apiBase = getApiBase();
         const res = await fetch(`${apiBase.replace(/\/$/, '')}/v1/hardware/print`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
-          },
+          headers: apiHeaders(),
           body: JSON.stringify({
             ip: activeConfig.networkIp,
             port: activeConfig.networkPort || 9100,
@@ -329,13 +328,10 @@ export class HardwarePrinterService {
     }
     if (this.config.transport === 'network' && this.config.networkIp) {
       try {
-        const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'http://localhost:3000';
+        const apiBase = getApiBase();
         const res = await fetch(`${apiBase.replace(/\/$/, '')}/v1/hardware/kick-drawer`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-Id': '00000000-0000-0000-0000-000000000001',
-          },
+          headers: apiHeaders(),
           body: JSON.stringify({
             ip: this.config.networkIp,
             port: this.config.networkPort || 9100,

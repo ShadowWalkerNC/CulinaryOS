@@ -6,12 +6,9 @@ on:
   pull_request:
     branches: [main]
 
-# package.json "packageManager" pins pnpm — do not also pass version: to
-# pnpm/action-setup (that conflict fails the job with ERR_PNPM_BAD_PM_VERSION).
-
 jobs:
   build:
-    name: Typecheck & Build
+    name: Typecheck, Rust Workspace & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +19,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify Rust Cargo Workspace
+        run: cargo test --workspace
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -34,18 +37,29 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Build marketing site (if present)
-        run: pnpm --filter @culinaryos/app-marketing build || echo 'Marketing app not yet installed'
-        continue-on-error: true
-
   test:
     name: Tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: culinaryos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     env:
       INTERNAL_API_KEY: test-key-ci
       DEVICE_API_KEY: test-device-ci
       AUTH_RELAXED: 'true'
       CULINARYOS_URL: http://localhost:3000
+      TEST_DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/culinaryos_test
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +69,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -69,7 +83,6 @@ jobs:
       - name: Run server integration tests
         run: bun test tests/server/
 
-      # Broader suite (ratio-engine + tests/**) — now blocking.
       - name: Run full test suite
         continue-on-error: false
         run: node ./scripts/run-all-tests.cjs
@@ -85,18 +98,3 @@ jobs:
         run: docker build -f apps/pos/Dockerfile -t culinaryos-pos:ci .
       - name: Build KDS image
         run: docker build -f apps/kds/Dockerfile -t culinaryos-kds:ci .
-
-  deploy:
-    name: Deploy to Railway
-    needs: [build, test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      - name: Deploy API to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service culinaryos-api --detach
-        continue-on-error: true  # non-blocking until token is provisioned

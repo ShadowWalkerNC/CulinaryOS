@@ -69,6 +69,47 @@ describe('Live Server Entrypoint Native PostgreSQL Cutover (BLOCKER-2)', () => {
     process.env = { ...originalEnv };
   });
 
+  it('allows the idempotency header used by cross-origin POS writes', async () => {
+    const response = await app.request('/v1/orders', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://127.0.0.1:5172',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'authorization,content-type,idempotency-key',
+      },
+    });
+    assert.equal(response.status, 204);
+    assert.match(response.headers.get('Access-Control-Allow-Headers') ?? '', /idempotency-key/i);
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), 'http://127.0.0.1:5172');
+  });
+
+  it('refuses legacy signup, interagency and internal routes in native mode', async () => {
+    process.env.CULINARYOS_NATIVE_PG = 'true';
+    await setupNativePostgres(app, { pool: createCutoverPool() as never });
+    for (const path of ['/v1/auth/signup', '/v1/interagency/authorize', '/internal/events']) {
+      const response = await app.request(path, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'operator@example.invalid', password: 'fictional-password', restaurant_name: 'Test' }),
+      });
+      assert.equal(response.status, 503);
+      assert.equal((await response.json() as { error: { code: string } }).error.code, 'NATIVE_FEATURE_UNAVAILABLE');
+    }
+  });
+  it('refuses API access before native startup succeeds', async () => {
+    process.env.CULINARYOS_NATIVE_PG = 'true';
+    const response = await app.request('/v1/auth/signup', { method: 'POST' });
+    assert.equal(response.status, 503);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, 'NATIVE_BACKEND_UNAVAILABLE');
+  });
+  it('preserves a supported native route reporting a missing order', async () => {
+    process.env.CULINARYOS_NATIVE_PG = 'true';
+    await setupNativePostgres(app, { pool: createCutoverPool() as never });
+    const response = await app.request('/v1/orders/dddddddd-dddd-dddd-dddd-dddddddddddd', {
+      headers: { Authorization: `Bearer cs_${'z'.repeat(43)}` },
+    });
+    assert.equal(response.status, 404);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, 'NOT_FOUND');
+  });
   it('routes /v1/* and /v1/native/* on live server app to nativeApp when CULINARYOS_NATIVE_PG=true', async () => {
     process.env.CULINARYOS_NATIVE_PG = 'true';
     const pool = createCutoverPool();

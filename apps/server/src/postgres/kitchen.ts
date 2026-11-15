@@ -1,7 +1,30 @@
 import { DomainError, integer, text, uuid } from './domain.js';
+import { KDS_ACTIVE_STATUSES, resolveDbStations } from '@culinaryos/shared';
 import type { NativeExecutor } from './executor.js';
 import { getOrder, listLineItems, type LineItemRow } from './orders.js';
 import { claimReceipt, finalizeReceipt, operationKey, requestFingerprint } from './receipts.js';
+
+export async function listKitchenTickets(
+  tx: NativeExecutor,
+  tenantId: string,
+  station?: string,
+  status?: string,
+) {
+  const stations = station && station !== 'all' && station !== 'expo' ? resolveDbStations(station) : null;
+  if (stations !== null && !Array.isArray(stations)) return [];
+  const { rows } = await tx.query(
+    `SELECT t.*, COALESCE((
+       SELECT jsonb_agg(i ORDER BY i.sort_order, i.id)
+       FROM public.ticket_items i WHERE i.tenant_id = t.tenant_id AND i.ticket_id = t.id
+     ), '[]'::jsonb) AS ticket_items
+     FROM public.kitchen_tickets t
+     WHERE t.tenant_id = $1 AND t.status = ANY($2::text[])
+       AND ($3::text[] IS NULL OR t.station = ANY($3::text[]))
+     ORDER BY t.fired_at ASC NULLS LAST, t.created_at ASC, t.id ASC`,
+    [tenantId, status ? [status] : [...KDS_ACTIVE_STATUSES], stations],
+  );
+  return rows;
+}
 
 export interface OrderCreatedItem {
   lineItemId: string;
@@ -43,7 +66,9 @@ export interface KitchenTicketRow {
   table_number: string | null;
   course_number: number;
   course_hold_status: string;
+  held_at: string | null;
   fired_at: string | null;
+  bumped_at: string | null;
 }
 
 function initialCourseState(courseNumber: number): { status: string; hold: string } {
@@ -297,6 +322,158 @@ export async function fireCourse(
   }
   await finalizeReceipt(tx, tenantId, key, JSON.parse(JSON.stringify({ tickets: fired })) as Record<string, unknown>);
   return { tickets: fired, replayed: false };
+}
+
+export type TicketAction = 'bump' | 'hold' | 'fire';
+
+export interface TicketActionResult {
+  ticket: KitchenTicketRow;
+  replayed: boolean;
+  /** True when this bump advanced the order to served (POS-visible completion). */
+  orderServed: boolean;
+}
+
+const TICKET_ACTIONS = new Set(['bump', 'hold', 'fire']);
+const TERMINAL_TICKET_STATUSES = new Set(['bumped', 'voided']);
+/** Order statuses that a fully-bumped rail may advance to served; paid/voided never regress. */
+const SERVABLE_ORDER_STATUSES = new Set(['sent', 'in-progress', 'ready']);
+
+function storedTicketActionResult(value: unknown): { ticket: KitchenTicketRow; orderServed: boolean } {
+  const result = value as { ticket?: KitchenTicketRow; orderServed?: boolean };
+  if (!result || typeof result !== 'object' || !result.ticket || typeof result.ticket.id !== 'string') {
+    throw new DomainError('INTERNAL_ERROR', 'Stored ticket receipt is incomplete', 500);
+  }
+  return { ticket: result.ticket, orderServed: result.orderServed === true };
+}
+
+/**
+ * Native KDS ticket actions consumed by the KDS client
+ * (PATCH /v1/kds/tickets/:id/bump|hold|fire) and the CLI.
+ *
+ * - bump: queued/fired/cooking/recalled -> bumped (bumped_at set). When no
+ *   active ticket remains on the order, the order advances to served unless it
+ *   is already paid/voided, so POS sees completion. Repeat bumps replay.
+ * - hold: marks course_hold_status held (held_at set); bumped/voided tickets
+ *   cannot be held. Repeat holds replay.
+ * - fire: held/queued -> fired (fired_at set) with a kds:ticket:fired push
+ *   event; bumped/voided tickets cannot fire. Repeat fires replay.
+ *
+ * With operationId the effect is receipt-backed (same ID + same payload replays
+ * the stored result; same ID + different payload is a 409). Without one the
+ * transition is state-convergent: re-applying an already-satisfied action
+ * returns the current ticket with replayed: true and writes nothing.
+ */
+export async function applyTicketAction(
+  tx: NativeExecutor,
+  tenantId: string,
+  ticketId: string,
+  action: string,
+  operationId?: string,
+): Promise<TicketActionResult> {
+  if (!TICKET_ACTIONS.has(action)) {
+    throw new DomainError('VALIDATION_ERROR', 'Ticket action must be bump, hold, or fire', 422);
+  }
+  const id = uuid(ticketId, 'ticket');
+  const locked = await tx.query<KitchenTicketRow>(
+    'SELECT * FROM public.kitchen_tickets WHERE tenant_id = $1 AND id = $2 FOR UPDATE',
+    [tenantId, id],
+  );
+  const current = locked.rows[0];
+  if (!current) throw new DomainError('NOT_FOUND', 'Ticket not found', 404);
+
+  let key: string | null = null;
+  if (operationId !== undefined) {
+    key = operationKey(operationId);
+    const claim = await claimReceipt(tx, tenantId, key, requestFingerprint({ ticketId: id, action }));
+    if (!claim.owned) {
+      const prior = storedTicketActionResult(claim.receipt.result);
+      return { ticket: prior.ticket, replayed: true, orderServed: prior.orderServed };
+    }
+  }
+
+  const now = new Date().toISOString();
+  let ticket = current;
+  let replayed = false;
+  let orderServed = false;
+
+  if (action === 'bump') {
+    if (current.status === 'bumped') {
+      replayed = true;
+    } else {
+      if (TERMINAL_TICKET_STATUSES.has(current.status)) {
+        throw new DomainError('CONFLICT', `Ticket is ${current.status}; bump is not available`, 409);
+      }
+      const updated = await tx.query<KitchenTicketRow>(
+        `UPDATE public.kitchen_tickets SET status = 'bumped', bumped_at = $3
+         WHERE tenant_id = $1 AND id = $2 RETURNING *`,
+        [tenantId, id, now],
+      );
+      const bumped = updated.rows[0];
+      if (!bumped) throw new DomainError('INTERNAL_ERROR', 'Ticket bump failed', 500);
+      ticket = bumped;
+      const remaining = await tx.query<{ id: string }>(
+        `SELECT id FROM public.kitchen_tickets
+         WHERE tenant_id = $1 AND order_id = $2 AND status = ANY($3::text[]) LIMIT 1`,
+        [tenantId, ticket.order_id, [...KDS_ACTIVE_STATUSES]],
+      );
+      if (remaining.rows.length === 0) {
+        const orderRow = await tx.query<{ status: string }>(
+          'SELECT status FROM public.pos_orders WHERE tenant_id = $1 AND id = $2 FOR UPDATE',
+          [tenantId, ticket.order_id],
+        );
+        const orderStatus = orderRow.rows[0]?.status;
+        if (orderStatus && SERVABLE_ORDER_STATUSES.has(orderStatus)) {
+          await tx.query('UPDATE public.pos_orders SET status = $3 WHERE tenant_id = $1 AND id = $2', [
+            tenantId, ticket.order_id, 'served',
+          ]);
+          orderServed = true;
+        }
+      }
+    }
+  } else if (action === 'hold') {
+    if (TERMINAL_TICKET_STATUSES.has(current.status)) {
+      throw new DomainError('CONFLICT', `Ticket is ${current.status}; hold is not available`, 409);
+    }
+    if (current.course_hold_status === 'held') {
+      replayed = true;
+    } else {
+      const updated = await tx.query<KitchenTicketRow>(
+        `UPDATE public.kitchen_tickets SET course_hold_status = 'held', held_at = $3
+         WHERE tenant_id = $1 AND id = $2 RETURNING *`,
+        [tenantId, id, now],
+      );
+      const held = updated.rows[0];
+      if (!held) throw new DomainError('INTERNAL_ERROR', 'Ticket hold failed', 500);
+      ticket = held;
+    }
+  } else {
+    if (TERMINAL_TICKET_STATUSES.has(current.status)) {
+      throw new DomainError('CONFLICT', `Ticket is ${current.status}; fire is not available`, 409);
+    }
+    if (current.course_hold_status === 'fired') {
+      replayed = true;
+    } else {
+      const updated = await tx.query<KitchenTicketRow>(
+        `UPDATE public.kitchen_tickets SET status = CASE WHEN status = 'queued' THEN 'fired' ELSE status END,
+           course_hold_status = 'fired', fired_at = $3
+         WHERE tenant_id = $1 AND id = $2 RETURNING *`,
+        [tenantId, id, now],
+      );
+      const fired = updated.rows[0];
+      if (!fired) throw new DomainError('INTERNAL_ERROR', 'Ticket fire failed', 500);
+      ticket = fired;
+      await tx.query(
+        `INSERT INTO public.pending_push (tenant_id, station_id, event_type, payload)
+         VALUES ($1, $2, 'kds:ticket:fired', $3)`,
+        [tenantId, ticket.station, JSON.stringify({ ticketId: ticket.id, orderId: ticket.order_id, station: ticket.station, courseNumber: ticket.course_number, status: 'fired' })],
+      );
+    }
+  }
+
+  if (key) {
+    await finalizeReceipt(tx, tenantId, key, JSON.parse(JSON.stringify({ ticket, orderServed })) as Record<string, unknown>);
+  }
+  return { ticket, replayed, orderServed };
 }
 
 export async function listPendingPush(

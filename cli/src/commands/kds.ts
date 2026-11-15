@@ -24,11 +24,11 @@ kdsCommand
         ['Ticket ID', 'Table', 'Station', 'Course', 'Items', 'Aging'],
         ...tickets.map((t) => [
           t.id.slice(0, 8),
-          t.tableNumber ? `Table ${t.tableNumber}` : t.tableLabel ?? 'Walk-in',
+          (t.tableNumber ?? t.table_number) ? `Table ${t.tableNumber ?? t.table_number}` : t.tableLabel ?? 'Walk-in',
           (t.station ?? 'GRILL').toUpperCase(),
-          `Course ${t.course ?? 1}`,
-          t.items?.map((i: any) => `${i.quantity}x ${i.name}`).join(', ') ?? 'Items',
-          `${Math.floor((Date.now() - new Date(t.createdAt ?? Date.now()).getTime()) / 60000)}m`,
+          `Course ${t.course ?? t.course_number ?? 1}`,
+          (t.items ?? t.ticket_items)?.map((i: any) => `${i.quantity}x ${i.menu_item_name ?? i.name}`).join(', ') ?? 'Items',
+          `${Math.floor((Date.now() - new Date(t.createdAt ?? t.created_at ?? Date.now()).getTime()) / 60000)}m`,
         ]),
       ];
       console.log(chalk.bold.hex('#F97316')('\n🔥 Live Kitchen Display Tickets:'));
@@ -41,6 +41,7 @@ kdsCommand
 // 2. Bump Ticket Complete
 kdsCommand
   .command('bump <ticketId>')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
   .description('Mark kitchen ticket as prepared and bumped')
   .option('--station <name>', 'Station name', 'expo')
   .option('--tenant <id>', 'Tenant ID')
@@ -48,6 +49,7 @@ kdsCommand
     try {
       await apiPatch(`/v1/kds/tickets/${ticketId}/bump`, {
         station: opts.station,
+        operationId: opts.operationId ?? `cli-bump-${Date.now().toString(36)}`,
       }, opts.tenant);
       console.log(chalk.bold.green(`✔ Ticket ${ticketId} bumped on ${opts.station.toUpperCase()}!`));
     } catch (err: any) {
@@ -58,16 +60,52 @@ kdsCommand
 // 3. Fire Specific Course
 kdsCommand
   .command('fire-course <orderId> <course>')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
   .description('Fire a held course (e.g. Course 2 Entrees or Course 3 Desserts)')
   .option('--tenant <id>', 'Tenant ID')
   .action(async (orderId, course, opts) => {
     try {
       await apiPost(`/v1/orders/${orderId}/fire-course`, {
-        course: parseInt(course, 10),
+        courseNumber: parseInt(course, 10),
+        operationId: opts.operationId ?? `cli-fire-${Date.now().toString(36)}`,
       }, opts.tenant);
       console.log(chalk.bold.green(`✔ Course ${course} fired for Order ${orderId}!`));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Fire course failed: ${err.message}\n`));
+    }
+  });
+
+// 3b. Hold Ticket
+kdsCommand
+  .command('hold <ticketId>')
+  .description('Hold a kitchen ticket (course pacing)')
+  .option('--tenant <id>', 'Tenant ID')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
+  .action(async (ticketId, opts) => {
+    try {
+      await apiPatch(`/v1/kds/tickets/${ticketId}/hold`, {
+        operationId: opts.operationId ?? `cli-hold-${Date.now().toString(36)}`,
+      }, opts.tenant);
+      console.log(chalk.bold.yellow(`✔ Ticket ${ticketId} held!`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Hold failed: ${err.message}\n`));
+    }
+  });
+
+// 3c. Fire Ticket
+kdsCommand
+  .command('fire <ticketId>')
+  .description('Fire a held kitchen ticket')
+  .option('--tenant <id>', 'Tenant ID')
+  .option('--operation-id <id>', 'Idempotency key (generated when omitted)')
+  .action(async (ticketId, opts) => {
+    try {
+      await apiPatch(`/v1/kds/tickets/${ticketId}/fire`, {
+        operationId: opts.operationId ?? `cli-fire-${Date.now().toString(36)}`,
+      }, opts.tenant);
+      console.log(chalk.bold.green(`✔ Ticket ${ticketId} fired!`));
+    } catch (err: any) {
+      console.error(chalk.red(`\n✖ Fire failed: ${err.message}\n`));
     }
   });
 

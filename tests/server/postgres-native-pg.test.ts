@@ -742,7 +742,8 @@ describe('native app factory end-to-end against real PostgreSQL', () => {
     const response = await app.request('/v1/native/webhooks/stripe', {
       method: 'POST', headers: auth(fx.serverToken, fx.tenantA), body: JSON.stringify({ forged: true }),
     });
-    assert.equal(response.status, 404);
+    assert.equal(response.status, 503);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, 'NATIVE_FEATURE_UNAVAILABLE');
   });
 
   it('dedupes webhook inbox rows and binds reconciliation to stored orders', async () => {

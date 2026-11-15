@@ -122,10 +122,11 @@ async function start() {
 
   console.log(`\x1b[1m\x1b[35m⚡ Active Profile: \x1b[32m${profile.toUpperCase()}\x1b[0m ` +
     (profile === 'demo' ? '(Sandbox pre-loaded with "The Golden Fork")' :
-     profile === 'clean' ? '(Clean slate for live restaurant onboarding)' :
+     profile === 'clean' ? '(Development admin view; no production database provisioning)' :
      '(Public marketing landing page & feature showcase)'));
   console.log();
 
+  console.log('Development launcher only. This does not install a production server or provision a persistent database.');
   printServiceDirectory();
 
   const isWindows = process.platform === 'win32';

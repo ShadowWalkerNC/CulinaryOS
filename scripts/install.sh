@@ -8,9 +8,16 @@ echo -e "\x1b[1;36m============================================================\
 echo -e "\x1b[1;33m     🍳 Installing CulinaryOS (Turnkey Restaurant OS)       \x1b[0m"
 echo -e "\x1b[1;36m============================================================\x1b[0m"
 
+echo "Development/demo setup only. Production self-host installation is not yet available."
+
 # 1. Check Node.js
 if ! command -v node &> /dev/null; then
-    echo -e "\x1b[1;31m❌ Node.js is required (>= 18.0.0). Please install from https://nodejs.org/\x1b[0m"
+    echo -e "\x1b[1;31m❌ Node.js is required (>= 22.0.0). Please install from https://nodejs.org/\x1b[0m"
+    exit 1
+fi
+
+if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'; then
+    echo "Node.js 22 or newer is required. Upgrade Node.js and rerun this installer."
     exit 1
 fi
 
@@ -35,6 +42,6 @@ echo -e "\x1b[1;33m⚡ Pre-building calculation engines...\x1b[0m"
 pnpm --filter @culinaryos/ratio-engine build
 pnpm --filter @culinaryos/ui build
 
-echo -e "\x1b[1;32m✅ Installation complete!\x1b[0m"
+echo -e "\x1b[1;32m✅ Development dependencies installed!\x1b[0m"
 echo -e "\x1b[1;36m🚀 Launching CulinaryOS Workstation...\x1b[0m"
 pnpm start

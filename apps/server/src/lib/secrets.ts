@@ -42,9 +42,9 @@ export function isAuthRelaxed(): boolean {
 export const isDemoMode = isLocalDemoMode;
 export const isDemoAuthAllowed = isLocalDemoMode;
 
-/** Validate the current Supabase runtime before starting listeners or workers.
- * DATABASE_URL alone is not a replacement backend. Update this contract only
- * when the PostgreSQL identity/data adapter is implemented and verified.
+/** Validate the selected backend before starting listeners or workers.
+ * Native PostgreSQL additionally verifies the restricted runtime role before
+ * opening its listener. DATABASE_URL alone does not select that backend.
  * Error messages contain variable names, never credential values.
  */
 export function assertProductionAuthConfiguration(): void {
@@ -54,6 +54,25 @@ export function assertProductionAuthConfiguration(): void {
     problems.push('demo authentication must be disabled');
   }
   if (process.env.VITEST) problems.push('VITEST must be unset');
+  if (process.env.CULINARYOS_NATIVE_PG === 'true') {
+    const value = process.env.DATABASE_URL;
+    if (isPlaceholderSecret(value)) {
+      problems.push('DATABASE_URL is required for native PostgreSQL');
+    } else {
+      try {
+        const url = new URL(value!);
+        if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || url.pathname.length < 2) {
+          problems.push('DATABASE_URL must be a PostgreSQL URL with a host and database');
+        }
+      } catch {
+        problems.push('DATABASE_URL must be a valid PostgreSQL URL');
+      }
+    }
+    if (problems.length) {
+      throw new Error(`Production authentication configuration rejected: ${problems.join('; ')}`);
+    }
+    return;
+  }
   for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'] as const) {
     if (isPlaceholderSecret(process.env[name])) problems.push(`${name} is required`);
   }

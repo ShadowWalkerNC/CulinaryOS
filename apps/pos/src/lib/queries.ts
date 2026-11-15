@@ -3,6 +3,7 @@ import { apiHeaders, getApiBase, enqueueDurableDelta, getPosDeviceId, runCreateO
 import { supabase } from './supabase';
 import { usePOSStore } from './store';
 import { getMockOrders, saveMockOrders } from './mockDb';
+import { adaptNativeMenuItems } from './native-menu';
 
 // Tenant/device scope for the durable offline queue (R4/P4a). Throws when
 // the device ID cannot be read or persisted; callers surface that as a
@@ -11,400 +12,6 @@ function posOfflineScope(tenantId: string) {
   return { tenantId, deviceId: getPosDeviceId() };
 }
 
-const MOCK_MENU = {
-  id: 'demo-menu',
-  name: 'Alley Katz & Half Baked Pilot Menu',
-  sections: [
-    {
-      id: 'section-1',
-      name: 'Starters & Bowls',
-      sort_order: 1,
-      items: [
-        {
-          id: 'item-1',
-          name: 'Maine Clam Chowder',
-          description: 'Traditional creamy New England chowder, tender ocean clams, smoked bacon & oyster crackers',
-          price: 900,
-          status: 'available',
-          station: 'cold',
-          allergens: ['dairy', 'seafood', 'gluten'],
-          sort_order: 1,
-          modifier_groups: []
-        },
-        {
-          id: 'item-2',
-          name: 'Crispy Point Judith Calamari',
-          description: 'Flash-fried cherry peppers, lemon wedge, house roasted garlic & spicy dipping aioli',
-          price: 1450,
-          status: 'available',
-          station: 'fry',
-          allergens: ['gluten', 'seafood'],
-          sort_order: 2,
-          modifier_groups: [
-            {
-              id: 'group-sauce',
-              name: 'Extra Dipping Sauce',
-              required: false,
-              min_selections: 0,
-              max_selections: 2,
-              modifiers: [
-                { id: 'mod-sauce-1', name: 'Spicy Sambal Aioli', price_adjustment: 150, is_default: false },
-                { id: 'mod-sauce-2', name: 'Roasted Garlic Tartar', price_adjustment: 0, is_default: true }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'item-3',
-          name: 'Truffle Parmesan Hand-Cut Fries',
-          description: 'Double-cooked Maine russets, white truffle oil, shaved pecorino & rosemary aioli',
-          price: 850,
-          status: 'available',
-          station: 'fry',
-          allergens: ['dairy'],
-          sort_order: 3,
-          modifier_groups: []
-        }
-      ]
-    },
-    {
-      id: 'section-2',
-      name: 'Mains & Tavern Classics',
-      sort_order: 2,
-      items: [
-        {
-          id: 'item-4',
-          name: 'Alley Katz Classic Lobster Roll',
-          description: 'Chilled Maine claw & knuckle lobster meat, griddled brioche split-top bun, light lemon-mayo dressing or warm butter',
-          price: 2800,
-          status: 'available',
-          station: 'cold',
-          allergens: ['shellfish', 'dairy', 'gluten'],
-          sort_order: 1,
-          modifier_groups: [
-            {
-              id: 'group-lobster-style',
-              name: 'Preparation Style',
-              required: true,
-              min_selections: 1,
-              max_selections: 1,
-              modifiers: [
-                { id: 'mod-lob-1', name: 'Traditional Chilled w/ Herb Mayo', price_adjustment: 0, is_default: true },
-                { id: 'mod-lob-2', name: 'Warm Poached in Brown Butter', price_adjustment: 200, is_default: false }
-              ]
-            },
-            {
-              id: 'group-lob-side',
-              name: 'Choice of Side',
-              required: true,
-              min_selections: 1,
-              max_selections: 1,
-              modifiers: [
-                { id: 'mod-side-1', name: 'Hand-Cut Sea Salt Fries', price_adjustment: 0, is_default: true },
-                { id: 'mod-side-2', name: 'Cape Cod Salt & Vinegar Slaw', price_adjustment: 0, is_default: false },
-                { id: 'mod-side-3', name: 'Sub Clam Chowder Cup', price_adjustment: 450, is_default: false }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'item-5',
-          name: 'Crispy Haddock Fish & Chips',
-          description: 'Local Gulf of Maine haddock in crisp craft ale batter, fresh tartar, lemon, hand-cut fries',
-          price: 1950,
-          status: 'available',
-          station: 'fry',
-          allergens: ['fish', 'gluten'],
-          sort_order: 2,
-          modifier_groups: []
-        },
-        {
-          id: 'item-6',
-          name: 'Prime Smash Cheeseburger',
-          description: 'Two dry-aged 4oz beef patties, double Cabot cheddar, shaved red onion, dill pickle, secret sauce on toasted potato bun',
-          price: 1650,
-          status: 'available',
-          station: 'grill',
-          allergens: ['gluten', 'dairy'],
-          sort_order: 3,
-          modifier_groups: [
-            {
-              id: 'group-burger-temp',
-              name: 'Meat Temperature',
-              required: true,
-              min_selections: 1,
-              max_selections: 1,
-              modifiers: [
-                { id: 'mod-cook-1', name: 'Medium Rare (Juicy)', price_adjustment: 0, is_default: true },
-                { id: 'mod-cook-2', name: 'Medium (Standard)', price_adjustment: 0, is_default: false },
-                { id: 'mod-cook-3', name: 'Well Done (Crisp Edge)', price_adjustment: 0, is_default: false }
-              ]
-            },
-            {
-              id: 'group-burger-adds',
-              name: 'Burger Add-Ons',
-              required: false,
-              min_selections: 0,
-              max_selections: 3,
-              modifiers: [
-                { id: 'mod-b-1', name: 'Applewood Smoked Bacon', price_adjustment: 250, is_default: false },
-                { id: 'mod-b-2', name: 'Fried Farm Egg', price_adjustment: 200, is_default: false },
-                { id: 'mod-b-3', name: 'Gluten-Free Bun', price_adjustment: 150, is_default: false }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'item-7',
-          name: 'Wood-Fired Margherita Pizza',
-          description: 'Crushed San Marzano tomatoes, fresh mozzarella curd, torn organic basil, Sicilian olive oil',
-          price: 1650,
-          status: 'available',
-          station: 'grill',
-          allergens: ['gluten', 'dairy'],
-          sort_order: 4,
-          modifier_groups: [
-            {
-              id: 'group-toppings',
-              name: 'Pizza Toppings',
-              required: false,
-              min_selections: 0,
-              max_selections: 4,
-              modifiers: [
-                { id: 'mod-top-1', name: 'Prosciutto di Parma', price_adjustment: 400, is_default: false },
-                { id: 'mod-top-2', name: 'Roasted Wild Mushrooms', price_adjustment: 250, is_default: false },
-                { id: 'mod-top-3', name: 'Hot Honey Drizzle', price_adjustment: 150, is_default: false }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'section-3',
-      name: 'Half Baked Bakery & Sweets',
-      sort_order: 3,
-      items: [
-        {
-          id: 'item-8',
-          name: 'Warm Wild Maine Blueberry Hand Pie',
-          description: 'Flaky butter crust filled with sweet Rockland wild blueberries, turbinado sugar & vanilla glaze',
-          price: 650,
-          status: 'available',
-          station: 'cold',
-          allergens: ['gluten', 'dairy'],
-          sort_order: 1,
-          modifier_groups: [
-            {
-              id: 'group-pie-cream',
-              name: 'A La Mode',
-              required: false,
-              min_selections: 0,
-              max_selections: 1,
-              modifiers: [
-                { id: 'mod-cream-1', name: 'Local Vanilla Bean Ice Cream', price_adjustment: 250, is_default: false },
-                { id: 'mod-cream-2', name: 'Fresh Whipped Cream', price_adjustment: 100, is_default: false }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'item-9',
-          name: 'Triple Chocolate Salted Brownie',
-          description: 'Valrhona dark chocolate fudge brownie topped with Maldon sea salt crystals',
-          price: 500,
-          status: 'available',
-          station: 'cold',
-          allergens: ['gluten', 'dairy', 'eggs'],
-          sort_order: 2,
-          modifier_groups: []
-        }
-      ]
-    },
-    {
-      id: 'section-4',
-      name: 'Beer, Wine & Non-Alcoholic',
-      sort_order: 4,
-      items: [
-        {
-          id: 'item-10',
-          name: 'Masons Brewing Local IPA (16oz)',
-          description: 'Hazy New England IPA brewed in Brewer, ME — tropical hops, citrus zest, smooth body',
-          price: 800,
-          status: 'available',
-          station: 'bar',
-          allergens: ['gluten'],
-          sort_order: 1,
-          modifier_groups: []
-        },
-        {
-          id: 'item-11',
-          name: 'Maine Root Sodas (Bottled)',
-          description: 'Organic cane sugar craft soda from Portland, ME',
-          price: 400,
-          status: 'available',
-          station: 'bar',
-          allergens: [],
-          sort_order: 2,
-          modifier_groups: [
-            {
-              id: 'group-soda-flavor',
-              name: 'Soda Flavor',
-              required: true,
-              min_selections: 1,
-              max_selections: 1,
-              modifiers: [
-                { id: 'mod-s-1', name: 'Root Beer', price_adjustment: 0, is_default: true },
-                { id: 'mod-s-2', name: 'Blueberry Soda', price_adjustment: 0, is_default: false },
-                { id: 'mod-s-3', name: 'Spicy Ginger Brew', price_adjustment: 0, is_default: false }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-};
-
-export const CHEEZIES_POS_MENU = {
-  id: 'cheezies-gourmet-menu',
-  name: 'Cheezies Gourmet (Ohio Pilot Menu)',
-  sections: [
-    {
-      id: 'section-cheezies-sig',
-      name: 'Signature Creations',
-      sort_order: 1,
-      items: [
-        {
-          id: 'item-cheezies-patty-meltdown',
-          name: 'The Patty Meltdown',
-          description: 'Smash-seared Prime Rib patty, caramelized onions, Swiss & American, sweet & tangy sauce on sourdough.',
-          price: 1300,
-          status: 'available',
-          station: 'grill',
-          allergens: ['dairy', 'gluten'],
-          sort_order: 1,
-          modifier_groups: [
-            {
-              id: 'group-cheezies-patty-mods',
-              name: 'Patty Options',
-              required: false,
-              min_selections: 0,
-              max_selections: 2,
-              modifiers: [
-                { id: 'mod-extra-bacon', name: 'Add Smoked Bacon', price_adjustment: 200, is_default: false },
-                { id: 'mod-extra-cheese', name: 'Extra Swiss & American', price_adjustment: 150, is_default: false },
-              ]
-            }
-          ]
-        },
-        {
-          id: 'item-cheezies-mac-attack',
-          name: 'The Mac Attack',
-          description: 'Bacon Mac & Cheese stuffed between thick Texas Toast.',
-          price: 1200,
-          status: 'available',
-          station: 'grill',
-          allergens: ['dairy', 'gluten'],
-          sort_order: 2,
-          modifier_groups: []
-        },
-        {
-          id: 'item-cheezies-truffle-melt',
-          name: 'The Truffle Melt',
-          description: 'Gruyère, sautéed mushrooms, fresh thyme & truffle oil drizzle on golden sourdough.',
-          price: 1500,
-          status: 'available',
-          station: 'grill',
-          allergens: ['dairy', 'gluten'],
-          sort_order: 3,
-          modifier_groups: []
-        }
-      ]
-    },
-    {
-      id: 'section-cheezies-melts',
-      name: 'Gourmet Melts',
-      sort_order: 2,
-      items: [
-        {
-          id: 'item-cheezies-classic',
-          name: 'The Classic',
-          description: 'Aged cheddar & American on buttery sourdough — the grilled cheese that started it all.',
-          price: 900,
-          status: 'available',
-          station: 'grill',
-          allergens: ['dairy', 'gluten'],
-          sort_order: 1,
-          modifier_groups: []
-        },
-        {
-          id: 'item-cheezies-buffalo-chicken',
-          name: 'The Buffalo Chicken',
-          description: 'Shredded chicken, buffalo sauce, blue cheese crumble & mozzarella on sourdough.',
-          price: 1300,
-          status: 'available',
-          station: 'grill',
-          allergens: ['dairy', 'gluten'],
-          sort_order: 2,
-          modifier_groups: []
-        }
-      ]
-    },
-    {
-      id: 'section-cheezies-sides',
-      name: 'Sides & Refreshments',
-      sort_order: 3,
-      items: [
-        {
-          id: 'item-cheezies-combo',
-          name: 'Chips & Drink Combo',
-          description: 'Add crispy kettle chips and an ice-cold canned beverage to any sandwich.',
-          price: 350,
-          status: 'available',
-          station: 'expo',
-          allergens: [],
-          sort_order: 1,
-          modifier_groups: []
-        },
-        {
-          id: 'item-cheezies-soup',
-          name: 'Tomato Basil Dipping Soup',
-          description: 'Warm, creamy roasted tomato basil soup cup for dunking grilled cheese.',
-          price: 450,
-          status: 'available',
-          station: 'expo',
-          allergens: ['dairy'],
-          sort_order: 2,
-          modifier_groups: []
-        },
-        {
-          id: 'item-cheezies-extra-bacon',
-          name: 'Add Smoked Bacon',
-          description: 'Thick applewood smoked bacon add-on.',
-          price: 200,
-          status: 'available',
-          station: 'grill',
-          allergens: [],
-          sort_order: 3,
-          modifier_groups: []
-        },
-        {
-          id: 'item-cheezies-drinks',
-          name: 'Ice Cold Can Soda / Water',
-          description: 'Choice of Coca-Cola, Diet Coke, Sprite, or chilled Spring Water.',
-          price: 200,
-          status: 'available',
-          station: 'expo',
-          allergens: [],
-          sort_order: 4,
-          modifier_groups: []
-        }
-      ]
-    }
-  ]
-};
-
 // ---- MENU ----
 export function useMenu() {
   const tenantId = usePOSStore((s) => s.tenantId);
@@ -412,11 +19,18 @@ export function useMenu() {
     queryKey: ['menu', tenantId],
     queryFn: async () => {
       if (!supabase) {
-        const activeProfile = typeof window !== 'undefined' ? (localStorage.getItem('culinaryos_active_profile') || 'cheezies') : 'cheezies';
-        if (activeProfile === 'cheezies') {
-          return CHEEZIES_POS_MENU;
+        // Native mode: real menu items with real native IDs. Failures throw
+        // (surfaced by the query error state); no mock menu is substituted.
+        const API = getApiBase();
+        const res = await fetch(`${API}/v1/menu/items`, {
+          headers: apiHeaders(tenantId),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error?.message ?? `Menu load failed (${res.status})`);
         }
-        return MOCK_MENU;
+        const json = await res.json();
+        return adaptNativeMenuItems(json?.data ?? []);
       }
       const { data, error } = await supabase
         .from('menus')
@@ -480,7 +94,13 @@ export function useOrder(id: string | null) {
         });
         if (res.ok) {
           const json = await res.json();
-          return json.data || null;
+          const data = json.data || null;
+          // Native shape nests { order, items }; flatten to the order shape
+          // the views consume. Legacy flat rows pass through unchanged.
+          if (data && typeof data === 'object' && 'order' in data && data.order) {
+            return { ...data.order, items: data.items ?? [] };
+          }
+          return data;
         }
       } catch {
         // Fallback below
@@ -569,6 +189,10 @@ export function useAddLineItem() {
             modifiers: item.selectedModifiers || [],
           }),
         });
+        if (!res.ok && !supabase) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error?.message ?? `Add item failed (${res.status})`);
+        }
         if (res.ok) {
           const json = await res.json();
           if (json.data) return json.data;
@@ -648,41 +272,20 @@ export function useFireOrder() {
       // Always fire through the API so kitchen tickets are created via the event bus
       // (or the shared mock kitchen store when Supabase is offline).
       if (!supabase) {
-        const orders = getMockOrders();
-        const order = orders.find(o => o.id === orderId);
-        if (!order) throw new Error('Order not found');
-
+        // Native mode: the server owns the order. Send it directly with a
+        // client-generated idempotency key; no mock order is consulted or
+        // mutated and no synthetic body is sent.
+        const operationId = globalThis.crypto?.randomUUID?.()
+          ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
         const res = await fetch(`${API}/v1/orders/${orderId}/send`, {
           method: 'PATCH',
           headers: apiHeaders(tenantId),
-          body: JSON.stringify({
-            order: {
-              tableNumber: order.table_number,
-              serverName: order.server_name,
-              createdAt: order.created_at,
-              items: (order.items ?? []).map((li: any) => ({
-                lineItemId: li.id,
-                menuItemId: li.menu_item_id,
-                name: li.name,
-                quantity: li.quantity,
-                station: li.station ?? 'hot',
-                courseNumber: li.course_number ?? 1,
-                modifiers: (li.modifiers ?? []).map((m: any) =>
-                  typeof m === 'string' ? m : m?.name ?? String(m)
-                ),
-                notes: li.notes ?? null,
-              })),
-            },
-          }),
+          body: JSON.stringify({ operationId }),
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body?.error?.message ?? `Fire failed (${res.status})`);
         }
-
-        order.status = 'sent';
-        order.fired_at = new Date().toISOString();
-        saveMockOrders(orders);
         return;
       }
 

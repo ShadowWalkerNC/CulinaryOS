@@ -9,7 +9,7 @@ import { authRoutes } from '../../apps/server/src/routes/auth.ts';
 
 const keys = ['NODE_ENV', 'VITEST', 'AUTH_RELAXED', 'CULINARYOS_DEMO_MODE',
   'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY',
-  'CULINARYOS_ALLOW_LIVE_TEST_SERVICES', 'DATABASE_URL'] as const;
+  'CULINARYOS_ALLOW_LIVE_TEST_SERVICES', 'DATABASE_URL', 'CULINARYOS_NATIVE_PG'] as const;
 const saved: Partial<Record<(typeof keys)[number], string | undefined>> = {};
 
 beforeEach(() => {
@@ -31,6 +31,30 @@ function validProductionFixture() {
 }
 
 describe('production authentication fails closed', () => {
+  it('accepts explicit native PostgreSQL configuration without Supabase credentials', () => {
+    process.env.CULINARYOS_NATIVE_PG = 'true';
+    process.env.DATABASE_URL = 'postgresql://runtime:fictional@db.invalid/culinaryos';
+    assert.doesNotThrow(assertProductionAuthConfiguration);
+    assert.equal(isDemoAuthAllowed(), false);
+  });
+  for (const url of ['', 'placeholder', 'https://runtime:private-value@db.invalid/culinaryos', 'postgresql://db.invalid/']) {
+    it(`rejects invalid native database configuration ${url ? 'form' : 'missing'}`, () => {
+      process.env.CULINARYOS_NATIVE_PG = 'true';
+      process.env.DATABASE_URL = url;
+      let message = '';
+      try { assertProductionAuthConfiguration(); } catch (error) { message = (error as Error).message; }
+      assert.match(message, /DATABASE_URL/);
+      assert.equal(message.includes('private-value'), false);
+    });
+  }
+  for (const flag of ['AUTH_RELAXED', 'CULINARYOS_DEMO_MODE', 'VITEST'] as const) {
+    it(`rejects ${flag} with native PostgreSQL too`, () => {
+      process.env.CULINARYOS_NATIVE_PG = 'true';
+      process.env.DATABASE_URL = 'postgresql://runtime@db.invalid/culinaryos';
+      process.env[flag] = 'true';
+      assert.throws(assertProductionAuthConfiguration, /Production authentication configuration rejected/);
+    });
+  }
   it('rejects missing backend configuration', () => {
     assert.throws(assertProductionAuthConfiguration, /Production authentication configuration rejected/);
     assert.equal(isDemoAuthAllowed(), false);

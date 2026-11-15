@@ -4,7 +4,7 @@ import { isNativePostgresEnabled } from './config.js';
 import type { AuthRunner, NativeExecutor, NativeVerifiedIdentity, TenantRunner } from './executor.js';
 import { managerGateNative, resolveNativeIdentity, satisfiesCapability, verifyPinAndMintSession, type PoolLike } from './identity.js';
 import { addLineItem, createOrder, getOrder, listActiveMenuItems, listLineItems, voidLineItem } from './orders.js';
-import { ackPendingPush, fireCourse, listPendingPush, sendOrderToKitchen } from './kitchen.js';
+import { ackPendingPush, applyTicketAction, fireCourse, listKitchenTickets, listPendingPush, sendOrderToKitchen } from './kitchen.js';
 import { recordCashCompPayment, recordRefund } from './payments.js';
 import { closeDrawer, getDrawer, openDrawer, recordDrawerMovement } from './drawers.js';
 import { allocateCheck } from './splits.js';
@@ -48,9 +48,8 @@ async function readBody<T>(c: { req: { json(): Promise<unknown> } }): Promise<T>
 
 /**
  * Feature-gated native factory. Throws unless CULINARYOS_NATIVE_PG=true
- * (or options.enabled). Mounting into the live server entrypoint is a
- * separate Codex-reviewed step; this factory is integration-ready but
- * intentionally not wired to production traffic here.
+ * (or options.enabled). startup.ts verifies the runtime role and prepares
+ * this router; index.ts dispatches native traffic without legacy fallback.
  *
  * Identity is verified twice: once in middleware (fail-fast 401 plus
  * tenant-header forgery 403) and again inside every tenant transaction by
@@ -65,6 +64,10 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
   const runTenant = options.runTenant;
   const runAuth = options.runAuth;
   const app = new Hono<NativeEnv>();
+  app.notFound((c) => c.json({
+    ok: false,
+    error: { code: 'NATIVE_FEATURE_UNAVAILABLE', message: 'This endpoint is not available with the PostgreSQL backend' },
+  }, 503));
 
   app.use('*', async (c, next) => {
     c.set('requestId', crypto.randomUUID());
@@ -456,6 +459,22 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
     }
   });
 
+  registerRoute('get', '/kds/tickets', async (c) => {
+    try {
+      const auth = c.get('nativeAuth');
+      const denied = capabilityDenied(c, auth, 'kds:read');
+      if (denied) return denied;
+      const station = c.req.query('station');
+      const status = c.req.query('status');
+      const tickets = await withTenant(c.get('tokenHash'), (tx, identity) =>
+        listKitchenTickets(tx, identity.tenantId, station, status));
+      c.header('Cache-Control', 'private, no-cache');
+      return c.json({ ok: true, data: tickets });
+    } catch (error) {
+      return sendError(c, error);
+    }
+  });
+
   registerRoute('get', '/kds/pending-push', async (c) => {
     try {
       const auth = c.get('nativeAuth');
@@ -485,6 +504,21 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
       const body = await readBody<{ ids?: string[] }>(c);
       const count = await withTenant(hash, (tx, identity) => ackPendingPush(tx, identity.tenantId, body.ids ?? []));
       return c.json({ ok: true, data: { acknowledged: count } });
+    } catch (error) {
+      return sendError(c, error);
+    }
+  });
+
+  registerRoute('patch', '/kds/tickets/:id/:action', async (c) => {
+    try {
+      const auth = c.get('nativeAuth');
+      const denied = capabilityDenied(c, auth, 'tickets:write');
+      if (denied) return denied;
+      const hash = c.get('tokenHash');
+      const body = await readBody<{ operationId?: string }>(c);
+      const data = await withTenant(hash, (tx, identity) =>
+        applyTicketAction(tx, identity.tenantId, c.req.param('id'), c.req.param('action'), body.operationId));
+      return c.json({ ok: true, data: data });
     } catch (error) {
       return sendError(c, error);
     }
@@ -532,7 +566,7 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
     try {
       const auth = c.get('nativeAuth');
       const hash = c.get('tokenHash');
-      const body = await readBody<{ drawerName?: string; kind: 'paid_in' | 'paid_out' | 'cash_sale'; amountCents: number }>(c);
+      const body = await readBody<{ drawerName?: string; kind: 'paid_in' | 'paid_out' | 'cash_sale'; amountCents: number; operationId?: string }>(c);
       const data = await withTenant(hash, (tx, identity) => recordDrawerMovement(tx, auth, identity.tenantId, body));
       return c.json({ ok: true, data: data });
     } catch (error) {
@@ -578,11 +612,5 @@ export function createNativePostgresApp(options: NativeAppOptions): Hono<NativeE
   return app;
 }
 
-/**
- * Implementable integration entrypoint (NOT wired here pending Codex review):
- * in `apps/server/src/index.ts`, after existing routes,
- * `if (isNativePostgresEnabled()) app.route('/', createNativePostgresApp({ pool, runTenant, runAuth })))`
- * with `runTenant = createTenantRunner(pool)` and `runAuth = createAuthRunner(pool)`
- * from `./transactions.ts`. Pool construction stays in Codex-owned integration scope.
- */
-export const NATIVE_INTEGRATION_NOTE = 'Codex-reviewed mount only; do not auto-mount in this slice.';
+/** Kept as an exported integration note for existing tooling. */
+export const NATIVE_INTEGRATION_NOTE = 'Explicit native startup with restricted role verification; entrypoint dispatches without legacy fallback.';

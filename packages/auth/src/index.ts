@@ -67,7 +67,7 @@ export async function pinLogin(opts: {
     const res = await fetch(`${base.replace(/\/$/, '')}/v1/auth/pin-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: opts.pin, tenant_id: opts.tenantId }),
+      body: JSON.stringify({ pin: opts.pin, tenantId: opts.tenantId, tenant_id: opts.tenantId }),
     });
     const body = (await res.json()) as {
       ok?: boolean;
@@ -75,8 +75,9 @@ export async function pinLogin(opts: {
         userId: string;
         tenantId: string;
         role: string;
-        displayName: string;
-        accessToken: string;
+        displayName?: string;
+        accessToken?: string;
+        token?: string;
         mode?: 'supabase' | 'demo';
       };
       error?: { message?: string };
@@ -84,12 +85,17 @@ export async function pinLogin(opts: {
     if (!res.ok || !body.ok || !body.data) {
       return { ok: false, error: body.error?.message ?? 'Invalid PIN' };
     }
+    // Native API returns { token }; legacy returns { accessToken, token }. Accept both.
+    const accessToken = body.data.accessToken ?? body.data.token;
+    if (!accessToken) {
+      return { ok: false, error: 'Login response missing credential' };
+    }
     const session: Session = {
       userId: body.data.userId,
       tenantId: body.data.tenantId,
       role: (body.data.role as AuthRole) || 'server',
-      displayName: body.data.displayName,
-      accessToken: body.data.accessToken,
+      ...(body.data.displayName ? { displayName: body.data.displayName } : {}),
+      accessToken,
       ...(body.data.mode ? { mode: body.data.mode } : {}),
     };
     setSession(session);
