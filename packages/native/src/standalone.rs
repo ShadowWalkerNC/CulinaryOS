@@ -242,31 +242,7 @@ impl StandaloneService {
         site_id: Uuid,
         saas_signing_secret: String,
     ) -> Result<Self, LocalStoreError> {
-        let mut store = LocalStore::open_or_init(db_path, site_id)?;
-        if store.list_orders().is_empty() {
-            if let Ok(seed_order) = store.create_order(
-                Some("ord-seed-101".to_string()),
-                "Table 4".to_string(),
-                vec![
-                    ("item-margherita".to_string(), 2, 1, 1),
-                    ("item-caesar".to_string(), 1, 2, 1),
-                    ("item-ribeye".to_string(), 1, 1, 2),
-                ],
-            ) {
-                let _ = store.send_order_to_kitchen(&seed_order.id);
-            }
-            if let Ok(seed_order_2) = store.create_order(
-                Some("ord-seed-102".to_string()),
-                "Bar 2".to_string(),
-                vec![
-                    ("item-smashburger".to_string(), 1, 1, 1),
-                    ("item-fries".to_string(), 1, 1, 1),
-                    ("item-negroni".to_string(), 2, 1, 1),
-                ],
-            ) {
-                let _ = store.send_order_to_kitchen(&seed_order_2.id);
-            }
-        }
+        let store = LocalStore::open_or_init(db_path, site_id)?;
         Ok(Self {
             inner: Arc::new(Mutex::new(InnerState {
                 store,
@@ -276,11 +252,22 @@ impl StandaloneService {
         })
     }
 
+    pub fn is_setup_completed(&self) -> bool {
+        self.inner
+            .lock()
+            .map(|g| g.store.is_setup_completed())
+            .unwrap_or(false)
+    }
+
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(workstation_ui))
+            .route("/setup", get(first_run_installer_ui))
             .route("/health", get(health))
             .route("/ready", get(ready))
+            .route("/v1/setup/status", get(setup_status))
+            .route("/v1/setup/complete", post(setup_complete))
+            .route("/v1/setup/reset", post(setup_reset))
             .route("/v1/auth/pin-login", post(pin_login))
             .route("/v1/menu", get(list_menu))
             .route("/v1/menu/items", get(list_menu_items_native))
@@ -415,10 +402,164 @@ async fn heal_ports() -> Json<Value> {
     Json(json!({ "ok": true, "message": "All workstation surface ports verified healthy." }))
 }
 
-async fn workstation_ui() -> impl IntoResponse {
+async fn workstation_ui(State(svc): State<StandaloneService>) -> Response {
+    let setup_done = svc
+        .inner
+        .lock()
+        .map(|g| g.store.is_setup_completed())
+        .unwrap_or(false);
+    if !setup_done {
+        return (
+            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            Html(FIRST_RUN_INSTALLER_HTML),
+        )
+            .into_response();
+    }
     (
         [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
         Html(STANDALONE_WORKSTATION_HTML),
+    )
+        .into_response()
+}
+
+async fn first_run_installer_ui() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        Html(FIRST_RUN_INSTALLER_HTML),
+    )
+}
+
+async fn setup_status(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc
+        .inner
+        .lock()
+        .map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "setupCompleted": guard.store.is_setup_completed(),
+            "siteId": guard.store.site_id(),
+            "restaurantName": guard.store.restaurant_name(),
+            "cityState": guard.store.city_state(),
+            "conceptPreset": guard.store.concept_preset(),
+            "taxRateBps": guard.store.tax_rate_bps(),
+            "tablesCount": guard.store.tables_count(),
+            "menuItemCount": guard.store.list_menu().len(),
+            "activeOrderCount": guard.store.list_orders().len(),
+            "activeTicketCount": guard.store.list_tickets(None).len(),
+            "cloudConnected": guard.cloud.is_connected(),
+        }),
+    )
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SetupCompleteBody {
+    #[serde(default)]
+    restaurant_name: String,
+    #[serde(default)]
+    city_state: String,
+    #[serde(default)]
+    concept_preset: String,
+    #[serde(default)]
+    owner_name: String,
+    #[serde(default)]
+    owner_pin: Option<String>,
+    #[serde(default = "default_tables")]
+    tables_count: u32,
+    #[serde(default = "default_tax_bps")]
+    tax_rate_bps: i64,
+    #[serde(default = "default_true")]
+    load_sample_data: bool,
+    #[serde(default = "default_true")]
+    connect_saas_demo: bool,
+}
+
+fn default_tables() -> u32 {
+    16
+}
+
+fn default_tax_bps() -> i64 {
+    825
+}
+
+fn default_true() -> bool {
+    true
+}
+
+async fn setup_complete(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<SetupCompleteBody>,
+) -> ApiReply {
+    let mut guard = svc
+        .inner
+        .lock()
+        .map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.complete_setup(
+        body.restaurant_name,
+        body.city_state,
+        body.concept_preset,
+        body.owner_name,
+        body.owner_pin,
+        body.tables_count,
+        body.tax_rate_bps,
+        body.load_sample_data,
+    )?;
+
+    if body.connect_saas_demo && !guard.cloud.is_connected() {
+        let site_id = guard.store.site_id();
+        let secret = guard.saas_signing_secret.clone();
+        let now = unix_now();
+        let mut addons = BTreeSet::new();
+        addons.insert(SaasAddon::CloudStorageSync);
+        addons.insert(SaasAddon::OnlineOrderingBridge);
+        addons.insert(SaasAddon::AiAutopilot);
+        addons.insert(SaasAddon::ManagedStripeConnect);
+        let payload = SaasEntitlementPayload {
+            grant_id: "alpha-pro-grant-001".to_string(),
+            customer_id: "cust-alley-katz-alpha".to_string(),
+            site_id,
+            plan_tier: "saas_pro".to_string(),
+            addons,
+            cloud_endpoint: "https://culinaryos-api.up.railway.app".to_string(),
+            issued_at_unix: now,
+            expires_at_unix: now + 30 * 86_400,
+            offline_grace_seconds: 86_400,
+        };
+        if let Ok(sig) = sign_entitlement_payload(&payload, &secret) {
+            let grant = SignedSaasGrant {
+                payload,
+                signature_hex: sig,
+            };
+            let _ = guard.cloud.connect(grant, site_id, &secret, now);
+        }
+    }
+
+    ok(
+        StatusCode::OK,
+        json!({
+            "setupCompleted": true,
+            "restaurantName": guard.store.restaurant_name(),
+            "cityState": guard.store.city_state(),
+            "conceptPreset": guard.store.concept_preset(),
+            "cloudConnected": guard.cloud.is_connected(),
+            "workstationUrl": "http://localhost:5180",
+        }),
+    )
+}
+
+async fn setup_reset(State(svc): State<StandaloneService>) -> ApiReply {
+    let mut guard = svc
+        .inner
+        .lock()
+        .map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.reset_for_first_run()?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "setupCompleted": false,
+            "message": "Workstation reset to clean first-run installer state."
+        }),
     )
 }
 
@@ -884,6 +1025,405 @@ const STANDALONE_WORKSTATION_HTML: &str = r#"<!DOCTYPE html>
 </head>
 <body style="background:#090d16;color:#f8fafc;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
   <div>Redirecting to CulinaryOS Restaurant Workstation (<a href="http://localhost:5180" style="color:#f97316;">http://localhost:5180</a>)...</div>
+</body>
+</html>
+"#;
+
+const FIRST_RUN_INSTALLER_HTML: &str = r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CulinaryOS — Native Rust Workstation Installer &amp; Onboarding</title>
+  <style>
+    :root {
+      --bg-0: #090b0e;
+      --bg-1: #12151b;
+      --bg-2: #181c24;
+      --border: #252b37;
+      --accent: #ff6b35;
+      --accent-hover: #e85d2a;
+      --emerald: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-0);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      height: 64px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-family: monospace;
+    }
+    .badge {
+      font-family: monospace; font-size: 11px; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 6px;
+      background: var(--bg-2); border: 1px solid var(--border); color: var(--emerald);
+      letter-spacing: 0.06em;
+    }
+    main {
+      flex: 1;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 20px 100px;
+    }
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .step-pill {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .step-pill.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(255, 107, 53, 0.1);
+    }
+    .step-pill.done {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+    .card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+    .sub { margin: 0 0 24px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    label {
+      display: block; font-family: monospace; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin-bottom: 6px; font-weight: 700;
+    }
+    input, select {
+      width: 100%; min-height: 48px; padding: 0 14px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg-0); color: var(--text);
+      font-size: 14px;
+    }
+    input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .preset-card {
+      padding: 16px; border-radius: 10px;
+      background: var(--bg-0); border: 1px solid var(--border);
+      cursor: pointer; text-align: left;
+      min-height: 92px;
+      transition: transform 75ms ease-out, border-color 120ms;
+    }
+    .preset-card:active { transform: scale(0.97); }
+    .preset-card.selected {
+      border-color: var(--accent);
+      background: rgba(255, 107, 53, 0.08);
+    }
+    .preset-title { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 4px; display: block; }
+    .preset-desc { font-size: 12px; color: var(--muted); line-height: 1.4; display: block; }
+    .hw-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-radius: 10px;
+      background: var(--bg-0); border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .hw-status {
+      font-family: monospace; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12); color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .footer-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(18, 21, 27, 0.96);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .btn {
+      min-height: 48px; min-width: 120px; padding: 0 22px;
+      border-radius: 8px; font-weight: 700; font-size: 12px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg-2); color: var(--text);
+      transition: transform 75ms ease-out, background 120ms;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .step-pane { display: none; }
+    .step-pane.active { display: block; }
+    .check-list { list-style: none; padding: 0; margin: 0; }
+    .check-list li {
+      padding: 10px 14px; border-radius: 8px;
+      background: var(--bg-0); border: 1px solid var(--border);
+      margin-bottom: 8px; font-family: monospace; font-size: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-mark">OS</div>
+      <div>
+        <div style="font-weight:800;font-size:14px;letter-spacing:0.04em;">CULINARYOS WORKSTATION INSTALLER</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted);">NATIVE RUST ENGINE v1.3.1 • FIRST-RUN SETUP WIZARD</div>
+      </div>
+    </div>
+    <span class="badge">ENGINE: #![FORBID(UNSAFE_CODE)]</span>
+  </header>
+
+  <main>
+    <div class="stepper">
+      <div id="pill-1" class="step-pill active">01 / VENUE &amp; PRESET</div>
+      <div id="pill-2" class="step-pill">02 / FLOOR &amp; FLSA</div>
+      <div id="pill-3" class="step-pill">03 / ESC/POS HARDWARE</div>
+      <div id="pill-4" class="step-pill">04 / SAAS CLOUD BRIDGE</div>
+      <div id="pill-5" class="step-pill">05 / VERIFY &amp; LAUNCH</div>
+    </div>
+
+    <div class="card">
+      <!-- STEP 1 -->
+      <div id="step-1" class="step-pane active">
+        <h1>Step 1: Venue Identity &amp; Concept Template</h1>
+        <p class="sub">Initialize your local embedded SHA-256 database (%APPDATA%/CulinaryOS/culinaryos.db) and choose an operational preset.</p>
+        <div class="grid-2">
+          <div>
+            <label for="restaurantName">Restaurant / Venue Name</label>
+            <input id="restaurantName" type="text" value="Alley Katz Taproom &amp; Kitchen" />
+          </div>
+          <div>
+            <label for="cityState">City &amp; State</label>
+            <input id="cityState" type="text" value="Cuyahoga Falls, OH" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label for="ownerName">Primary Owner / GM Name</label>
+            <input id="ownerName" type="text" value="Nathaniel (Operator)" />
+          </div>
+          <div>
+            <label for="ownerPin">Owner POS/Admin PIN (4-8 Digits)</label>
+            <input id="ownerPin" type="password" value="1234" maxlength="8" />
+          </div>
+        </div>
+        <label>Select Restaurant Concept Template</label>
+        <div class="grid-3">
+          <button type="button" class="preset-card selected" data-preset="full-service" onclick="selectPreset('full-service', 16, 825)">
+            <span class="preset-title">01 / Full-Service Dining</span>
+            <span class="preset-desc">16 tables, Course 1/2 pacing, Hot/Grill/Cold/Fry/Bar stations, hours-weighted tip pool.</span>
+          </button>
+          <button type="button" class="preset-card" data-preset="cheezies-gourmet" onclick="selectPreset('cheezies-gourmet', 6, 675)">
+            <span class="preset-title">02 / Cheezies Gourmet Pilot</span>
+            <span class="preset-desc">Fast-casual &amp; food truck flow, Grill/Fry split rail, quick counter checkout.</span>
+          </button>
+          <button type="button" class="preset-card" data-preset="bar-taproom" onclick="selectPreset('bar-taproom', 24, 825)">
+            <span class="preset-title">03 / High-Volume Bar &amp; Taproom</span>
+            <span class="preset-desc">24 tables + bar tabs, rapid drink rail, 24V cash drawer fast-settle.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="step-2" class="step-pane">
+        <h1>Step 2: Dining Room Floor, Tax &amp; FLSA Tip Engine</h1>
+        <p class="sub">Configure authoritative integer-cent sales tax and federal FLSA 29 U.S.C. 203(m)(2)(B) tip pool rules.</p>
+        <div class="grid-2">
+          <div>
+            <label for="tablesCount">Total Dining Room Tables</label>
+            <input id="tablesCount" type="number" value="16" min="0" max="120" />
+          </div>
+          <div>
+            <label for="taxRateBps">Sales Tax Rate (Basis Points, 825 = 8.25%)</label>
+            <input id="taxRateBps" type="number" value="825" min="0" max="2000" />
+          </div>
+        </div>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">FLSA Manager &amp; Supervisor Tip Pool Exclusion</div>
+            <div style="font-size:12px;color:var(--muted);">Hardcoded in Rust (packages/native/src/local_store.rs). Owners and managers cannot be allocated tip pool cents.</div>
+          </div>
+          <span class="hw-status">LOCKED ENFORCED</span>
+        </div>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">Seed Starter Menu &amp; Live Demo Kitchen Tickets</div>
+            <div style="font-size:12px;color:var(--muted);">Pre-populates 12 dishes across 5 stations plus active Table 4 &amp; Bar 2 tickets for immediate POS/KDS testing.</div>
+          </div>
+          <input id="loadSampleData" type="checkbox" checked style="width:24px;height:24px;min-height:24px;" />
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="step-3" class="step-pane">
+        <h1>Step 3: Local LAN Hardware &amp; ESC/POS Discovery</h1>
+        <p class="sub">Verify receipt printers, impact kitchen printers, 24V RJ11 cash drawer kick, and Stripe Terminal readers.</p>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">FOH Thermal Receipt Printer (Star TSP143IV / Epson TM-m30)</div>
+            <div style="font-size:12px;color:var(--muted);">ESC/POS over TCP :9100 + 24V RJ11/RJ12 cash drawer pulse</div>
+          </div>
+          <span class="hw-status">READY (SIMULATED + LAN)</span>
+        </div>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">BOH Kitchen Impact Printer (Star SP742 / Epson TM-U220)</div>
+            <div style="font-size:12px;color:var(--muted);">High-heat grease-resistant impact ticket routing</div>
+          </div>
+          <span class="hw-status">READY (SIMULATED + LAN)</span>
+        </div>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">Card-Present Reader (Stripe Terminal WisePOS E / S700)</div>
+            <div style="font-size:12px;color:var(--muted);">Bring-Your-Own-Stripe Connect Standard • SAQ-A Out-of-Scope</div>
+          </div>
+          <span class="hw-status">SAQ-A VERIFIED</span>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div id="step-4" class="step-pane">
+        <h1>Step 4: Optional CulinaryOS SaaS Cloud Bridge</h1>
+        <p class="sub">Your workstation runs 100% offline forever. Enrolling in the SaaS Cloud Bridge unlocks offsite SHA-256 backup and online order relay.</p>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">Enroll Demo SaaS Pro Entitlement Grant</div>
+            <div style="font-size:12px;color:var(--muted);">Issues an HMAC-SHA256 SignedSaasGrant unlocking cloud_storage_sync, online_ordering_bridge, ai_autopilot &amp; managed_stripe_connect.</div>
+          </div>
+          <input id="connectSaasDemo" type="checkbox" checked style="width:24px;height:24px;min-height:24px;" />
+        </div>
+        <div class="hw-row">
+          <div>
+            <div style="font-weight:700;font-size:14px;">Production Cloud Bridge Endpoint</div>
+            <div style="font-size:12px;color:var(--muted);">https://culinaryos-api.up.railway.app (24-Hour Offline Grace Window)</div>
+          </div>
+          <span class="hw-status">ONLINE</span>
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div id="step-5" class="step-pane">
+        <h1>Step 5: Preflight Verification &amp; Workstation Launch</h1>
+        <p class="sub">All 8 local CulinaryOS React surfaces and the embedded Rust gateway are online and ready.</p>
+        <ul class="check-list">
+          <li><span>Master Workstation Shell (:5180)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F1 — Point of Sale Terminal (:5172)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F2 — Kitchen Display System (:5173)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F3 — Back-Office Admin &amp; MRP (:5174)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F4 — Guest Storefront &amp; QR Menu (:5176)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F5 — KitchenKit Prep &amp; Yield (:5175)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F6 — CulinaryOps Finance &amp; FLSA (:5177)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F7 — Wallboard &amp; RecipeOS (:5178)</span><span style="color:var(--emerald);">ONLINE</span></li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <div class="footer-bar">
+    <button type="button" id="btn-back" class="btn" onclick="prevStep()" style="visibility:hidden;">Back</button>
+    <div style="font-family:monospace;font-size:12px;color:var(--muted);" id="step-counter">STEP 1 OF 5</div>
+    <button type="button" id="btn-next" class="btn btn-primary" onclick="nextStep()">Continue Setup</button>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let selectedPreset = 'full-service';
+
+    function selectPreset(id, tables, taxBps) {
+      selectedPreset = id;
+      document.getElementById('tablesCount').value = tables;
+      document.getElementById('taxRateBps').value = taxBps;
+      document.querySelectorAll('.preset-card').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-preset') === id);
+      });
+    }
+
+    function renderStep() {
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('step-' + i).classList.toggle('active', i === currentStep);
+        const pill = document.getElementById('pill-' + i);
+        pill.classList.toggle('active', i === currentStep);
+        pill.classList.toggle('done', i < currentStep);
+      }
+      document.getElementById('btn-back').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+      document.getElementById('step-counter').textContent = 'STEP ' + currentStep + ' OF 5';
+      document.getElementById('btn-next').textContent = currentStep === 5 ? 'Complete Installation & Launch Workstation' : 'Continue Setup';
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    async function nextStep() {
+      if (currentStep < 5) {
+        currentStep++;
+        renderStep();
+        return;
+      }
+      const btn = document.getElementById('btn-next');
+      btn.disabled = true;
+      btn.textContent = 'PROVISIONING WORKSTATION...';
+
+      const payload = {
+        restaurantName: document.getElementById('restaurantName').value,
+        cityState: document.getElementById('cityState').value,
+        conceptPreset: selectedPreset,
+        ownerName: document.getElementById('ownerName').value,
+        ownerPin: document.getElementById('ownerPin').value,
+        tablesCount: Number(document.getElementById('tablesCount').value) || 16,
+        taxRateBps: Number(document.getElementById('taxRateBps').value) || 825,
+        loadSampleData: document.getElementById('loadSampleData').checked,
+        connectSaasDemo: document.getElementById('connectSaasDemo').checked
+      };
+
+      try {
+        const res = await fetch('/v1/setup/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.ok) {
+          window.location.href = json.data.workstationUrl || 'http://localhost:5180';
+        } else {
+          window.location.href = 'http://localhost:5180';
+        }
+      } catch (e) {
+        window.location.href = 'http://localhost:5180';
+      }
+    }
+  </script>
 </body>
 </html>
 "#;

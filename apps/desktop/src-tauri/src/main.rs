@@ -192,6 +192,10 @@ async fn main() {
 
     let data_dir = default_data_dir();
     let db_path = data_dir.join("culinaryos.db");
+    if args.iter().any(|a| a == "--fresh-install" || a == "--reset") && db_path.exists() {
+        let _ = std::fs::remove_file(&db_path);
+        println!("[CulinaryOS Desktop] Reset local database for fresh first-time installation.");
+    }
     let site_id = default_site_id();
     let saas_secret = env::var("CULINARYOS_SAAS_SIGNING_SECRET")
         .unwrap_or_else(|_| "6a2693f12117beb3a558bb30ed74efbcbee68a9ee927a4a28045026b892515f0".to_string());
@@ -235,7 +239,11 @@ async fn main() {
                 .await;
         });
 
-        workstation_url = "http://localhost:5180".to_string();
+        workstation_url = if service.is_setup_completed() {
+            "http://localhost:5180".to_string()
+        } else {
+            format!("http://{bind_addr}/setup")
+        };
     }
 
     println!("[CulinaryOS Desktop] Native Rust API Gateway listening at http://{bind_addr}");

@@ -180,8 +180,36 @@ pub struct TipPoolReport {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkstationSetupProfile {
+    pub restaurant_name: String,
+    pub city_state: String,
+    pub concept_preset: String,
+    pub owner_name: String,
+    pub owner_email: String,
+    pub tables_count: u32,
+    pub tax_rate_bps: i64,
+    pub tip_method: TipDistributionMethod,
+    pub receipt_printer_host: String,
+    pub kitchen_printer_host: String,
+    pub load_sample_orders: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PersistedState {
     site_id: Uuid,
+    #[serde(default)]
+    setup_completed: bool,
+    #[serde(default)]
+    restaurant_name: String,
+    #[serde(default)]
+    city_state: String,
+    #[serde(default)]
+    concept_preset: String,
+    #[serde(default)]
+    tax_rate_bps: i64,
+    #[serde(default)]
+    tables_count: u32,
     staff: Vec<StaffMember>,
     menu: BTreeMap<String, MenuItem>,
     orders: BTreeMap<String, OrderRecord>,
@@ -259,6 +287,12 @@ impl LocalStore {
 
         let state = PersistedState {
             site_id: default_site_id,
+            setup_completed: false,
+            restaurant_name: "Unconfigured Venue".to_string(),
+            city_state: "".to_string(),
+            concept_preset: "full-service".to_string(),
+            tax_rate_bps: 825,
+            tables_count: 16,
             staff: vec![
                 StaffMember {
                     id: owner_id,
@@ -636,6 +670,114 @@ impl LocalStore {
 
     pub fn pending_outbox_len(&self) -> usize {
         self.state.sync_outbox.len()
+    }
+
+    pub fn is_setup_completed(&self) -> bool {
+        self.state.setup_completed
+    }
+
+    pub fn restaurant_name(&self) -> &str {
+        if self.state.restaurant_name.is_empty() {
+            "Unconfigured Venue"
+        } else {
+            &self.state.restaurant_name
+        }
+    }
+
+    pub fn city_state(&self) -> &str {
+        &self.state.city_state
+    }
+
+    pub fn concept_preset(&self) -> &str {
+        if self.state.concept_preset.is_empty() {
+            "full-service"
+        } else {
+            &self.state.concept_preset
+        }
+    }
+
+    pub fn tax_rate_bps(&self) -> i64 {
+        if self.state.tax_rate_bps <= 0 {
+            825
+        } else {
+            self.state.tax_rate_bps
+        }
+    }
+
+    pub fn tables_count(&self) -> u32 {
+        self.state.tables_count
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn complete_setup(
+        &mut self,
+        restaurant_name: String,
+        city_state: String,
+        concept_preset: String,
+        owner_name: String,
+        owner_pin: Option<String>,
+        tables_count: u32,
+        tax_rate_bps: i64,
+        load_sample_data: bool,
+    ) -> Result<(), LocalStoreError> {
+        self.state.setup_completed = true;
+        self.state.restaurant_name = if restaurant_name.trim().is_empty() {
+            "Alley Katz Taproom & Kitchen".to_string()
+        } else {
+            restaurant_name.trim().to_string()
+        };
+        self.state.city_state = city_state.trim().to_string();
+        self.state.concept_preset = concept_preset.trim().to_string();
+        self.state.tables_count = tables_count;
+        self.state.tax_rate_bps = tax_rate_bps.clamp(0, 2500);
+
+        if let Some(staff_owner) = self.state.staff.first_mut() {
+            if !owner_name.trim().is_empty() {
+                staff_owner.display_name = owner_name.trim().to_string();
+            }
+            if let Some(pin) = owner_pin {
+                if (4..=8).contains(&pin.len()) && pin.bytes().all(|b| b.is_ascii_digit()) {
+                    staff_owner.pin_digest = pin_digest(self.state.site_id, &pin);
+                }
+            }
+        }
+
+        if load_sample_data && self.state.orders.is_empty() {
+            let _ = self.create_order(
+                Some("ord-seed-101".to_string()),
+                "Table 4".to_string(),
+                vec![
+                    ("item-margherita".to_string(), 2, 1, 1),
+                    ("item-caesar".to_string(), 1, 2, 1),
+                    ("item-ribeye".to_string(), 1, 1, 2),
+                ],
+            );
+            let _ = self.send_order_to_kitchen("ord-seed-101");
+
+            let _ = self.create_order(
+                Some("ord-seed-102".to_string()),
+                "Bar 2".to_string(),
+                vec![
+                    ("item-smashburger".to_string(), 1, 1, 1),
+                    ("item-fries".to_string(), 1, 1, 1),
+                    ("item-negroni".to_string(), 2, 1, 1),
+                ],
+            );
+            let _ = self.send_order_to_kitchen("ord-seed-102");
+        }
+
+        self.save()
+    }
+
+    pub fn reset_for_first_run(&mut self) -> Result<(), LocalStoreError> {
+        let site_id = self.state.site_id;
+        let path = self.path.clone();
+        if path.exists() {
+            let _ = fs::remove_file(&path);
+        }
+        let fresh = Self::open_or_init(&path, site_id)?;
+        self.state = fresh.state;
+        Ok(())
     }
 }
 
