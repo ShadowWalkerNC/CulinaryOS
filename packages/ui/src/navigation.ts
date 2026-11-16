@@ -132,6 +132,10 @@ export function resolveCulinaryAppHref(
   const app = getCulinaryAppModule(id);
   const currentLocation = location ?? (typeof window !== 'undefined' ? window.location : undefined);
 
+  if (currentLocation && (currentLocation.port === '3000' || currentLocation.port === '')) {
+    return `/${app.id}/`;
+  }
+
   if (currentLocation && (isLoopbackHost(currentLocation.hostname) ||
     CULINARY_APP_MODULES.some((surface) => String(surface.port) === currentLocation.port))) {
     const hostname = currentLocation.hostname.includes(':') && !currentLocation.hostname.startsWith('[')

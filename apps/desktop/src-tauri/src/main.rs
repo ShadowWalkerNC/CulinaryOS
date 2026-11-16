@@ -2,13 +2,15 @@
 
 use culinaryos_native::{
     local_store::{calculate_tip_pool, LocalStore, StaffRole, TipDistributionMethod, TipParticipantInput},
-    standalone::{diagnostics_router, spa_router, StandaloneService},
+    standalone::{diagnostics_router, mime_for_path, spa_router, StandaloneService},
 };
+use axum::response::{IntoResponse, Response};
 use std::{
     env,
     net::SocketAddr,
     path::{Path, PathBuf},
     process::Command,
+    sync::Arc,
 };
 use uuid::Uuid;
 
@@ -32,6 +34,38 @@ fn default_site_id() -> Uuid {
         .ok()
         .and_then(|v| v.parse::<Uuid>().ok())
         .unwrap_or_else(|| Uuid::from_u128(1))
+}
+
+fn serve_spa_root(root: &Path) -> Response {
+    let index = root.join("index.html");
+    if let Ok(bytes) = std::fs::read(&index) {
+        (
+            axum::http::StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            bytes,
+        )
+            .into_response()
+    } else {
+        (axum::http::StatusCode::NOT_FOUND, "SPA index.html not found").into_response()
+    }
+}
+
+fn serve_spa_subpath(root: &Path, rel_path: &str) -> Response {
+    if rel_path.contains("..") {
+        return axum::http::StatusCode::BAD_REQUEST.into_response();
+    }
+    let candidate = root.join(rel_path);
+    if candidate.is_file() {
+        if let Ok(bytes) = std::fs::read(&candidate) {
+            return (
+                axum::http::StatusCode::OK,
+                [(axum::http::header::CONTENT_TYPE, mime_for_path(&candidate))],
+                bytes,
+            )
+                .into_response();
+        }
+    }
+    serve_spa_root(root)
 }
 
 fn locate_workspace_apps_dir() -> Option<PathBuf> {
@@ -180,6 +214,21 @@ fn resolve_bind_addr(args: &[String]) -> SocketAddr {
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        println!("CulinaryOS Standalone Native Rust Desktop Workstation v1.3.1");
+        println!("Toast & Square Open-Source Industrial Alternative");
+        println!();
+        println!("Usage: culinaryos-desktop.exe [OPTIONS]");
+        println!();
+        println!("Options:");
+        println!("  --port <PORT>        Port to bind the unified web workstation and API (default: 3000)");
+        println!("  --fresh-install      Reset local embedded database to blank first-time setup state");
+        println!("  --headless           Run server in background without opening Edge kiosk window");
+        println!("  --self-test          Run fast headless FLSA compliance and local store self-test and exit");
+        println!("  --legacy-ports       Also bind legacy split ports (5172..5180)");
+        println!("  --help, -h           Print this help menu and exit");
+        std::process::exit(0);
+    }
     if args.iter().any(|a| a == "--self-test" || a == "--headless-check") {
         match run_self_test() {
             Ok(()) => std::process::exit(0),
@@ -191,6 +240,7 @@ async fn main() {
     }
 
     let data_dir = default_data_dir();
+    let _ = std::fs::create_dir_all(&data_dir);
     let db_path = data_dir.join("culinaryos.db");
     if args.iter().any(|a| a == "--fresh-install" || a == "--reset") && db_path.exists() {
         let _ = std::fs::remove_file(&db_path);
@@ -206,29 +256,126 @@ async fn main() {
 
     let mut workstation_url = format!("http://{bind_addr}");
 
+    let mut main_router = service.clone().router();
+
     if let Some(apps_dir) = locate_workspace_apps_dir() {
-        let surfaces: [(&str, u16, &str); 8] = [
-            ("POS Terminal", 5172, "pos"),
-            ("KDS Kitchen", 5173, "kds"),
-            ("Back-Office Admin", 5174, "admin"),
-            ("KitchenKit", 5175, "kitchenkit"),
-            ("Guest Storefront", 5176, "web"),
-            ("CulinaryOps", 5177, "ops"),
-            ("Display & RecipeOS", 5178, "display"),
-            ("Master Workstation", 5180, "desktop"),
+        let single_port_surfaces: [(&str, &str); 7] = [
+            ("pos", "pos"),
+            ("kds", "kds"),
+            ("admin", "admin"),
+            ("kitchenkit", "kitchenkit"),
+            ("menu", "web"),
+            ("ops", "ops"),
+            ("display", "display"),
         ];
 
-        for (label, port, folder) in surfaces {
+        for (route_prefix, folder) in single_port_surfaces {
             let dist_path = apps_dir.join(folder).join("dist");
             if dist_path.is_dir() {
-                let addr = SocketAddr::from(([127, 0, 0, 1], port));
-                let router = spa_router(dist_path);
-                println!("[CulinaryOS Desktop] {label} GUI ready at http://localhost:{port}");
-                tokio::spawn(async move {
-                    let _ = axum_server::bind(addr)
-                        .serve(router.into_make_service())
-                        .await;
-                });
+                println!("[CulinaryOS Desktop] Mounted /{route_prefix} on Port 3000 ({})", dist_path.display());
+                let dist_dir = Arc::new(dist_path);
+
+                let d1 = Arc::clone(&dist_dir);
+                let d2 = Arc::clone(&dist_dir);
+                let d3 = Arc::clone(&dist_dir);
+
+                main_router = main_router
+                    .route(
+                        &format!("/{route_prefix}"),
+                        axum::routing::get(move || {
+                            let root = Arc::clone(&d1);
+                            async move { serve_spa_root(&root) }
+                        }),
+                    )
+                    .route(
+                        &format!("/{route_prefix}/"),
+                        axum::routing::get(move || {
+                            let root = Arc::clone(&d2);
+                            async move { serve_spa_root(&root) }
+                        }),
+                    )
+                    .route(
+                        &format!("/{route_prefix}/{{*path}}"),
+                        axum::routing::get(move |axum::extract::Path(path): axum::extract::Path<String>| {
+                            let root = Arc::clone(&d3);
+                            async move { serve_spa_subpath(&root, &path) }
+                        }),
+                    );
+            }
+        }
+
+        let shared_apps_dir = Arc::new(apps_dir.clone());
+        let shared_dir_assets = Arc::clone(&shared_apps_dir);
+        let shared_dir_files = Arc::clone(&shared_apps_dir);
+
+        main_router = main_router
+            .route(
+                "/assets/{*file}",
+                axum::routing::get(move |axum::extract::Path(file): axum::extract::Path<String>| {
+                    let root = Arc::clone(&shared_dir_assets);
+                    async move {
+                        let folders = ["pos", "kds", "admin", "kitchenkit", "web", "ops", "display", "desktop"];
+                        for folder in &folders {
+                            let p = root.join(folder).join("dist").join("assets").join(&file);
+                            if p.is_file() {
+                                if let Ok(bytes) = std::fs::read(&p) {
+                                    return (
+                                        axum::http::StatusCode::OK,
+                                        [(axum::http::header::CONTENT_TYPE, mime_for_path(&p))],
+                                        bytes,
+                                    )
+                                        .into_response();
+                                }
+                            }
+                        }
+                        axum::http::StatusCode::NOT_FOUND.into_response()
+                    }
+                }),
+            )
+            .route(
+                "/registerSW.js",
+                axum::routing::get(move || {
+                    let root = Arc::clone(&shared_dir_files);
+                    async move {
+                        let p = root.join("pos").join("dist").join("registerSW.js");
+                        if let Ok(bytes) = std::fs::read(&p) {
+                            (
+                                axum::http::StatusCode::OK,
+                                [(axum::http::header::CONTENT_TYPE, "application/javascript; charset=utf-8")],
+                                bytes,
+                            )
+                                .into_response()
+                        } else {
+                            axum::http::StatusCode::NOT_FOUND.into_response()
+                        }
+                    }
+                }),
+            );
+
+        if env::var("CULINARYOS_LEGACY_PORTS").is_ok() || args.iter().any(|a| a == "--legacy-ports") {
+            let legacy_surfaces: [(&str, u16, &str); 8] = [
+                ("POS Terminal", 5172, "pos"),
+                ("KDS Kitchen", 5173, "kds"),
+                ("Back-Office Admin", 5174, "admin"),
+                ("KitchenKit", 5175, "kitchenkit"),
+                ("Guest Storefront", 5176, "web"),
+                ("CulinaryOps", 5177, "ops"),
+                ("Display & RecipeOS", 5178, "display"),
+                ("Master Workstation", 5180, "desktop"),
+            ];
+
+            for (label, port, folder) in legacy_surfaces {
+                let dist_path = apps_dir.join(folder).join("dist");
+                if dist_path.is_dir() {
+                    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                    let router = spa_router(dist_path);
+                    println!("[CulinaryOS Desktop] Legacy port {port} active for {label}");
+                    tokio::spawn(async move {
+                        let _ = axum_server::bind(addr)
+                            .serve(router.into_make_service())
+                            .await;
+                    });
+                }
             }
         }
 
@@ -240,14 +387,14 @@ async fn main() {
         });
 
         workstation_url = if service.is_setup_completed() {
-            "http://localhost:5180".to_string()
+            format!("http://{bind_addr}")
         } else {
             format!("http://{bind_addr}/setup")
         };
     }
 
-    println!("[CulinaryOS Desktop] Native Rust API Gateway listening at http://{bind_addr}");
-    println!("[CulinaryOS Desktop] Master Workstation GUI listening at {workstation_url}");
+    println!("[CulinaryOS Desktop] Native Rust API Gateway & Unified GUI listening at http://{bind_addr}");
+    println!("[CulinaryOS Desktop] Master Workstation Entry: {workstation_url}");
     println!("[CulinaryOS Desktop] Embedded Database: {}", db_path.display());
 
     if !args.iter().any(|a| a == "--headless") {
@@ -255,7 +402,7 @@ async fn main() {
     }
 
     axum_server::bind(bind_addr)
-        .serve(service.router().into_make_service())
+        .serve(main_router.into_make_service())
         .await
         .expect("CulinaryOS Desktop server exited");
 }

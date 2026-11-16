@@ -27,7 +27,8 @@ Thumbs.db
 .idea/
 *.swp
 
-# Android & Native Builds
+dist-installer/
+*.zip
 *.apk
 *.aab
 local.properties
