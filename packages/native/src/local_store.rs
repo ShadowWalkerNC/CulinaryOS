@@ -196,6 +196,153 @@ pub struct WorkstationSetupProfile {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PantryItemRecord {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub current_stock: f64,
+    pub unit: String,
+    pub par_level: f64,
+    pub reorder_point: f64,
+    pub cost_per_unit_cents: i64,
+    pub vendor_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PurchaseOrderLine {
+    pub item_id: String,
+    pub name: String,
+    pub quantity: f64,
+    pub unit: String,
+    pub unit_cost_cents: i64,
+    pub total_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PurchaseOrderRecord {
+    pub id: String,
+    pub po_number: String,
+    pub vendor_id: String,
+    pub vendor_name: String,
+    pub status: String,
+    pub total_cents: i64,
+    pub lines: Vec<PurchaseOrderLine>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VendorRecord {
+    pub id: String,
+    pub name: String,
+    pub code: String,
+    pub contact_email: String,
+    pub min_order_cents: i64,
+    pub lead_time_days: i32,
+    pub categories: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TalentApplicationRecord {
+    pub id: String,
+    pub name: String,
+    pub email: String,
+    pub phone: String,
+    pub role: String,
+    pub experience_years: i32,
+    pub stage: String,
+    pub notes: String,
+    pub applied_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TalentJobRecord {
+    pub id: String,
+    pub title: String,
+    pub department: String,
+    pub employment_type: String,
+    pub pay_rate: String,
+    pub is_active: bool,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WasteRecord {
+    pub id: String,
+    pub item_name: String,
+    pub quantity: f64,
+    pub unit: String,
+    pub estimated_loss_cents: i64,
+    pub reason: String,
+    pub station: String,
+    pub logged_by: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TableRecord {
+    pub id: String,
+    pub number: u32,
+    pub capacity: u32,
+    pub status: String,
+    pub current_order_id: Option<String>,
+    pub section: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BarTabRecord {
+    pub id: String,
+    pub tab_name: String,
+    pub card_last4: Option<String>,
+    pub preauth_cents: i64,
+    pub order_id: String,
+    pub is_open: bool,
+    pub opened_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZReportSummaryRecord {
+    pub id: String,
+    pub site_id: Uuid,
+    pub date: String,
+    pub closed_at: String,
+    pub gross_sales_cents: i64,
+    pub discounts_cents: i64,
+    pub net_sales_cents: i64,
+    pub tax_collected_cents: i64,
+    pub tip_pool_cents: i64,
+    pub cash_sales_cents: i64,
+    pub card_sales_cents: i64,
+    pub opening_drawer_cents: i64,
+    pub expected_cash_cents: i64,
+    pub actual_cash_cents: i64,
+    pub cash_variance_cents: i64,
+    pub order_count: usize,
+    pub voids_count: usize,
+    pub closed_by_staff_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayRecord {
+    pub id: String,
+    pub name: String,
+    pub screen_type: String,
+    pub pairing_code: String,
+    pub is_paired: bool,
+    pub last_seen_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PersistedState {
     site_id: Uuid,
     #[serde(default)]
@@ -217,6 +364,28 @@ struct PersistedState {
     drawer: CashDrawerSession,
     applied_operations: BTreeSet<String>,
     sync_outbox: Vec<serde_json::Value>,
+    #[serde(default)]
+    pantry: BTreeMap<String, PantryItemRecord>,
+    #[serde(default)]
+    purchase_orders: BTreeMap<String, PurchaseOrderRecord>,
+    #[serde(default)]
+    vendors: Vec<VendorRecord>,
+    #[serde(default)]
+    talent_applications: Vec<TalentApplicationRecord>,
+    #[serde(default)]
+    talent_jobs: Vec<TalentJobRecord>,
+    #[serde(default)]
+    waste: Vec<WasteRecord>,
+    #[serde(default)]
+    tables: BTreeMap<String, TableRecord>,
+    #[serde(default)]
+    tabs: BTreeMap<String, BarTabRecord>,
+    #[serde(default)]
+    z_reports: Vec<ZReportSummaryRecord>,
+    #[serde(default)]
+    displays: Vec<DisplayRecord>,
+    #[serde(default)]
+    settings: serde_json::Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -249,10 +418,13 @@ impl LocalStore {
             if actual != env.sha256 {
                 return Err(LocalStoreError::Storage);
             }
-            return Ok(Self {
+            let mut store = Self {
                 path: path.to_path_buf(),
                 state: env.state,
-            });
+            };
+            store.ensure_defaults();
+            let _ = store.save();
+            return Ok(store);
         }
 
         let owner_id = Uuid::from_u128(1);
@@ -322,18 +494,33 @@ impl LocalStore {
             },
             applied_operations: BTreeSet::new(),
             sync_outbox: Vec::new(),
+            pantry: BTreeMap::new(),
+            purchase_orders: BTreeMap::new(),
+            vendors: Vec::new(),
+            talent_applications: Vec::new(),
+            talent_jobs: Vec::new(),
+            waste: Vec::new(),
+            tables: BTreeMap::new(),
+            tabs: BTreeMap::new(),
+            z_reports: Vec::new(),
+            displays: Vec::new(),
+            settings: serde_json::Value::Null,
         };
 
-        let store = Self {
+        let mut store = Self {
             path: path.to_path_buf(),
             state,
         };
+        store.ensure_defaults();
         store.save()?;
         Ok(store)
     }
 
     fn save(&self) -> Result<(), LocalStoreError> {
         let dir = self.path.parent().unwrap_or_else(|| Path::new("."));
+        if !dir.exists() {
+            std::fs::create_dir_all(dir).map_err(|_| LocalStoreError::Storage)?;
+        }
         let serialized = serde_json::to_vec(&self.state).map_err(|_| LocalStoreError::Storage)?;
         let sha256 = hex::encode(Sha256::digest(&serialized));
         let env = Envelope {
@@ -766,6 +953,669 @@ impl LocalStore {
             let _ = self.send_order_to_kitchen("ord-seed-102");
         }
 
+        self.save()
+    }
+
+    pub fn ensure_defaults(&mut self) {
+        if self.state.pantry.is_empty() {
+            let defaults = [
+                ("pantry-flour", "00 Pizza Flour", "Dry Goods", 45.0, "kg", 50.0, 20.0, 220, "Sysco"),
+                ("pantry-tomatoes", "San Marzano DOP Tomatoes", "Canned", 24.0, "cans", 36.0, 12.0, 450, "Sysco"),
+                ("pantry-ribeye", "Prime Ribeye Loins", "Meat", 14.0, "lbs", 25.0, 10.0, 1850, "US Foods"),
+                ("pantry-wagyu", "Wagyu Patties 8oz", "Meat", 35.0, "pcs", 50.0, 20.0, 650, "US Foods"),
+                ("pantry-halibut", "Alaskan Halibut Fillets", "Seafood", 12.0, "lbs", 20.0, 8.0, 2200, "SeaHarvest"),
+                ("pantry-gem", "Little Gem Lettuce", "Produce", 18.0, "heads", 30.0, 10.0, 175, "Local Farms"),
+                ("pantry-burrata", "Fresh Burrata 4oz", "Dairy", 22.0, "pcs", 40.0, 15.0, 320, "Local Farms"),
+                ("pantry-gin", "Dry Gin 750ml", "Beverage", 6.0, "btls", 12.0, 4.0, 2400, "Craft Spirits"),
+            ];
+            for (id, name, cat, stock, unit, par, reorder, cost, vendor) in defaults {
+                self.state.pantry.insert(
+                    id.to_string(),
+                    PantryItemRecord {
+                        id: id.to_string(),
+                        name: name.to_string(),
+                        category: cat.to_string(),
+                        current_stock: stock,
+                        unit: unit.to_string(),
+                        par_level: par,
+                        reorder_point: reorder,
+                        cost_per_unit_cents: cost,
+                        vendor_name: vendor.to_string(),
+                    },
+                );
+            }
+        }
+
+        if self.state.vendors.is_empty() {
+            self.state.vendors = vec![
+                VendorRecord {
+                    id: "vnd-sysco".to_string(),
+                    name: "Sysco Northeast".to_string(),
+                    code: "SYSCO".to_string(),
+                    contact_email: "orders.ne@sysco.com".to_string(),
+                    min_order_cents: 50_000,
+                    lead_time_days: 1,
+                    categories: vec!["Dry Goods".to_string(), "Canned".to_string(), "Dairy".to_string()],
+                },
+                VendorRecord {
+                    id: "vnd-usfoods".to_string(),
+                    name: "US Foods Metro".to_string(),
+                    code: "USFOODS".to_string(),
+                    contact_email: "dispatch@usfoods.com".to_string(),
+                    min_order_cents: 75_000,
+                    lead_time_days: 2,
+                    categories: vec!["Meat".to_string(), "Poultry".to_string()],
+                },
+                VendorRecord {
+                    id: "vnd-local".to_string(),
+                    name: "Hudson Valley Organic Farm".to_string(),
+                    code: "LOCAL-FARMS".to_string(),
+                    contact_email: "fresh@hudsonfarm.org".to_string(),
+                    min_order_cents: 20_000,
+                    lead_time_days: 3,
+                    categories: vec!["Produce".to_string(), "Dairy".to_string()],
+                },
+            ];
+        }
+
+        if self.state.purchase_orders.is_empty() {
+            self.state.purchase_orders.insert(
+                "po-1001".to_string(),
+                PurchaseOrderRecord {
+                    id: "po-1001".to_string(),
+                    po_number: "PO-1001".to_string(),
+                    vendor_id: "vnd-sysco".to_string(),
+                    vendor_name: "Sysco Northeast".to_string(),
+                    status: "sent".to_string(),
+                    total_cents: 38_400,
+                    lines: vec![
+                        PurchaseOrderLine {
+                            item_id: "pantry-flour".to_string(),
+                            name: "00 Pizza Flour".to_string(),
+                            quantity: 10.0,
+                            unit: "kg".to_string(),
+                            unit_cost_cents: 220,
+                            total_cents: 2200,
+                        },
+                        PurchaseOrderLine {
+                            item_id: "pantry-tomatoes".to_string(),
+                            name: "San Marzano DOP Tomatoes".to_string(),
+                            quantity: 12.0,
+                            unit: "cans".to_string(),
+                            unit_cost_cents: 450,
+                            total_cents: 5400,
+                        },
+                    ],
+                    created_at: "2026-11-15T14:00:00Z".to_string(),
+                },
+            );
+        }
+
+        if self.state.talent_jobs.is_empty() {
+            self.state.talent_jobs = vec![
+                TalentJobRecord {
+                    id: "job-1".to_string(),
+                    title: "Sous Chef".to_string(),
+                    department: "Kitchen / BOH".to_string(),
+                    employment_type: "full-time".to_string(),
+                    pay_rate: "$26.00/hr".to_string(),
+                    is_active: true,
+                    description: "Lead line execution, inventory control, and culinary team mentorship.".to_string(),
+                },
+                TalentJobRecord {
+                    id: "job-2".to_string(),
+                    title: "Lead Line Cook".to_string(),
+                    department: "Kitchen / BOH".to_string(),
+                    employment_type: "full-time".to_string(),
+                    pay_rate: "$22.00/hr".to_string(),
+                    is_active: true,
+                    description: "High volume grill and saute station mastery.".to_string(),
+                },
+                TalentJobRecord {
+                    id: "job-3".to_string(),
+                    title: "Floor Server / Bartender".to_string(),
+                    department: "Front of House".to_string(),
+                    employment_type: "part-time".to_string(),
+                    pay_rate: "$16.50/hr + tips".to_string(),
+                    is_active: true,
+                    description: "Hospitality forward service with craft beverage knowledge.".to_string(),
+                },
+            ];
+        }
+
+        if self.state.talent_applications.is_empty() {
+            self.state.talent_applications = vec![
+                TalentApplicationRecord {
+                    id: "app-1".to_string(),
+                    name: "Marco Rossi".to_string(),
+                    email: "marco.rossi@example.com".to_string(),
+                    phone: "555-0192".to_string(),
+                    role: "Sous Chef".to_string(),
+                    experience_years: 6,
+                    stage: "interview".to_string(),
+                    notes: "Strong fine-dining background, staging on Tuesday.".to_string(),
+                    applied_at: "2026-11-12T10:30:00Z".to_string(),
+                },
+                TalentApplicationRecord {
+                    id: "app-2".to_string(),
+                    name: "Elena Vance".to_string(),
+                    email: "elena.v@example.com".to_string(),
+                    phone: "555-0184".to_string(),
+                    role: "Lead Line Cook".to_string(),
+                    experience_years: 4,
+                    stage: "offer".to_string(),
+                    notes: "Offer letter generated, pending sign-off.".to_string(),
+                    applied_at: "2026-11-14T11:15:00Z".to_string(),
+                },
+                TalentApplicationRecord {
+                    id: "app-3".to_string(),
+                    name: "David Chen".to_string(),
+                    email: "david.c@example.com".to_string(),
+                    phone: "555-0177".to_string(),
+                    role: "Floor Server".to_string(),
+                    experience_years: 2,
+                    stage: "applied".to_string(),
+                    notes: "Previous experience at high-volume gastropub.".to_string(),
+                    applied_at: "2026-11-15T09:00:00Z".to_string(),
+                },
+            ];
+        }
+
+        if self.state.waste.is_empty() {
+            self.state.waste = vec![
+                WasteRecord {
+                    id: "wst-1".to_string(),
+                    item_name: "Alaskan Halibut".to_string(),
+                    quantity: 1.5,
+                    unit: "lbs".to_string(),
+                    estimated_loss_cents: 3300,
+                    reason: "trimming_loss".to_string(),
+                    station: "hot".to_string(),
+                    logged_by: "Chef de Partie".to_string(),
+                    timestamp: "2026-11-15T17:30:00Z".to_string(),
+                },
+            ];
+        }
+
+        if self.state.tables.is_empty() {
+            for num in 1..=16 {
+                let id = format!("table-{}", num);
+                let (cap, section) = if num <= 8 {
+                    (4, "Main Dining")
+                } else if num <= 12 {
+                    (2, "Mezzanine")
+                } else {
+                    (8, "Patio")
+                };
+                let status = if num == 4 { "occupied" } else { "available" };
+                let current_order_id = if num == 4 { Some("ord-seed-101".to_string()) } else { None };
+                self.state.tables.insert(
+                    id.clone(),
+                    TableRecord {
+                        id,
+                        number: num,
+                        capacity: cap,
+                        status: status.to_string(),
+                        current_order_id,
+                        section: section.to_string(),
+                    },
+                );
+            }
+        }
+
+        if self.state.tabs.is_empty() {
+            self.state.tabs.insert(
+                "tab-bar-1".to_string(),
+                BarTabRecord {
+                    id: "tab-bar-1".to_string(),
+                    tab_name: "Bar Tab - Thompson".to_string(),
+                    card_last4: Some("4242".to_string()),
+                    preauth_cents: 5000,
+                    order_id: "ord-seed-102".to_string(),
+                    is_open: true,
+                    opened_at: "2026-11-15T18:30:00Z".to_string(),
+                },
+            );
+        }
+
+        if self.state.displays.is_empty() {
+            self.state.displays = vec![
+                DisplayRecord {
+                    id: "disp-kds-1".to_string(),
+                    name: "Kitchen Expo Wall".to_string(),
+                    screen_type: "kds".to_string(),
+                    pairing_code: "EXPO-881".to_string(),
+                    is_paired: true,
+                    last_seen_at: "Just now".to_string(),
+                },
+                DisplayRecord {
+                    id: "disp-wall-1".to_string(),
+                    name: "Dining Room Status Board".to_string(),
+                    screen_type: "wallboard".to_string(),
+                    pairing_code: "WALL-104".to_string(),
+                    is_paired: true,
+                    last_seen_at: "Just now".to_string(),
+                },
+            ];
+        }
+
+        if self.state.settings.is_null() {
+            self.state.settings = serde_json::json!({
+                "restaurantName": self.state.restaurant_name,
+                "cityState": self.state.city_state,
+                "conceptPreset": self.state.concept_preset,
+                "taxRateBps": self.state.tax_rate_bps,
+                "tablesCount": self.state.tables_count,
+                "tipMethod": "hours_weighted_pool",
+                "flsaManagerExclusionEnforced": true,
+                "theme": "toast_dark",
+                "kdsAudioChime": true,
+                "offlineReconciliation": "idempotent"
+            });
+        }
+    }
+
+    // Staff & Security Management
+    pub fn list_staff(&self) -> Vec<StaffMember> {
+        self.state.staff.clone()
+    }
+
+    pub fn add_staff(
+        &mut self,
+        name: String,
+        role: StaffRole,
+        pin: String,
+        has_hiring_firing: bool,
+    ) -> Result<StaffMember, LocalStoreError> {
+        if pin.len() < 4 || !pin.chars().all(|c| c.is_ascii_digit()) {
+            return Err(LocalStoreError::InvalidInput("PIN must be 4-8 numeric digits"));
+        }
+        let digest = pin_digest(self.state.site_id, &pin);
+        if self.state.staff.iter().any(|s| s.pin_digest == digest) {
+            return Err(LocalStoreError::Conflict("PIN already assigned to another staff member"));
+        }
+        let id = Uuid::new_v4();
+        let member = StaffMember {
+            id,
+            display_name: name,
+            role,
+            has_hiring_firing_authority: has_hiring_firing,
+            pin_digest: digest,
+        };
+        self.state.staff.push(member.clone());
+        self.save()?;
+        Ok(member)
+    }
+
+    pub fn update_staff(
+        &mut self,
+        staff_id: Uuid,
+        name: Option<String>,
+        role: Option<StaffRole>,
+        pin: Option<String>,
+    ) -> Result<StaffMember, LocalStoreError> {
+        let site_id = self.state.site_id;
+        let member = self
+            .state
+            .staff
+            .iter_mut()
+            .find(|s| s.id == staff_id)
+            .ok_or(LocalStoreError::NotFound("Staff member not found"))?;
+        if let Some(n) = name {
+            if !n.trim().is_empty() {
+                member.display_name = n.trim().to_string();
+            }
+        }
+        if let Some(r) = role {
+            member.role = r;
+        }
+        if let Some(p) = pin {
+            if p.len() >= 4 && p.chars().all(|c| c.is_ascii_digit()) {
+                member.pin_digest = pin_digest(site_id, &p);
+            }
+        }
+        let result = member.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn verify_manager_pin(&self, pin: &str) -> bool {
+        let digest = pin_digest(self.state.site_id, pin);
+        self.state
+            .staff
+            .iter()
+            .any(|s| s.pin_digest == digest && s.role.is_management_or_supervisor())
+    }
+
+    // Menu & 86 Item Controls
+    pub fn get_menu_item(&self, item_id: &str) -> Option<MenuItem> {
+        self.state.menu.get(item_id).cloned()
+    }
+
+    pub fn toggle_item_86(&mut self, item_id: &str) -> Result<MenuItem, LocalStoreError> {
+        let item = self
+            .state
+            .menu
+            .get_mut(item_id)
+            .ok_or(LocalStoreError::NotFound("Menu item not found"))?;
+        item.available = !item.available;
+        let result = item.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn set_item_available(&mut self, item_id: &str, available: bool) -> Result<MenuItem, LocalStoreError> {
+        let item = self
+            .state
+            .menu
+            .get_mut(item_id)
+            .ok_or(LocalStoreError::NotFound("Menu item not found"))?;
+        item.available = available;
+        let result = item.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn update_menu_item_price(&mut self, item_id: &str, price_cents: i64) -> Result<MenuItem, LocalStoreError> {
+        let item = self
+            .state
+            .menu
+            .get_mut(item_id)
+            .ok_or(LocalStoreError::NotFound("Menu item not found"))?;
+        item.price_cents = price_cents;
+        let result = item.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn list_86_items(&self) -> Vec<MenuItem> {
+        self.state
+            .menu
+            .values()
+            .filter(|m| !m.available)
+            .cloned()
+            .collect()
+    }
+
+    // Pantry & Purchasing Controls
+    pub fn list_pantry_items(&self) -> Vec<PantryItemRecord> {
+        self.state.pantry.values().cloned().collect()
+    }
+
+    pub fn update_pantry_stock(&mut self, item_id: &str, delta: f64) -> Result<PantryItemRecord, LocalStoreError> {
+        let item = self
+            .state
+            .pantry
+            .get_mut(item_id)
+            .ok_or(LocalStoreError::NotFound("Pantry item not found"))?;
+        item.current_stock = (item.current_stock + delta).max(0.0);
+        let result = item.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn list_purchase_orders(&self) -> Vec<PurchaseOrderRecord> {
+        self.state.purchase_orders.values().cloned().collect()
+    }
+
+    pub fn create_purchase_order(&mut self, mut po: PurchaseOrderRecord) -> Result<PurchaseOrderRecord, LocalStoreError> {
+        if po.id.is_empty() {
+            po.id = format!("po-{}", Uuid::new_v4().as_simple());
+        }
+        self.state.purchase_orders.insert(po.id.clone(), po.clone());
+        self.save()?;
+        Ok(po)
+    }
+
+    pub fn update_po_status(&mut self, po_id: &str, status: &str) -> Result<PurchaseOrderRecord, LocalStoreError> {
+        let po = self
+            .state
+            .purchase_orders
+            .get_mut(po_id)
+            .ok_or(LocalStoreError::NotFound("Purchase order not found"))?;
+        po.status = status.to_string();
+        let result = po.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn delete_purchase_order(&mut self, po_id: &str) -> Result<(), LocalStoreError> {
+        self.state.purchase_orders.remove(po_id);
+        self.save()?;
+        Ok(())
+    }
+
+    pub fn list_vendors(&self) -> Vec<VendorRecord> {
+        self.state.vendors.clone()
+    }
+
+    // Talent & Jobs ATS
+    pub fn list_talent_applications(&self) -> Vec<TalentApplicationRecord> {
+        self.state.talent_applications.clone()
+    }
+
+    pub fn update_talent_stage(&mut self, id: &str, stage: &str) -> Result<TalentApplicationRecord, LocalStoreError> {
+        let app = self
+            .state
+            .talent_applications
+            .iter_mut()
+            .find(|a| a.id == id)
+            .ok_or(LocalStoreError::NotFound("Applicant not found"))?;
+        app.stage = stage.to_string();
+        let result = app.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    pub fn hire_applicant(&mut self, id: &str, role: StaffRole, pin: &str) -> Result<StaffMember, LocalStoreError> {
+        let name = {
+            let app = self
+                .state
+                .talent_applications
+                .iter_mut()
+                .find(|a| a.id == id)
+                .ok_or(LocalStoreError::NotFound("Applicant not found"))?;
+            app.stage = "hired".to_string();
+            app.name.clone()
+        };
+        let staff = self.add_staff(name, role, pin.to_string(), false)?;
+        Ok(staff)
+    }
+
+    pub fn list_talent_jobs(&self) -> Vec<TalentJobRecord> {
+        self.state.talent_jobs.clone()
+    }
+
+    pub fn create_talent_job(&mut self, mut job: TalentJobRecord) -> Result<TalentJobRecord, LocalStoreError> {
+        if job.id.is_empty() {
+            job.id = format!("job-{}", Uuid::new_v4().as_simple());
+        }
+        self.state.talent_jobs.push(job.clone());
+        self.save()?;
+        Ok(job)
+    }
+
+    // Waste Logging
+    pub fn record_waste(&mut self, mut waste: WasteRecord) -> Result<WasteRecord, LocalStoreError> {
+        if waste.id.is_empty() {
+            waste.id = format!("wst-{}", Uuid::new_v4().as_simple());
+        }
+        self.state.waste.push(waste.clone());
+        self.save()?;
+        Ok(waste)
+    }
+
+    pub fn list_waste(&self) -> Vec<WasteRecord> {
+        self.state.waste.clone()
+    }
+
+    // Floor Tables
+    pub fn list_tables(&self) -> Vec<TableRecord> {
+        self.state.tables.values().cloned().collect()
+    }
+
+    pub fn transfer_table(&mut self, from_id: &str, to_id: &str) -> Result<(), LocalStoreError> {
+        let from_order = self.state.tables.get(from_id).and_then(|t| t.current_order_id.clone());
+        if let Some(order_id) = from_order {
+            if let Some(to) = self.state.tables.get_mut(to_id) {
+                to.current_order_id = Some(order_id);
+                to.status = "occupied".to_string();
+            }
+            if let Some(from) = self.state.tables.get_mut(from_id) {
+                from.current_order_id = None;
+                from.status = "dirty".to_string();
+            }
+            self.save()?;
+        }
+        Ok(())
+    }
+
+    pub fn merge_tables(&mut self, target_table_id: &str, source_table_id: &str) -> Result<(), LocalStoreError> {
+        if let Some(source) = self.state.tables.get_mut(source_table_id) {
+            source.current_order_id = None;
+            source.status = "available".to_string();
+        }
+        if let Some(target) = self.state.tables.get_mut(target_table_id) {
+            target.status = "occupied".to_string();
+        }
+        self.save()?;
+        Ok(())
+    }
+
+    // Bar Tabs
+    pub fn list_tabs(&self) -> Vec<BarTabRecord> {
+        self.state.tabs.values().cloned().collect()
+    }
+
+    pub fn open_tab(&mut self, mut tab: BarTabRecord) -> Result<BarTabRecord, LocalStoreError> {
+        if tab.id.is_empty() {
+            tab.id = format!("tab-{}", Uuid::new_v4().as_simple());
+        }
+        self.state.tabs.insert(tab.id.clone(), tab.clone());
+        self.save()?;
+        Ok(tab)
+    }
+
+    pub fn close_tab(&mut self, tab_id: &str) -> Result<BarTabRecord, LocalStoreError> {
+        let tab = self
+            .state
+            .tabs
+            .get_mut(tab_id)
+            .ok_or(LocalStoreError::NotFound("Bar tab not found"))?;
+        tab.is_open = false;
+        let result = tab.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    // Z-Report & Cash Drawer Operations
+    pub fn get_z_report(&self) -> ZReportSummaryRecord {
+        let gross_sales_cents: i64 = self.state.orders.values().map(|o| o.subtotal_cents).sum();
+        let net_sales_cents = gross_sales_cents;
+        let tax_collected_cents: i64 = self.state.orders.values().map(|o| o.tax_cents).sum();
+        let cash_sales_cents = self.state.drawer.cash_sales_cents;
+        let paid_total: i64 = self.state.orders.values().map(|o| o.paid_cents).sum();
+        let card_sales_cents = (paid_total - cash_sales_cents).max(0);
+        let tip_pool_cents = (paid_total - gross_sales_cents - tax_collected_cents).max(0);
+        let opening_drawer_cents = self.state.drawer.opening_cents;
+        let expected_cash_cents = opening_drawer_cents + cash_sales_cents;
+        let actual_cash_cents = self.state.drawer.counted_cents.unwrap_or(expected_cash_cents);
+        let cash_variance_cents = actual_cash_cents - expected_cash_cents;
+
+        ZReportSummaryRecord {
+            id: format!("zrep-{}", Uuid::new_v4().as_simple()),
+            site_id: self.state.site_id,
+            date: "2026-11-15".to_string(),
+            closed_at: "2026-11-15T23:59:59Z".to_string(),
+            gross_sales_cents,
+            discounts_cents: 0,
+            net_sales_cents,
+            tax_collected_cents,
+            tip_pool_cents,
+            cash_sales_cents,
+            card_sales_cents,
+            opening_drawer_cents,
+            expected_cash_cents,
+            actual_cash_cents,
+            cash_variance_cents,
+            order_count: self.state.orders.len(),
+            voids_count: self.state.orders.values().filter(|o| o.status == OrderStatus::Voided).count(),
+            closed_by_staff_id: self.state.staff.first().map(|s| s.id.to_string()).unwrap_or_default(),
+        }
+    }
+
+    pub fn close_z_report(&mut self, staff_id: &str, counted_cash_cents: i64) -> Result<ZReportSummaryRecord, LocalStoreError> {
+        let mut report = self.get_z_report();
+        report.actual_cash_cents = counted_cash_cents;
+        report.cash_variance_cents = counted_cash_cents - report.expected_cash_cents;
+        report.closed_by_staff_id = staff_id.to_string();
+        self.state.drawer.closed = true;
+        self.state.drawer.counted_cents = Some(counted_cash_cents);
+        self.state.drawer.variance_cents = Some(report.cash_variance_cents);
+        self.state.z_reports.push(report.clone());
+        self.save()?;
+        Ok(report)
+    }
+
+    pub fn drawer_movement(&mut self, amount_cents: i64) -> Result<CashDrawerSession, LocalStoreError> {
+        self.state.drawer.cash_sales_cents += amount_cents;
+        self.save()?;
+        Ok(self.state.drawer.clone())
+    }
+
+    pub fn void_order(&mut self, order_id: &str) -> Result<OrderRecord, LocalStoreError> {
+        let order = self
+            .state
+            .orders
+            .get_mut(order_id)
+            .ok_or(LocalStoreError::NotFound("Order not found"))?;
+        order.status = OrderStatus::Voided;
+        let result = order.clone();
+        self.save()?;
+        Ok(result)
+    }
+
+    // Displays
+    pub fn list_displays(&self) -> Vec<DisplayRecord> {
+        self.state.displays.clone()
+    }
+
+    pub fn pair_display(&mut self, code: &str, name: &str, screen_type: &str) -> Result<DisplayRecord, LocalStoreError> {
+        let rec = DisplayRecord {
+            id: format!("disp-{}", Uuid::new_v4().as_simple()),
+            name: name.to_string(),
+            screen_type: screen_type.to_string(),
+            pairing_code: code.to_string(),
+            is_paired: true,
+            last_seen_at: "Just now".to_string(),
+        };
+        self.state.displays.push(rec.clone());
+        self.save()?;
+        Ok(rec)
+    }
+
+    // Settings
+    pub fn get_settings(&self) -> serde_json::Value {
+        if self.state.settings.is_null() || self.state.settings.as_object().map(|o| o.is_empty()).unwrap_or(true) {
+            serde_json::json!({
+                "restaurantName": self.state.restaurant_name,
+                "cityState": self.state.city_state,
+                "conceptPreset": self.state.concept_preset,
+                "taxRateBps": self.state.tax_rate_bps,
+                "tablesCount": self.state.tables_count,
+                "tipMethod": "hours_weighted_pool",
+                "flsaManagerExclusionEnforced": true,
+                "theme": "toast_dark",
+                "kdsAudioChime": true,
+                "offlineReconciliation": "idempotent"
+            })
+        } else {
+            self.state.settings.clone()
+        }
+    }
+
+    pub fn update_settings(&mut self, settings: serde_json::Value) -> Result<(), LocalStoreError> {
+        self.state.settings = settings;
         self.save()
     }
 

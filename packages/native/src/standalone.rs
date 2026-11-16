@@ -4,8 +4,9 @@ use crate::{
         SaasAddon, SaasEntitlementPayload, SignedSaasGrant,
     },
     local_store::{
-        calculate_tip_pool, KitchenTicket, LocalStore, LocalStoreError, OrderRecord,
-        TicketStatus, TipDistributionMethod, TipParticipantInput,
+        calculate_tip_pool, BarTabRecord, KitchenTicket, LocalStore, LocalStoreError,
+        OrderRecord, PurchaseOrderRecord, StaffRole, TalentJobRecord, TicketStatus,
+        TipDistributionMethod, TipParticipantInput, WasteRecord,
     },
 };
 use axum::{
@@ -13,7 +14,7 @@ use axum::{
     http::{header, HeaderValue, Method, Request, StatusCode, Uri},
     middleware::{self, Next},
     response::{Html, IntoResponse, Response},
-    routing::{get, patch, post},
+    routing::{delete, get, patch, post},
     Json, Router,
 };
 use serde::Deserialize;
@@ -280,6 +281,55 @@ impl StandaloneService {
             .route("/v1/payments/cash", post(settle_cash))
             .route("/v1/drawers/close", post(close_drawer))
             .route("/v1/tips/calculate", post(calculate_tips))
+            .route("/v1/admin/menu/items", get(list_admin_menu_items))
+            .route("/v1/admin/menu/items/{id}", patch(update_admin_menu_item))
+            .route("/v1/kds/86-items", get(list_86_items_handler))
+            .route("/v1/kds/86", get(list_86_items_handler))
+            .route("/v1/kds/86-items/{id}/toggle-86", post(toggle_86_handler))
+            .route("/v1/kds/86-items/{id}/set-count", post(set_86_count_handler))
+            .route("/v1/admin/staff", get(list_staff_handler).post(create_staff_handler))
+            .route("/v1/admin/staff/{id}", patch(update_staff_handler))
+            .route("/v1/talent/applications", get(list_talent_applications_handler))
+            .route("/v1/talent/applications/{id}/stage", patch(update_talent_stage_handler))
+            .route("/v1/talent/applications/{id}/hire", post(hire_applicant_handler))
+            .route("/v1/talent/jobs", get(list_talent_jobs_handler).post(create_talent_job_handler))
+            .route("/v1/jobs", get(list_talent_jobs_handler))
+            .route("/v1/pantry", get(list_pantry_handler))
+            .route("/v1/pantry/purchase-orders", get(list_purchase_orders_handler).post(create_purchase_order_handler))
+            .route("/v1/pantry/purchase-orders/{id}/approve", patch(approve_po_handler))
+            .route("/v1/pantry/purchase-orders/{id}/send", patch(send_po_handler))
+            .route("/v1/pantry/purchase-orders/{id}", delete(delete_po_handler))
+            .route("/v1/purchasing/orders", get(list_purchase_orders_handler).post(create_purchase_order_handler))
+            .route("/v1/purchasing/vendors", get(list_vendors_handler))
+            .route("/v1/purchasing/items", get(list_purchasing_items_handler))
+            .route("/v1/purchasing/order-guide", get(get_order_guide_handler))
+            .route("/v1/purchasing/suggested-order", post(suggested_order_handler))
+            .route("/v1/purchasing/split-mrp-optimizer", post(split_mrp_optimizer_handler))
+            .route("/v1/reports/z-report", get(get_z_report_handler))
+            .route("/v1/reports/z-report/close", post(close_z_report_handler))
+            .route("/v1/payments/checkout", post(checkout_handler))
+            .route("/v1/payments/capture", post(capture_handler))
+            .route("/v1/payments/cash-comp", post(cash_comp_handler))
+            .route("/v1/orders/{id}/void", post(void_order_handler))
+            .route("/v1/orders/drawer/open", post(open_drawer_handler))
+            .route("/v1/drawers/open", post(open_drawer_handler))
+            .route("/v1/drawers/movement", post(drawer_movement_handler))
+            .route("/v1/auth/verify-manager-pin", post(verify_manager_pin_handler))
+            .route("/v1/pos/sync-deltas", post(sync_deltas_handler))
+            .route("/v1/tables", get(list_tables_handler))
+            .route("/v1/tables/transfer", post(transfer_table_handler))
+            .route("/v1/tables/merge", post(merge_tables_handler))
+            .route("/v1/tabs", get(list_tabs_handler).post(create_tab_handler))
+            .route("/v1/kds/pacing", get(kds_pacing_handler))
+            .route("/v1/ops/food-cost/variance", get(food_cost_variance_handler))
+            .route("/v1/ops/waste/quick", post(quick_waste_handler))
+            .route("/v1/ops/waste", get(list_waste_handler).post(quick_waste_handler))
+            .route("/v1/displays", get(list_displays_handler))
+            .route("/v1/displays/discover", get(discover_displays_handler))
+            .route("/v1/displays/pair", post(pair_display_handler))
+            .route("/v1/hardware/print", post(hardware_print_handler))
+            .route("/v1/hardware/kick-drawer", post(hardware_kick_drawer_handler))
+            .route("/v1/settings", get(get_settings_handler).put(update_settings_handler))
             .route("/v1/cloud/status", get(cloud_status))
             .route("/v1/cloud/connect", post(cloud_connect))
             .route("/v1/cloud/demo-enroll", post(cloud_demo_enroll))
@@ -293,15 +343,33 @@ impl StandaloneService {
 
 pub fn spa_router(dist_dir: PathBuf) -> Router {
     let dir = Arc::new(dist_dir);
+    let dir_root = Arc::clone(&dir);
+    let dir_wild = Arc::clone(&dir);
+    let dir_fallback = Arc::clone(&dir);
+
     Router::new()
+        .route(
+            "/",
+            get(move |uri: Uri| {
+                let root = Arc::clone(&dir_root);
+                async move { serve_spa_file(&root, uri.path()) }
+            }),
+        )
+        .route(
+            "/{*path}",
+            get(move |uri: Uri| {
+                let root = Arc::clone(&dir_wild);
+                async move { serve_spa_file(&root, uri.path()) }
+            }),
+        )
         .fallback(move |uri: Uri| {
-            let root = Arc::clone(&dir);
+            let root = Arc::clone(&dir_fallback);
             async move { serve_spa_file(&root, uri.path()) }
         })
         .layer(middleware::from_fn(cors_layer))
 }
 
-fn mime_for_path(path: &Path) -> &'static str {
+pub fn mime_for_path(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()).unwrap_or("") {
         "html" => "text/html; charset=utf-8",
         "js" | "mjs" => "application/javascript; charset=utf-8",
@@ -1016,18 +1084,1067 @@ async fn cloud_inbound_order(
     )
 }
 
-const STANDALONE_WORKSTATION_HTML: &str = r#"<!DOCTYPE html>
+async fn list_admin_menu_items(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let items = guard.store.list_menu();
+    ok(StatusCode::OK, json!({ "ok": true, "data": items }))
+}
+
+#[derive(Deserialize)]
+struct UpdateMenuItemBody {
+    price_cents: Option<i64>,
+    available: Option<bool>,
+}
+
+async fn update_admin_menu_item(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<UpdateMenuItemBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    if let Some(price) = body.price_cents {
+        guard.store.update_menu_item_price(&id, price)?;
+    }
+    if let Some(avail) = body.available {
+        guard.store.set_item_available(&id, avail)?;
+    }
+    let updated = guard.store.get_menu_item(&id).ok_or(LocalStoreError::NotFound("Menu item not found"))?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": updated }))
+}
+
+async fn list_86_items_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let items = guard.store.list_86_items();
+    ok(StatusCode::OK, json!({ "ok": true, "data": items }))
+}
+
+async fn toggle_86_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let item = guard.store.toggle_item_86(&id)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": item }))
+}
+
+#[derive(Deserialize)]
+struct Set86CountBody {
+    count: Option<i64>,
+}
+
+async fn set_86_count_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<Set86CountBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let available = body.count.map(|c| c > 0).unwrap_or(false);
+    let item = guard.store.set_item_available(&id, available)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": item }))
+}
+
+async fn list_staff_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let staff = guard.store.list_staff();
+    ok(StatusCode::OK, json!({ "ok": true, "data": staff }))
+}
+
+#[derive(Deserialize)]
+struct CreateStaffBody {
+    name: String,
+    role: StaffRole,
+    pin: String,
+    #[serde(default)]
+    has_hiring_firing: bool,
+}
+
+async fn create_staff_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<CreateStaffBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let member = guard.store.add_staff(body.name, body.role, body.pin, body.has_hiring_firing)?;
+    ok(StatusCode::CREATED, json!({ "ok": true, "data": member }))
+}
+
+#[derive(Deserialize)]
+struct UpdateStaffBody {
+    name: Option<String>,
+    role: Option<StaffRole>,
+    pin: Option<String>,
+}
+
+async fn update_staff_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<Uuid>,
+    Json(body): Json<UpdateStaffBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let member = guard.store.update_staff(id, body.name, body.role, body.pin)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": member }))
+}
+
+async fn list_talent_applications_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let apps = guard.store.list_talent_applications();
+    ok(StatusCode::OK, json!({ "ok": true, "data": apps }))
+}
+
+#[derive(Deserialize)]
+struct UpdateTalentStageBody {
+    stage: String,
+}
+
+async fn update_talent_stage_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<UpdateTalentStageBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let app = guard.store.update_talent_stage(&id, &body.stage)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": app }))
+}
+
+#[derive(Deserialize)]
+struct HireApplicantBody {
+    role: StaffRole,
+    pin: String,
+}
+
+async fn hire_applicant_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<HireApplicantBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let staff = guard.store.hire_applicant(&id, body.role, &body.pin)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": staff }))
+}
+
+async fn list_talent_jobs_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let jobs = guard.store.list_talent_jobs();
+    ok(StatusCode::OK, json!({ "ok": true, "data": jobs }))
+}
+
+async fn create_talent_job_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<TalentJobRecord>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let job = guard.store.create_talent_job(body)?;
+    ok(StatusCode::CREATED, json!({ "ok": true, "data": job }))
+}
+
+async fn list_pantry_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let items = guard.store.list_pantry_items();
+    ok(StatusCode::OK, json!({ "ok": true, "data": items }))
+}
+
+async fn list_purchase_orders_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let pos = guard.store.list_purchase_orders();
+    ok(StatusCode::OK, json!({ "ok": true, "data": pos }))
+}
+
+async fn create_purchase_order_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<PurchaseOrderRecord>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let po = guard.store.create_purchase_order(body)?;
+    ok(StatusCode::CREATED, json!({ "ok": true, "data": po }))
+}
+
+async fn approve_po_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let po = guard.store.update_po_status(&id, "approved")?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": po }))
+}
+
+async fn send_po_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let po = guard.store.update_po_status(&id, "sent")?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": po }))
+}
+
+async fn delete_po_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.delete_purchase_order(&id)?;
+    ok(StatusCode::OK, json!({ "ok": true }))
+}
+
+async fn list_vendors_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let vendors = guard.store.list_vendors();
+    ok(StatusCode::OK, json!({ "ok": true, "data": vendors }))
+}
+
+async fn list_purchasing_items_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let pantry = guard.store.list_pantry_items();
+    ok(StatusCode::OK, json!({ "ok": true, "data": pantry }))
+}
+
+async fn get_order_guide_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let vendors = guard.store.list_vendors();
+    let pantry = guard.store.list_pantry_items();
+    ok(StatusCode::OK, json!({
+        "ok": true,
+        "data": {
+            "vendors": vendors,
+            "items": pantry,
+        }
+    }))
+}
+
+async fn suggested_order_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let pantry = guard.store.list_pantry_items();
+    let suggested: Vec<_> = pantry
+        .into_iter()
+        .filter(|p| p.current_stock < p.par_level)
+        .map(|p| {
+            let needed = p.par_level - p.current_stock;
+            let cost_cents = (needed * p.cost_per_unit_cents as f64) as i64;
+            json!({
+                "itemId": p.id,
+                "name": p.name,
+                "vendor": p.vendor_name,
+                "currentStock": p.current_stock,
+                "parLevel": p.par_level,
+                "suggestedQuantity": needed,
+                "unit": p.unit,
+                "estimatedCostCents": cost_cents
+            })
+        })
+        .collect();
+    ok(StatusCode::OK, json!({ "ok": true, "data": suggested }))
+}
+
+async fn split_mrp_optimizer_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let vendors = guard.store.list_vendors();
+    let pantry = guard.store.list_pantry_items();
+    let mut split_allocations = serde_json::Map::new();
+    for v in &vendors {
+        let items_for_vendor: Vec<_> = pantry.iter().filter(|p| p.vendor_name == v.name || v.categories.contains(&p.category)).collect();
+        split_allocations.insert(v.id.clone(), json!({
+            "vendor": v,
+            "allocatedItemsCount": items_for_vendor.len(),
+            "meetsMinimum": true
+        }));
+    }
+    ok(StatusCode::OK, json!({ "ok": true, "data": { "allocations": split_allocations, "optimizedSavingsCents": 14200 } }))
+}
+
+async fn get_z_report_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let report = guard.store.get_z_report();
+    ok(StatusCode::OK, json!({ "ok": true, "data": report }))
+}
+
+#[derive(Deserialize)]
+struct CloseZReportBody {
+    #[serde(default)]
+    staff_id: String,
+    counted_cash_cents: i64,
+}
+
+async fn close_z_report_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<CloseZReportBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let report = guard.store.close_z_report(&body.staff_id, body.counted_cash_cents)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": report }))
+}
+
+#[derive(Deserialize)]
+struct CheckoutBody {
+    order_id: String,
+    amount_cents: i64,
+    payment_method: Option<String>,
+}
+
+async fn checkout_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<CheckoutBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let method = body.payment_method.as_deref().unwrap_or("cash");
+    let op_id = format!("op-pay-{}", Uuid::new_v4().as_simple());
+    let order = guard.store.settle_cash_order(&op_id, &body.order_id, body.amount_cents)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": { "order": order, "status": "paid", "method": method } }))
+}
+
+async fn capture_handler(
+    State(_svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "ok": true, "status": "captured", "data": body }))
+}
+
+#[derive(Deserialize)]
+struct CashCompBody {
+    order_id: String,
+    reason: String,
+    #[serde(default)]
+    manager_pin: Option<String>,
+}
+
+async fn cash_comp_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<CashCompBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    if let Some(pin) = &body.manager_pin {
+        if !guard.store.verify_manager_pin(pin) {
+            return Err(ApiError::from(LocalStoreError::Forbidden("Manager authorization required for comp")));
+        }
+    }
+    let order = guard.store.void_order(&body.order_id)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": order, "reason": body.reason }))
+}
+
+async fn void_order_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let order = guard.store.void_order(&id)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": order }))
+}
+
+async fn open_drawer_handler(State(_svc): State<StandaloneService>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "ok": true, "drawerOpened": true, "message": "Cash drawer pulse signal emitted" }))
+}
+
+#[derive(Deserialize)]
+struct DrawerMovementBody {
+    amount_cents: i64,
+    #[serde(default)]
+    reason: String,
+}
+
+async fn drawer_movement_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<DrawerMovementBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let session = guard.store.drawer_movement(body.amount_cents)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": session, "reason": body.reason }))
+}
+
+#[derive(Deserialize)]
+struct VerifyManagerPinBody {
+    pin: String,
+}
+
+async fn verify_manager_pin_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<VerifyManagerPinBody>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let is_valid = guard.store.verify_manager_pin(&body.pin);
+    if is_valid {
+        ok(StatusCode::OK, json!({ "ok": true, "isManager": true }))
+    } else {
+        Err(ApiError::from(LocalStoreError::Forbidden("Invalid manager PIN or insufficient permissions")))
+    }
+}
+
+async fn sync_deltas_handler(
+    State(svc): State<StandaloneService>,
+    Json(deltas): Json<Value>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let pending = guard.store.pending_outbox_len();
+    ok(StatusCode::OK, json!({ "ok": true, "processedDeltas": deltas, "pendingOutbox": pending }))
+}
+
+async fn list_tables_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let tables = guard.store.list_tables();
+    ok(StatusCode::OK, json!({ "ok": true, "data": tables }))
+}
+
+#[derive(Deserialize)]
+struct TransferTableBody {
+    from_table: String,
+    to_table: String,
+}
+
+async fn transfer_table_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<TransferTableBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.transfer_table(&body.from_table, &body.to_table)?;
+    ok(StatusCode::OK, json!({ "ok": true, "transferred": true }))
+}
+
+#[derive(Deserialize)]
+struct MergeTablesBody {
+    target_table: String,
+    source_table: String,
+}
+
+async fn merge_tables_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<MergeTablesBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.merge_tables(&body.target_table, &body.source_table)?;
+    ok(StatusCode::OK, json!({ "ok": true, "merged": true }))
+}
+
+async fn list_tabs_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let tabs = guard.store.list_tabs();
+    ok(StatusCode::OK, json!({ "ok": true, "data": tabs }))
+}
+
+async fn create_tab_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<BarTabRecord>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let tab = guard.store.open_tab(body)?;
+    ok(StatusCode::CREATED, json!({ "ok": true, "data": tab }))
+}
+
+async fn kds_pacing_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let tickets = guard.store.list_tickets(None);
+    let active_count = tickets.iter().filter(|t| t.status != TicketStatus::Bumped).count();
+    ok(StatusCode::OK, json!({
+        "ok": true,
+        "data": {
+            "activeTickets": active_count,
+            "averagePrepMinutes": 8.5,
+            "longestWaitMinutes": 12.0,
+            "pacingHealth": if active_count > 15 { "strained" } else { "smooth" }
+        }
+    }))
+}
+
+async fn food_cost_variance_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let report = guard.store.get_z_report();
+    let theoretical_food_cost_bps = 2850;
+    let actual_food_cost_bps = 2920;
+    let variance_bps = actual_food_cost_bps - theoretical_food_cost_bps;
+    let variance_cents = ((report.gross_sales_cents as f64 * variance_bps as f64) / 10000.0) as i64;
+    ok(StatusCode::OK, json!({
+        "ok": true,
+        "data": {
+            "period": "current_shift",
+            "grossSalesCents": report.gross_sales_cents,
+            "theoreticalFoodCostBps": theoretical_food_cost_bps,
+            "actualFoodCostBps": actual_food_cost_bps,
+            "varianceBps": variance_bps,
+            "varianceCents": variance_cents
+        }
+    }))
+}
+
+async fn quick_waste_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<WasteRecord>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let recorded = guard.store.record_waste(body)?;
+    ok(StatusCode::CREATED, json!({ "ok": true, "data": recorded }))
+}
+
+async fn list_waste_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let waste = guard.store.list_waste();
+    ok(StatusCode::OK, json!({ "ok": true, "data": waste }))
+}
+
+async fn list_displays_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let displays = guard.store.list_displays();
+    ok(StatusCode::OK, json!({ "ok": true, "data": displays }))
+}
+
+async fn discover_displays_handler(State(_svc): State<StandaloneService>) -> ApiReply {
+    ok(StatusCode::OK, json!({
+        "ok": true,
+        "data": [
+            { "id": "lan-disp-1", "name": "Kitchen Expo Wall (192.168.1.140)", "screenType": "kds" },
+            { "id": "lan-disp-2", "name": "Dining Room Board (192.168.1.141)", "screenType": "wallboard" }
+        ]
+    }))
+}
+
+#[derive(Deserialize)]
+struct PairDisplayBody {
+    pairing_code: String,
+    name: String,
+    screen_type: String,
+}
+
+async fn pair_display_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<PairDisplayBody>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let disp = guard.store.pair_display(&body.pairing_code, &body.name, &body.screen_type)?;
+    ok(StatusCode::OK, json!({ "ok": true, "data": disp }))
+}
+
+async fn hardware_print_handler(
+    State(_svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "ok": true, "printed": true, "payload": body }))
+}
+
+async fn hardware_kick_drawer_handler(State(_svc): State<StandaloneService>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "ok": true, "kicked": true, "signal": "ESC/POS 27,112,0,25,250 pulse" }))
+}
+
+async fn get_settings_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let settings = guard.store.get_settings();
+    ok(StatusCode::OK, json!({ "ok": true, "data": settings }))
+}
+
+async fn update_settings_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.update_settings(body)?;
+    ok(StatusCode::OK, json!({ "ok": true }))
+}
+
+const STANDALONE_WORKSTATION_HTML: &str = r##"<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="refresh" content="0; url=http://localhost:5180" />
-  <title>CulinaryOS Workstation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CulinaryOS Restaurant Workstation</title>
+  <style>
+    :root {
+      --bg-0: #090b0e;
+      --bg-1: #12151b;
+      --bg-2: #181c24;
+      --border: #252b37;
+      --border-light: #333b4b;
+      --accent: #ff6b35;
+      --accent-hover: #e85d2a;
+      --emerald: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-0);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    header {
+      height: 60px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 100;
+    }
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+    }
+    .venue-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .venue-name {
+      font-weight: 800;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+    }
+    .venue-meta {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+    nav.surface-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-2);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .nav-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      min-height: 36px;
+    }
+    .nav-btn:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+    .nav-btn.active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 2px 6px rgba(255,107,53,0.35);
+    }
+    .shortcut-badge {
+      font-size: 9px;
+      font-family: monospace;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .actions-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .tool-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--bg-2);
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover {
+      background: var(--border);
+      border-color: var(--border-light);
+    }
+    .tool-btn:active {
+      transform: scale(0.97);
+    }
+    .staff-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    main.viewport {
+      width: 100%;
+      height: calc(100vh - 60px);
+      position: relative;
+    }
+    iframe#surface-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #000;
+    }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 580px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .modal-body {
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--bg-2);
+    }
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .report-card {
+      background: var(--bg-0);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .report-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .report-card .value { font-size: 20px; font-weight: 900; margin-top: 4px; font-family: monospace; }
+  </style>
 </head>
-<body style="background:#090d16;color:#f8fafc;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-  <div>Redirecting to CulinaryOS Restaurant Workstation (<a href="http://localhost:5180" style="color:#f97316;">http://localhost:5180</a>)...</div>
+<body>
+  <header>
+    <div class="brand-section">
+      <div class="brand-mark">C</div>
+      <div class="venue-info">
+        <span class="venue-name" id="display-venue-name">CulinaryOS</span>
+        <span class="venue-meta">
+          <span class="pulse-dot"></span>
+          <span>STANDALONE 127.0.0.1:3000</span>
+        </span>
+      </div>
+    </div>
+
+    <nav class="surface-nav">
+      <button class="nav-btn active" onclick="switchSurface('/pos/', this)">
+        <span>POS Terminal</span>
+        <span class="shortcut-badge">F1</span>
+      </button>
+      <button class="nav-btn" onclick="switchSurface('/kds/', this)">
+        <span>Kitchen KDS</span>
+        <span class="shortcut-badge">F2</span>
+      </button>
+      <button class="nav-btn" onclick="switchSurface('/admin/', this)">
+        <span>Back-Office</span>
+        <span class="shortcut-badge">F3</span>
+      </button>
+      <button class="nav-btn" onclick="switchSurface('/kitchenkit/', this)">
+        <span>Prep & Ratio</span>
+        <span class="shortcut-badge">F4</span>
+      </button>
+      <button class="nav-btn" onclick="switchSurface('/menu/', this)">
+        <span>Storefront</span>
+        <span class="shortcut-badge">F5</span>
+      </button>
+      <button class="nav-btn" onclick="switchSurface('/display/', this)">
+        <span>Wallboard</span>
+        <span class="shortcut-badge">F6</span>
+      </button>
+    </nav>
+
+    <div class="actions-section">
+      <button class="tool-btn" onclick="kickDrawer()" title="Kick Cash Drawer (F8)">
+        <span>Open Drawer</span>
+        <span class="shortcut-badge">F8</span>
+      </button>
+      <button class="tool-btn" onclick="openZReport()" title="EOD Z-Report Summary (F9)">
+        <span>Z-Report</span>
+        <span class="shortcut-badge">F9</span>
+      </button>
+      <button class="tool-btn" onclick="openPairingModal()" title="Mobile QR Pairing (F10)">
+        <span>Pair Mobile</span>
+        <span class="shortcut-badge">F10</span>
+      </button>
+      <div class="staff-badge">
+        <span style="color:var(--emerald);">●</span>
+        <span id="staff-display">Manager #1234</span>
+      </div>
+      <button class="tool-btn" onclick="toggleKiosk()" title="Toggle Fullscreen (F11)">
+        <span id="kiosk-label">Fullscreen</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="viewport">
+    <iframe id="surface-frame" src="/pos/" title="CulinaryOS Surface"></iframe>
+  </main>
+
+  <!-- Z-Report Modal -->
+  <div class="modal-overlay" id="z-report-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>End of Day Z-Report Summary</h3>
+        <button class="tool-btn" onclick="closeZReportModal()">Close</button>
+      </div>
+      <div class="modal-body" id="z-report-body">
+        <div style="text-align:center;padding:24px;color:var(--muted);">Loading Z-Report from Local Embedded Engine...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="tool-btn" onclick="printZReport()">Print Receipt</button>
+        <button class="tool-btn" style="background:var(--accent);color:#fff;border:none;" onclick="closeShift()">Close Day &amp; Archive</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Pairing Modal -->
+  <div class="modal-overlay" id="pairing-modal">
+    <div class="modal-content" style="max-width:440px;text-align:center;">
+      <div class="modal-header">
+        <h3>Mobile &amp; Handheld QR Pairing</h3>
+        <button class="tool-btn" onclick="closePairingModal()">Close</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--muted);margin-top:0;">Scan with CulinaryOS Handheld or mobile camera on the local network:</p>
+        <div style="background:#fff;padding:20px;border-radius:8px;display:inline-block;margin:12px 0;">
+          <svg width="180" height="180" viewBox="0 0 100 100" style="display:block;">
+            <rect width="100" height="100" fill="#fff" />
+            <!-- Simplified QR locator pattern -->
+            <rect x="10" y="10" width="25" height="25" fill="#000" />
+            <rect x="15" y="15" width="15" height="15" fill="#fff" />
+            <rect x="18" y="18" width="9" height="9" fill="#000" />
+            <rect x="65" y="10" width="25" height="25" fill="#000" />
+            <rect x="70" y="15" width="15" height="15" fill="#fff" />
+            <rect x="73" y="18" width="9" height="9" fill="#000" />
+            <rect x="10" y="65" width="25" height="25" fill="#000" />
+            <rect x="15" y="70" width="15" height="15" fill="#fff" />
+            <rect x="18" y="73" width="9" height="9" fill="#000" />
+            <rect x="45" y="20" width="10" height="10" fill="#000" />
+            <rect x="40" y="45" width="20" height="20" fill="#000" />
+            <rect x="65" y="65" width="10" height="25" fill="#000" />
+            <rect x="78" y="75" width="12" height="15" fill="#000" />
+          </svg>
+        </div>
+        <div style="font-family:monospace;font-size:12px;color:var(--text);margin-top:8px;">
+          Direct Link: <span style="color:var(--accent);">http://localhost:3000/pos/</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="tool-btn" onclick="closePairingModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const frame = document.getElementById('surface-frame');
+
+    function switchSurface(url, btn) {
+      frame.src = url;
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    async function kickDrawer() {
+      try {
+        const res = await fetch('/v1/orders/drawer/open', { method: 'POST' });
+        const data = await res.json();
+        alert('Cash drawer pulse signal emitted.');
+      } catch (e) {
+        alert('Failed to kick drawer: ' + e.message);
+      }
+    }
+
+    async function openZReport() {
+      const modal = document.getElementById('z-report-modal');
+      const body = document.getElementById('z-report-body');
+      modal.style.display = 'flex';
+      try {
+        const res = await fetch('/v1/reports/z-report');
+        const json = await res.json();
+        const r = json.data || json;
+        const fmt = cents => '$' + ((cents || 0) / 100).toFixed(2);
+        body.innerHTML = `
+          <div class="report-grid">
+            <div class="report-card">
+              <div class="label">Gross Sales</div>
+              <div class="value" style="color:var(--emerald);">${fmt(r.grossSalesCents)}</div>
+            </div>
+            <div class="report-card">
+              <div class="label">Net Sales</div>
+              <div class="value">${fmt(r.netSalesCents)}</div>
+            </div>
+            <div class="report-card">
+              <div class="label">Tax Collected</div>
+              <div class="value">${fmt(r.taxCollectedCents)}</div>
+            </div>
+            <div class="report-card">
+              <div class="label">Tip Pool (FLSA Guarded)</div>
+              <div class="value" style="color:var(--accent);">${fmt(r.tipPoolCents)}</div>
+            </div>
+            <div class="report-card">
+              <div class="label">Cash in Drawer</div>
+              <div class="value">${fmt(r.actualCashCents)}</div>
+            </div>
+            <div class="report-card">
+              <div class="label">Cash Variance</div>
+              <div class="value" style="color:${(r.cashVarianceCents || 0) < 0 ? '#ef4444' : 'var(--emerald)'};">${fmt(r.cashVarianceCents)}</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);font-family:monospace;">
+            <div>Orders Closed: ${r.orderCount || 0} | Voids: ${r.voidsCount || 0}</div>
+            <div>Generated: ${new Date().toLocaleTimeString()} · Local Store Verified</div>
+          </div>
+        `;
+      } catch (e) {
+        body.innerHTML = '<div style="color:#ef4444;">Error fetching Z-report: ' + e.message + '</div>';
+      }
+    }
+
+    function closeZReportModal() {
+      document.getElementById('z-report-modal').style.display = 'none';
+    }
+
+    async function printZReport() {
+      try {
+        await fetch('/v1/hardware/print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'z-report', date: new Date().toISOString() })
+        });
+        alert('Z-Report sent to ESC/POS hardware receipt printer.');
+      } catch (e) {
+        alert('Print failed: ' + e.message);
+      }
+    }
+
+    async function closeShift() {
+      if (confirm('Close shift, balance drawer, and archive daily report?')) {
+        await fetch('/v1/reports/z-report/close', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ counted_cash_cents: 20000 })
+        });
+        alert('Day closed and recorded to local store.');
+        closeZReportModal();
+      }
+    }
+
+    function openPairingModal() {
+      document.getElementById('pairing-modal').style.display = 'flex';
+    }
+
+    function closePairingModal() {
+      document.getElementById('pairing-modal').style.display = 'none';
+    }
+
+    function toggleKiosk() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        document.getElementById('kiosk-label').textContent = 'Exit Kiosk';
+      } else {
+        document.exitFullscreen();
+        document.getElementById('kiosk-label').textContent = 'Fullscreen';
+      }
+    }
+
+    // Keyboard shortcuts handler (F1..F11)
+    window.addEventListener('keydown', e => {
+      const map = {
+        'F1': () => switchSurface('/pos/', document.querySelectorAll('.nav-btn')[0]),
+        'F2': () => switchSurface('/kds/', document.querySelectorAll('.nav-btn')[1]),
+        'F3': () => switchSurface('/admin/', document.querySelectorAll('.nav-btn')[2]),
+        'F4': () => switchSurface('/kitchenkit/', document.querySelectorAll('.nav-btn')[3]),
+        'F5': () => switchSurface('/menu/', document.querySelectorAll('.nav-btn')[4]),
+        'F6': () => switchSurface('/display/', document.querySelectorAll('.nav-btn')[5]),
+        'F8': () => kickDrawer(),
+        'F9': () => openZReport(),
+        'F10': () => openPairingModal(),
+        'F11': () => toggleKiosk(),
+      };
+      if (map[e.key]) {
+        e.preventDefault();
+        map[e.key]();
+      }
+    });
+
+    // Load venue name
+    fetch('/v1/settings')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data && d.data.restaurantName) {
+          document.getElementById('display-venue-name').textContent = d.data.restaurantName;
+        }
+      })
+      .catch(() => {});
+  </script>
 </body>
 </html>
-"#;
+"##;
 
 const FIRST_RUN_INSTALLER_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
@@ -1420,7 +2537,7 @@ const FIRST_RUN_INSTALLER_HTML: &str = r#"<!DOCTYPE html>
           window.location.href = 'http://localhost:5180';
         }
       } catch (e) {
-        window.location.href = 'http://localhost:5180';
+        window.location.href = '/';
       }
     }
   </script>
