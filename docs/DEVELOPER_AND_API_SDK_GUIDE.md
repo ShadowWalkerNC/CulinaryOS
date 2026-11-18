@@ -160,3 +160,65 @@ const costing = calculateDishCost72GP({
 const tiers = await client.intelligence.getTiers();
 const resilience = await client.intelligence.resilience();
 ```
+
+---
+
+## 8. Universal CLI (`culinary`) Complete Command Reference
+
+Every subsystem in CulinaryOS is 100% operable from the terminal against either the local Native Rust Workstation (`http://127.0.0.1:3000`) or the Cloud Hono Server (`apps/server`):
+
+### A. Authentication, RBAC Roles, Device Tokens & Audit Trail (`culinary auth`)
+```powershell
+culinary auth login 1234                                              # Authenticate PIN & inspect FLSA tip eligibility
+culinary auth verify-manager 1234                                     # Verify Manager/Owner override PIN authority
+culinary auth whoami                                                  # Inspect active session, tenant binding & capabilities
+culinary auth roles                                                   # Display full RBAC role & FLSA 29 U.S.C. 203(m)(2)(B) matrix
+culinary auth staff                                                   # List all registered venue staff & PIN roster
+culinary auth create-staff --name "Marco Rossi" --role cook --pin 4321 # Provision staff member with salted SHA-256 PIN
+culinary auth mint-device-token --label "Grill KDS" --role kds --station grill --manager-pin 1234
+culinary auth audit-logs                                              # View chronological security & manager override audit logs
+```
+
+### B. Webhooks: Stripe Connect HMAC-SHA256, Delivery Relays & Partner Endpoints (`culinary webhooks`)
+```powershell
+culinary webhooks events                                              # Inspect inbound/outbound webhook delivery & HMAC ledger
+culinary webhooks test-stripe --order ord-101 --amount 4250           # Sign & test HMAC-SHA256 payment_intent.succeeded webhook
+culinary webhooks simulate-delivery --provider doordash --customer "Alex Rivera" # Route inbound delivery order to POS & KDS
+culinary webhooks endpoints                                           # List outbound partner webhook subscriptions (ERP/Slack)
+culinary webhooks add-endpoint --url https://erp.example.com/hook     # Register outbound webhook & provision whsec_ signing key
+culinary webhooks replay wh-evt-stripe-001                            # Replay a logged webhook event idempotently
+```
+
+### C. Absorbed Chef's Intelligence & Open Kitchen Toolkit (`culinary chefs`)
+```powershell
+culinary chefs list                                                   # Browse all 121 absorbed skills (Free Core vs SaaS Pro)
+culinary chefs list --tier free_core                                  # List the 39 Free Core deterministic kitchen skills
+culinary chefs packs                                                  # List all 8 operational packs (home, bakery, food-truck, etc.)
+culinary chefs load daily-brief-generator                             # Load full absorbed SKILL.md operational playbook
+culinary chefs cost-dish --name "Pan-Roasted Halibut" --gp 72         # Run deterministic 72% GP dish costing with AP/EP trim yield
+culinary chefs allergen-matrix                                        # Run 14-regulated-allergen FIR/Natasha's Law & FDA Top-9 audit
+culinary chefs audit-rota                                             # Audit shift schedule for WTR Reg 10 (<11h rest) breaches
+```
+
+### D. Cloud Bridge, SaaS Tiers & Resilience Fallbacks (`culinary cloud` & `culinary autopilot`)
+```powershell
+culinary cloud status                                                 # Inspect installed Rust site ID, SaaS grant & outbox depth
+culinary cloud enroll-demo                                            # Enroll signed HMAC-SHA256 SaaS Cloud Pro grant locally
+culinary cloud sync                                                   # Flush pending offline outbox events with SHA-256 verification
+culinary autopilot tiers                                              # Display Free Open-Source ($0) vs Cloud Pro ($49) vs Enterprise ($149)
+culinary autopilot resilience                                         # Verify all 5 failure-mode fallbacks (WAN, Printer, Payment, SaaS, AI)
+```
+
+### E. Daily POS, KDS, Menu & Pantry Operations
+```powershell
+culinary menu list                                                    # List active menu catalog, station assignments & prices
+culinary menu toggle-86 item-burrata                                  # Toggle real-time 86 status across POS, KDS & Storefront
+culinary menu set-price item-ribeye 4800                              # Update item price in integer cents ($48.00)
+culinary orders list                                                  # List open, sent, paid & voided orders
+culinary orders create --table "Table 8" --item item-diavola --qty 2  # Create a new POS order in integer cents
+culinary orders fire <orderId>                                        # Fire order to KDS station rails
+culinary inventory check --low                                        # Inspect pantry stock levels & below-par alerts
+culinary inventory reorder                                            # Generate automated purchase order for below-par items
+culinary doctor ui                                                    # Audit Jakob's Law, 48px touch targets & OKLCH contrast
+culinary doctor security                                              # Audit PostgreSQL RLS coverage & service_role isolation
+```

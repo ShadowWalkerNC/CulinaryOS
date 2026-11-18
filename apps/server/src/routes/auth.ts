@@ -282,3 +282,120 @@ authRoutes.post('/hash-pin', async (c) => {
   return ok(c, { pin_hash: hashPin(String(body.pin)) });
 });
 
+
+export const RBAC_ROLES_MATRIX = [
+  {
+    role: 'owner',
+    title: 'Restaurant Owner',
+    hasHiringFiringAuthority: true,
+    flsaTipPoolEligible: false,
+    flsaCitation: '29 U.S.C. 203(m)(2)(B) — Excluded (Owner/Employer)',
+    capabilities: ['*'],
+  },
+  {
+    role: 'manager',
+    title: 'General Manager',
+    hasHiringFiringAuthority: true,
+    flsaTipPoolEligible: false,
+    flsaCitation: '29 U.S.C. 203(m)(2)(B) — Excluded (Manager/Supervisor)',
+    capabilities: ['pos:*', 'kds:*', 'admin:*', 'ops:*', 'reports:*', 'void:approve', 'drawer:kick'],
+  },
+  {
+    role: 'executive_chef',
+    title: 'Executive / Head Chef',
+    hasHiringFiringAuthority: true,
+    flsaTipPoolEligible: false,
+    flsaCitation: '29 U.S.C. 203(m)(2)(B) — Excluded (BOH Management)',
+    capabilities: ['kds:*', 'kitchenkit:*', 'pantry:*', 'purchasing:*', 'menu:86', 'intelligence:*'],
+  },
+  {
+    role: 'server',
+    title: 'Front-of-House Server',
+    hasHiringFiringAuthority: false,
+    flsaTipPoolEligible: true,
+    flsaCitation: 'Eligible — FOH Tipped Employee',
+    capabilities: ['pos:orders', 'pos:tables', 'pos:tabs', 'pos:checkout'],
+  },
+  {
+    role: 'bartender',
+    title: 'Bartender',
+    hasHiringFiringAuthority: false,
+    flsaTipPoolEligible: true,
+    flsaCitation: 'Eligible — FOH Tipped Employee',
+    capabilities: ['pos:orders', 'pos:tabs', 'pos:checkout', 'drawer:open', 'kds:bar'],
+  },
+  {
+    role: 'line_cook',
+    title: 'Line Cook / Station Chef',
+    hasHiringFiringAuthority: false,
+    flsaTipPoolEligible: true,
+    flsaCitation: 'Eligible only when employer pays full statutory minimum wage (no tip credit)',
+    capabilities: ['kds:station', 'kds:bump', 'kitchenkit:prep', 'ops:waste'],
+  },
+  {
+    role: 'host',
+    title: 'Host / Cashier',
+    hasHiringFiringAuthority: false,
+    flsaTipPoolEligible: true,
+    flsaCitation: 'Eligible — FOH Support Pool',
+    capabilities: ['pos:tables', 'reservations:*', 'display:pickup'],
+  },
+];
+
+authRoutes.get('/roles', (c) => {
+  return ok(c, RBAC_ROLES_MATRIX);
+});
+
+authRoutes.get('/session', requireTenant, (c) => {
+  const role = c.get('authRole') ?? 'server';
+  const roleSpec = RBAC_ROLES_MATRIX.find((r) => r.role === role) ?? RBAC_ROLES_MATRIX[3]!;
+  return ok(c, {
+    tenantId: c.get('tenantId'),
+    userId: c.get('userId') ?? 'demo-session',
+    role,
+    title: roleSpec.title,
+    authMode: c.get('authMode') ?? 'relaxed',
+    flsaTipPoolEligible: roleSpec.flsaTipPoolEligible,
+    hasHiringFiringAuthority: roleSpec.hasHiringFiringAuthority,
+    capabilities: roleSpec.capabilities,
+  });
+});
+
+authRoutes.post('/device-token', requireTenant, async (c) => {
+  const tenantId = c.get('tenantId') || DEMO_TENANT;
+  const body = await c.req
+    .json<{ label?: string; deviceRole?: 'pos' | 'kds' | 'display' | 'handheld'; station?: string; managerPin?: string }>()
+    .catch(() => ({} as any));
+
+  const managerPin = String(body.managerPin ?? '').trim();
+  const mgr = await verifyManagerPinDirectly(tenantId, managerPin);
+  if (!mgr.authorized) {
+    return err(c, 'FORBIDDEN', 'Valid Manager or Owner PIN is required to mint device tokens', 403);
+  }
+
+  const label = String(body.label || 'POS Terminal #1').trim();
+  const deviceRole = body.deviceRole || 'pos';
+  const station = body.station || null;
+  const rawToken = `cos_dev_${deviceRole}_${Buffer.from(`${tenantId}:${label}:${Date.now()}`).toString('base64url')}`;
+
+  return ok(
+    c,
+    {
+      deviceId: `dev-${Date.now().toString(36)}`,
+      tenantId,
+      label,
+      deviceRole,
+      station,
+      issuedByManagerId: mgr.managerId ?? 'manager',
+      token: rawToken,
+      capabilities:
+        deviceRole === 'kds'
+          ? [`kds:${station || 'hot'}`, 'kds:bump']
+          : deviceRole === 'display'
+          ? ['display:read', 'display:bump']
+          : ['pos:orders', 'pos:checkout', 'kds:read'],
+      expiresAt: new Date(Date.now() + 365 * 86400 * 1000).toISOString(),
+    },
+    201,
+  );
+});

@@ -48,6 +48,7 @@ import { displaysRoutes }      from './routes/displays';
 import { intelligenceRoutes }  from './routes/intelligence';
 import { marketingRoutes }     from './routes/marketing';
 import { hardwareRoutes }      from './routes/hardware';
+import { webhooksRoutes }      from './routes/webhooks';
 import type { Env }            from './types';
 
 
@@ -172,6 +173,7 @@ app.route('/v1/hardware',     hardwareRoutes);
 
 // Stripe webhook — no tenant middleware (signature-verified)
 app.route('/v1/webhooks/stripe', stripeWebhook);
+app.route('/v1/webhooks',        webhooksRoutes);
 
 // Marketplace & optional AI layer
 app.route('/v1/marketplace', marketplaceRoutes);

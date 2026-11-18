@@ -33,6 +33,10 @@ import { diagnosticsCommand } from './commands/diagnostics';
 import { gastronomyCommand } from './commands/gastronomy';
 import { displayCommand } from './commands/display';
 import { interagencyCommand } from './commands/interagency';
+import { authCommand } from './commands/auth';
+import { webhooksCommand } from './commands/webhooks';
+import { chefsCommand } from './commands/chefs';
+import { cloudCommand } from './commands/cloud';
 
 const program = new Command();
 
@@ -72,6 +76,10 @@ program.addCommand(diagnosticsCommand);
 program.addCommand(gastronomyCommand);
 program.addCommand(displayCommand);
 program.addCommand(interagencyCommand);
+program.addCommand(authCommand);
+program.addCommand(webhooksCommand);
+program.addCommand(chefsCommand);
+program.addCommand(cloudCommand);
 
 // Top-Level Doctor Command (supports: culinary doctor security, culinary doctor ui)
 program

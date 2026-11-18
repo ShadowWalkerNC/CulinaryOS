@@ -424,6 +424,81 @@ export class CulinaryOSClient {
     createProviderAdapter: (config: ProviderConfig): ProviderAdapter =>
       createProviderAdapter(config),
   };
+
+  // --- Authentication, RBAC Roles, Device Tokens & Security Audit Subsystem ---
+  readonly auth = {
+    pinLogin: (pin: string) =>
+      this.request<any>('/v1/auth/pin-login', {
+        method: 'POST',
+        body: JSON.stringify({ pin, tenant_id: this.tenantId }),
+      }),
+    verifyManagerPin: (pin: string) =>
+      this.request<any>('/v1/auth/verify-manager-pin', {
+        method: 'POST',
+        body: JSON.stringify({ pin, tenant_id: this.tenantId }),
+      }),
+    session: () => this.request<any>('/v1/auth/session'),
+    me: () => this.request<any>('/v1/auth/me'),
+    roles: () => this.request<any[]>('/v1/auth/roles'),
+    auditLogs: (limit = 50) => this.request<any[]>(`/v1/auth/audit-logs?limit=${limit}`),
+    mintDeviceToken: (params: {
+      label: string;
+      deviceRole: 'pos' | 'kds' | 'display' | 'handheld';
+      station?: string;
+      managerPin: string;
+    }) =>
+      this.request<any>('/v1/auth/device-token', {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
+  };
+
+  // --- Webhooks (Stripe Connect, Delivery Order Relays, Outbound Subscriptions & Replay) ---
+  readonly webhooks = {
+    listEvents: () => this.request<any[]>('/v1/webhooks/events'),
+    replayEvent: (eventId: string) =>
+      this.request<any>(`/v1/webhooks/events/${encodeURIComponent(eventId)}/replay`, {
+        method: 'POST',
+      }),
+    listEndpoints: () => this.request<any[]>('/v1/webhooks/endpoints'),
+    registerEndpoint: (params: { url: string; description?: string; events?: string[] }) =>
+      this.request<any>('/v1/webhooks/endpoints', {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
+    deleteEndpoint: (endpointId: string) =>
+      this.request<any>(`/v1/webhooks/endpoints/${encodeURIComponent(endpointId)}`, {
+        method: 'DELETE',
+      }),
+    simulateDelivery: (
+      provider: 'doordash' | 'ubereats' | 'grubhub' | 'storefront',
+      payload: { orderId?: string; customerName?: string; items?: any[] },
+    ) =>
+      this.request<any>(`/v1/webhooks/delivery/${encodeURIComponent(provider)}`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  };
+
+  // --- Cloud Bridge & Signed SaaS Entitlements Subsystem ---
+  readonly cloud = {
+    status: () => this.request<any>('/v1/cloud/status'),
+    connectGrant: (signedGrant: any) =>
+      this.request<any>('/v1/cloud/connect', {
+        method: 'POST',
+        body: JSON.stringify(signedGrant),
+      }),
+    demoEnroll: () =>
+      this.request<any>('/v1/cloud/demo-enroll', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+    sync: () =>
+      this.request<any>('/v1/cloud/sync', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+  };
 }
 
 export * from '@culinaryos/hardware';

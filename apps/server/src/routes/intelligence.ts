@@ -226,14 +226,14 @@ intelligenceRoutes.post('/chefs-intelligence/cost-dish', async (c) => {
       menuPriceGross?: number;
       ingredients?: Array<{ name: string; weightGrams: number; bulkPricePerKg: number; trimYieldPct?: number }>;
     }>()
-    .catch(() => ({}));
+    .catch(() => ({} as any));
   const targetGpPct = body.targetGpPct ?? 72;
   const isVatRegistered = body.isVatRegistered ?? false;
   const vatRatePct = body.vatRatePct ?? 20;
   const ingredients = body.ingredients || [];
 
   let totalRawFoodCost = 0;
-  const breakdown = ingredients.map((ing) => {
+  const breakdown = ingredients.map((ing: any) => {
     const yieldFactor = ing.trimYieldPct && ing.trimYieldPct > 0 ? ing.trimYieldPct / 100 : 1.0;
     const effectiveCostPerKg = (ing.bulkPricePerKg || 0) / yieldFactor;
     const portionCost = effectiveCostPerKg * ((ing.weightGrams || 0) / 1000);
