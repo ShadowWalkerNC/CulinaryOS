@@ -83,7 +83,7 @@ export default function PantryPage() {
 
       {!items || items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-5xl mb-4">🥫</div>
+          <div className="text-5xl mb-4"></div>
           <h2 className="text-lg font-semibold">Pantry is empty</h2>
           <p className="mt-2 text-sm text-gray-500">Add ingredients to track your stock.</p>
         </div>

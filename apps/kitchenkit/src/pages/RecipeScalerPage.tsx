@@ -616,27 +616,27 @@ export default function RecipeScalerPage() {
           <div className="flex flex-wrap gap-1.5">
             {dietaryProfile.isVegan && (
               <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                🌱 Vegan
+                Vegan
               </span>
             )}
             {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
               <span className="badge bg-green-500/20 text-green-300 border border-green-500/30">
-                🥗 Vegetarian
+                Vegetarian
               </span>
             )}
             {dietaryProfile.isGlutenFree && (
               <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                🌾 Gluten-Free
+                Gluten-Free
               </span>
             )}
             {dietaryProfile.isDairyFree && (
               <span className="badge bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                🥛 Dairy-Free
+                Dairy-Free
               </span>
             )}
             {dietaryProfile.isNutFree && (
               <span className="badge bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                🥜 Nut-Free
+                Nut-Free
               </span>
             )}
           </div>

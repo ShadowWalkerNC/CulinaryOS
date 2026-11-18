@@ -97,7 +97,7 @@ export const CheeziesPromoView: React.FC = () => {
 
           {/* Next Tour Stop Banner */}
           <div className="p-4 rounded-2xl bg-[#1e1302] border border-amber-500/40 flex items-center gap-3 text-amber-200 text-sm font-bold">
-            <span className="text-xl">📍</span>
+            <span className="text-xl"></span>
             <span>{data.nextLocation}</span>
           </div>
         </div>

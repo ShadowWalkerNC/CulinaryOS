@@ -148,7 +148,7 @@ export const StaffView: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <span className={`text-xl ${item.done ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {item.done ? '✓' : '○'}
+                      {item.done ? '' : '○'}
                     </span>
                     <div>
                       <span className={`text-base font-bold ${item.done ? 'line-through text-slate-400' : 'text-slate-100'}`}>
@@ -202,7 +202,7 @@ export const StaffView: React.FC = () => {
             <ul className="space-y-3 font-sans">
               {(data.safetyReminders || []).map((rem: string, idx: number) => (
                 <li key={idx} className="flex items-start gap-2.5 text-slate-300 text-sm">
-                  <span className="text-blue-400 font-bold">🛡</span>
+                  <span className="text-blue-400 font-bold"></span>
                   <span>{rem}</span>
                 </li>
               ))}

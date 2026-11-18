@@ -159,7 +159,7 @@ export function useCompletePrepPlan() {
       qc.invalidateQueries({ queryKey: ['prep_history'] });
       qc.invalidateQueries({ queryKey: ['par_levels'] });
       qc.invalidateQueries({ queryKey: ['dashboard_stats'] });
-      toast.success('Shift complete! 🎉');
+      toast.success('Shift complete! ');
     },
     onError: (err: Error) => {
       toast.error(`Failed to complete shift: ${err.message}`);

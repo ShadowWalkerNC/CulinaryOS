@@ -96,16 +96,16 @@ export default function RecipeDetailPage() {
             <span className="badge bg-emerald-600/20 text-emerald-400">public</span>
           )}
           {dietaryProfile.isVegan && (
-            <span className="badge bg-emerald-500/20 text-emerald-300">🌱 Vegan</span>
+            <span className="badge bg-emerald-500/20 text-emerald-300">Vegan</span>
           )}
           {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
-            <span className="badge bg-green-500/20 text-green-300">🥗 Vegetarian</span>
+            <span className="badge bg-green-500/20 text-green-300">Vegetarian</span>
           )}
           {dietaryProfile.isGlutenFree && (
-            <span className="badge bg-amber-500/20 text-amber-300">🌾 Gluten-Free</span>
+            <span className="badge bg-amber-500/20 text-amber-300">Gluten-Free</span>
           )}
           {dietaryProfile.isDairyFree && (
-            <span className="badge bg-blue-500/20 text-blue-300">🥛 Dairy-Free</span>
+            <span className="badge bg-blue-500/20 text-blue-300">Dairy-Free</span>
           )}
         </div>
         {recipe.description && (

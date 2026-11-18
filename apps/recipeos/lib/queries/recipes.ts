@@ -8,7 +8,7 @@ const FALLBACK_RECIPES = [
     description: 'Double seared patty, caramelized onion jam, American cheddar, house burger sauce on brioche.',
     difficulty: 'Intermediate',
     base_servings: 4,
-    category: { id: 'c1', name: 'Entrees', icon: '🍔' },
+    category: { id: 'c1', name: 'Entrees', icon: 'ENT' },
     tags: ['Beef', 'Grill', 'Burger', 'Fast Casual'],
   },
   {
@@ -17,7 +17,7 @@ const FALLBACK_RECIPES = [
     description: 'Jumbo double-crisped wings tossed in signature aged cayenne butter with blue cheese dip.',
     difficulty: 'Beginner',
     base_servings: 6,
-    category: { id: 'c2', name: 'Appetizers', icon: '🍗' },
+    category: { id: 'c2', name: 'Appetizers', icon: 'APP' },
     tags: ['Wings', 'Poultry', 'Fry', 'Spicy'],
   },
   {
@@ -26,7 +26,7 @@ const FALLBACK_RECIPES = [
     description: 'Sharp cheddar and smoked gruyere emulsion with regional IPA and whole grain mustard.',
     difficulty: 'Beginner',
     base_servings: 8,
-    category: { id: 'c3', name: 'Sauces', icon: '🧀' },
+    category: { id: 'c3', name: 'Sauces', icon: 'SCE' },
     tags: ['Dip', 'Cheese', 'Sauce', 'Prep'],
   },
   {
@@ -35,7 +35,7 @@ const FALLBACK_RECIPES = [
     description: 'Kennebec russet potatoes twice-fried in beef tallow, tossed with white truffle oil and reggiano.',
     difficulty: 'Intermediate',
     base_servings: 4,
-    category: { id: 'c4', name: 'Sides', icon: '🍟' },
+    category: { id: 'c4', name: 'Sides', icon: 'SDE' },
     tags: ['Sides', 'Potato', 'Truffle'],
   },
 ];

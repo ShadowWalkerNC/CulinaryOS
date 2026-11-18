@@ -346,27 +346,27 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
         <div className="bg-zinc-950/80 p-4 rounded-xl border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🛡️</span> FDA FASTER Act Top 9 Allergen & Dietary Intelligence
+              <span></span> FDA FASTER Act Top 9 Allergen & Dietary Intelligence
             </span>
             <div className="flex items-center gap-1.5">
               {dietaryProfile.isVegan && (
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-green-500/20 text-green-300 border border-green-500/40">
-                  🌱 Vegan
+                  Vegan
                 </span>
               )}
               {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  🥗 Vegetarian
+                  Vegetarian
                 </span>
               )}
               {dietaryProfile.isGlutenFree && (
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                  🌾 Gluten-Free
+                  Gluten-Free
                 </span>
               )}
               {dietaryProfile.isDairyFree && (
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                  🥛 Dairy-Free
+                  Dairy-Free
                 </span>
               )}
             </div>
@@ -384,7 +384,7 @@ export default function RecipeScalingModal({ initialRecipeName = 'Sourdough Foca
                     key={algId}
                     className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-red-950/60 text-red-300 rounded-lg border border-red-800"
                   >
-                    <span>{def?.emoji ?? '⚠'}</span>
+                    <span>{def?.emoji ?? ''}</span>
                     <span>{def?.name ?? algId}</span>
                   </span>
                 );

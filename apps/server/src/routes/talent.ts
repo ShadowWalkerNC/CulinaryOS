@@ -389,7 +389,7 @@ talentAdminRoutes.post('/applications/:id/hire', async (c) => {
   app.staff_id = staffUserId;
 
   return ok(c, {
-    message: `🎉 Candidate ${app.candidate_name} hired successfully!`,
+    message: `Candidate ${app.candidate_name} hired successfully!`,
     onboarding: {
       staff_id: staffUserId,
       display_name: app.candidate_name,

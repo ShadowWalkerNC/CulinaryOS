@@ -80,7 +80,7 @@ export function FloorMap2D({
     main: {
       title: 'Main Dining Room',
       subtitle: 'Family Seating, Center 4-Tops & Perimeter Booths',
-      icon: '🍽️',
+      icon: 'MD',
       accent: 'text-slate-200',
       border: 'border-slate-700/60',
       bg: 'bg-slate-900/40',
@@ -88,7 +88,7 @@ export function FloorMap2D({
     bar: {
       title: 'Bar & Cocktail Lounge',
       subtitle: 'High-Top Tables, Stool Counter Rail & Tavern Seating',
-      icon: '🍸',
+      icon: 'BR',
       accent: 'text-amber-300',
       border: 'border-amber-600/40',
       bg: 'bg-amber-950/20',
@@ -96,7 +96,7 @@ export function FloorMap2D({
     patio: {
       title: 'Outdoor Garden Patio',
       subtitle: 'Open-Air Terrace, Planters & Umbrella Round Tables',
-      icon: '🌿',
+      icon: 'PT',
       accent: 'text-emerald-300',
       border: 'border-emerald-600/40',
       bg: 'bg-emerald-950/20',
@@ -104,7 +104,7 @@ export function FloorMap2D({
     vip: {
       title: 'Private VIP Dining Suite',
       subtitle: 'Executive Banquets, Wine Display & Intimate Dining',
-      icon: '👑',
+      icon: 'VP',
       accent: 'text-purple-300',
       border: 'border-purple-600/40',
       bg: 'bg-purple-950/25',
@@ -112,7 +112,7 @@ export function FloorMap2D({
     rooftop: {
       title: 'Skyline Rooftop Deck',
       subtitle: 'Elevated Views & Lounge Sofas',
-      icon: '✨',
+      icon: 'RT',
       accent: 'text-sky-300',
       border: 'border-sky-600/40',
       bg: 'bg-sky-950/20',
@@ -221,11 +221,11 @@ export function FloorMap2D({
       <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-2.5 shadow-md">
         <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
           {[
-            { id: 'all', label: 'All Floor Plan', icon: '🏢' },
-            { id: 'main', label: 'Main Dining', icon: '🍽️' },
-            { id: 'bar', label: 'Bar & Lounge', icon: '🍸' },
-            { id: 'patio', label: 'Outdoor Patio', icon: '🌿' },
-            { id: 'vip', label: 'VIP Suite', icon: '👑' },
+            { id: 'all', label: 'All Floor Plan', icon: 'FL' },
+            { id: 'main', label: 'Main Dining', icon: 'MD' },
+            { id: 'bar', label: 'Bar & Lounge', icon: 'BR' },
+            { id: 'patio', label: 'Outdoor Patio', icon: 'PT' },
+            { id: 'vip', label: 'VIP Suite', icon: 'VP' },
           ].map((sec) => (
             <button
               key={sec.id}

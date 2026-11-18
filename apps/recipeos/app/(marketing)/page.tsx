@@ -2,32 +2,32 @@ import Link from 'next/link';
 
 const FEATURES = [
   {
-    icon: '🗂️',
+    icon: 'VLT',
     title: 'Recipe Vault',
     description: 'Store and organize all your recipes in one place. Tag, categorize, and find anything instantly.',
   },
   {
-    icon: '⚖️',
+    icon: '',
     title: 'Smart Scaling',
     description: 'Scale any recipe up or down in real time. Ratio-based engine handles fractions and unit conversions automatically.',
   },
   {
-    icon: '🥦',
+    icon: 'ING',
     title: 'Pantry Tracker',
     description: 'Track what you have on hand. Get low-stock alerts before you run out of key ingredients.',
   },
   {
-    icon: '📋',
+    icon: 'PRP',
     title: 'Prep Lists',
     description: 'Break recipes into timed prep tasks by station. Check off tasks as you go — solo or with a team.',
   },
   {
-    icon: '🤖',
+    icon: 'AUT',
     title: 'MCP Server',
     description: 'Expose your recipe data to any AI tool via the Model Context Protocol. Build custom automations.',
   },
   {
-    icon: '📱',
+    icon: 'MOB',
     title: 'Mobile App',
     description: 'Native iOS and Android app with offline support, barcode scanning, and OCR recipe import. Coming in Phase 5.',
   },

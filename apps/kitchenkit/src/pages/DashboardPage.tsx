@@ -44,7 +44,7 @@ export default function DashboardPage() {
     <div className="space-y-8 max-w-5xl mx-auto">
       <div>
         <h2 className="text-xl font-bold text-zinc-100">
-          {isLoading ? 'Loading...' : `Welcome back, ${displayName} 👋`}
+          {isLoading ? 'Loading...' : `Welcome back, ${displayName} `}
         </h2>
         <p className="mt-1 text-sm text-zinc-400">Here’s what’s on deck for today.</p>
       </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
       {/* Ratio engine callout */}
       <div className="card border-brand-600/30 bg-brand-600/5">
         <div className="flex items-start gap-3">
-          <span className="text-xl">🧠</span>
+          <span className="text-xl"></span>
           <div>
             <h3 className="font-semibold text-zinc-100 mb-1">Ratio Blueprint Engine</h3>
             <p className="text-sm text-zinc-400">

@@ -44,7 +44,7 @@ describe('008 static audit', () => {
   const eight = readMigration('008_membership_serialization.sql');
   const code = eight.replace(/--[^\n]*/g, '');
 
-  it('ships 001-008 in order', () => {
+  it('ships 001-009 in order', () => {
     expect(filenames).toEqual([
       '001_foundation.sql',
       '002_identity.sql',
@@ -54,6 +54,7 @@ describe('008 static audit', () => {
       '006_identity_hardening.sql',
       '007_token_derived_rls.sql',
       '008_membership_serialization.sql',
+      '009_native_device_pairing.sql',
     ]);
     expect(listMigrationFiles(MIGRATIONS_DIR).map((f) => f.version)).toEqual([
       '001',
@@ -64,6 +65,7 @@ describe('008 static audit', () => {
       '006',
       '007',
       '008',
+      '009',
     ]);
   });
 

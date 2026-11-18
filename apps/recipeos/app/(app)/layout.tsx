@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 const NAV = [
-  { href: '/vault',  label: 'Vault',   icon: '🗂️' },
-  { href: '/pantry', label: 'Pantry',  icon: '🥫' },
-  { href: '/prep',   label: 'Prep',    icon: '📋' },
-  { href: '/scale',  label: 'Scale',   icon: '⚖️' },
+  { href: '/vault',  label: 'Vault',   icon: 'VLT' },
+  { href: '/pantry', label: 'Pantry',  icon: 'PNT' },
+  { href: '/prep',   label: 'Prep',    icon: 'PRP' },
+  { href: '/scale',  label: 'Scale',   icon: '' },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className="w-56 shrink-0 border-r border-gray-100 flex flex-col py-6 px-4">
         <div className="flex items-center gap-2 px-2 mb-8">
-          <span className="text-2xl">🍽️</span>
+          <span className="text-2xl"></span>
           <span className="font-bold text-lg tracking-tight">RecipeOS</span>
         </div>
         <nav className="flex flex-col gap-1">

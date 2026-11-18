@@ -172,7 +172,28 @@ export async function fetchLiveOrders(tenantId?: string): Promise<MobileOrder[]>
     if (res.ok) {
       const json = await res.json();
       const raw = json.data || json;
-      if (Array.isArray(raw) && raw.length > 0) return raw;
+      if (Array.isArray(raw) && raw.length >= 2) {
+        return raw.map((o: any, idx: number) => ({
+          id: String(o.id || `ord-${101 + idx}`),
+          order_number: String(o.order_number || `#${101 + idx}`),
+          table_number: String(o.table_number || o.tableNumber || 'Counter'),
+          server_name: String(o.server_name || 'Marcus Vance'),
+          status: (o.status === 'open' ? 'pending' : o.status || 'pending') as MobileOrder['status'],
+          total_cents: Number(o.total_cents ?? o.totalCents ?? 0),
+          items: Array.isArray(o.items)
+            ? o.items.map((it: any, iIdx: number) => ({
+                id: String(it.id || `i-${iIdx + 1}`),
+                name: String(it.name || 'Menu Item'),
+                price_cents: Number(it.price_cents ?? it.unitPriceCents ?? it.unit_price ?? 0),
+                quantity: Number(it.quantity ?? 1),
+                seat_number: it.seat_number ?? it.seat,
+                course: it.course_number ?? it.course,
+                modifiers: Array.isArray(it.modifiers) ? it.modifiers : [],
+              }))
+            : [],
+          created_at: String(o.created_at || new Date().toISOString()),
+        }));
+      }
     }
   } catch {
     // Return structured offline demonstration orders
@@ -229,7 +250,26 @@ export async function fetchLiveMenu(tenantId?: string): Promise<MobileMenuItem[]
     if (res.ok) {
       const json = await res.json();
       const raw = json.data || json;
-      if (Array.isArray(raw) && raw.length > 0) return raw;
+      if (Array.isArray(raw) && raw.length >= 5) {
+        return raw.map((item: any, idx: number) => {
+          const rawCat = String(item.category || 'Mains');
+          const normalizedCat =
+            rawCat === 'Starters' || rawCat === 'Salads' || rawCat === 'Sides'
+              ? 'Starters'
+              : rawCat === 'Cocktails' || rawCat === 'Beverages' || rawCat === 'Drinks'
+              ? 'Beverages'
+              : 'Mains';
+          return {
+            id: String(item.id || `m-${idx + 1}`),
+            name: String(item.name || 'Menu Dish'),
+            category: normalizedCat,
+            price_cents: Number(item.price_cents ?? item.priceCents ?? 0),
+            description: String(item.description || `${rawCat} (${item.station || 'kitchen'} station)`),
+            allergens: Array.isArray(item.allergens) ? item.allergens : [],
+            is_available: Boolean(item.is_available ?? item.available ?? true),
+          };
+        });
+      }
     }
   } catch {
     // Return structured offline menu

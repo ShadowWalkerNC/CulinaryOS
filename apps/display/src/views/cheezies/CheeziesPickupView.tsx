@@ -84,7 +84,7 @@ export const CheeziesPickupView: React.FC = () => {
           <div className="pb-4 border-b-2 border-amber-500/40 flex items-center justify-between mb-8">
             <h2 className="text-3xl font-black text-amber-400 uppercase tracking-widest flex items-center gap-3">
               <span>COOKING ON GRILL</span>
-              <span className="text-2xl">🔥</span>
+              <span className="text-2xl"></span>
             </h2>
             <span className="text-sm font-black bg-amber-400 text-amber-950 px-3.5 py-1 rounded-full uppercase">
               {data.cooking?.length || 0} Orders

@@ -124,8 +124,7 @@ export const CheeziesOpsView: React.FC = () => {
       {tickets.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center font-mono">
           <div className="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center text-4xl mb-4">
-            🧀
-          </div>
+            </div>
           <h2 className="text-3xl font-black uppercase text-amber-300 tracking-wide">
             Cheezies Truck Queue Clear
           </h2>

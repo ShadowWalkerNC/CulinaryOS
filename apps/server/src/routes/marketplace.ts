@@ -543,7 +543,7 @@ let mockVerifications: Record<string, MarketplaceVerificationRecord> = {
     securityAuditStatus: 'passed',
     developerPayoutRate: 1.0,
     verifiedAt: new Date().toISOString(),
-    badge: '🛡️ Verified Enterprise SLA',
+    badge: 'Verified Enterprise SLA',
   },
   'recipe-vault': {
     extensionId: 'recipe-vault',
@@ -552,7 +552,7 @@ let mockVerifications: Record<string, MarketplaceVerificationRecord> = {
     securityAuditStatus: 'passed',
     developerPayoutRate: 1.0,
     verifiedAt: new Date().toISOString(),
-    badge: '✅ Verified Partner Extension',
+    badge: 'Verified Partner Extension',
   },
 };
 
@@ -579,7 +579,7 @@ marketplaceRoutes.post('/extensions/submit', async (c) => {
     verificationTier: tier,
     securityAuditStatus: tier === 'community' ? 'passed' : 'pending',
     developerPayoutRate: 1.0, // 0% platform fee, 100% to developer
-    badge: tier === 'enterprise_sla' ? '🛡️ Enterprise Verified' : tier === 'verified_partner' ? '✅ Verified Partner' : '📦 Community Open Extension',
+    badge: tier === 'enterprise_sla' ? 'Enterprise Verified' : tier === 'verified_partner' ? 'Verified Partner' : 'Community Open Extension',
   };
 
   mockVerifications[extensionId] = record;
@@ -603,7 +603,7 @@ marketplaceRoutes.get('/extensions/:id/verification', async (c) => {
     verificationTier: 'community',
     securityAuditStatus: 'passed',
     developerPayoutRate: 1.0,
-    badge: '📦 Community Extension',
+    badge: 'Community Extension',
   };
 
   return c.json({ ok: true, data: record });

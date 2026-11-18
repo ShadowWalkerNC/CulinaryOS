@@ -190,8 +190,7 @@ export default function ScalePage() {
                         onClick={() => removeIngredient(i)}
                         className="w-8 h-8 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 inline-flex items-center justify-center text-xs"
                       >
-                        ✕
-                      </button>
+                        </button>
                     </td>
                   </tr>
                 ))}
@@ -289,8 +288,7 @@ export default function ScalePage() {
                           onClick={() => removeBakersIngredient(i)}
                           className="w-8 h-8 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 inline-flex items-center justify-center text-xs"
                         >
-                          ✕
-                        </button>
+                          </button>
                       )}
                     </td>
                   </tr>
@@ -326,32 +324,32 @@ export default function ScalePage() {
       <div className="p-5 rounded-xl border border-gray-200 bg-white space-y-4 shadow-xs">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-            <span>🛡️</span> FDA FASTER Act Top 9 Allergen Intelligence
+            <span></span> FDA FASTER Act Top 9 Allergen Intelligence
           </h2>
           <div className="flex items-center gap-2">
             {dietaryProfile.isVegan && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                🌱 Vegan
+                Vegan
               </span>
             )}
             {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                🥗 Vegetarian
+                Vegetarian
               </span>
             )}
             {dietaryProfile.isGlutenFree && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                🌾 Gluten-Free
+                Gluten-Free
               </span>
             )}
             {dietaryProfile.isDairyFree && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                🥛 Dairy-Free
+                Dairy-Free
               </span>
             )}
             {dietaryProfile.isNutFree && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
-                🥜 Nut-Free
+                Nut-Free
               </span>
             )}
           </div>
@@ -362,7 +360,7 @@ export default function ScalePage() {
           <span className="text-xs font-semibold text-gray-500 block mb-2">Detected Allergens in Recipe:</span>
           {dietaryProfile.matchedAllergens.length === 0 ? (
             <div className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
-              ✔ No FDA Top 9 major allergens detected in active formula ingredients.
+              No FDA Top 9 major allergens detected in active formula ingredients.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -418,7 +416,7 @@ export default function ScalePage() {
         {/* Cross-Contact Warnings */}
         {dietaryProfile.crossContactWarnings.length > 0 && (
           <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 space-y-1">
-            <span className="text-xs font-bold text-amber-900 block">⚠ Cross-Contact & Station Risk Advisories:</span>
+            <span className="text-xs font-bold text-amber-900 block">Cross-Contact & Station Risk Advisories:</span>
             <ul className="text-xs text-amber-800 list-disc list-inside space-y-0.5">
               {dietaryProfile.crossContactWarnings.map((warn, i) => (
                 <li key={i}>{warn}</li>

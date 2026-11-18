@@ -86,16 +86,16 @@ export default function RecipeDetailPage() {
             <span key={t} className="bg-gray-100 text-gray-600 rounded px-2 py-0.5">{t}</span>
           ))}
           {dietaryProfile.isVegan && (
-            <span className="bg-green-100 text-green-800 font-semibold rounded px-2 py-0.5">🌱 Vegan</span>
+            <span className="bg-green-100 text-green-800 font-semibold rounded px-2 py-0.5">Vegan</span>
           )}
           {dietaryProfile.isVegetarian && !dietaryProfile.isVegan && (
-            <span className="bg-emerald-100 text-emerald-800 font-semibold rounded px-2 py-0.5">🥗 Vegetarian</span>
+            <span className="bg-emerald-100 text-emerald-800 font-semibold rounded px-2 py-0.5">Vegetarian</span>
           )}
           {dietaryProfile.isGlutenFree && (
-            <span className="bg-amber-100 text-amber-800 font-semibold rounded px-2 py-0.5">🌾 Gluten-Free</span>
+            <span className="bg-amber-100 text-amber-800 font-semibold rounded px-2 py-0.5">Gluten-Free</span>
           )}
           {dietaryProfile.isDairyFree && (
-            <span className="bg-blue-100 text-blue-800 font-semibold rounded px-2 py-0.5">🥛 Dairy-Free</span>
+            <span className="bg-blue-100 text-blue-800 font-semibold rounded px-2 py-0.5">Dairy-Free</span>
           )}
         </div>
 
