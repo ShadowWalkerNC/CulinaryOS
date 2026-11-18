@@ -5,6 +5,14 @@
 // ============================================================
 
 import { Hono } from 'hono';
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  CULINARYOS_TIERS,
+  CULINARYOS_FEATURE_GATES,
+  CULINARYOS_FAILURE_MODES,
+  evaluateFeatureEntitlement,
+} from '@culinaryos/shared';
 import { ok, err, requireTenant } from '../middleware/auth.js';
 import type { Env } from '../types.js';
 
@@ -168,6 +176,91 @@ intelligenceRoutes.post('/approvals/:approvalId/decide', async (c) => {
   };
   inMemoryApprovals.push(created);
   return ok(c, created);
+});
+
+intelligenceRoutes.get('/tiers', (c) => {
+  return ok(c, {
+    tiers: CULINARYOS_TIERS,
+    featureGates: CULINARYOS_FEATURE_GATES,
+    failureModes: CULINARYOS_FAILURE_MODES,
+    aiAccessoryEnabled: process.env.AI_ENABLED === 'true',
+  });
+});
+
+intelligenceRoutes.post('/tiers/check', async (c) => {
+  const body = await c.req
+    .json<{ featureId?: string; activeAddons?: any[] }>()
+    .catch(() => ({ featureId: '', activeAddons: [] }));
+  const result = evaluateFeatureEntitlement(body.featureId || '', {
+    activeAddons: body.activeAddons || [],
+    aiFlagEnabled: process.env.AI_ENABLED === 'true',
+  });
+  return ok(c, result);
+});
+
+intelligenceRoutes.get('/chefs-intelligence/skills/:skillId', (c) => {
+  const skillId = c.req.param('skillId').trim().toLowerCase();
+  const candidates = [
+    path.resolve(process.cwd(), 'packages/intelligence/skills', skillId, 'SKILL.md'),
+    path.resolve(process.cwd(), '../../packages/intelligence/skills', skillId, 'SKILL.md'),
+  ];
+  const found = candidates.find((p) => fs.existsSync(p));
+  if (!found) {
+    return err(c, 'NOT_FOUND', `Chef's Intelligence skill not found: ${skillId}`, 404);
+  }
+  const markdown = fs.readFileSync(found, 'utf8');
+  return ok(c, {
+    id: skillId,
+    markdown,
+    hasDeterministicFallback: true,
+  });
+});
+
+intelligenceRoutes.post('/chefs-intelligence/cost-dish', async (c) => {
+  const body = await c.req
+    .json<{
+      name?: string;
+      targetGpPct?: number;
+      isVatRegistered?: boolean;
+      vatRatePct?: number;
+      menuPriceGross?: number;
+      ingredients?: Array<{ name: string; weightGrams: number; bulkPricePerKg: number; trimYieldPct?: number }>;
+    }>()
+    .catch(() => ({}));
+  const targetGpPct = body.targetGpPct ?? 72;
+  const isVatRegistered = body.isVatRegistered ?? false;
+  const vatRatePct = body.vatRatePct ?? 20;
+  const ingredients = body.ingredients || [];
+
+  let totalRawFoodCost = 0;
+  const breakdown = ingredients.map((ing) => {
+    const yieldFactor = ing.trimYieldPct && ing.trimYieldPct > 0 ? ing.trimYieldPct / 100 : 1.0;
+    const effectiveCostPerKg = (ing.bulkPricePerKg || 0) / yieldFactor;
+    const portionCost = effectiveCostPerKg * ((ing.weightGrams || 0) / 1000);
+    totalRawFoodCost += portionCost;
+    return {
+      name: ing.name,
+      weightGrams: ing.weightGrams || 0,
+      bulkPricePerKg: ing.bulkPricePerKg || 0,
+      trimYieldPct: `${(yieldFactor * 100).toFixed(0)}%`,
+      portionCost: Number(portionCost.toFixed(2)),
+    };
+  });
+
+  const targetFoodCostFactor = Math.max(0.01, (100 - targetGpPct) / 100);
+  const minNetPrice = totalRawFoodCost / targetFoodCostFactor;
+  const vatFactor = isVatRegistered ? 1 + vatRatePct / 100 : 1.0;
+  const minMenuPriceGross = minNetPrice * vatFactor;
+
+  return ok(c, {
+    dish: body.name || 'Unnamed Dish',
+    totalRawFoodCost: Number(totalRawFoodCost.toFixed(2)),
+    targetGp: `${targetGpPct}%`,
+    minNetPrice: Number(minNetPrice.toFixed(2)),
+    minMenuPriceGross: Number(minMenuPriceGross.toFixed(2)),
+    suggestedMenuPrice: Number((Math.ceil(minMenuPriceGross * 2) / 2).toFixed(2)),
+    breakdown,
+  });
 });
 
 export default intelligenceRoutes;

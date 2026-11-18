@@ -1,83 +1,75 @@
-# 🚀 CulinaryOS SaaS Tiers & Turnkey Packaging Specification
+# CulinaryOS SaaS Tiers & Turnkey Packaging Specification
 
-This document details the functional breakdown between the **Free & Open-Source Community Core** and the **Paid SaaS Tiers** (Pro Cloud & Multi-Unit Enterprise), including onboarding flows and turnkey installation requirements.
+This document details the functional boundary between the **Free & Open-Source Core ($0 Forever, MIT License)** and the **Paid SaaS Subscriptions** (**Cloud Pro $49/mo** & **Enterprise Multi-Unit $149/mo**), enforced in code via [packages/shared/src/saasTiers.ts](../packages/shared/src/saasTiers.ts) and HMAC-SHA256 signed grants in [packages/native/src/cloud_bridge.rs](../packages/native/src/cloud_bridge.rs).
 
----
-
-## 🏗️ Architecture Split: Open Source Core vs. Paid SaaS
-
-CulinaryOS is built on an **Open Core** architecture. The core point-of-sale and kitchen display engine are fully functional offline and self-hostable with zero licensing fees. Advanced multi-device cloud synchronization, automated compliance reporting, and enterprise multi-unit management are offered in the managed SaaS tiers.
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   ENTERPRISE MULTI-UNIT ($149/mo)                      │
-│   Commissary Transfer Orders (V17) · Brand Menu Syndication            │
-│   Cross-Unit Financial Rollups · Custom Webhooks & ERP Bridge          │
-├────────────────────────────────────────────────────────────────────────┤
-│                       PRO CLOUD ($49/mo)                               │
-│   Managed Supabase Realtime Sync · Gusto/ADP Tip Payroll Export        │
-│   Remote Back-Office Dashboard · Live Online Ordering Portal           │
-│   Automated Cloud Backups · Multi-Device Instant Handshake             │
-├────────────────────────────────────────────────────────────────────────┤
-│                  COMMUNITY CORE ($0 — Open Source)                     │
-│   Local POS Workstation · Local Kitchen Display Screen (KDS)           │
-│   Offline Event Bus & Queue · Local SQLite/Postgres DB · Floor Maps    │
-│   ESC/POS Thermal Receipt & Impact Ticket Printing · Cash Drawer Kick  │
-│   Standard Shift Z-Reports · FLSA Tip Calculator · Local Staff PINs    │
-└────────────────────────────────────────────────────────────────────────┘
-```
+For complete REST API, TypeScript SDK (`@culinaryos/sdk`), Role/PIN mappings, and Failure-Mode Fallbacks, see [docs/DEVELOPER_AND_API_SDK_GUIDE.md](DEVELOPER_AND_API_SDK_GUIDE.md).
 
 ---
 
-## 📦 Detailed Feature Matrix
+## 1. Architecture Split: Open-Source Core vs. Paid SaaS
 
-| Feature Domain | Community Core ($0) | Pro Cloud ($49/mo) | Enterprise ($149/mo) |
+CulinaryOS is built on an **Open-Core, Local-First** architecture. The standalone Native Rust Workstation (`culinaryos-desktop.exe` on Port 3000) is 100% functional offline and self-hostable forever with zero licensing fees and zero per-terminal charges.
+
+Optional SaaS subscriptions connect the local workstation to encrypted offsite cloud storage, commission-free public online ordering relay, Beta AI Autopilot (off-by-default per Rule 6), and multi-unit central commissary orchestration.
+
+```text
++------------------------------------------------------------------------+
+|                ENTERPRISE & COMMISSARY ($149/mo per location)          |
+|   multi_unit_commissary · V17 Organization Hierarchy & RLS Rollups     |
+|   Central Commissary Production Quotas & Inter-Store Transfer Orders   |
+|   Multi-Distributor MRP Split-Order Optimizer (Sysco/US Foods/Dennis)  |
++------------------------------------------------------------------------+
+|                CLOUD PRO & AI AUTOPILOT ($49/mo flat per location)     |
+|   cloud_storage: Encrypted SHA-256 Offsite Backup & Remote Web Admin   |
+|   online_ordering: Hosted Commission-Free Storefront & QR Table Relay  |
+|   ai_autopilot (Beta): 121-Skill Generative Workflows & Predictive 86  |
+|   Campaign Studio (Post-Pilot) & Per-Tenant Token Cost Dashboard       |
++------------------------------------------------------------------------+
+|                OPEN-SOURCE CORE ($0 Forever — MIT License)             |
+|   Standalone Native Rust Workstation on Port 3000 (embedded-local-db)  |
+|   Unlimited POS Terminals, 2D Floor Map, Split Checks & Bar Tabs       |
+|   Unlimited KDS Station Screens, Course Pacing, Bilingual Chits & 86   |
+|   Direct TCP :9100 / USB ESC/POS Printing + Auto Backup Printer Route  |
+|   Hardcoded FLSA Tip Pool Engine, Payroll CSV Export & EOD Z-Reports   |
+|   39 Deterministic Chef's Intelligence Calculators (72% GP, 14-Allerg) |
++------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Detailed Feature & Entitlement Matrix
+
+| Feature Domain | Open-Source Core ($0) | Cloud Pro ($49/mo) | Enterprise ($149/mo) |
 | :--- | :---: | :---: | :---: |
-| **POS Stations per Location** | Unlimited (Local Network) | Unlimited (Cloud Sync) | Unlimited (Multi-Site) |
-| **KDS Screens per Location** | Unlimited (Local Network) | Unlimited (Cloud Sync) | Unlimited (Multi-Site) |
-| **Hardware Compatibility** | Any PC, Mac, iPad, Android | Any PC, Mac, iPad, Android | Any PC, Mac, iPad, Android |
-| **Printer Support** | ESC/POS (LAN / USB / Bluetooth) | ESC/POS + CloudPRNT | ESC/POS + CloudPRNT |
-| **Cash Drawer Kick** | RJ11/RJ12 Printer DK Port | RJ11/RJ12 Printer DK Port | RJ11/RJ12 Printer DK Port |
-| **Card Payments** | Bring-Your-Own Stripe Terminal | Bring-Your-Own Stripe Terminal | Bring-Your-Own Stripe Terminal |
-| **Offline Dining Rush Mode** | Local Queue (Auto-Reconcile) | Local Queue (Cloud Sync) | Local Queue (Cloud Sync) |
-| **FLSA Tip Pooling Engine** | In-App Shift Calculation | In-App + Gusto/ADP CSV | In-App + Gusto/ADP + Multi-Unit |
-| **Daily Z-Report & Drawer Count**| Local Generation & PDF Print | Cloud Sealed Ledger + PDF | Centralized Organization Audit |
-| **Pantry & Recipe Costing** | Local Par Levels & Depletion | Cloud Realtime Auto-86 | Multi-Unit Commissary Transfer |
-| **Multi-Location Rollups** | ❌ (Single Unit) | ❌ (Single Unit) | ✅ Full Parent Organization |
-| **Centralized Menu Push** | ❌ | ❌ | ✅ Broadcast to All Units |
-| **Commissary Logistics** | ❌ | ❌ | ✅ V17 Transfer Orders |
+| **Per-Terminal / Per-Screen Fee** | **$0.00 (Unlimited)** | **$0.00 (Unlimited)** | **$0.00 (Unlimited)** |
+| **POS Order Entry, Split Checks, Bar Tabs, 2D Floor Map** | Included | Included | Included |
+| **KDS Multi-Station Rails, Course Hold/Fire & 86 Sync** | Included | Included | Included |
+| **ESC/POS Printing (LAN `:9100` / USB) + Auto Backup Failover** | Included | Included | Included |
+| **RJ11/RJ12 24V Cash Drawer Kick (`F8`)** | Included | Included | Included |
+| **Card Payments (Bring-Your-Own Stripe Connect Standard)** | Included (0% Markup) | Included (SAQ-A) | Included (SAQ-A) |
+| **Hardcoded FLSA Tip Pooling (29 U.S.C. 203(m)(2)(B)) & CSV** | Included | Included | Included |
+| **Automated End-of-Day Z-Report & Cash Variance Audit (`F9`)** | Included | Included + Cloud Vault | Included + Org Rollup |
+| **39 Deterministic Chef's Intelligence Calculators** | Included (72% GP, 14-Allergens, WTR 11h Rota, Baker's %) | Included | Included |
+| **Full CLI (`culinary`) & TypeScript SDK (`@culinaryos/sdk`)** | Included | Included | Included |
+| **Encrypted Offsite Cloud Storage & Remote Owner Dashboard** | Local LAN Only | **`cloud_storage` Included** | **`cloud_storage` Included** |
+| **Hosted Commission-Free Online Storefront & QR Relay** | Local LAN `/menu/` | **`online_ordering` Included** | **`online_ordering` Included** |
+| **Beta 121-Skill Generative AI Autopilot & Campaign Studio** | Deterministic Local Fallback | **`ai_autopilot` Included** | **`ai_autopilot` Included** |
+| **Multi-Unit Organization Rollups & V17 Commissary Transfers** | Single Location | Single Location | **`multi_unit_commissary` Included** |
+| **Multi-Distributor Lowest-Cost Split MRP (Sysco/US Foods/Dennis)** | Standard Par POs | Standard Par POs | **Included + IPV Audit** |
 
 ---
 
-## 🛠️ Turnkey Deployment Profiles
+## 3. Absorbed Chef's Intelligence Library (121 Skills Across 8 Packs)
 
-CulinaryOS provides three turnkey installation and onboarding paths:
+All 121 skills absorbed into `packages/intelligence/skills/` (`@culinaryos/intelligence`) are organized across 8 operational packs (`home`, `bakery`, `food-truck`, `bar-foh`, `shops`, `operations`, `people`, `care`):
 
-### 1. Local Single-Station / Food Truck (Community Edition)
-* **Target:** Single touchscreen PC, laptop, or tablet.
-* **Requirements:** Node.js >= 20.
-* **Turnkey Setup:**
-  ```powershell
-  git clone https://github.com/ShadowWalkerNC/CulinaryOS.git
-  cd CulinaryOS
-  pnpm install
-  pnpm dev
-  ```
-* **Offline Operation:** Zero external cloud accounts required. Uses built-in mock/local database and storage.
-
-### 2. Independent Full-Service Restaurant (Pro Cloud)
-* **Target:** Multi-tablet dining room (2 POS, 1 Bar, 2 KDS screens, 1 Receipt Printer, 1 Kitchen Impact Printer).
-* **Onboarding Steps:**
-  1. Provision managed Supabase project via `pnpm local:supabase` or Supabase Cloud.
-  2. Run database migrations: `supabase db push` (V1–V17).
-  3. Connect Stripe account via Stripe Connect onboarding link.
-  4. Pair tablets via local QR code / mDNS discovery (`culinary mdns discover`).
-  5. Configure printer IP addresses in back-office terminal setup.
-
-### 3. Multi-Unit Commissary Enterprise
-* **Target:** Central production kitchen supplying 3+ retail restaurant locations.
-* **Onboarding Steps:**
-  1. Create parent organization in `organizations` table.
-  2. Associate unit tenants under `restaurants.organization_id`.
-  3. Set up commissary catalog and route replenishment orders via `V17__multi_unit_commissary.sql`.
-  4. Access consolidated organization revenue, labor, and food cost rollups.
+1. **Free Core Deterministic Skills (39 Core Workflows — Always Unlocked Offline):**
+   - `dish-costing-calculator`: 72% Gross Profit / 28% Food Cost target calculator with AP/EP butcher trim yield and >40% dominant ingredient volatility alerts.
+   - `allergen-matrix-builder` & `allergen-management-system`: 14-regulated-allergen FIR/Natasha's Law + FDA FASTER Act Top-9 matrix builder.
+   - `daily-brief-generator` & `foh-service-brief`: Structured 2-minute pre-shift kitchen and FOH line briefing generator.
+   - `recipe-compliance-checker`: Station portion, substitution, and HACCP CCP compliance auditor.
+   - `bakers-percentage-formula` & `preferment-flour-accounting`: Flour-anchored hydration and levain scaling math.
+   - Plus all 32 canonical pack core workflows (`PACK_CORE_IDS`).
+2. **SaaS Pro & Enterprise Generative Autopilot Skills (82 Advanced Workflows — Unlocked via `ai_autopilot`, with Deterministic Local Fallback):**
+   - Predictive 86 countdowns, weather/daypart prep demand forecasting, multilingual service briefs, social campaign attribution, catering quotations, banquet event orders (BEO), and product recall trace drills.
+   - When `AI_ENABLED` is off (the default per Rule 6) or the restaurant is on the Free Open-Source tier, every skill executes its deterministic local template/math fallback with zero LLM token spend.

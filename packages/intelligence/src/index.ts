@@ -28,3 +28,4 @@ export * from './diagnostics/index.ts';
 export * from './mcp/capabilities.ts';
 export * from './mcp/server.ts';
 export * from './api/server.ts';
+export * from './chefs-intelligence/index.ts';

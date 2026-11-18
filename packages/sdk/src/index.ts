@@ -265,6 +265,22 @@ export class CulinaryOSClient {
           body: JSON.stringify({ decision, notes }),
         }),
     },
+    getTiers: () => this.request<any>('/v1/intelligence/tiers'),
+    loadChefSkill: (skillId: string) =>
+      this.request<any>(`/v1/intelligence/chefs-intelligence/skills/${encodeURIComponent(skillId)}`),
+    costDish72GP: (payload: {
+      name: string;
+      targetGpPct?: number;
+      isVatRegistered?: boolean;
+      vatRatePct?: number;
+      menuPriceGross?: number;
+      ingredients: Array<{ name: string; weightGrams: number; bulkPricePerKg: number; trimYieldPct?: number }>;
+    }) =>
+      this.request<any>('/v1/intelligence/chefs-intelligence/cost-dish', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    resilience: () => this.request<any>('/v1/system/resilience'),
   };
 
   // --- Ops (Waste, Food Cost, Plate Economics) ---

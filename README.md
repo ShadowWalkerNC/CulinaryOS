@@ -2,8 +2,8 @@
 
 **The unified restaurant technology operating system.** Humans on POS/KDS, edge nodes on Raspberry Pi, agents on MCP, sovereign Postgres. MIT licensed.
 
-[![Tests: Passing](https://img.shields.io/badge/Tests-193%20Passing-brightgreen.svg)](./tests/)
-[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-59%2F59%20Tasks-blue.svg)](./turbo.json)
+[![Tests: Passing](https://img.shields.io/badge/Tests-202%20Passing-brightgreen.svg)](./tests/)
+[![Typecheck: Passing](https://img.shields.io/badge/Typecheck-61%2F61%20Tasks-blue.svg)](./turbo.json)
 [![UI: OKLCH + 6--State](https://img.shields.io/badge/UI-OKLCH%20%2B%206--State-purple.svg)](./packages/ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -53,9 +53,9 @@ CulinaryOS ships with a unified root **Rust Cargo Workspace** ([`Cargo.toml`](./
 - **`culinaryos-desktop` ([`apps/desktop/src-tauri`](./apps/desktop/src-tauri)):** Standalone Rust desktop executable (`culinaryos-desktop.exe`) that initializes a zero-config embedded local database (`%APPDATA%/CulinaryOS/culinaryos.db`) and serves the workstation locally without requiring Node.js or an external database server.
 - **`culinaryos-native` / `culinaryos-site` ([`packages/native`](./packages/native)):** Native Rust Axum server supporting Dual-Engine storage (Embedded Local DB out-of-the-box + PostgreSQL `001-009` via `DATABASE_URL`), cryptographic device pairing, POS order entry, station-scoped KDS ticket bumping, cash drawer reconciliation, and hardcoded FLSA-compliant tip pool calculations.
 - **`culinaryos-edge-daemon` ([`packages/hardware/daemon`](./packages/hardware/daemon)):** Native Rust TCP/USB ESC/POS thermal receipt printer spooler and 24V RJ11/RJ12 cash drawer kick daemon.
-- **Installed App + SaaS Cloud Bridge ([`packages/native/src/cloud_bridge.rs`](./packages/native/src/cloud_bridge.rs)):**
-  - Every restaurant (both free Community and paid SaaS subscribers) installs and runs the standalone **CulinaryOS Rust Application** on-site so POS, KDS, and hardware never go down during an internet outage.
-  - Subscribing to **CulinaryOS SaaS** (hosted from the private `CulinaryOS-SaaS` repository) connects the installed Rust application via cryptographically signed entitlement grants (`POST /v1/cloud/connect`) to unlock **Offsite Cloud Storage & Backup Sync** (`cloud_storage_sync`), **Online Ordering Server Bridge** (`online_ordering_bridge`), **AI Autopilot** (`ai_autopilot`), **Multi-Unit Commissary Sync** (`multi_unit_commissary`), and **Managed Stripe Connect** (`managed_stripe_connect`).
+- **Installed App + SaaS Cloud Bridge ([`packages/native/src/cloud_bridge.rs`](./packages/native/src/cloud_bridge.rs) & [`packages/cloud-bridge-server`](./packages/cloud-bridge-server)):**
+  - Every restaurant (both free Open-Source Core and paid SaaS subscribers) installs and runs the standalone **CulinaryOS Rust Workstation** on-site on Port 3000 (`http://127.0.0.1:3000`) so POS, KDS, and hardware never go down during an internet outage.
+  - Subscribing to **CulinaryOS Cloud Pro ($49/mo)** or **Enterprise & Commissary ($149/mo)** connects the installed Rust application via HMAC-SHA256 signed entitlement grants (`POST /v1/cloud/connect`) to unlock **Offsite Cloud Storage & Backup Sync** (`cloud_storage`), **Commission-Free Online Ordering Relay** (`online_ordering`), **Beta 121-Skill AI Autopilot** (`ai_autopilot`), and **Multi-Unit Commissary Sync** (`multi_unit_commissary`).
 
 ```bash
 # Build & test the entire Rust workspace
