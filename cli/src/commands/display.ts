@@ -25,7 +25,7 @@ displayCommand
       const displays: any[] = Array.isArray(res) ? res : res.data ?? [];
 
       if (displays.length === 0) {
-        console.log(chalk.yellow('\n📺 No displays paired yet. Open Display App or onn. TV to generate a code.\n'));
+        console.log(chalk.yellow('\nNo displays paired yet. Open Display App or onn. TV to generate a code.\n'));
         return;
       }
 
@@ -42,7 +42,7 @@ displayCommand
         ]),
       ];
 
-      console.log(chalk.bold.hex('#F59E0B')('\n📺 CulinaryOS & Cheezies Display Matrix:'));
+      console.log(chalk.bold.hex('#F59E0B')('\nCulinaryOS & Cheezies Display Matrix:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching displays: ${err.message}\n`));
@@ -171,7 +171,7 @@ displayCommand
         )}&brand=${opts.brand}`,
         opts.tenant
       );
-      console.log(chalk.bold.hex('#F59E0B')(`\n📺 Projection Payload for [${opts.brand.toUpperCase()}] ${opts.mode.toUpperCase()}:`));
+      console.log(chalk.bold.hex('#F59E0B')(`\nProjection Payload for [${opts.brand.toUpperCase()}] ${opts.mode.toUpperCase()}:`));
       console.log(JSON.stringify(data.data ?? data, null, 2));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Projection fetch failed: ${err.message}\n`));
@@ -187,7 +187,7 @@ displayCommand
     try {
       const res: any = await apiGet('/v1/displays/discover', opts.tenant);
       const info = res.data ?? res;
-      console.log(chalk.bold.hex('#F59E0B')('\n📡 CulinaryOS Zero-Config LAN Discovery:'));
+      console.log(chalk.bold.hex('#F59E0B')('\nCulinaryOS Zero-Config LAN Discovery:'));
       console.log(chalk.white(`  Host:       ${info.hostname} (${info.mdnsHost})`));
       console.log(chalk.white(`  Primary IP: ${info.primaryIp}`));
       console.log(chalk.white(`  API URL:    ${info.surfaces?.api}`));

@@ -20,11 +20,11 @@ hardwareCommand
       ["POS Tablet", "iPad 10.2 / Galaxy Tab A9+", "Web POS / PWA (Universal)", "$249 - $329", "$450 (Locked Android)"],
     ];
 
-    console.log(chalk.bold.hex("#F97316")("\n📦 CulinaryOS Blessed Kit v1 Hardware Matrix:"));
+    console.log(chalk.bold.hex("#F97316")("\nCulinaryOS Blessed Kit v1 Hardware Matrix:"));
     console.log(chalk.gray("Standard open-architecture restaurant hardware. Zero proprietary terminal lock-in.\n"));
     console.log(table(rows));
 
-    console.log(chalk.bold.cyan("💰 Financial & TCO Comparison:"));
+    console.log(chalk.bold.cyan("Financial & TCO Comparison:"));
     console.log("  CulinaryOS Blessed Kit (Station): " + chalk.bold.green("~$884 total hardware"));
     console.log("  Toast Comparison (Station):       " + chalk.bold.red("~$1,800 - $2,200 upfront + $69/mo/term\n"));
     console.log(chalk.yellow("⚡ Cabling Notice: Standard phone RJ11 cables are NOT wired the same as POS RJ12 cables."));
@@ -94,7 +94,7 @@ hardwareCommand
     const columns = opts.width === "58mm" ? 32 : 48;
     const testBuffer = buildEscPosTestPattern(columns);
 
-    console.log(chalk.bold.hex("#F97316")("\n🧾 CulinaryOS Hardware Diagnostic Test Receipt:"));
+    console.log(chalk.bold.hex("#F97316")("\nCulinaryOS Hardware Diagnostic Test Receipt:"));
     console.log(`  Target:    ${opts.ip}:${opts.port}`);
     console.log(`  Width:     ${opts.width} (${columns} columns)`);
     console.log(`  Payload:   ${testBuffer.length} raw ESC/POS bytes generated\n`);
@@ -155,7 +155,7 @@ hardwareCommand
     // ESC p <pin> <t1> <t2>
     const pulseBuffer = Buffer.from([0x1b, 0x70, pinByte, 0x19, 0xfa]);
 
-    console.log(chalk.bold.hex("#F97316")("\n💵 Cash Drawer Solenoid Kick Pulse:"));
+    console.log(chalk.bold.hex("#F97316")("\nCash Drawer Solenoid Kick Pulse:"));
     console.log(`  Target Printer: ${opts.ip}:${opts.port}`);
     console.log(`  Drawer Pin:     Pin ${opts.pin} (${opts.pin === "5" ? "Drawer 2" : "Drawer 1 (Primary)"})`);
     console.log(`  Pulse Sequence: ${pulseBuffer.toString("hex").toUpperCase()}`);
@@ -193,7 +193,7 @@ hardwareCommand
   .command("scan")
   .description("Scan local subnet for network-attached ESC/POS thermal printers on port 9100")
   .action(async () => {
-    console.log(chalk.bold.hex("#F97316")("\n🔍 Scanning Local Network for Port 9100 ESC/POS Printers:"));
+    console.log(chalk.bold.hex("#F97316")("\nScanning Local Network for Port 9100 ESC/POS Printers:"));
 
     const candidateHosts = ["127.0.0.1", "192.168.1.200", "192.168.1.201", "192.168.0.200", "10.0.0.200"];
 

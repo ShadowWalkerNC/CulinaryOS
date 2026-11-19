@@ -167,7 +167,7 @@ reportCommand
       ['Covers', f.guestCoverCount ?? 0],
       ['Avg Check', `$${((f.averageCheckCents ?? 0) / 100).toFixed(2)}`],
     ];
-    console.log('\n📊 FINANCIALS');
+    console.log('\nFINANCIALS');
     console.log(table(finRows));
 
     const drawerRows = [
@@ -178,10 +178,10 @@ reportCommand
       ['Actual Counted', cash.actualCountedCents > 0 ? `$${(cash.actualCountedCents / 100).toFixed(2)}` : 'NOT YET COUNTED'],
       ['Over / Short', cash.overShortCents !== undefined ? `${cash.overShortCents >= 0 ? '+' : ''}$${(cash.overShortCents / 100).toFixed(2)}` : '—'],
     ];
-    console.log('\n💵 CASH DRAWER');
+    console.log('\nCASH DRAWER');
     console.log(table(drawerRows));
 
-    console.log(`\n🎯 TIP POOL — Total: $${((tips.poolTotalCents ?? 0) / 100).toFixed(2)} | Method: ${tips.method ?? '—'}`);
+    console.log(`\nTIP POOL — Total: $${((tips.poolTotalCents ?? 0) / 100).toFixed(2)} | Method: ${tips.method ?? '—'}`);
     console.log(`   ℹ  Run 'culinary report tips' to view full staff breakdown.\n`);
   });
 
@@ -200,7 +200,7 @@ reportCommand
     // Prompt for PIN without echoing
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const pin = await new Promise<string>((resolve) => {
-      process.stdout.write('🔐 Manager PIN: ');
+      process.stdout.write('Manager PIN: ');
       process.stdin.setRawMode?.(true);
       let input = '';
       process.stdin.on('data', (char) => {
@@ -214,7 +214,7 @@ reportCommand
           input = input.slice(0, -1);
           process.stdout.clearLine?.(0);
           process.stdout.cursorTo?.(0);
-          process.stdout.write(`🔐 Manager PIN: ${'*'.repeat(input.length)}`);
+          process.stdout.write(`Manager PIN: ${'*'.repeat(input.length)}`);
         } else {
           input += c;
           process.stdout.write('*');
@@ -255,9 +255,9 @@ reportCommand
       console.log(`  SHIFT CLOSED — Z-Report ${r.zReportNumber ?? '—'}`);
       console.log(`  Date: ${opts.date} | Closed by: ${r.closedBy?.displayName ?? 'Manager'}`);
       console.log(`╚══════════════════════════════════════════════════════════════╝`);
-      console.log(`\n  💵 Cash Drawer: ${overShortLabel}`);
-      console.log(`  📊 Net Sales:   $${((r.financials?.netSalesCents ?? 0) / 100).toFixed(2)}`);
-      console.log(`  💰 Total Collected: $${((r.financials?.totalRevenueCents ?? 0) / 100).toFixed(2)}`);
+      console.log(`\n  Cash Drawer: ${overShortLabel}`);
+      console.log(`  Net Sales:   $${((r.financials?.netSalesCents ?? 0) / 100).toFixed(2)}`);
+      console.log(`  Total Collected: $${((r.financials?.totalRevenueCents ?? 0) / 100).toFixed(2)}`);
       console.log(`\n  ✅ Z-Report sealed and immutable. Ledger entry logged.\n`);
     } catch (e: any) {
       console.error(`❌ ${e.message}`);

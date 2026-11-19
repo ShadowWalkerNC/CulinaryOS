@@ -374,6 +374,15 @@ export async function applyTicketAction(
     throw new DomainError('VALIDATION_ERROR', 'Ticket action must be bump, hold, or fire', 422);
   }
   const id = uuid(ticketId, 'ticket');
+  // Serialize ticket actions per order, before locking individual tickets.
+  // Final concurrent bumps must see each other's committed transitions.
+  const parent = await tx.query<{ id: string }>(
+    `SELECT id FROM public.pos_orders WHERE tenant_id = $1 AND id = (
+       SELECT order_id FROM public.kitchen_tickets WHERE tenant_id = $1 AND id = $2
+     ) FOR UPDATE`,
+    [tenantId, id],
+  );
+  if (!parent.rows[0]) throw new DomainError('NOT_FOUND', 'Ticket not found', 404);
   const locked = await tx.query<KitchenTicketRow>(
     'SELECT * FROM public.kitchen_tickets WHERE tenant_id = $1 AND id = $2 FOR UPDATE',
     [tenantId, id],

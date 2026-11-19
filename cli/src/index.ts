@@ -95,7 +95,7 @@ program
   .command('init [directory]')
   .description('Initialize and scaffold a zero-config CulinaryOS installation')
   .action(async (dir = '.') => {
-    console.log(chalk.bold.hex('#F97316')('\n🍳 CulinaryOS — Universal Restaurant Platform Initializer'));
+    console.log(chalk.bold.hex('#F97316')('\nCulinaryOS — Universal Restaurant Platform Initializer'));
     console.log(chalk.gray('Preparing turnkey POS, KDS, Admin, Web, and Inventory suite...\n'));
 
     const targetDir = path.resolve(process.cwd(), dir);
@@ -112,7 +112,7 @@ program
     }
 
     console.log(chalk.cyan('✔ All workspace packages ready (POS, KDS, Admin, Web, Ratio Engine, Food Cost Engine)'));
-    console.log(chalk.bold.green('\n🎉 CulinaryOS is ready to run!'));
+    console.log(chalk.bold.green('\nCulinaryOS is ready to run!'));
     console.log(chalk.white('To start all applications, run:'));
     console.log(chalk.bold.yellow('  pnpm start\n'));
   });
@@ -141,7 +141,7 @@ program
   ╚██████╗╚██████╔╝███████╗██║██║ ╚████║██║  ██║██║  ██║   ██║   ╚██████╔╝███████║
    ╚═════╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
     `));
-    console.log(chalk.bold.cyan('  🚀 Live Surfaces Dashboard\n'));
+    console.log(chalk.bold.cyan('  Live Surfaces Dashboard\n'));
     console.log(chalk.bold('  [1] POS Terminal:       ') + chalk.underline.hex('#38BDF8')('http://localhost:5172') + chalk.gray(' (PIN 1234 / 5678)'));
     console.log(chalk.bold('  [2] Kitchen KDS:        ') + chalk.underline.hex('#38BDF8')('http://localhost:5173') + chalk.gray(' (Station Tabs & Timers)'));
     console.log(chalk.bold('  [3] Admin Back-Office:  ') + chalk.underline.hex('#38BDF8')('http://localhost:5174') + chalk.gray(' (Pantry, Menu, Tools)'));

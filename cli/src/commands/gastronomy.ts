@@ -23,7 +23,7 @@ gastronomyCommand
       }, opts.tenant);
 
       const d = res.data;
-      console.log(chalk.bold.hex('#F97316')(`\n🍮 Gelatin Bloom Inversion Conversion:\n`));
+      console.log(chalk.bold.hex('#F97316')(`\nGelatin Bloom Inversion Conversion:\n`));
       const rows = [
         ['Parameter', 'Source Formulation', 'Target Converted'],
         ['Bloom Strength', `${d.sourceBloom} Bloom`, `${d.targetBloom} Bloom`],
@@ -53,7 +53,7 @@ gastronomyCommand
       }, opts.tenant);
 
       const d = res.data;
-      console.log(chalk.bold.hex('#F97316')(`\n🔮 Modernist Spherification Formulation (${d.type.toUpperCase()}):\n`));
+      console.log(chalk.bold.hex('#F97316')(`\nModernist Spherification Formulation (${d.type.toUpperCase()}):\n`));
       const rows = [
         ['Component', 'Formulation Weight', 'Role'],
         ['Base Liquid', `${d.liquidBaseGrams}g`, `Flavor Base (pH ${d.liquidBasePh})`],
@@ -135,7 +135,7 @@ gastronomyCommand
       }, opts.tenant);
 
       const d = res.data;
-      console.log(chalk.bold.hex('#F97316')(`\n🥚 Sous-Vide Egg Precision Rheology:\n`));
+      console.log(chalk.bold.hex('#F97316')(`\nSous-Vide Egg Precision Rheology:\n`));
       const rows = [
         ['Parameter', 'Result'],
         ['Water Bath Temp', `${d.bathTempC}°C`],
@@ -168,7 +168,7 @@ gastronomyCommand
       }, opts.tenant);
 
       const d = res.data;
-      console.log(chalk.bold.hex('#F97316')(`\n🧂 Modernist Equilibrium Brining Formula:\n`));
+      console.log(chalk.bold.hex('#F97316')(`\nModernist Equilibrium Brining Formula:\n`));
       const rows = [
         ['Component', 'Weight', 'Percentage'],
         ['Protein Mass', `${d.proteinWeightGrams}g`, '—'],
@@ -199,7 +199,7 @@ gastronomyCommand
         }, opts.tenant);
 
         const d = res.data;
-        console.log(chalk.bold.hex('#F97316')(`\n🧬 Molecular Flavor Pairing Affinity:\n`));
+        console.log(chalk.bold.hex('#F97316')(`\nMolecular Flavor Pairing Affinity:\n`));
         const rows = [
           ['Pairing', `${d.ingredientA} + ${d.ingredientB}`],
           ['Affinity Score', chalk.bold.green(`${d.affinityScore} / 100`)],
@@ -216,7 +216,7 @@ gastronomyCommand
         }, opts.tenant);
 
         const pairings = res.data;
-        console.log(chalk.bold.hex('#F97316')(`\n🧬 Top Companion Flavor Pairings for: ${ingredientA}\n`));
+        console.log(chalk.bold.hex('#F97316')(`\nTop Companion Flavor Pairings for: ${ingredientA}\n`));
         const rows = [
           ['Rank', 'Companion Ingredient', 'Affinity Score', 'Shared Key Volatiles'],
           ...pairings.map((p: any, idx: number) => [

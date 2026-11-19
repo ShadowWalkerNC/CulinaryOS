@@ -32,7 +32,7 @@ commissaryCommand
         ]),
       ];
 
-      console.log(chalk.bold.hex('#F97316')('\n📦 Multi-Unit Commissary Transfers:'));
+      console.log(chalk.bold.hex('#F97316')('\nMulti-Unit Commissary Transfers:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Failed to fetch transfers: ${err.message}\n`));
@@ -87,7 +87,7 @@ commissaryCommand
         ]),
       ];
 
-      console.log(chalk.bold.hex('#F97316')('\n🏢 Multi-Unit Franchise Royalty Ledger:'));
+      console.log(chalk.bold.hex('#F97316')('\nMulti-Unit Franchise Royalty Ledger:'));
       console.log(chalk.gray(`Period: ${opts.from} to ${opts.to}`));
       console.log(table(rows));
       if (ledger.totalRoyaltyDueCents) {
@@ -116,7 +116,7 @@ commissaryCommand
         ]),
       ];
 
-      console.log(chalk.bold.hex('#F97316')('\n📋 Commissary Transfer Logistics Packing Slip:'));
+      console.log(chalk.bold.hex('#F97316')('\nCommissary Transfer Logistics Packing Slip:'));
       console.log(`  Order:        ${chalk.bold(slip.transferOrderId)}`);
       console.log(`  Origin:       ${slip.sourceCommissaryName}`);
       console.log(`  Destination:  ${slip.destinationStoreName} (${slip.destinationStoreId})`);

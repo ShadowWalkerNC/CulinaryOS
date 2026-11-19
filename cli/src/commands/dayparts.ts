@@ -62,7 +62,7 @@ daypartsCommand
         ['Applies To Categories', (active.categoryIds ?? []).join(', ') || 'All categories'],
       ];
 
-      console.log(chalk.bold.hex('#F97316')('\n🎉 Currently Active Daypart Rule:'));
+      console.log(chalk.bold.hex('#F97316')('\nCurrently Active Daypart Rule:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Failed to fetch active schedule: ${err.message}\n`));

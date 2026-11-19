@@ -27,7 +27,7 @@ opsCommand
         timestamp: new Date().toISOString(),
       }, opts.tenant);
 
-      console.log(chalk.bold.yellow(`\n🗑️ Waste Event Recorded:`));
+      console.log(chalk.bold.yellow(`\nWaste Event Recorded:`));
       console.log(chalk.white(`  Item:       ${itemId}`));
       console.log(chalk.white(`  Quantity:   ${qty}`));
       console.log(chalk.white(`  Reason:     ${reason}`));
@@ -53,7 +53,7 @@ opsCommand
         ['Food Cost %', `${(res.foodCostPercent ?? 28.4).toFixed(1)}%`],
         ['Status', res.status ?? 'AMBER (Review Top Spoilage)'],
       ];
-      console.log(chalk.bold.hex('#F97316')('\n📊 Food Cost Variance Ledger:'));
+      console.log(chalk.bold.hex('#F97316')('\nFood Cost Variance Ledger:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching food cost: ${err.message}\n`));
@@ -76,7 +76,7 @@ opsCommand
         ['Labor %', `${(res.laborPercent ?? 27.8).toFixed(1)}%`],
         ['Status', res.status ?? 'OPTIMAL (< 30%)'],
       ];
-      console.log(chalk.bold.hex('#F97316')('\n👥 Shift Labor & Productivity:'));
+      console.log(chalk.bold.hex('#F97316')('\nShift Labor & Productivity:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching labor data: ${err.message}\n`));

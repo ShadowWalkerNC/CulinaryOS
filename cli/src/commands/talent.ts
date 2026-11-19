@@ -36,7 +36,7 @@ talentCommand
           j.status.toUpperCase(),
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n💼 CulinaryTalent Job Postings:'));
+      console.log(chalk.bold.hex('#F97316')('\nCulinaryTalent Job Postings:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching jobs: ${err.message}\n`));
@@ -96,7 +96,7 @@ talentCommand
           a.phone,
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n📋 Talent Pipeline Applications:'));
+      console.log(chalk.bold.hex('#F97316')('\nTalent Pipeline Applications:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching candidate applications: ${err.message}\n`));

@@ -1,3 +1,4 @@
+import { integerArgument, operationId } from '../lib/native-input';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { table } from 'table';
@@ -30,7 +31,7 @@ posCommand
           o.serverName ?? o.server_name ?? 'Server #1234',
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n🍽️ Active Dining Room Orders:'));
+      console.log(chalk.bold.hex('#F97316')('\nActive Dining Room Orders:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching POS orders: ${err.message}\n`));
@@ -163,12 +164,13 @@ posCommand
       await apiPost(`/v1/payments/cash-comp`, {
         orderId,
         method: opts.method,
-        amount: parseInt(amountCents, 10),
-        tipCents: parseInt(opts.tipCents, 10),
-        operationId: opts.operationId ?? `cli-cash-${Date.now().toString(36)}`,
+        amount: integerArgument(amountCents),
+        tipCents: integerArgument(opts.tipCents),
+        operationId: operationId(opts.operationId),
       }, opts.tenant);
       console.log(chalk.green(`✔ Order ${orderId} paid via ${String(opts.method).toUpperCase()} (${amountCents}c)`));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Cash/comp payment failed: ${err.message}\n`));
     }
   });
@@ -183,12 +185,13 @@ posCommand
     try {
       await apiPost(`/v1/payments/refund`, {
         paymentId,
-        amountCents: parseInt(amountCents, 10),
+        amountCents: integerArgument(amountCents),
         reason,
-        operationId: opts.operationId ?? `cli-refund-${Date.now().toString(36)}`,
+        operationId: operationId(opts.operationId),
       }, opts.tenant);
       console.log(chalk.green(`✔ Refund of ${amountCents}c recorded on payment ${paymentId}`));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Refund failed: ${err.message}\n`));
     }
   });
@@ -204,10 +207,11 @@ posCommand
     try {
       await apiPost(`/v1/drawers/open`, {
         drawerName: opts.drawer,
-        openingFloatCents: parseInt(opts.floatCents, 10),
+        openingFloatCents: integerArgument(opts.floatCents),
       }, opts.tenant);
       console.log(chalk.green(`✔ Drawer ${opts.drawer} opened (float ${opts.floatCents}c)`));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Drawer open failed: ${err.message}\n`));
     }
   });
@@ -224,11 +228,12 @@ posCommand
       await apiPost(`/v1/drawers/movement`, {
         drawerName: opts.drawer,
         kind,
-        amountCents: parseInt(amountCents, 10),
-        operationId: opts.operationId ?? `cli-move-${Date.now().toString(36)}`,
+        amountCents: integerArgument(amountCents),
+        operationId: operationId(opts.operationId),
       }, opts.tenant);
       console.log(chalk.green(`✔ Drawer ${opts.drawer} ${kind} ${amountCents}c recorded`));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Drawer movement failed: ${err.message}\n`));
     }
   });
@@ -243,11 +248,12 @@ posCommand
     try {
       const res: any = await apiPost(`/v1/drawers/close`, {
         drawerName: opts.drawer,
-        countedCents: parseInt(countedCents, 10),
+        countedCents: integerArgument(countedCents),
       }, opts.tenant);
       const data = res?.data ?? {};
       console.log(chalk.green(`✔ Drawer ${opts.drawer} closed (expected ${data.expectedCents}c, variance ${data.varianceCents}c)`));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Drawer close failed: ${err.message}\n`));
     }
   });
@@ -268,6 +274,7 @@ posCommand
         [s.opening_float_cents, s.cash_sales_cents, s.paid_in_cents, s.paid_out_cents, s.counted_cents ?? '-'],
       ]));
     } catch (err: any) {
+      process.exitCode = 1;
       console.error(chalk.red(`\n✖ Drawer show failed: ${err.message}\n`));
     }
   });

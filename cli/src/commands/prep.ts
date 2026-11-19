@@ -20,7 +20,7 @@ prepCommand
         multiplier: factor,
       }, opts.tenant);
 
-      console.log(chalk.bold.hex('#F97316')(`\n🥣 Scaled Recipe Formula: ${recipeName} (${factor}x Batch)\n`));
+      console.log(chalk.bold.hex('#F97316')(`\nScaled Recipe Formula: ${recipeName} (${factor}x Batch)\n`));
       const ingredients = res.ingredients ?? [
         { name: 'Flour (Caputo 00)', baseAmount: '1000g', scaledAmount: `${1000 * factor}g` },
         { name: 'Water (65%)', baseAmount: '650g', scaledAmount: `${650 * factor}g` },
@@ -50,7 +50,7 @@ prepCommand
     const border = '═'.repeat(42);
 
     console.log(chalk.bold.cyan(`\n╔${border}╗`));
-    console.log(chalk.bold.cyan(`║  🏷️  KITCHEN PREP & EXPIRATION LABEL       ║`));
+    console.log(chalk.bold.cyan(`║  KITCHEN PREP & EXPIRATION LABEL       ║`));
     console.log(chalk.bold.cyan(`╠${border}╣`));
     console.log(chalk.bold.white(`║  ITEM:       ${dishName.padEnd(28)}║`));
     console.log(chalk.bold.white(`║  PREP BY:    ${opts.cook.padEnd(28)}║`));
@@ -78,7 +78,7 @@ prepCommand
         ['Pantry Ingredient', 'On Hand', 'Par Level', 'Status'],
         ...items.map((i: any) => [i.name, i.current, i.par, i.status]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n📦 Pantry Par Levels & Purchase Orders:'));
+      console.log(chalk.bold.hex('#F97316')('\nPantry Par Levels & Purchase Orders:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching par levels: ${err.message}\n`));

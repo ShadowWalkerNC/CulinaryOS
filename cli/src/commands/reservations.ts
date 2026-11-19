@@ -33,7 +33,7 @@ reservationsCommand
           r.notes ?? '—',
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')(`\n📅 Reservations for ${opts.date}:`));
+      console.log(chalk.bold.hex('#F97316')(`\nReservations for ${opts.date}:`));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching reservations: ${err.message}\n`));

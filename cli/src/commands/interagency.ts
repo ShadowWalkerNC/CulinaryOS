@@ -17,7 +17,7 @@ interagencyCommand
   .option('--tenant <id>', 'Tenant ID')
   .action(async (opts) => {
     try {
-      console.log(chalk.bold.hex('#6366F1')('\n🔗 CulinaryOS Interagency Read Bridge Status:'));
+      console.log(chalk.bold.hex('#6366F1')('\nCulinaryOS Interagency Read Bridge Status:'));
 
       const isEnabled = process.env.INTERAGENCY_READ_ENABLED === 'true';
       console.log(`  Engine Status:       ${isEnabled ? chalk.green('● ENABLED (Read-Only)') : chalk.yellow('○ DISABLED (Set INTERAGENCY_READ_ENABLED=true)')}`);
@@ -42,7 +42,7 @@ interagencyCommand
       const grants: any[] = res.grants || [];
 
       if (grants.length === 0) {
-        console.log(chalk.yellow('\n🔗 No active third-party read grants found for this tenant.\n'));
+        console.log(chalk.yellow('\nNo active third-party read grants found for this tenant.\n'));
         return;
       }
 
@@ -57,7 +57,7 @@ interagencyCommand
         ]),
       ];
 
-      console.log(chalk.bold.hex('#6366F1')('\n🔗 Active Third-Party Read Grants:'));
+      console.log(chalk.bold.hex('#6366F1')('\nActive Third-Party Read Grants:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error listing grants: ${err.message}\n`));
@@ -99,7 +99,7 @@ interagencyCommand
         return;
       }
 
-      console.log(chalk.bold.hex('#6366F1')(`\n📦 Fetching snapshot for resource: ${resource}...`));
+      console.log(chalk.bold.hex('#6366F1')(`\nFetching snapshot for resource: ${resource}...`));
 
       const query = new URLSearchParams({
         resource,

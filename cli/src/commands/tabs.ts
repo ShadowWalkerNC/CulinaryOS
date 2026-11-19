@@ -29,7 +29,7 @@ tabsCommand
           (t.status ?? 'open').toUpperCase(),
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n🍸 Active Bar Tabs:'));
+      console.log(chalk.bold.hex('#F97316')('\nActive Bar Tabs:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error fetching tabs: ${err.message}\n`));

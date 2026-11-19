@@ -23,7 +23,7 @@ marketplaceCommand
           chalk.cyan(String(item.installed ? 'installed' : 'available')),
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n🏪 CulinaryOS Marketplace Catalog:'));
+      console.log(chalk.bold.hex('#F97316')('\nCulinaryOS Marketplace Catalog:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Failed to list marketplace items: ${err.message}\n`));

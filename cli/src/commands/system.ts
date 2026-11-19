@@ -69,7 +69,7 @@ export function auditRlsCoverage(candidateDirsOverride?: string[]): { ok: boolea
 
 export async function runDoctor(subsystem?: string, opts?: any): Promise<boolean> {
   if (subsystem === 'security') {
-    console.log(chalk.bold.hex('#F97316')('\n🔒 CulinaryOS Security Doctor & Tenant Isolation Audit:'));
+    console.log(chalk.bold.hex('#F97316')('\nCulinaryOS Security Doctor & Tenant Isolation Audit:'));
     console.log(chalk.gray('Auditing RLS coverage, service_role protection, webhook signatures & auth gates...\n'));
 
     const rlsAudit = auditRlsCoverage();
@@ -131,7 +131,7 @@ function isPlaceholder(val?: string): boolean {
   }
 
   if (subsystem === 'ui') {
-    console.log(chalk.bold.hex('#F97316')('\n🎨 CulinaryOS UI/UX Ergonomics & Jakob\'s Law Auditor:'));
+    console.log(chalk.bold.hex('#F97316')('\nCulinaryOS UI/UX Ergonomics & Jakob\'s Law Auditor:'));
     console.log(chalk.gray('Auditing button physics, 48px touch targets, OKLCH tokens, and thumb-zone compliance...\n'));
 
     const buttonPathCandidates = [
@@ -195,7 +195,7 @@ function isPlaceholder(val?: string): boolean {
     return allPassed;
   }
 
-  console.log(chalk.bold.hex('#F97316')('\n🩺 CulinaryOS System Doctor & Port Health Diagnostic:'));
+  console.log(chalk.bold.hex('#F97316')('\nCulinaryOS System Doctor & Port Health Diagnostic:'));
   console.log(chalk.gray('Checking all 8 core restaurant surface ports...\n'));
 
   for (const p of PORTS) {
@@ -223,7 +223,7 @@ systemCommand
   .command('heal')
   .description('Scan and auto-kill zombie processes locking ports 3000, 5172–5180')
   .action(() => {
-    console.log(chalk.bold.yellow('\n🩺 Running Port Conflict Self-Healing Engine...'));
+    console.log(chalk.bold.yellow('\nRunning Port Conflict Self-Healing Engine...'));
     const isWindows = process.platform === 'win32';
     if (isWindows) {
       try {
@@ -239,7 +239,7 @@ systemCommand
   .command('tray')
   .description('Launch the background skillet system tray manager')
   .action(() => {
-    console.log(chalk.bold.hex('#F97316')('\n🍳 Launching CulinaryOS System Tray Manager...'));
+    console.log(chalk.bold.hex('#F97316')('\nLaunching CulinaryOS System Tray Manager...'));
     const child = spawn('npx', ['tsx', 'scripts/tray-manager.ts'], {
       detached: true,
       stdio: 'ignore',
@@ -254,7 +254,7 @@ systemCommand
   .command('discover')
   .description('Broadcast mDNS (culinaryos.local) and generate pairing QR code for tablets')
   .action(() => {
-    console.log(chalk.bold.cyan('\n📱 Launching Local mDNS & QR Discovery Broadcast...'));
+    console.log(chalk.bold.cyan('\nLaunching Local mDNS & QR Discovery Broadcast...'));
     const child = spawn('npx', ['tsx', 'scripts/mdns-qr-discovery.ts'], {
       stdio: 'inherit',
       shell: true,
@@ -268,7 +268,7 @@ systemCommand
   .option('--action <action>', 'Action (test-page | kick-drawer | full-cert)', 'full-cert')
   .option('--columns <cols>', 'Printer columns (48 or 32)', '48')
   .action((opts) => {
-    console.log(chalk.bold.hex('#F97316')('\n🖨️ CulinaryOS Hardware Matrix & Device Certification:'));
+    console.log(chalk.bold.hex('#F97316')('\nCulinaryOS Hardware Matrix & Device Certification:'));
     console.log(chalk.gray('Certified Lineup: Star TSP143IV / Epson TM-m30 + RJ12 24V Drawer + Stripe WisePOS E\n'));
 
     const cols = parseInt(opts.columns, 10);
@@ -289,5 +289,5 @@ systemCommand
       console.log(chalk.green('  ✔ Test receipt pattern generated and validated.'));
     }
 
-    console.log(chalk.bold.green('\n🎉 Hardware Kit v1 certification check PASSED.\n'));
+    console.log(chalk.bold.green('\nHardware Kit v1 certification check PASSED.\n'));
   });

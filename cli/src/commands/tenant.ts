@@ -12,12 +12,13 @@ tenantCommand
   .description('List all active restaurant tenants')
   .action(async () => {
     try {
-      const tenants: any[] = await apiGet('/api/tenants');
+      const res: any = await apiGet('/v1/tenants');
+      const tenants: any[] = Array.isArray(res) ? res : res?.data || [];
       const rows = [
         ['Tenant ID', 'Restaurant Name', 'Plan', 'Status', 'Created'],
-        ...tenants.map((t) => [t.id.slice(0, 8), t.name, t.plan ?? 'pro', t.status ?? 'active', new Date(t.createdAt || Date.now()).toLocaleDateString()]),
+        ...tenants.map((t) => [String(t.id).slice(0, 8), t.name, t.plan ?? 'free_opensource', t.status ?? 'active', new Date(t.createdAt || Date.now()).toLocaleDateString()]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n🏢 Active CulinaryOS Multi-Tenant Venues:'));
+      console.log(chalk.bold.hex('#F97316')('\nActive CulinaryOS Multi-Tenant Venues:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error listing tenants: ${err.message}\n`));
@@ -30,10 +31,10 @@ tenantCommand
   .description('Onboard a new restaurant tenant')
   .requiredOption('--name <name>', 'Restaurant name')
   .requiredOption('--email <email>', 'Owner email')
-  .option('--plan <plan>', 'Subscription plan (starter|pro|enterprise)', 'starter')
+  .option('--plan <plan>', 'Subscription plan (free_opensource|cloud_pro|enterprise_multi_unit)', 'free_opensource')
   .action(async (opts) => {
     try {
-      const tenant: any = await apiPost('/api/tenants', { name: opts.name, email: opts.email, plan: opts.plan });
+      const tenant: any = await apiPost('/v1/tenants', { name: opts.name, email: opts.email, plan: opts.plan });
       console.log(chalk.green(`\n✔ Tenant created: ${tenant.id} — ${tenant.name} (${tenant.plan})\n`));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error creating tenant: ${err.message}\n`));
@@ -43,17 +44,17 @@ tenantCommand
 // 3. Fast 1-Command Venue Bootstrap (Phase 2 Closed Beta)
 tenantCommand
   .command('bootstrap')
-  .description('Fast 1-command venue bootstrapping for closed-beta operators')
+  .description('Fast 1-command venue bootstrapping for operators')
   .requiredOption('--name <name>', 'Restaurant name')
   .requiredOption('--email <email>', 'Owner email')
   .option('--password <password>', 'Initial owner password', 'CulinaryOS2026!')
-  .option('--plan <plan>', 'Subscription tier (starter|pro|enterprise)', 'pro')
+  .option('--plan <plan>', 'Subscription tier (free_opensource|cloud_pro|enterprise_multi_unit)', 'free_opensource')
   .option('--template <template>', 'Operational preset (full-service|food-truck)', 'full-service')
   .action(async (opts) => {
     try {
-      console.log(chalk.cyan(`\nBootstrapping closed-beta venue: "${opts.name}"...`));
+      console.log(chalk.cyan(`\nBootstrapping venue: "${opts.name}"...`));
       
-      // 1. Create auth user, restaurant row, and 14-day trial
+      // 1. Create auth user, restaurant row, and subscription tier
       const signupRes: any = await apiPost('/v1/auth/signup', {
         email: opts.email,
         password: opts.password,
@@ -62,7 +63,7 @@ tenantCommand
 
       const tenantId = signupRes.tenant_id ?? '00000000-0000-0000-0000-000000000001';
       console.log(chalk.green(`✔ 1. Provisioned tenant: ${tenantId}`));
-      console.log(chalk.green(`✔ 2. Created 14-day trial subscription for plan: ${opts.plan.toUpperCase()}`));
+      console.log(chalk.green(`✔ 2. Configured plan tier: ${opts.plan.toUpperCase()}`));
 
       // 2. Apply business template preset
       try {
@@ -72,12 +73,13 @@ tenantCommand
         console.log(chalk.yellow(`! 3. Applied default operational settings (offline compatibility)`));
       }
 
-      console.log(chalk.bold.hex('#F97316')('\n🎉 Closed Beta Venue Ready:'));
+      console.log(chalk.bold.hex('#F97316')('\nCulinaryOS Venue Ready:'));
       console.log(`  Restaurant:  ${chalk.bold.white(opts.name)}`);
       console.log(`  Tenant ID:   ${chalk.cyan(tenantId)}`);
       console.log(`  Owner Email: ${chalk.white(opts.email)}`);
-      console.log(`  POS Login:   http://localhost:5172?tenant=${tenantId}`);
-      console.log(`  Admin Hub:   http://localhost:5174?tenant=${tenantId}\n`);
+      console.log(`  Workstation: http://127.0.0.1:3000/`);
+      console.log(`  POS Login:   http://127.0.0.1:3000/pos/?tenant=${tenantId}`);
+      console.log(`  Admin Hub:   http://127.0.0.1:3000/admin/?tenant=${tenantId}\n`);
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Bootstrap failed: ${err.message}\n`));
     }
@@ -115,7 +117,7 @@ tenantCommand
   .action(async (opts) => {
     try {
       const res: any = await apiPost('/v1/payments/connect/link', {}, opts.tenant);
-      console.log(chalk.bold.hex('#F97316')('\n💳 Stripe Connect Standard Onboarding:'));
+      console.log(chalk.bold.hex('#F97316')('\nStripe Connect Standard Onboarding:'));
       console.log(chalk.gray('  Direct merchant payouts with 0% CulinaryOS card processing markup (SAQ-A).'));
       console.log(chalk.green(`  Account ID:   ${res.account_id ?? 'acct_standard_pending'}`));
       console.log(chalk.cyan(`  Onboarding:   ${res.url ?? 'https://connect.stripe.com/express/oauth'}\n`));
@@ -147,7 +149,7 @@ tenantCommand
         ['FLSA Tip Pool Mode', 'Hours-Weighted with FLSA Rule 9 Exclusions'],
       ];
 
-      console.log(chalk.bold.hex('#F97316')('\n📊 Closed-Beta Venue Financial & Subscription Statement:'));
+      console.log(chalk.bold.hex('#F97316')('\nClosed-Beta Venue Financial & Subscription Statement:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Error loading statement: ${err.message}\n`));

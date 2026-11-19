@@ -29,6 +29,6 @@ diagnosticsCommand
       ['Prime Cost Total', chalk.bold(`$${(primeCents / 100).toFixed(2)}`), chalk.bold(`${primePct.toFixed(1)}%`), status],
     ];
 
-    console.log(chalk.bold.hex('#F97316')('\n📈 RestRevive-AI Prime Cost Diagnostic:'));
+    console.log(chalk.bold.hex('#F97316')('\nRestRevive-AI Prime Cost Diagnostic:'));
     console.log(table(rows));
   });

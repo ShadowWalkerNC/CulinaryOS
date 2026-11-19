@@ -234,6 +234,17 @@ test('104 ticket actions: auth, transitions, replay, POS-visible completion', {
     assert.equal(res.status, 200);
     assert.equal((await res.json() as { data: { order: { status: string } } }).data.order.status, 'served');
 
+    // Distinct final tickets bump concurrently, but completion serializes per order.
+    const concurrentOrder = await createOrder('K-concurrent');
+    await addItem(concurrentOrder, itemGrill, 1);
+    await addItem(concurrentOrder, itemCold, 1);
+    const concurrentSend = await send(concurrentOrder, op('send'));
+    const concurrentBumps = await Promise.all(concurrentSend.data.tickets.map((t) =>
+      act(t.id, 'bump', { operationId: op('bump') }, serverH)));
+    for (const response of concurrentBumps) assert.equal(response.status, 200);
+    const concurrentDetail = await app.request(`/v1/orders/${concurrentOrder}`, { headers: serverH });
+    assert.equal((await concurrentDetail.json() as { data: { order: { status: string } } }).data.order.status, 'served');
+
     // Terminal tickets refuse further transitions; a paid order never regresses to served.
     res = await act(grillTicket, 'fire', {}, serverH);
     assert.equal(res.status, 409);

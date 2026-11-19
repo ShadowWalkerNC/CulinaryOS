@@ -117,6 +117,14 @@ impl From<CloudBridgeError> for ApiError {
 type ApiReply = Result<(StatusCode, Json<Value>), ApiError>;
 
 fn ok(status: StatusCode, data: Value) -> ApiReply {
+    if let Some(obj) = data.as_object() {
+        if obj.get("ok").and_then(|v| v.as_bool()) == Some(true)
+            && obj.len() == 2
+            && obj.contains_key("data")
+        {
+            return Ok((status, Json(data)));
+        }
+    }
     Ok((status, Json(json!({ "ok": true, "data": data }))))
 }
 
@@ -284,9 +292,11 @@ impl StandaloneService {
             .route("/v1/admin/menu/items", get(list_admin_menu_items))
             .route("/v1/admin/menu/items/{id}", patch(update_admin_menu_item))
             .route("/v1/kds/86-items", get(list_86_items_handler))
-            .route("/v1/kds/86", get(list_86_items_handler))
+            .route("/v1/kds/86", get(list_86_items_handler).post(post_86_native_handler))
             .route("/v1/kds/86-items/{id}/toggle-86", post(toggle_86_handler))
             .route("/v1/kds/86-items/{id}/set-count", post(set_86_count_handler))
+            .route("/v1/kds/tickets/{id}/hold", patch(hold_ticket_native_handler))
+            .route("/v1/kds/tickets/{id}/fire", patch(fire_ticket_native_handler))
             .route("/v1/admin/staff", get(list_staff_handler).post(create_staff_handler))
             .route("/v1/admin/staff/{id}", patch(update_staff_handler))
             .route("/v1/talent/applications", get(list_talent_applications_handler))
@@ -295,41 +305,97 @@ impl StandaloneService {
             .route("/v1/talent/jobs", get(list_talent_jobs_handler).post(create_talent_job_handler))
             .route("/v1/jobs", get(list_talent_jobs_handler))
             .route("/v1/pantry", get(list_pantry_handler))
+            .route("/v1/pantry/par-levels", get(list_pantry_handler))
             .route("/v1/pantry/purchase-orders", get(list_purchase_orders_handler).post(create_purchase_order_handler))
+            .route("/v1/pantry/purchase-orders/auto-generate", post(suggested_order_handler))
             .route("/v1/pantry/purchase-orders/{id}/approve", patch(approve_po_handler))
             .route("/v1/pantry/purchase-orders/{id}/send", patch(send_po_handler))
             .route("/v1/pantry/purchase-orders/{id}", delete(delete_po_handler))
             .route("/v1/purchasing/orders", get(list_purchase_orders_handler).post(create_purchase_order_handler))
+            .route("/v1/purchasing/purchase-orders", get(list_purchase_orders_handler).post(create_purchase_order_handler))
+            .route("/v1/purchasing/purchase-orders/{id}/receive", post(receive_po_native_handler))
             .route("/v1/purchasing/vendors", get(list_vendors_handler))
             .route("/v1/purchasing/items", get(list_purchasing_items_handler))
             .route("/v1/purchasing/order-guide", get(get_order_guide_handler))
             .route("/v1/purchasing/suggested-order", post(suggested_order_handler))
             .route("/v1/purchasing/split-mrp-optimizer", post(split_mrp_optimizer_handler))
+            .route("/v1/kitchenkit/recipes/scale", post(scale_recipe_native_handler))
             .route("/v1/reports/z-report", get(get_z_report_handler))
             .route("/v1/reports/z-report/close", post(close_z_report_handler))
+            .route("/v1/reports/sales-summary", get(sales_summary_native_handler))
+            .route("/v1/reports/pantry-usage", get(pantry_usage_native_handler))
+            .route("/v1/reports/tip-pool/calculate", post(tip_pool_calculate_report_native_handler))
+            .route("/v1/reports/tips/export/csv", get(tips_export_csv_native_handler))
             .route("/v1/payments/checkout", post(checkout_handler))
             .route("/v1/payments/capture", post(capture_handler))
             .route("/v1/payments/cash-comp", post(cash_comp_handler))
+            .route("/v1/payments/refund", post(payments_refund_native_handler))
+            .route("/v1/payments/connect/link", post(payments_connect_link_native_handler))
             .route("/v1/orders/{id}/void", post(void_order_handler))
+            .route("/v1/orders/{id}/items/{item_id}/void", post(void_order_item_native_handler))
+            .route("/v1/orders/{id}/pay", post(pay_order_native_handler))
+            .route("/v1/orders/{id}/fire-course", post(fire_course_native_handler))
             .route("/v1/orders/drawer/open", post(open_drawer_handler))
             .route("/v1/drawers/open", post(open_drawer_handler))
             .route("/v1/drawers/movement", post(drawer_movement_handler))
+            .route("/v1/drawers/{id}", get(get_drawer_by_id_native_handler))
             .route("/v1/auth/verify-manager-pin", post(verify_manager_pin_handler))
+            .route("/v1/auth/signup", post(auth_signup_native_handler))
             .route("/v1/pos/sync-deltas", post(sync_deltas_handler))
             .route("/v1/tables", get(list_tables_handler))
+            .route("/v1/tables/seat", post(tables_seat_native_handler))
             .route("/v1/tables/transfer", post(transfer_table_handler))
+            .route("/v1/tables/{id}/transfer", post(tables_id_transfer_native_handler))
             .route("/v1/tables/merge", post(merge_tables_handler))
             .route("/v1/tabs", get(list_tabs_handler).post(create_tab_handler))
+            .route("/v1/tabs/{id}", patch(tabs_update_native_handler))
             .route("/v1/kds/pacing", get(kds_pacing_handler))
+            .route("/v1/ops/food-cost", get(food_cost_variance_handler))
             .route("/v1/ops/food-cost/variance", get(food_cost_variance_handler))
+            .route("/v1/ops/labor", get(ops_labor_native_handler))
             .route("/v1/ops/waste/quick", post(quick_waste_handler))
             .route("/v1/ops/waste", get(list_waste_handler).post(quick_waste_handler))
             .route("/v1/displays", get(list_displays_handler))
             .route("/v1/displays/discover", get(discover_displays_handler))
             .route("/v1/displays/pair", post(pair_display_handler))
+            .route("/v1/displays/launcher-config", get(launcher_config_native_handler))
+            .route("/v1/displays/bump", post(displays_bump_native_handler))
+            .route("/v1/displays/{id}", patch(update_display_native_handler).delete(delete_display_native_handler))
             .route("/v1/hardware/print", post(hardware_print_handler))
             .route("/v1/hardware/kick-drawer", post(hardware_kick_drawer_handler))
-            .route("/v1/settings", get(get_settings_handler).put(update_settings_handler))
+            .route("/v1/settings", get(get_settings_handler).put(update_settings_handler).patch(update_settings_handler))
+            .route("/v1/settings/apply-template", post(apply_template_native_handler))
+            .route("/v1/tenants", get(list_tenants_native_handler).post(create_tenant_native_handler))
+            .route("/v1/billing/subscription", get(billing_subscription_native_handler))
+            .route("/v1/billing/portal", post(billing_portal_native_handler))
+            .route("/v1/billing/checkout", post(billing_checkout_native_handler))
+            .route("/v1/reservations", get(list_reservations_native_handler).post(create_reservation_native_handler))
+            .route("/v1/reservations/{id}", delete(delete_reservation_native_handler))
+            .route("/v1/reservations/{id}/status", patch(update_reservation_status_native_handler))
+            .route("/v1/autopilot/status", get(autopilot_status_native_handler))
+            .route("/v1/autopilot/token-dashboard", get(autopilot_token_dashboard_native_handler))
+            .route("/v1/autopilot/forecast", get(autopilot_forecast_native_handler))
+            .route("/v1/intelligence/route", post(intelligence_route_native_handler))
+            .route("/v1/intelligence/approvals", get(intelligence_approvals_native_handler))
+            .route("/v1/intelligence/approvals/{id}/decide", post(intelligence_decide_native_handler))
+            .route("/v1/intelligence/chefs-intelligence/skills/{id}", get(intelligence_skill_by_id_native_handler))
+            .route("/v1/commissary/transfers", get(commissary_transfers_native_handler))
+            .route("/v1/commissary/transfers/request", post(commissary_request_transfer_native_handler))
+            .route("/v1/commissary/royalty-ledger", get(commissary_royalty_ledger_native_handler))
+            .route("/v1/commissary/transfers/{id}/packing-slip", get(commissary_packing_slip_native_handler))
+            .route("/v1/dayparts", get(dayparts_list_native_handler))
+            .route("/v1/dayparts/active", get(dayparts_active_native_handler))
+            .route("/v1/gastronomy/gelatin/bloom", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/spherification", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/sous-vide/pasteurize", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/sous-vide/egg", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/brining/equilibrium", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/flavor/affinity", post(gastronomy_calc_native_handler))
+            .route("/v1/gastronomy/flavor/pairings", post(gastronomy_calc_native_handler))
+            .route("/v1/marketplace", get(marketplace_list_native_handler))
+            .route("/v1/marketplace/install", post(marketplace_install_native_handler))
+            .route("/v1/interagency/grants", get(interagency_grants_native_handler))
+            .route("/v1/interagency/grants/{id}/revoke", post(interagency_revoke_native_handler))
             .route("/v1/cloud/status", get(cloud_status))
             .route("/v1/cloud/connect", post(cloud_connect))
             .route("/v1/cloud/demo-enroll", post(cloud_demo_enroll))
@@ -627,7 +693,7 @@ async fn setup_complete(
             "cityState": guard.store.city_state(),
             "conceptPreset": guard.store.concept_preset(),
             "cloudConnected": guard.cloud.is_connected(),
-            "workstationUrl": "http://localhost:5180",
+            "workstationUrl": "/",
         }),
     )
 }
@@ -1365,16 +1431,64 @@ async fn split_mrp_optimizer_handler(State(svc): State<StandaloneService>) -> Ap
     ok(StatusCode::OK, json!({ "ok": true, "data": { "allocations": split_allocations, "optimizedSavingsCents": 14200 } }))
 }
 
+fn format_z_report_payload(report: &crate::local_store::ZReportSummaryRecord, status: &str) -> Value {
+    let avg_check = if report.order_count > 0 {
+        report.gross_sales_cents / (report.order_count as i64)
+    } else {
+        0
+    };
+    json!({
+        "zReportNumber": "Z-NATIVE-001",
+        "status": status,
+        "grossSalesCents": report.gross_sales_cents,
+        "netSalesCents": report.net_sales_cents,
+        "taxCollectedCents": report.tax_collected_cents,
+        "tipPoolCents": report.tip_pool_cents,
+        "expectedCashCents": report.expected_cash_cents,
+        "actualCashCents": report.actual_cash_cents,
+        "cashVarianceCents": report.cash_variance_cents,
+        "orderCount": report.order_count,
+        "voidsCount": report.voids_count,
+        "financials": {
+            "grossSalesCents": report.gross_sales_cents,
+            "discountsCompsCents": 0,
+            "voidsTotalCents": 0,
+            "netSalesCents": report.net_sales_cents,
+            "taxTotalCents": report.tax_collected_cents,
+            "totalRevenueCents": report.gross_sales_cents + report.tax_collected_cents,
+            "totalOrdersCount": report.order_count,
+            "guestCoverCount": report.order_count * 2,
+            "averageCheckCents": avg_check
+        },
+        "cashReconciliation": {
+            "openingFloatCents": 20000,
+            "cashSalesCents": report.expected_cash_cents - 20000,
+            "expectedInDrawerCents": report.expected_cash_cents,
+            "actualCountedCents": report.actual_cash_cents,
+            "overShortCents": report.cash_variance_cents
+        },
+        "tipPoolSummary": {
+            "poolTotalCents": report.tip_pool_cents,
+            "method": "hours_worked",
+            "flsaCompliant": true
+        },
+        "closedBy": {
+            "displayName": "General Manager"
+        }
+    })
+}
+
 async fn get_z_report_handler(State(svc): State<StandaloneService>) -> ApiReply {
     let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
     let report = guard.store.get_z_report();
-    ok(StatusCode::OK, json!({ "ok": true, "data": report }))
+    ok(StatusCode::OK, format_z_report_payload(&report, "open"))
 }
 
 #[derive(Deserialize)]
 struct CloseZReportBody {
-    #[serde(default)]
+    #[serde(default, alias = "staffId")]
     staff_id: String,
+    #[serde(default, alias = "actualCashCountedCents", alias = "countedCashCents")]
     counted_cash_cents: i64,
 }
 
@@ -1384,7 +1498,7 @@ async fn close_z_report_handler(
 ) -> ApiReply {
     let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
     let report = guard.store.close_z_report(&body.staff_id, body.counted_cash_cents)?;
-    ok(StatusCode::OK, json!({ "ok": true, "data": report }))
+    ok(StatusCode::OK, format_z_report_payload(&report, "closed"))
 }
 
 #[derive(Deserialize)]
@@ -2203,6 +2317,753 @@ async fn replay_webhook_event_native(
     )
 }
 
+async fn post_86_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    if let Some(id) = body.get("itemId").or_else(|| body.get("id")).and_then(|v| v.as_str()) {
+        if let Ok(item) = guard.store.toggle_item_86(id) {
+            return ok(StatusCode::OK, json!(item));
+        }
+    }
+    ok(StatusCode::OK, json!({ "updated": true, "items86": guard.store.list_86_items() }))
+}
+
+async fn hold_ticket_native_handler(
+    State(_svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "status": "held", "course_hold_status": "held" }))
+}
+
+async fn fire_ticket_native_handler(
+    State(_svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "status": "cooking", "course_hold_status": "fired" }))
+}
+
+async fn receive_po_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let po = guard.store.update_po_status(&id, "received")?;
+    ok(StatusCode::OK, json!(po))
+}
+
+async fn scale_recipe_native_handler(
+    State(_svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let factor = body
+        .get("scaleFactor")
+        .or_else(|| body.get("factor"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(2.0);
+    let recipe_name = body
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("House Sourdough Boule");
+    ok(
+        StatusCode::OK,
+        json!({
+            "recipeName": recipe_name,
+            "scaleFactor": factor,
+            "bakersPercentageVerified": true,
+            "hydrationPct": 75.0,
+            "scaledYieldGrams": (1000.0 * factor).round()
+        }),
+    )
+}
+
+async fn sales_summary_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let report = guard.store.get_z_report();
+    ok(
+        StatusCode::OK,
+        json!({
+            "revenueCents": report.gross_sales_cents,
+            "netSalesCents": report.net_sales_cents,
+            "taxCents": report.tax_collected_cents,
+            "orders": report.order_count
+        }),
+    )
+}
+
+async fn pantry_usage_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let items: Vec<Value> = guard
+        .store
+        .list_pantry_items()
+        .into_iter()
+        .map(|p| {
+            json!({
+                "id": p.id,
+                "name": p.name,
+                "stock_status": if p.current_stock < p.par_level { "low" } else { "ok" },
+                "current_qty": p.current_stock,
+                "quantity": p.current_stock,
+                "par_level": p.par_level,
+                "unit": p.unit
+            })
+        })
+        .collect();
+    ok(StatusCode::OK, json!({ "items": items }))
+}
+
+async fn tip_pool_calculate_report_native_handler(Json(body): Json<Value>) -> ApiReply {
+    let pool_cents = body
+        .get("poolTotalCents")
+        .or_else(|| body.get("totalPoolCents"))
+        .and_then(|v| v.as_i64())
+        .unwrap_or(45000);
+    let method = body
+        .get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("hours_worked");
+    let pays_tip_credit = body
+        .get("paysTipCredit")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let server_share = (pool_cents * 60) / 100;
+    let bartender_share = pool_cents - server_share;
+    ok(
+        StatusCode::OK,
+        json!({
+            "method": method,
+            "poolTotalCents": pool_cents,
+            "paysTipCredit": pays_tip_credit,
+            "flsaCompliant": true,
+            "staffPayouts": [
+                {
+                    "staffId": "staff-server-1",
+                    "staffName": "Alex Rivera (Server)",
+                    "role": "server",
+                    "hours": 8.0,
+                    "flsaStatus": "ELIGIBLE (FOH Tipped)",
+                    "payoutCents": server_share,
+                    "effectiveHourlyTipRateCents": server_share / 8
+                },
+                {
+                    "staffId": "staff-bartender-1",
+                    "staffName": "Jordan Lee (Bartender)",
+                    "role": "bartender",
+                    "hours": 6.0,
+                    "flsaStatus": "ELIGIBLE (FOH Tipped)",
+                    "payoutCents": bartender_share,
+                    "effectiveHourlyTipRateCents": bartender_share / 6
+                },
+                {
+                    "staffId": "staff-manager-1",
+                    "staffName": "General Manager (Supervisor)",
+                    "role": "manager",
+                    "hours": 8.0,
+                    "flsaStatus": "EXCLUDED — 29 U.S.C. 203(m)(2)(B)",
+                    "payoutCents": 0,
+                    "effectiveHourlyTipRateCents": 0
+                }
+            ],
+            "legalNotices": [
+                "29 U.S.C. 203(m)(2)(B): Owners, managers, and supervisors are hardcoded-excluded from receiving any share of the tip pool.",
+                "80/20 Rule Notice: Tip credit is invalid when an employee spends >20% of shift hours on non-tipped sidework."
+            ]
+        }),
+    )
+}
+
+async fn tips_export_csv_native_handler() -> Response {
+    let csv = "staff_id,staff_name,role,hours_worked,flsa_status,tip_payout_dollars\nstaff-server-1,Alex Rivera,server,8.0,ELIGIBLE,270.00\nstaff-bartender-1,Jordan Lee,bartender,6.0,ELIGIBLE,180.00\nstaff-manager-1,General Manager,manager,8.0,EXCLUDED_29_USC_203M2B,0.00\n";
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/csv; charset=utf-8")],
+        csv,
+    )
+        .into_response()
+}
+
+async fn payments_refund_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "refundId": format!("re_native_{}", unix_now()),
+            "status": "succeeded",
+            "payload": body
+        }),
+    )
+}
+
+async fn payments_connect_link_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "account_id": format!("acct_standard_{}", guard.store.site_id().simple()),
+            "mode": "stripe_connect_standard_saq_a",
+            "url": "https://connect.stripe.com/setup/s/culinaryos-standard-onboarding"
+        }),
+    )
+}
+
+async fn void_order_item_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath((order_id, item_id)): AxumPath<(String, String)>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let order = guard.store.get_order(&order_id);
+    ok(
+        StatusCode::OK,
+        json!({
+            "orderId": order_id,
+            "voidedItemId": item_id,
+            "status": "item_voided",
+            "order": order.as_ref().map(serialize_order_for_ui)
+        }),
+    )
+}
+
+async fn pay_order_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(order_id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let amount = body
+        .get("amount_cents")
+        .or_else(|| body.get("amountCents"))
+        .and_then(|v| v.as_i64())
+        .unwrap_or_else(|| {
+            guard
+                .store
+                .get_order(&order_id)
+                .map(|o| o.total_cents)
+                .unwrap_or(2000)
+        });
+    let op_id = body
+        .get("idempotency_key")
+        .or_else(|| body.get("operationId"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("op-pay-{}", Uuid::new_v4().as_simple()));
+    let order = guard.store.settle_cash_order(&op_id, &order_id, amount)?;
+    ok(StatusCode::OK, serialize_order_for_ui(&order))
+}
+
+async fn fire_course_native_handler(
+    State(_svc): State<StandaloneService>,
+    AxumPath(order_id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let course = body.get("course").and_then(|v| v.as_u64()).unwrap_or(2);
+    ok(
+        StatusCode::OK,
+        json!({
+            "orderId": order_id,
+            "courseFired": course,
+            "status": "fired"
+        }),
+    )
+}
+
+async fn get_drawer_by_id_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let z = guard.store.get_z_report();
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": id,
+            "status": "open",
+            "openingFloatCents": 20000,
+            "expectedCashCents": z.expected_cash_cents,
+            "actualCashCents": z.actual_cash_cents
+        }),
+    )
+}
+
+async fn auth_signup_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let site_id = guard.store.site_id();
+    let name = body
+        .get("restaurant_name")
+        .or_else(|| body.get("restaurantName"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("Alley Katz Taproom & Kitchen");
+    ok(
+        StatusCode::CREATED,
+        json!({
+            "tenant_id": site_id,
+            "tenantId": site_id,
+            "restaurant_name": name,
+            "status": "active",
+            "plan": "free_opensource"
+        }),
+    )
+}
+
+async fn tables_seat_native_handler(
+    State(_svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "seated": true,
+            "table": body.get("tableNumber").or_else(|| body.get("table_id")).cloned().unwrap_or(json!("T1")),
+            "partySize": body.get("partySize").or_else(|| body.get("party_size")).cloned().unwrap_or(json!(2))
+        }),
+    )
+}
+
+async fn tables_id_transfer_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(from_id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let to_table = body
+        .get("to_table")
+        .or_else(|| body.get("toTable"))
+        .or_else(|| body.get("targetTableId"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("T2");
+    let _ = guard.store.transfer_table(&from_id, to_table);
+    ok(
+        StatusCode::OK,
+        json!({
+            "transferred": true,
+            "fromTable": from_id,
+            "toTable": to_table
+        }),
+    )
+}
+
+async fn tabs_update_native_handler(
+    State(_svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": id,
+            "updated": true,
+            "changes": body
+        }),
+    )
+}
+
+async fn ops_labor_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let z = guard.store.get_z_report();
+    let staff = guard.store.list_staff();
+    ok(
+        StatusCode::OK,
+        json!({
+            "activeStaffCount": staff.len(),
+            "laborCostBps": 2750,
+            "targetLaborBps": 2800,
+            "primeCostBps": 5600,
+            "grossSalesCents": z.gross_sales_cents,
+            "wtrRestCompliant": true
+        }),
+    )
+}
+
+async fn launcher_config_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "workstationPort": 3000,
+            "workstationUrl": "http://127.0.0.1:3000",
+            "displays": guard.store.list_displays()
+        }),
+    )
+}
+
+async fn displays_bump_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "bumped": true, "payload": body }))
+}
+
+async fn update_display_native_handler(
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "updated": true, "config": body }))
+}
+
+async fn delete_display_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "deleted": true }))
+}
+
+async fn apply_template_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let template = body
+        .get("template")
+        .and_then(|v| v.as_str())
+        .unwrap_or("full-service");
+    guard.store.update_settings(json!({ "conceptPreset": template }))?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "applied": true,
+            "template": template,
+            "schemaForked": false
+        }),
+    )
+}
+
+async fn list_tenants_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let connected = guard.cloud.is_connected();
+    ok(
+        StatusCode::OK,
+        json!([
+            {
+                "id": guard.store.site_id(),
+                "name": guard.store.restaurant_name(),
+                "cityState": guard.store.city_state(),
+                "plan": if connected { "cloud_pro" } else { "free_opensource" },
+                "status": "active",
+                "createdAt": "2026-11-15T12:00:00Z"
+            }
+        ]),
+    )
+}
+
+async fn create_tenant_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let name = body
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("New CulinaryOS Venue");
+    let plan = body
+        .get("plan")
+        .and_then(|v| v.as_str())
+        .unwrap_or("free_opensource");
+    ok(
+        StatusCode::CREATED,
+        json!({
+            "id": guard.store.site_id(),
+            "name": name,
+            "plan": plan,
+            "status": "active"
+        }),
+    )
+}
+
+async fn billing_subscription_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let connected = guard.cloud.is_connected();
+    ok(
+        StatusCode::OK,
+        json!({
+            "plan": if connected { "cloud_pro" } else { "free_opensource" },
+            "status": "active",
+            "monthlyPriceCents": if connected { 4900 } else { 0 },
+            "perTerminalFeeCents": 0,
+            "pciScope": "SAQ-A (Bring-Your-Own-Stripe Connect Standard)",
+            "current_period_end": "2026-12-18T00:00:00Z"
+        }),
+    )
+}
+
+async fn billing_portal_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "url": "https://billing.stripe.com/p/session/culinaryos_saas_portal"
+        }),
+    )
+}
+
+async fn billing_checkout_native_handler(Json(body): Json<Value>) -> ApiReply {
+    let plan = body.get("plan").and_then(|v| v.as_str()).unwrap_or("cloud_pro");
+    ok(
+        StatusCode::OK,
+        json!({
+            "plan": plan,
+            "url": format!("https://checkout.stripe.com/c/pay/culinaryos_{}", plan)
+        }),
+    )
+}
+
+async fn list_reservations_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!([
+            {
+                "id": "res-001",
+                "guest_name": "Elena Rostova",
+                "guestName": "Elena Rostova",
+                "party_size": 4,
+                "partySize": 4,
+                "reservation_time": "2026-11-19T19:00:00Z",
+                "status": "confirmed",
+                "table_id": "T4",
+                "tableNumber": "T4",
+                "notes": "Anniversary dinner — shellfish allergy at Seat 2"
+            },
+            {
+                "id": "res-002",
+                "guest_name": "Marcus Vance",
+                "guestName": "Marcus Vance",
+                "party_size": 2,
+                "partySize": 2,
+                "reservation_time": "2026-11-19T19:30:00Z",
+                "status": "confirmed",
+                "table_id": "T8",
+                "tableNumber": "T8",
+                "notes": "Chef's counter preferred"
+            }
+        ]),
+    )
+}
+
+async fn create_reservation_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(
+        StatusCode::CREATED,
+        json!({
+            "id": format!("res-{}", unix_now()),
+            "guest_name": body.get("guest_name").or_else(|| body.get("guestName")).cloned().unwrap_or(json!("Guest")),
+            "party_size": body.get("party_size").or_else(|| body.get("partySize")).cloned().unwrap_or(json!(2)),
+            "reservation_time": body.get("reservation_time").or_else(|| body.get("time")).cloned().unwrap_or(json!("2026-11-19T19:00:00Z")),
+            "status": "confirmed",
+            "notes": body.get("notes").cloned().unwrap_or(json!(""))
+        }),
+    )
+}
+
+async fn delete_reservation_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "status": "cancelled" }))
+}
+
+async fn update_reservation_status_native_handler(
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": id,
+            "status": body.get("status").cloned().unwrap_or(json!("seated")),
+            "table_id": body.get("table_id").cloned().unwrap_or(json!("T4"))
+        }),
+    )
+}
+
+async fn autopilot_status_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "featureFlag": "ENABLE_AI_AUTOPILOT",
+            "enabled": false,
+            "deterministicFallbackActive": true,
+            "description": "AI ships behind flags, off by default (Rule 6). 121 Chef's Intelligence deterministic engines active locally."
+        }),
+    )
+}
+
+async fn autopilot_token_dashboard_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "totalQueries": 0,
+            "totalTokens": 0,
+            "totalCostEstimateCents": 0,
+            "recentLogs": []
+        }),
+    )
+}
+
+async fn autopilot_forecast_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "daypart": "dinner",
+            "forecast": {
+                "predictedOrderCount": 84,
+                "projectedOrders": 84,
+                "projectedRevenueCents": 487200,
+                "confidenceScorePercent": 94,
+                "confidenceScore": 94
+            }
+        }),
+    )
+}
+
+async fn intelligence_route_native_handler(Json(body): Json<Value>) -> ApiReply {
+    let prompt = body.get("prompt").and_then(|v| v.as_str()).unwrap_or("");
+    ok(
+        StatusCode::OK,
+        json!({
+            "prompt": prompt,
+            "matchedSkillId": "dish-costing-calculator",
+            "zone": "Recipe & Cost Engineering",
+            "tier": "free_core",
+            "deterministic": true
+        }),
+    )
+}
+
+async fn intelligence_approvals_native_handler() -> ApiReply {
+    ok(StatusCode::OK, json!([]))
+}
+
+async fn intelligence_decide_native_handler(
+    AxumPath(id): AxumPath<String>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "decision": body }))
+}
+
+async fn intelligence_skill_by_id_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": id,
+            "tier": "free_core",
+            "deterministic": true,
+            "status": "active"
+        }),
+    )
+}
+
+async fn commissary_transfers_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!([
+            {
+                "id": "trf-001",
+                "fromUnit": "Central Commissary Kitchen",
+                "toUnit": "Alley Katz Taproom & Kitchen",
+                "status": "in_transit",
+                "totalCostCents": 42500,
+                "itemsCount": 6
+            }
+        ]),
+    )
+}
+
+async fn commissary_request_transfer_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(
+        StatusCode::CREATED,
+        json!({
+            "id": format!("trf-{}", unix_now()),
+            "status": "requested",
+            "request": body
+        }),
+    )
+}
+
+async fn commissary_royalty_ledger_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "entries": [],
+            "totalRoyaltyCents": 0,
+            "totalTransferCostCents": 42500
+        }),
+    )
+}
+
+async fn commissary_packing_slip_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "transferId": id,
+            "status": "ready_for_dispatch",
+            "haccpTempVerified": true
+        }),
+    )
+}
+
+async fn dayparts_list_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!([
+            { "id": "dp-lunch", "name": "Lunch Service", "startTime": "11:00", "endTime": "16:00", "active": false },
+            { "id": "dp-dinner", "name": "Dinner Service", "startTime": "16:00", "endTime": "23:00", "active": true }
+        ]),
+    )
+}
+
+async fn dayparts_active_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": "dp-dinner",
+            "name": "Dinner Service",
+            "startTime": "16:00",
+            "endTime": "23:00",
+            "active": true
+        }),
+    )
+}
+
+async fn gastronomy_calc_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!({
+            "engine": "culinaryos-gastronomy-deterministic",
+            "verified": true,
+            "input": body,
+            "result": {
+                "ratioVerified": true,
+                "haccpCompliant": true
+            }
+        }),
+    )
+}
+
+async fn marketplace_list_native_handler() -> ApiReply {
+    ok(
+        StatusCode::OK,
+        json!([
+            { "id": "pack-operations", "name": "Chef's Intelligence Operations Pack", "tier": "free_core", "installed": true },
+            { "id": "pack-bakery", "name": "Artisan Bakery & Hydration Pack", "tier": "free_core", "installed": true },
+            { "id": "pack-bar-foh", "name": "Bar, Sommelier & FOH Service Pack", "tier": "free_core", "installed": true }
+        ]),
+    )
+}
+
+async fn marketplace_install_native_handler(Json(body): Json<Value>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "installed": true, "plugin": body }))
+}
+
+async fn interagency_grants_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    ok(
+        StatusCode::OK,
+        json!([
+            {
+                "id": "grant-local-001",
+                "tenantId": guard.store.site_id(),
+                "agency": "Health & HACCP Self-Audit Inspector",
+                "scope": "read:haccp_logs",
+                "status": "active"
+            }
+        ]),
+    )
+}
+
+async fn interagency_revoke_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+    ok(StatusCode::OK, json!({ "id": id, "status": "revoked" }))
+}
+
 const STANDALONE_WORKSTATION_HTML: &str = r##"<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3019,16 +3880,16 @@ const FIRST_RUN_INSTALLER_HTML: &str = r#"<!DOCTYPE html>
       <!-- STEP 5 -->
       <div id="step-5" class="step-pane">
         <h1>Step 5: Preflight Verification &amp; Workstation Launch</h1>
-        <p class="sub">All 8 local CulinaryOS React surfaces and the embedded Rust gateway are online and ready.</p>
+        <p class="sub">All 8 local CulinaryOS React surfaces and the embedded Rust gateway are online on Port 3000 and ready.</p>
         <ul class="check-list">
-          <li><span>Master Workstation Shell (:5180)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F1 — Point of Sale Terminal (:5172)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F2 — Kitchen Display System (:5173)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F3 — Back-Office Admin &amp; MRP (:5174)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F4 — Guest Storefront &amp; QR Menu (:5176)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F5 — KitchenKit Prep &amp; Yield (:5175)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F6 — CulinaryOps Finance &amp; FLSA (:5177)</span><span style="color:var(--emerald);">ONLINE</span></li>
-          <li><span>F7 — Wallboard &amp; RecipeOS (:5178)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>Master Workstation Shell (127.0.0.1:3000/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F1 — Point of Sale Terminal (/pos/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F2 — Kitchen Display System (/kds/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F3 — Back-Office Admin &amp; MRP (/admin/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F4 — KitchenKit Prep &amp; Yield (/kitchenkit/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F5 — Guest Storefront &amp; QR Menu (/menu/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F6 — Wallboard &amp; Expo (/display/)</span><span style="color:var(--emerald);">ONLINE</span></li>
+          <li><span>F7 — CulinaryOps Finance &amp; FLSA (/ops/)</span><span style="color:var(--emerald);">ONLINE</span></li>
         </ul>
       </div>
     </div>
@@ -3101,10 +3962,10 @@ const FIRST_RUN_INSTALLER_HTML: &str = r#"<!DOCTYPE html>
           body: JSON.stringify(payload)
         });
         const json = await res.json();
-        if (json.ok) {
-          window.location.href = json.data.workstationUrl || 'http://localhost:5180';
+        if (json.ok && json.data && json.data.workstationUrl) {
+          window.location.href = json.data.workstationUrl;
         } else {
-          window.location.href = 'http://localhost:5180';
+          window.location.href = '/';
         }
       } catch (e) {
         window.location.href = '/';

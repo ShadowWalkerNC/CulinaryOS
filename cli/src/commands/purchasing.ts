@@ -23,7 +23,7 @@ purchasingCommand
           chalk.green(String(v.status ?? 'active')),
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n🚚 Approved Vendors:'));
+      console.log(chalk.bold.hex('#F97316')('\nApproved Vendors:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Failed to list vendors: ${err.message}\n`));
@@ -47,7 +47,7 @@ purchasingCommand
           String(po.status ?? 'draft'),
         ]),
       ];
-      console.log(chalk.bold.hex('#F97316')('\n📦 Purchase Orders:'));
+      console.log(chalk.bold.hex('#F97316')('\nPurchase Orders:'));
       console.log(table(rows));
     } catch (err: any) {
       console.error(chalk.red(`\n✖ Failed to list purchase orders: ${err.message}\n`));
