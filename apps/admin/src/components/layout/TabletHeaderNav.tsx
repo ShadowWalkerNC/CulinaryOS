@@ -37,6 +37,7 @@ export function TabletHeaderNav() {
 
   const allDrawerItems = [
     { to: '/dashboard', label: 'Executive Dashboard', icon: <Activity className="w-5 h-5" /> },
+    { to: '/intelligence', label: "Chef's Intelligence", icon: <ShieldCheck className="w-5 h-5" /> },
     { to: '/reports', label: 'Financials & P&L', icon: <TrendingUp className="w-5 h-5" /> },
     { to: '/operations', label: 'Shift Checklists & Approvals', icon: <ClipboardList className="w-5 h-5" /> },
     { to: '/scheduling', label: 'Roster & Scheduling', icon: <Clock className="w-5 h-5" /> },

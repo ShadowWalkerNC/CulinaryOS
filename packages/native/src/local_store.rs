@@ -331,7 +331,7 @@ pub struct ZReportSummaryRecord {
     pub closed_by_staff_id: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayRecord {
     pub id: String,
@@ -342,61 +342,146 @@ pub struct DisplayRecord {
     pub last_seen_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct PersistedState {
-    site_id: Uuid,
+pub type DisplayDeviceRecord = DisplayRecord;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ReservationRecord {
+    pub id: String,
+    #[serde(alias = "guest_name")]
+    pub guest_name: String,
+    #[serde(alias = "party_size")]
+    pub party_size: u32,
+    #[serde(alias = "reservation_time", alias = "time", alias = "reserved_at")]
+    pub reservation_time: String,
+    pub status: String,
+    #[serde(default, alias = "table_id", alias = "tableNumber")]
+    pub table_id: String,
     #[serde(default)]
-    setup_completed: bool,
-    #[serde(default)]
-    restaurant_name: String,
-    #[serde(default)]
-    city_state: String,
-    #[serde(default)]
-    concept_preset: String,
-    #[serde(default)]
-    tax_rate_bps: i64,
-    #[serde(default)]
-    tables_count: u32,
-    staff: Vec<StaffMember>,
-    menu: BTreeMap<String, MenuItem>,
-    orders: BTreeMap<String, OrderRecord>,
-    tickets: BTreeMap<String, KitchenTicket>,
-    drawer: CashDrawerSession,
-    applied_operations: BTreeSet<String>,
-    sync_outbox: Vec<serde_json::Value>,
-    #[serde(default)]
-    pantry: BTreeMap<String, PantryItemRecord>,
-    #[serde(default)]
-    purchase_orders: BTreeMap<String, PurchaseOrderRecord>,
-    #[serde(default)]
-    vendors: Vec<VendorRecord>,
-    #[serde(default)]
-    talent_applications: Vec<TalentApplicationRecord>,
-    #[serde(default)]
-    talent_jobs: Vec<TalentJobRecord>,
-    #[serde(default)]
-    waste: Vec<WasteRecord>,
-    #[serde(default)]
-    tables: BTreeMap<String, TableRecord>,
-    #[serde(default)]
-    tabs: BTreeMap<String, BarTabRecord>,
-    #[serde(default)]
-    z_reports: Vec<ZReportSummaryRecord>,
-    #[serde(default)]
-    displays: Vec<DisplayRecord>,
-    #[serde(default)]
-    settings: serde_json::Value,
+    pub notes: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookEndpointRecord {
+    pub id: String,
+    #[serde(alias = "tenant_id")]
+    pub tenant_id: Uuid,
+    pub url: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub events: Vec<String>,
+    #[serde(alias = "signing_secret")]
+    pub signing_secret: String,
+    pub active: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookEventRecord {
+    pub id: String,
+    pub direction: String,
+    pub provider: String,
+    #[serde(alias = "event_type")]
+    pub event_type: String,
+    #[serde(alias = "tenant_id")]
+    pub tenant_id: Uuid,
+    #[serde(alias = "signature_verified")]
+    pub signature_verified: bool,
+    pub status: String,
+    #[serde(alias = "payload_summary")]
+    pub payload_summary: String,
+    #[serde(alias = "received_at")]
+    pub received_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CommissaryTransferRecord {
+    pub id: String,
+    #[serde(alias = "from_unit")]
+    pub from_unit: String,
+    #[serde(alias = "to_unit")]
+    pub to_unit: String,
+    pub status: String,
+    #[serde(alias = "total_cost_cents")]
+    pub total_cost_cents: i64,
+    #[serde(alias = "items_count")]
+    pub items_count: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StoreState {
+    pub site_id: Uuid,
+    #[serde(default)]
+    pub setup_completed: bool,
+    #[serde(default)]
+    pub restaurant_name: String,
+    #[serde(default)]
+    pub city_state: String,
+    #[serde(default)]
+    pub concept_preset: String,
+    #[serde(default)]
+    pub tax_rate_bps: i64,
+    #[serde(default)]
+    pub tables_count: u32,
+    pub staff: Vec<StaffMember>,
+    pub menu: BTreeMap<String, MenuItem>,
+    pub orders: BTreeMap<String, OrderRecord>,
+    pub tickets: BTreeMap<String, KitchenTicket>,
+    pub drawer: CashDrawerSession,
+    pub applied_operations: BTreeSet<String>,
+    pub sync_outbox: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub pantry: BTreeMap<String, PantryItemRecord>,
+    #[serde(default)]
+    pub purchase_orders: BTreeMap<String, PurchaseOrderRecord>,
+    #[serde(default)]
+    pub vendors: Vec<VendorRecord>,
+    #[serde(default)]
+    pub talent_applications: Vec<TalentApplicationRecord>,
+    #[serde(default)]
+    pub talent_jobs: Vec<TalentJobRecord>,
+    #[serde(default)]
+    pub waste: Vec<WasteRecord>,
+    #[serde(default)]
+    pub tables: BTreeMap<String, TableRecord>,
+    #[serde(default)]
+    pub tabs: BTreeMap<String, BarTabRecord>,
+    #[serde(default)]
+    pub z_reports: Vec<ZReportSummaryRecord>,
+    #[serde(default)]
+    pub displays: Vec<DisplayRecord>,
+    #[serde(default)]
+    pub settings: serde_json::Value,
+    #[serde(default)]
+    pub reservations: BTreeMap<String, ReservationRecord>,
+    #[serde(default)]
+    pub webhook_endpoints: BTreeMap<String, WebhookEndpointRecord>,
+    #[serde(default)]
+    pub webhook_events: Vec<WebhookEventRecord>,
+    #[serde(default)]
+    pub commissary_transfers: BTreeMap<String, CommissaryTransferRecord>,
+}
+
+pub type PersistedState = StoreState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Envelope {
     sha256: String,
-    state: PersistedState,
+    state: StoreState,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RawEnvelope {
+    sha256: String,
+    state: serde_json::Value,
 }
 
 pub struct LocalStore {
     path: PathBuf,
-    state: PersistedState,
+    state: StoreState,
 }
 
 fn pin_digest(site_id: Uuid, pin: &str) -> String {
@@ -404,29 +489,7 @@ fn pin_digest(site_id: Uuid, pin: &str) -> String {
 }
 
 impl LocalStore {
-    pub fn open_or_init(path: &Path, default_site_id: Uuid) -> Result<Self, LocalStoreError> {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).map_err(|_| LocalStoreError::Storage)?;
-        }
-        if path.exists() {
-            let file = File::open(path).map_err(|_| LocalStoreError::Storage)?;
-            let env: Envelope = serde_json::from_reader(BufReader::new(file))
-                .map_err(|_| LocalStoreError::Storage)?;
-            let serialized =
-                serde_json::to_vec(&env.state).map_err(|_| LocalStoreError::Storage)?;
-            let actual = hex::encode(Sha256::digest(&serialized));
-            if actual != env.sha256 {
-                return Err(LocalStoreError::Storage);
-            }
-            let mut store = Self {
-                path: path.to_path_buf(),
-                state: env.state,
-            };
-            store.ensure_defaults();
-            let _ = store.save();
-            return Ok(store);
-        }
-
+    pub fn default_state(default_site_id: Uuid) -> StoreState {
         let owner_id = Uuid::from_u128(1);
         let server_id = Uuid::from_u128(2);
         let mut menu = BTreeMap::new();
@@ -457,7 +520,7 @@ impl LocalStore {
             );
         }
 
-        let state = PersistedState {
+        StoreState {
             site_id: default_site_id,
             setup_completed: false,
             restaurant_name: "Unconfigured Venue".to_string(),
@@ -505,8 +568,42 @@ impl LocalStore {
             z_reports: Vec::new(),
             displays: Vec::new(),
             settings: serde_json::Value::Null,
-        };
+            reservations: BTreeMap::new(),
+            webhook_endpoints: BTreeMap::new(),
+            webhook_events: Vec::new(),
+            commissary_transfers: BTreeMap::new(),
+        }
+    }
 
+    pub fn open_or_init(path: &Path, default_site_id: Uuid) -> Result<Self, LocalStoreError> {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|_| LocalStoreError::Storage)?;
+        }
+        if path.exists() {
+            let file = File::open(path).map_err(|_| LocalStoreError::Storage)?;
+            let raw_env: RawEnvelope = serde_json::from_reader(BufReader::new(file))
+                .map_err(|_| LocalStoreError::Storage)?;
+            let raw_serialized =
+                serde_json::to_vec(&raw_env.state).map_err(|_| LocalStoreError::Storage)?;
+            let raw_digest = hex::encode(Sha256::digest(&raw_serialized));
+            let state: StoreState = serde_json::from_value(raw_env.state)
+                .map_err(|_| LocalStoreError::Storage)?;
+            let typed_serialized =
+                serde_json::to_vec(&state).map_err(|_| LocalStoreError::Storage)?;
+            let typed_digest = hex::encode(Sha256::digest(&typed_serialized));
+            if typed_digest != raw_env.sha256 && raw_digest != raw_env.sha256 {
+                return Err(LocalStoreError::Storage);
+            }
+            let mut store = Self {
+                path: path.to_path_buf(),
+                state,
+            };
+            store.ensure_defaults();
+            let _ = store.save();
+            return Ok(store);
+        }
+
+        let state = Self::default_state(default_site_id);
         let mut store = Self {
             path: path.to_path_buf(),
             state,
@@ -514,6 +611,10 @@ impl LocalStore {
         store.ensure_defaults();
         store.save()?;
         Ok(store)
+    }
+
+    pub fn record_outbox(&mut self, event: serde_json::Value) {
+        self.state.sync_outbox.push(event);
     }
 
     fn save(&self) -> Result<(), LocalStoreError> {
@@ -1213,6 +1314,94 @@ impl LocalStore {
                 "offlineReconciliation": "idempotent"
             });
         }
+
+        if self.state.reservations.is_empty() {
+            self.state.reservations.insert(
+                "res-001".to_string(),
+                ReservationRecord {
+                    id: "res-001".to_string(),
+                    guest_name: "Elena Rostova".to_string(),
+                    party_size: 4,
+                    reservation_time: "2026-11-19T19:00:00Z".to_string(),
+                    status: "confirmed".to_string(),
+                    table_id: "T4".to_string(),
+                    notes: "Anniversary dinner — shellfish allergy at Seat 2".to_string(),
+                },
+            );
+            self.state.reservations.insert(
+                "res-002".to_string(),
+                ReservationRecord {
+                    id: "res-002".to_string(),
+                    guest_name: "Marcus Vance".to_string(),
+                    party_size: 2,
+                    reservation_time: "2026-11-19T19:30:00Z".to_string(),
+                    status: "confirmed".to_string(),
+                    table_id: "T8".to_string(),
+                    notes: "Chef's counter preferred".to_string(),
+                },
+            );
+        }
+
+        if self.state.webhook_endpoints.is_empty() {
+            self.state.webhook_endpoints.insert(
+                "wh-ep-default-erp".to_string(),
+                WebhookEndpointRecord {
+                    id: "wh-ep-default-erp".to_string(),
+                    tenant_id: self.state.site_id,
+                    url: "https://accounting.example.com/webhooks/culinaryos".to_string(),
+                    description: "Nightly Z-Report & Prime Cost Accounting Sync".to_string(),
+                    events: vec![
+                        "order.paid".to_string(),
+                        "z_report.closed".to_string(),
+                        "tip_pool.calculated".to_string(),
+                        "inventory.low_stock".to_string(),
+                    ],
+                    signing_secret: "whsec_culinaryos_default_partner_signing_key_2026".to_string(),
+                    active: true,
+                },
+            );
+        }
+
+        if self.state.webhook_events.is_empty() {
+            self.state.webhook_events = vec![
+                WebhookEventRecord {
+                    id: "wh-evt-stripe-001".to_string(),
+                    direction: "inbound".to_string(),
+                    provider: "stripe".to_string(),
+                    event_type: "payment_intent.succeeded".to_string(),
+                    tenant_id: self.state.site_id,
+                    signature_verified: true,
+                    status: "processed".to_string(),
+                    payload_summary: "Stripe Connect PaymentIntent verified via HMAC-SHA256".to_string(),
+                    received_at: "2026-11-18T12:15:00Z".to_string(),
+                },
+                WebhookEventRecord {
+                    id: "wh-evt-delivery-002".to_string(),
+                    direction: "inbound".to_string(),
+                    provider: "storefront".to_string(),
+                    event_type: "delivery.order.created".to_string(),
+                    tenant_id: self.state.site_id,
+                    signature_verified: true,
+                    status: "processed".to_string(),
+                    payload_summary: "Online Storefront order routed to local POS & KDS rails".to_string(),
+                    received_at: "2026-11-18T12:20:00Z".to_string(),
+                },
+            ];
+        }
+
+        if self.state.commissary_transfers.is_empty() {
+            self.state.commissary_transfers.insert(
+                "trf-001".to_string(),
+                CommissaryTransferRecord {
+                    id: "trf-001".to_string(),
+                    from_unit: "Central Commissary Kitchen".to_string(),
+                    to_unit: "Alley Katz Taproom & Kitchen".to_string(),
+                    status: "in_transit".to_string(),
+                    total_cost_cents: 42500,
+                    items_count: 6,
+                },
+            );
+        }
     }
 
     // Staff & Security Management
@@ -1508,6 +1697,48 @@ impl LocalStore {
         Ok(result)
     }
 
+    pub fn update_tab(
+        &mut self,
+        tab_id: &str,
+        customer_name: Option<String>,
+        pre_auth_cents: Option<i64>,
+        is_open: Option<bool>,
+    ) -> Result<BarTabRecord, LocalStoreError> {
+        if let Some(cents) = pre_auth_cents {
+            if cents < 0 {
+                return Err(LocalStoreError::InvalidInput(
+                    "Pre-auth cents cannot be negative",
+                ));
+            }
+        }
+        let tab = self
+            .state
+            .tabs
+            .get_mut(tab_id)
+            .ok_or(LocalStoreError::NotFound("Bar tab not found"))?;
+        if let Some(name) = customer_name {
+            if !name.trim().is_empty() {
+                tab.tab_name = name.trim().to_string();
+            }
+        }
+        if let Some(cents) = pre_auth_cents {
+            tab.preauth_cents = cents;
+        }
+        if let Some(open) = is_open {
+            tab.is_open = open;
+        }
+        let updated = tab.clone();
+        self.record_outbox(serde_json::json!({
+            "type": "tab.updated",
+            "tabId": updated.id,
+            "tabName": updated.tab_name,
+            "preauthCents": updated.preauth_cents,
+            "isOpen": updated.is_open
+        }));
+        self.save()?;
+        Ok(updated)
+    }
+
     // Z-Report & Cash Drawer Operations
     pub fn get_z_report(&self) -> ZReportSummaryRecord {
         let gross_sales_cents: i64 = self.state.orders.values().map(|o| o.subtotal_cents).sum();
@@ -1575,6 +1806,38 @@ impl LocalStore {
         Ok(result)
     }
 
+    pub fn void_order_item(
+        &mut self,
+        order_id: &str,
+        item_id: &str,
+    ) -> Result<OrderRecord, LocalStoreError> {
+        let order = self
+            .state
+            .orders
+            .get_mut(order_id)
+            .ok_or(LocalStoreError::NotFound("Order not found"))?;
+        let pos = order
+            .items
+            .iter()
+            .position(|i| i.id == item_id || i.menu_item_id == item_id)
+            .ok_or(LocalStoreError::NotFound("Order line item not found"))?;
+        order.items.remove(pos);
+        order.subtotal_cents = order.items.iter().map(|i| i.line_total_cents).sum();
+        order.tax_cents = (order.subtotal_cents * 825 + 5000) / 10_000;
+        order.total_cents = order.subtotal_cents + order.tax_cents;
+        let updated = order.clone();
+        self.record_outbox(serde_json::json!({
+            "type": "order.item.voided",
+            "orderId": order_id,
+            "itemId": item_id,
+            "subtotalCents": updated.subtotal_cents,
+            "taxCents": updated.tax_cents,
+            "totalCents": updated.total_cents
+        }));
+        self.save()?;
+        Ok(updated)
+    }
+
     // Displays
     pub fn list_displays(&self) -> Vec<DisplayRecord> {
         self.state.displays.clone()
@@ -1592,6 +1855,279 @@ impl LocalStore {
         self.state.displays.push(rec.clone());
         self.save()?;
         Ok(rec)
+    }
+
+    pub fn update_display(
+        &mut self,
+        id: &str,
+        name: Option<String>,
+        screen_type: Option<String>,
+    ) -> Result<DisplayDeviceRecord, LocalStoreError> {
+        let disp = self
+            .state
+            .displays
+            .iter_mut()
+            .find(|d| d.id == id)
+            .ok_or(LocalStoreError::NotFound("Display device not found"))?;
+        if let Some(n) = name {
+            if !n.trim().is_empty() {
+                disp.name = n.trim().to_string();
+            }
+        }
+        if let Some(st) = screen_type {
+            if !st.trim().is_empty() {
+                disp.screen_type = st.trim().to_string();
+            }
+        }
+        let updated = disp.clone();
+        self.record_outbox(serde_json::json!({
+            "type": "display.updated",
+            "displayId": updated.id,
+            "name": updated.name,
+            "screenType": updated.screen_type
+        }));
+        self.save()?;
+        Ok(updated)
+    }
+
+    pub fn delete_display(&mut self, id: &str) -> Result<(), LocalStoreError> {
+        let before = self.state.displays.len();
+        self.state.displays.retain(|d| d.id != id);
+        if self.state.displays.len() == before {
+            return Err(LocalStoreError::NotFound("Display device not found"));
+        }
+        self.record_outbox(serde_json::json!({
+            "type": "display.deleted",
+            "displayId": id
+        }));
+        self.save()?;
+        Ok(())
+    }
+
+    // Reservations
+    pub fn list_reservations(&self) -> Vec<ReservationRecord> {
+        self.state.reservations.values().cloned().collect()
+    }
+
+    pub fn create_reservation(
+        &mut self,
+        mut reservation: ReservationRecord,
+    ) -> Result<ReservationRecord, LocalStoreError> {
+        if reservation.id.trim().is_empty() {
+            reservation.id = format!("res-{}", Uuid::new_v4().as_simple());
+        }
+        if reservation.guest_name.trim().is_empty() {
+            reservation.guest_name = "Guest".to_string();
+        }
+        if reservation.party_size == 0 {
+            reservation.party_size = 2;
+        }
+        if reservation.reservation_time.trim().is_empty() {
+            reservation.reservation_time = "2026-11-19T19:00:00Z".to_string();
+        }
+        if reservation.status.trim().is_empty() {
+            reservation.status = "confirmed".to_string();
+        }
+        if reservation.table_id.trim().is_empty() {
+            reservation.table_id = "T1".to_string();
+        }
+        self.state
+            .reservations
+            .insert(reservation.id.clone(), reservation.clone());
+        self.record_outbox(serde_json::json!({
+            "type": "reservation.created",
+            "reservationId": reservation.id,
+            "guestName": reservation.guest_name,
+            "partySize": reservation.party_size
+        }));
+        self.save()?;
+        Ok(reservation)
+    }
+
+    pub fn cancel_reservation(&mut self, id: &str) -> Result<ReservationRecord, LocalStoreError> {
+        let res = self
+            .state
+            .reservations
+            .get_mut(id)
+            .ok_or(LocalStoreError::NotFound("Reservation not found"))?;
+        res.status = "cancelled".to_string();
+        let updated = res.clone();
+        self.record_outbox(serde_json::json!({
+            "type": "reservation.cancelled",
+            "reservationId": updated.id
+        }));
+        self.save()?;
+        Ok(updated)
+    }
+
+    pub fn update_reservation_status(
+        &mut self,
+        id: &str,
+        status: &str,
+        table_id: Option<String>,
+    ) -> Result<ReservationRecord, LocalStoreError> {
+        let res = self
+            .state
+            .reservations
+            .get_mut(id)
+            .ok_or(LocalStoreError::NotFound("Reservation not found"))?;
+        if !status.trim().is_empty() {
+            res.status = status.trim().to_string();
+        }
+        if let Some(tid) = table_id {
+            if !tid.trim().is_empty() {
+                res.table_id = tid.trim().to_string();
+            }
+        }
+        let updated = res.clone();
+        self.record_outbox(serde_json::json!({
+            "type": "reservation.status_updated",
+            "reservationId": updated.id,
+            "status": updated.status,
+            "tableId": updated.table_id
+        }));
+        self.save()?;
+        Ok(updated)
+    }
+
+    // Webhooks
+    pub fn list_webhook_endpoints(&self) -> Vec<WebhookEndpointRecord> {
+        self.state.webhook_endpoints.values().cloned().collect()
+    }
+
+    pub fn create_webhook_endpoint(
+        &mut self,
+        mut endpoint: WebhookEndpointRecord,
+    ) -> Result<WebhookEndpointRecord, LocalStoreError> {
+        if endpoint.id.trim().is_empty() {
+            endpoint.id = format!("wh-ep-{}", Uuid::new_v4().as_simple());
+        }
+        if endpoint.tenant_id.is_nil() {
+            endpoint.tenant_id = self.state.site_id;
+        }
+        if endpoint.url.trim().is_empty() {
+            endpoint.url = "https://partner.example.com/webhook".to_string();
+        }
+        if endpoint.events.is_empty() {
+            endpoint.events = vec![
+                "order.paid".to_string(),
+                "kds.ticket.bumped".to_string(),
+                "z_report.closed".to_string(),
+            ];
+        }
+        if endpoint.signing_secret.trim().is_empty() {
+            endpoint.signing_secret = format!("whsec_native_{}", Uuid::new_v4().as_simple());
+        }
+        self.state
+            .webhook_endpoints
+            .insert(endpoint.id.clone(), endpoint.clone());
+        self.record_outbox(serde_json::json!({
+            "type": "webhook.endpoint.created",
+            "endpointId": endpoint.id,
+            "url": endpoint.url
+        }));
+        self.save()?;
+        Ok(endpoint)
+    }
+
+    pub fn list_webhook_events(&self) -> Vec<WebhookEventRecord> {
+        self.state.webhook_events.clone()
+    }
+
+    pub fn record_webhook_event(
+        &mut self,
+        mut event: WebhookEventRecord,
+    ) -> Result<WebhookEventRecord, LocalStoreError> {
+        if event.id.trim().is_empty() {
+            event.id = format!("wh-evt-{}", Uuid::new_v4().as_simple());
+        }
+        if event.tenant_id.is_nil() {
+            event.tenant_id = self.state.site_id;
+        }
+        if event.received_at.trim().is_empty() {
+            event.received_at = "2026-11-18T12:30:00Z".to_string();
+        }
+        self.state.webhook_events.push(event.clone());
+        self.record_outbox(serde_json::json!({
+            "type": "webhook.event.recorded",
+            "eventId": event.id,
+            "provider": event.provider,
+            "eventType": event.event_type
+        }));
+        self.save()?;
+        Ok(event)
+    }
+
+    pub fn replay_webhook_event(
+        &mut self,
+        event_id: &str,
+    ) -> Result<WebhookEventRecord, LocalStoreError> {
+        let existing = self
+            .state
+            .webhook_events
+            .iter()
+            .find(|e| e.id == event_id)
+            .cloned()
+            .ok_or(LocalStoreError::NotFound("Webhook event not found"))?;
+        let replayed = WebhookEventRecord {
+            id: format!(
+                "{}-replay-{}",
+                existing.id,
+                self.state.webhook_events.len() + 1
+            ),
+            direction: existing.direction,
+            provider: existing.provider,
+            event_type: existing.event_type,
+            tenant_id: self.state.site_id,
+            signature_verified: true,
+            status: "replayed".to_string(),
+            payload_summary: format!("Replayed from {}", existing.id),
+            received_at: "2026-11-18T12:35:00Z".to_string(),
+        };
+        self.state.webhook_events.push(replayed.clone());
+        self.record_outbox(serde_json::json!({
+            "type": "webhook.event.replayed",
+            "originalEventId": event_id,
+            "replayEventId": replayed.id
+        }));
+        self.save()?;
+        Ok(replayed)
+    }
+
+    // Commissary Transfers
+    pub fn list_commissary_transfers(&self) -> Vec<CommissaryTransferRecord> {
+        self.state.commissary_transfers.values().cloned().collect()
+    }
+
+    pub fn create_commissary_transfer(
+        &mut self,
+        mut transfer: CommissaryTransferRecord,
+    ) -> Result<CommissaryTransferRecord, LocalStoreError> {
+        if transfer.id.trim().is_empty() {
+            transfer.id = format!("trf-{}", Uuid::new_v4().as_simple());
+        }
+        if transfer.from_unit.trim().is_empty() {
+            transfer.from_unit = "Central Commissary Kitchen".to_string();
+        }
+        if transfer.to_unit.trim().is_empty() {
+            transfer.to_unit = self.restaurant_name().to_string();
+        }
+        if transfer.status.trim().is_empty() {
+            transfer.status = "requested".to_string();
+        }
+        self.state
+            .commissary_transfers
+            .insert(transfer.id.clone(), transfer.clone());
+        self.record_outbox(serde_json::json!({
+            "type": "commissary.transfer.created",
+            "transferId": transfer.id,
+            "fromUnit": transfer.from_unit,
+            "toUnit": transfer.to_unit,
+            "totalCostCents": transfer.total_cost_cents,
+            "itemsCount": transfer.items_count
+        }));
+        self.save()?;
+        Ok(transfer)
     }
 
     // Settings

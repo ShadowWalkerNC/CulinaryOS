@@ -5,10 +5,11 @@ import { signOut } from '@/lib/auth';
 import { Button } from '@culinaryos/ui';
 
 const titles: Record<string, string> = {
-  '/dashboard':  'Dashboard',
-  '/recipes':    'Recipes',
-  '/prep':       'Prep Planner',
-  '/par-levels': 'Par Levels',
+  '/dashboard':          'Dashboard',
+  '/chefs-intelligence': "Chef's Intelligence (121 Skills)",
+  '/recipes':            'Recipes',
+  '/prep':               'Prep Planner',
+  '/par-levels':         'Par Levels',
 };
 
 export default function Topbar() {

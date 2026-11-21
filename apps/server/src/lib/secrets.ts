@@ -22,6 +22,22 @@ export function isLiveSupabaseConfigured(): boolean {
   return hasConfiguredSupabaseCredentials();
 }
 
+export function hasConfiguredNativePostgresCredentials(): boolean {
+  if (process.env.CULINARYOS_NATIVE_PG === 'false') return false;
+  if (process.env.CULINARYOS_NATIVE_PG === 'true') return true;
+  if (!isPlaceholderSecret(process.env.SUPABASE_URL)) return false;
+  const value = process.env.DATABASE_URL ?? '';
+  if (!value || isPlaceholderSecret(value)) return false;
+  if (value === 'postgres://fixture.invalid/test') return false;
+  return true;
+}
+
+export function isNativePostgresConfigured(): boolean {
+  return hasConfiguredNativePostgresCredentials();
+}
+
+export const isLivePostgresConfigured = isNativePostgresConfigured;
+
 /** Local demo access is explicit; missing backend configuration is not permission. */
 export function isLocalDemoMode(): boolean {
   const environment = process.env.NODE_ENV;
@@ -43,8 +59,10 @@ export const isDemoMode = isLocalDemoMode;
 export const isDemoAuthAllowed = isLocalDemoMode;
 
 /** Validate the selected backend before starting listeners or workers.
- * Native PostgreSQL additionally verifies the restricted runtime role before
- * opening its listener. DATABASE_URL alone does not select that backend.
+ * Native PostgreSQL is automatically enabled as a primary production backend
+ * when DATABASE_URL is configured (or CULINARYOS_NATIVE_PG=true) without
+ * requiring Supabase credentials, and verifies the restricted runtime role
+ * before opening its listener.
  * Error messages contain variable names, never credential values.
  */
 export function assertProductionAuthConfiguration(): void {
@@ -54,7 +72,7 @@ export function assertProductionAuthConfiguration(): void {
     problems.push('demo authentication must be disabled');
   }
   if (process.env.VITEST) problems.push('VITEST must be unset');
-  if (process.env.CULINARYOS_NATIVE_PG === 'true') {
+  if (process.env.CULINARYOS_NATIVE_PG === 'true' || hasConfiguredNativePostgresCredentials()) {
     const value = process.env.DATABASE_URL;
     if (isPlaceholderSecret(value)) {
       problems.push('DATABASE_URL is required for native PostgreSQL');

@@ -37,6 +37,11 @@ describe('production authentication fails closed', () => {
     assert.doesNotThrow(assertProductionAuthConfiguration);
     assert.equal(isDemoAuthAllowed(), false);
   });
+  it('automatically enables native PostgreSQL mode when DATABASE_URL is configured without Supabase credentials', () => {
+    process.env.DATABASE_URL = 'postgresql://runtime:fictional@db.invalid/culinaryos';
+    assert.doesNotThrow(assertProductionAuthConfiguration);
+    assert.equal(isDemoAuthAllowed(), false);
+  });
   for (const url of ['', 'placeholder', 'https://runtime:private-value@db.invalid/culinaryos', 'postgresql://db.invalid/']) {
     it(`rejects invalid native database configuration ${url ? 'form' : 'missing'}`, () => {
       process.env.CULINARYOS_NATIVE_PG = 'true';

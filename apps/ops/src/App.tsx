@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ChefsIntelligenceHub } from '@culinaryos/ui';
 import { useSession } from './hooks/useSession';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
@@ -32,6 +33,9 @@ export default function App() {
         <Route path="food-cost" element={<FoodCostPage />} />
         <Route path="vendor" element={<VendorPage />} />
         <Route path="waste" element={<WastePage />} />
+        {/* Chef's Intelligence */}
+        <Route path="chefs-intelligence" element={<ChefsIntelligenceHub surface="ops" />} />
+        <Route path="intelligence" element={<ChefsIntelligenceHub surface="ops" />} />
       </Route>
     </Routes>
   );

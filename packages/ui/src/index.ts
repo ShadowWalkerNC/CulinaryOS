@@ -19,6 +19,7 @@ export * from './components/ThemeCustomizer';
 export * from './components/FloorMap3D';
 export * from './components/CompactNavigation';
 export * from './components/CulinaryAppLauncher';
+export * from './components/ChefsIntelligenceHub';
 export * from './navigation';
 
 // Universal CulinaryOS Theme Engine & Presets

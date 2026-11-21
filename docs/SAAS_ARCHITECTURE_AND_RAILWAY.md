@@ -1,17 +1,44 @@
-# CulinaryOS-SaaS — Cloud Bridge Architecture & Railway Runbook
+# CulinaryOS — Unified Cloud Architecture & Railway Runbook
 
-## 1. Architectural Boundary
+## 1. Unified Monorepo Architectural Boundary
 
-`ShadowWalkerNC/CulinaryOS-SaaS` is the **private commercial SaaS control plane and marketing repository** for CulinaryOS.
+All CulinaryOS on-premise native binaries and cloud services deploy directly from the unified **`ShadowWalkerNC/CulinaryOS`** monorepo (there is no separate `CulinaryOS-SaaS` repository):
 
-- **On-Premise Execution (Public Repo `ShadowWalkerNC/CulinaryOS`):**
-  Every restaurant installs the native Rust binaries (`culinaryos-desktop.exe`, `culinaryos-site.exe`, `culinaryos-edge-daemon.exe`) locally. The local Rust node handles POS orders, KDS ticket routing, ESC/POS thermal/impact printing, cash drawer kicks, and FLSA tip pool calculations with zero internet dependency.
-- **Cloud Bridge & Add-On Licensing (Private Repo `ShadowWalkerNC/CulinaryOS-SaaS`):**
-  Hosted on Railway (`culinaryos-api.up.railway.app` and `culinaryos-demo.up.railway.app`), this repository issues HMAC-SHA256 signed capability grants (`SignedSaasGrant`), ingests encrypted offsite storage backups (`CloudSyncEnvelope`), relays customer web orders down to the restaurant's installed Rust node (`RelayedOnlineOrder`), and processes Bring-Your-Own-Stripe Connect Standard webhooks in integer cents.
+- **On-Premise Native Rust Execution (`ShadowWalkerNC/CulinaryOS`):**
+  Every restaurant installs the native Rust workstation binaries (`culinaryos-desktop.exe`, `culinaryos-site.exe`, `culinaryos-edge-daemon.exe` from official GitHub Release `v1.3.1`). The local Rust node serves all 8 operational web apps + embedded REST API on a single port (`http://127.0.0.1:3000`) and handles POS orders, KDS ticket routing, ESC/POS thermal/impact printing, cash drawer kicks, and FLSA tip pool calculations with zero internet dependency.
+- **Primary Cloud API & SaaS Cloud Bridge (`ShadowWalkerNC/CulinaryOS` on Railway):**
+  Hosted on Railway directly from `ShadowWalkerNC/CulinaryOS`, the cloud control plane runs Native PostgreSQL Primary Cloud Mode (`@culinaryos/server` with `DATABASE_URL` + `CULINARYOS_NATIVE_PG=true` — zero Supabase dependency required) alongside the SaaS Cloud Bridge (`@culinaryos/cloud-bridge-server`), Marketing Portal (`@culinaryos/app-marketing`), Admin Back-Office (`@culinaryos/admin`), and Online Storefront (`@culinaryos/app-web`). It issues HMAC-SHA256 signed capability grants (`SignedSaasGrant`), ingests encrypted offsite storage backups (`CloudSyncEnvelope`), relays customer web orders down to the restaurant's installed Rust node (`RelayedOnlineOrder`), and processes Bring-Your-Own-Stripe Connect Standard webhooks in integer cents.
 
 ---
 
-## 2. Cloud Bridge API Endpoints (`packages/cloud-bridge-server`)
+## 2. Unified Railway Service Matrix (`ShadowWalkerNC/CulinaryOS`)
+
+All Railway services build and deploy from the root of `ShadowWalkerNC/CulinaryOS` using the shared `railway.toml` Railpack configuration:
+
+| Railway Service | Monorepo Package | Build Command | Start Command / Static Hosting | Key Environment Variables |
+|---|---|---|---|---|
+| `culinaryos-api` | `@culinaryos/server` | `pnpm --filter @culinaryos/server build` | `pnpm --filter @culinaryos/server start` | `NODE_ENV=production`, `DATABASE_URL`, `CULINARYOS_NATIVE_PG=true`, `CULINARYOS_AUTO_MIGRATE=true`, `CULINARYOS_PIN_LOOKUP_SECRET` |
+| `culinaryos-cloud-bridge` | `@culinaryos/cloud-bridge-server` | `pnpm --filter @culinaryos/cloud-bridge-server build` | `pnpm --filter @culinaryos/cloud-bridge-server start` | `NODE_ENV=production`, `DATABASE_URL`, `CULINARYOS_SAAS_SIGNING_SECRET`, `STRIPE_WEBHOOK_SECRET` |
+| `culinaryos-marketing` | `@culinaryos/app-marketing` | `pnpm --filter @culinaryos/app-marketing build` | Leave unset for Railpack static hosting (`RAILPACK_SPA_OUTPUT_DIR=apps/marketing/out`) | `NEXT_PUBLIC_API_URL`, `RAILPACK_SPA_OUTPUT_DIR=apps/marketing/out` |
+| `culinaryos-admin` | `@culinaryos/admin` | `pnpm --filter @culinaryos/admin build` | Leave unset for Railpack SPA hosting (`RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist`) | `VITE_API_URL`, `RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist` |
+| `culinaryos-web` | `@culinaryos/app-web` | `pnpm --filter @culinaryos/app-web build` | Leave unset for Railpack SPA hosting (`RAILPACK_SPA_OUTPUT_DIR=apps/web/dist`) | `VITE_API_URL`, `RAILPACK_SPA_OUTPUT_DIR=apps/web/dist` |
+
+---
+
+## 3. Native PostgreSQL Primary Cloud Mode (`@culinaryos/server`)
+
+When `DATABASE_URL` is configured (or `CULINARYOS_NATIVE_PG=true` is set), `@culinaryos/server` automatically boots in **Native PostgreSQL Primary Cloud Mode** without requiring `SUPABASE_URL`, `SUPABASE_ANON_KEY`, or `SUPABASE_SERVICE_ROLE_KEY`:
+
+1. **Optional Automatic Migrations on Boot (`CULINARYOS_AUTO_MIGRATE=true`):**
+   - `setupNativePostgres` in `apps/server/src/postgres/startup.ts` invokes `runPostgresMigrations` from `@culinaryos/db` (using `DATABASE_MIGRATION_URL` when provided, or the configured PostgreSQL connection) to apply migrations `001_foundation.sql` through `009_native_device_pairing.sql` under a PostgreSQL session advisory lock.
+2. **Restricted Runtime Role Verification:**
+   - Before opening the HTTP listener, `assertRuntimeDatabaseRole` verifies that the runtime connection is a member of `culinaryos_app`, has `NOBYPASSRLS`, is not a superuser, and owns `0` public tables.
+3. **Token-Derived RLS Enforcement:**
+   - Every tenant transaction binds only `app.token_hash` via `withVerifiedTenantTransaction`, enforcing database-verified session (`cs_...`) and device (`cd_...`) isolation.
+
+---
+
+## 4. Cloud Bridge API Endpoints (`@culinaryos/cloud-bridge-server`)
 
 ### Health & Readiness
 - `GET /` or `GET /health` or `GET /v1/health`
@@ -64,13 +91,18 @@
 
 ---
 
-## 3. Environment Variables
+## 5. Environment Variables Reference
 
 | Variable | Service | Description |
 |---|---|---|
-| `PORT` | `culinaryos-api` / `culinaryos-web` | Listening port injected by Railway (`3000` / `8080`) |
-| `CULINARYOS_SAAS_SIGNING_SECRET` | `culinaryos-api` | Shared HMAC-SHA256 secret (>= 16 chars) used to sign `SignedSaasGrant` tokens verified by installed Rust nodes |
-| `STRIPE_WEBHOOK_SECRET` | `culinaryos-api` | HMAC secret for verifying Stripe Connect subscription webhooks |
-| `DATABASE_URL` | `culinaryos-api` | Railway PostgreSQL connection string |
-| `NEXT_PUBLIC_API_URL` | `culinaryos-web` | Public URL of the SaaS Cloud Bridge (`https://culinaryos-api.up.railway.app`) |
-| `RAILPACK_SPA_OUTPUT_DIR` | `culinaryos-web` | Set to `apps/marketing/out` when using Railway's Caddy static server |
+| `PORT` | All API services | Listening port injected by Railway (`3000` / `8080`) |
+| `DATABASE_URL` | `@culinaryos/server` / `@culinaryos/cloud-bridge-server` | Railway PostgreSQL connection string (automatically enables Native PostgreSQL mode on `@culinaryos/server`) |
+| `CULINARYOS_NATIVE_PG` | `@culinaryos/server` | Set to `true` for explicit Native PostgreSQL mode (also auto-enabled when `DATABASE_URL` is configured) |
+| `CULINARYOS_AUTO_MIGRATE` | `@culinaryos/server` | Set to `true` to execute pending `@culinaryos/db` PostgreSQL migrations automatically on boot |
+| `DATABASE_MIGRATION_URL` | `@culinaryos/server` | Optional migration-owner PostgreSQL URL used when `CULINARYOS_AUTO_MIGRATE=true` |
+| `CULINARYOS_PIN_LOOKUP_SECRET` | `@culinaryos/server` | 32+ char HMAC secret for deterministic staff PIN lookup in Native PostgreSQL mode |
+| `CULINARYOS_SAAS_SIGNING_SECRET` | `@culinaryos/cloud-bridge-server` | Shared HMAC-SHA256 secret (>= 16 chars) used to sign `SignedSaasGrant` tokens verified by installed Rust nodes |
+| `STRIPE_WEBHOOK_SECRET` | `@culinaryos/server` / `@culinaryos/cloud-bridge-server` | HMAC secret for verifying Stripe Connect webhooks |
+| `NEXT_PUBLIC_API_URL` | `@culinaryos/app-marketing` | Public URL of the API / Cloud Bridge (`https://culinaryos-api.up.railway.app`) |
+| `VITE_API_URL` | `@culinaryos/admin` / `@culinaryos/app-web` | Public URL of the CulinaryOS API (`https://culinaryos-api.up.railway.app`) |
+| `RAILPACK_SPA_OUTPUT_DIR` | `@culinaryos/app-marketing` / `@culinaryos/admin` / `@culinaryos/app-web` | Static output directory served by Railpack Caddy (`apps/marketing/out`, `apps/admin/dist`, `apps/web/dist`) |

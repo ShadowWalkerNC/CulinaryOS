@@ -1,13 +1,14 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Button, LayoutGrid, Users, DollarSign, Package, Trash2, CulinaryAppLauncher } from '@culinaryos/ui';
+import { Button, LayoutGrid, Users, DollarSign, Package, Trash2, ChefHat, CulinaryAppLauncher } from '@culinaryos/ui';
 
 const NAV = [
-  { to: '/',          label: 'Dashboard',  Icon: LayoutGrid },
-  { to: '/labor',     label: 'Labor',      Icon: Users      },
-  { to: '/food-cost', label: 'Food Cost',  Icon: DollarSign },
-  { to: '/vendor',    label: 'Vendors',    Icon: Package    },
-  { to: '/waste',     label: 'Waste',      Icon: Trash2     },
+  { to: '/',                   label: 'Dashboard',           Icon: LayoutGrid },
+  { to: '/chefs-intelligence', label: "Chef's Intelligence", Icon: ChefHat    },
+  { to: '/labor',              label: 'Labor',               Icon: Users      },
+  { to: '/food-cost',          label: 'Food Cost',           Icon: DollarSign },
+  { to: '/vendor',             label: 'Vendors',             Icon: Package    },
+  { to: '/waste',              label: 'Waste',               Icon: Trash2     },
 ];
 
 export default function Layout() {

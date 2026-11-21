@@ -25,7 +25,12 @@ export interface AppliedMigration {
 }
 
 export interface MigrateOptions {
-  dir?: string;
+  dir?: string | undefined;
+}
+
+export interface RunPostgresMigrationsOptions extends MigrateOptions {
+  pool?: Pool | undefined;
+  connectionString?: string | undefined;
 }
 
 /** Session-level advisory lock key serializing migration runs. */
@@ -130,5 +135,63 @@ export async function applyMigrations(pool: Pool, options: MigrateOptions = {}):
     }
   } finally {
     client.release();
+  }
+}
+
+/**
+ * Execute pending PostgreSQL migrations on boot or via programmatic invocation.
+ * Accepts an existing pg Pool, a PostgreSQL connection string, or options.
+ */
+export async function runPostgresMigrations(
+  poolOrUrlOrOptions?: Pool | string | RunPostgresMigrationsOptions,
+  options: MigrateOptions = {},
+): Promise<AppliedMigration[]> {
+  if (
+    poolOrUrlOrOptions &&
+    typeof poolOrUrlOrOptions === 'object' &&
+    typeof (poolOrUrlOrOptions as Pool).connect === 'function'
+  ) {
+    return applyMigrations(poolOrUrlOrOptions as Pool, options);
+  }
+
+  if (typeof poolOrUrlOrOptions === 'string') {
+    const { Pool: PgPool } = await import('pg');
+    const tempPool = new PgPool({
+      connectionString: poolOrUrlOrOptions,
+      max: 1,
+      connectionTimeoutMillis: 5000,
+      statement_timeout: 30000,
+    });
+    try {
+      return await applyMigrations(tempPool, options);
+    } finally {
+      await tempPool.end();
+    }
+  }
+
+  const opts = (poolOrUrlOrOptions as RunPostgresMigrationsOptions | undefined) ?? {};
+  const dir = opts.dir ?? options.dir;
+  if (opts.pool) {
+    return applyMigrations(opts.pool, { dir });
+  }
+
+  const connectionString =
+    opts.connectionString ??
+    process.env.DATABASE_MIGRATION_URL ??
+    process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_MIGRATION_URL or DATABASE_URL is required to run PostgreSQL migrations');
+  }
+  const { Pool: PgPool } = await import('pg');
+  const tempPool = new PgPool({
+    connectionString,
+    max: 1,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 30000,
+  });
+  try {
+    return await applyMigrations(tempPool, { dir });
+  } finally {
+    await tempPool.end();
   }
 }

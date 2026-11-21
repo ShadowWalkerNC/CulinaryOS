@@ -236,3 +236,17 @@ export {
   type RuntimeDatabaseRoleInfo,
 } from './runtime-role.js';
 
+export {
+  applyMigrations,
+  runPostgresMigrations,
+  checksumSql,
+  defaultMigrationsDir,
+  listMigrationFiles,
+  MIGRATION_ADVISORY_LOCK_KEY,
+  type AppliedMigration,
+  type MigrateOptions,
+  type MigrationFile,
+  type RunPostgresMigrationsOptions,
+} from './migrate.js';
+
+

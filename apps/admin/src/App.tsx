@@ -25,6 +25,7 @@ import { SettingsPage } from './pages/Settings';
 import { IntegrationsPage } from './pages/Integrations';
 import { DisplaysPage } from './pages/DisplaysPage';
 import { InteragencyConsentPage } from './pages/InteragencyConsentPage';
+import { ChefsIntelligencePage } from './pages/ChefsIntelligencePage';
 
 export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -41,6 +42,9 @@ export function App() {
             <ResponsiveShell onOpenOnboarding={() => setShowOnboarding(true)}>
               <Routes>
                 <Route path="/dashboard" element={<DashboardPage />} />
+                {/* Chef's Intelligence */}
+                <Route path="/intelligence" element={<ChefsIntelligencePage />} />
+                <Route path="/chefs-intelligence" element={<ChefsIntelligencePage />} />
                 <Route path="/reports" element={<ReportingPage />} />
                 <Route path="/roles" element={<RolesManagementPage />} />
                 <Route path="/scheduling" element={<SchedulingPage />} />

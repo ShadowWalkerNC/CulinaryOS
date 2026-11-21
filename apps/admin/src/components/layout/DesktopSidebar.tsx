@@ -39,6 +39,7 @@ export function DesktopSidebar() {
       groupName: 'Intelligence & Performance',
       items: [
         { to: '/dashboard', label: 'Executive Dashboard', icon: <Activity className="w-4 h-4" /> },
+        { to: '/intelligence', label: "Chef's Intelligence", icon: <Sparkles className="w-4 h-4" />, badge: '121' },
         { to: '/reports', label: 'Financials & P&L', icon: <TrendingUp className="w-4 h-4" /> },
       ],
     },

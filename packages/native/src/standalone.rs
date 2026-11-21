@@ -4,9 +4,10 @@ use crate::{
         SaasAddon, SaasEntitlementPayload, SignedSaasGrant,
     },
     local_store::{
-        calculate_tip_pool, BarTabRecord, KitchenTicket, LocalStore, LocalStoreError,
-        OrderRecord, PurchaseOrderRecord, StaffRole, TalentJobRecord, TicketStatus,
-        TipDistributionMethod, TipParticipantInput, WasteRecord,
+        calculate_tip_pool, BarTabRecord, CommissaryTransferRecord, KitchenTicket, LocalStore,
+        LocalStoreError, OrderRecord, PurchaseOrderRecord, ReservationRecord, StaffRole,
+        TalentJobRecord, TicketStatus, TipDistributionMethod, TipParticipantInput, WasteRecord,
+        WebhookEndpointRecord, WebhookEventRecord,
     },
 };
 use axum::{
@@ -2173,11 +2174,24 @@ async fn stripe_webhook_native_handler(
         }
     }
 
+    let site_id = guard.store.site_id();
+    let recorded = guard.store.record_webhook_event(WebhookEventRecord {
+        id: event_id.clone(),
+        direction: "inbound".to_string(),
+        provider: "stripe".to_string(),
+        event_type: event_type.clone(),
+        tenant_id: site_id,
+        signature_verified: true,
+        status: "processed".to_string(),
+        payload_summary: format!("Stripe webhook {} ({} cents)", event_type, amount_cents),
+        received_at: "2026-11-18T12:30:00Z".to_string(),
+    })?;
+
     ok(
         StatusCode::OK,
         json!({
             "received": true,
-            "eventId": event_id,
+            "eventId": recorded.id,
             "eventType": event_type,
             "signatureVerified": true,
             "settledOrderId": settled_order,
@@ -2213,10 +2227,30 @@ async fn delivery_webhook_native_handler(
         .create_order(Some(order_id.clone()), table_label, vec![(default_menu_id, 1, 1, 1)])?;
     let tickets = guard.store.send_order_to_kitchen(&created.id)?;
 
+    let site_id = guard.store.site_id();
+    let event_id = body
+        .get("eventId")
+        .or_else(|| body.get("id"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("wh-evt-{}-{}", provider, created.id));
+    let recorded = guard.store.record_webhook_event(WebhookEventRecord {
+        id: event_id,
+        direction: "inbound".to_string(),
+        provider: provider.clone(),
+        event_type: "delivery.order.created".to_string(),
+        tenant_id: site_id,
+        signature_verified: true,
+        status: "processed".to_string(),
+        payload_summary: format!("Inbound {} delivery order {} routed to KDS", provider, created.id),
+        received_at: "2026-11-18T12:30:00Z".to_string(),
+    })?;
+
     ok(
         StatusCode::CREATED,
         json!({
             "received": true,
+            "eventId": recorded.id,
             "provider": provider,
             "signatureVerified": true,
             "order": serialize_order_for_ui(&created),
@@ -2227,92 +2261,91 @@ async fn delivery_webhook_native_handler(
 
 async fn list_webhook_endpoints_native(State(svc): State<StandaloneService>) -> ApiReply {
     let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
-    ok(
-        StatusCode::OK,
-        json!([
-            {
-                "id": "wh-ep-default-erp",
-                "tenantId": guard.store.site_id(),
-                "url": "https://accounting.example.com/webhooks/culinaryos",
-                "description": "Nightly Z-Report & Prime Cost Accounting Sync",
-                "events": ["order.paid", "z_report.closed", "tip_pool.calculated", "inventory.low_stock"],
-                "signingSecret": "whsec_culinaryos_default_partner_signing_key_2026",
-                "active": true
-            }
-        ]),
-    )
+    ok(StatusCode::OK, json!(guard.store.list_webhook_endpoints()))
 }
 
 async fn create_webhook_endpoint_native(
     State(svc): State<StandaloneService>,
     Json(body): Json<Value>,
 ) -> ApiReply {
-    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let id = body
+        .get("id")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("wh-ep-{}", Uuid::new_v4().as_simple()));
     let url = body
         .get("url")
         .and_then(|v| v.as_str())
-        .unwrap_or("https://partner.example.com/webhook");
-    let events = body
+        .unwrap_or("https://partner.example.com/webhook")
+        .to_string();
+    let description = body
+        .get("description")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Partner Webhook Endpoint")
+        .to_string();
+    let events: Vec<String> = body
         .get("events")
-        .cloned()
-        .unwrap_or_else(|| json!(["order.paid", "kds.ticket.bumped", "z_report.closed"]));
-    ok(
-        StatusCode::CREATED,
-        json!({
-            "id": format!("wh-ep-{}", unix_now()),
-            "tenantId": guard.store.site_id(),
-            "url": url,
-            "events": events,
-            "signingSecret": format!("whsec_native_{}", unix_now()),
-            "active": true
-        }),
-    )
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            vec![
+                "order.paid".to_string(),
+                "kds.ticket.bumped".to_string(),
+                "z_report.closed".to_string(),
+            ]
+        });
+    let signing_secret = body
+        .get("signingSecret")
+        .or_else(|| body.get("signing_secret"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("whsec_native_{}", unix_now()));
+    let active = body
+        .get("active")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let site_id = guard.store.site_id();
+    let created = guard.store.create_webhook_endpoint(WebhookEndpointRecord {
+        id,
+        tenant_id: site_id,
+        url,
+        description,
+        events,
+        signing_secret,
+        active,
+    })?;
+    ok(StatusCode::CREATED, json!(created))
 }
 
 async fn list_webhook_events_native(State(svc): State<StandaloneService>) -> ApiReply {
     let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
-    ok(
-        StatusCode::OK,
-        json!([
-            {
-                "id": "wh-evt-stripe-001",
-                "direction": "inbound",
-                "provider": "stripe",
-                "eventType": "payment_intent.succeeded",
-                "tenantId": guard.store.site_id(),
-                "signatureVerified": true,
-                "status": "processed",
-                "payloadSummary": "Stripe Connect PaymentIntent verified via HMAC-SHA256",
-                "receivedAt": "2026-11-18T12:15:00Z"
-            },
-            {
-                "id": "wh-evt-delivery-002",
-                "direction": "inbound",
-                "provider": "storefront",
-                "eventType": "delivery.order.created",
-                "tenantId": guard.store.site_id(),
-                "signatureVerified": true,
-                "status": "processed",
-                "payloadSummary": "Online Storefront order routed to local POS & KDS rails",
-                "receivedAt": "2026-11-18T12:20:00Z"
-            }
-        ]),
-    )
+    ok(StatusCode::OK, json!(guard.store.list_webhook_events()))
 }
 
 async fn replay_webhook_event_native(
     State(svc): State<StandaloneService>,
     AxumPath(event_id): AxumPath<String>,
 ) -> ApiReply {
-    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let replayed = guard.store.replay_webhook_event(&event_id)?;
     ok(
         StatusCode::OK,
         json!({
-            "id": format!("{}-replay-{}", event_id, unix_now()),
+            "id": replayed.id,
             "originalEventId": event_id,
-            "tenantId": guard.store.site_id(),
-            "status": "replayed",
-            "signatureVerified": true
+            "tenantId": replayed.tenant_id,
+            "direction": replayed.direction,
+            "provider": replayed.provider,
+            "eventType": replayed.event_type,
+            "status": replayed.status,
+            "signatureVerified": replayed.signature_verified,
+            "payloadSummary": replayed.payload_summary,
+            "receivedAt": replayed.received_at
         }),
     )
 }
@@ -2510,15 +2543,18 @@ async fn void_order_item_native_handler(
     State(svc): State<StandaloneService>,
     AxumPath((order_id, item_id)): AxumPath<(String, String)>,
 ) -> ApiReply {
-    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
-    let order = guard.store.get_order(&order_id);
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let order = guard.store.void_order_item(&order_id, &item_id)?;
     ok(
         StatusCode::OK,
         json!({
             "orderId": order_id,
             "voidedItemId": item_id,
             "status": "item_voided",
-            "order": order.as_ref().map(serialize_order_for_ui)
+            "subtotalCents": order.subtotal_cents,
+            "taxCents": order.tax_cents,
+            "totalCents": order.total_cents,
+            "order": serialize_order_for_ui(&order)
         }),
     )
 }
@@ -2645,16 +2681,50 @@ async fn tables_id_transfer_native_handler(
 }
 
 async fn tabs_update_native_handler(
-    State(_svc): State<StandaloneService>,
+    State(svc): State<StandaloneService>,
     AxumPath(id): AxumPath<String>,
     Json(body): Json<Value>,
 ) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let customer_name = body
+        .get("customer_name")
+        .or_else(|| body.get("customerName"))
+        .or_else(|| body.get("tab_name"))
+        .or_else(|| body.get("tabName"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let pre_auth_cents = body
+        .get("pre_auth_cents")
+        .or_else(|| body.get("preAuthCents"))
+        .or_else(|| body.get("preauth_cents"))
+        .or_else(|| body.get("preauthCents"))
+        .and_then(|v| v.as_i64());
+    let is_open = body
+        .get("is_open")
+        .or_else(|| body.get("isOpen"))
+        .and_then(|v| v.as_bool())
+        .or_else(|| {
+            body.get("status")
+                .and_then(|v| v.as_str())
+                .map(|s| !s.eq_ignore_ascii_case("closed"))
+        });
+    let updated = guard
+        .store
+        .update_tab(&id, customer_name, pre_auth_cents, is_open)?;
     ok(
         StatusCode::OK,
         json!({
-            "id": id,
+            "id": updated.id,
+            "tabName": updated.tab_name,
+            "customerName": updated.tab_name,
+            "cardLast4": updated.card_last4,
+            "preauthCents": updated.preauth_cents,
+            "preAuthCents": updated.preauth_cents,
+            "orderId": updated.order_id,
+            "isOpen": updated.is_open,
+            "openedAt": updated.opened_at,
             "updated": true,
-            "changes": body
+            "tab": updated
         }),
     )
 }
@@ -2693,13 +2763,42 @@ async fn displays_bump_native_handler(Json(body): Json<Value>) -> ApiReply {
 }
 
 async fn update_display_native_handler(
+    State(svc): State<StandaloneService>,
     AxumPath(id): AxumPath<String>,
     Json(body): Json<Value>,
 ) -> ApiReply {
-    ok(StatusCode::OK, json!({ "id": id, "updated": true, "config": body }))
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let name = body
+        .get("name")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let screen_type = body
+        .get("screen_type")
+        .or_else(|| body.get("screenType"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let updated = guard.store.update_display(&id, name, screen_type)?;
+    ok(
+        StatusCode::OK,
+        json!({
+            "id": updated.id,
+            "name": updated.name,
+            "screenType": updated.screen_type,
+            "pairingCode": updated.pairing_code,
+            "isPaired": updated.is_paired,
+            "lastSeenAt": updated.last_seen_at,
+            "updated": true,
+            "display": updated
+        }),
+    )
 }
 
-async fn delete_display_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
+async fn delete_display_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    guard.store.delete_display(&id)?;
     ok(StatusCode::OK, json!({ "id": id, "deleted": true }))
 }
 
@@ -2801,68 +2900,122 @@ async fn billing_checkout_native_handler(Json(body): Json<Value>) -> ApiReply {
     )
 }
 
-async fn list_reservations_native_handler() -> ApiReply {
-    ok(
-        StatusCode::OK,
-        json!([
-            {
-                "id": "res-001",
-                "guest_name": "Elena Rostova",
-                "guestName": "Elena Rostova",
-                "party_size": 4,
-                "partySize": 4,
-                "reservation_time": "2026-11-19T19:00:00Z",
-                "status": "confirmed",
-                "table_id": "T4",
-                "tableNumber": "T4",
-                "notes": "Anniversary dinner — shellfish allergy at Seat 2"
-            },
-            {
-                "id": "res-002",
-                "guest_name": "Marcus Vance",
-                "guestName": "Marcus Vance",
-                "party_size": 2,
-                "partySize": 2,
-                "reservation_time": "2026-11-19T19:30:00Z",
-                "status": "confirmed",
-                "table_id": "T8",
-                "tableNumber": "T8",
-                "notes": "Chef's counter preferred"
-            }
-        ]),
-    )
+fn serialize_reservation_for_ui(r: &ReservationRecord) -> Value {
+    json!({
+        "id": r.id,
+        "guest_name": r.guest_name,
+        "guestName": r.guest_name,
+        "party_size": r.party_size,
+        "partySize": r.party_size,
+        "reservation_time": r.reservation_time,
+        "reservationTime": r.reservation_time,
+        "status": r.status,
+        "table_id": r.table_id,
+        "tableId": r.table_id,
+        "tableNumber": r.table_id,
+        "notes": r.notes
+    })
 }
 
-async fn create_reservation_native_handler(Json(body): Json<Value>) -> ApiReply {
-    ok(
-        StatusCode::CREATED,
-        json!({
-            "id": format!("res-{}", unix_now()),
-            "guest_name": body.get("guest_name").or_else(|| body.get("guestName")).cloned().unwrap_or(json!("Guest")),
-            "party_size": body.get("party_size").or_else(|| body.get("partySize")).cloned().unwrap_or(json!(2)),
-            "reservation_time": body.get("reservation_time").or_else(|| body.get("time")).cloned().unwrap_or(json!("2026-11-19T19:00:00Z")),
-            "status": "confirmed",
-            "notes": body.get("notes").cloned().unwrap_or(json!(""))
-        }),
-    )
+async fn list_reservations_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let rows: Vec<Value> = guard
+        .store
+        .list_reservations()
+        .iter()
+        .map(serialize_reservation_for_ui)
+        .collect();
+    ok(StatusCode::OK, json!(rows))
 }
 
-async fn delete_reservation_native_handler(AxumPath(id): AxumPath<String>) -> ApiReply {
-    ok(StatusCode::OK, json!({ "id": id, "status": "cancelled" }))
+async fn create_reservation_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let id = body
+        .get("id")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("res-{}", Uuid::new_v4().as_simple()));
+    let guest_name = body
+        .get("guest_name")
+        .or_else(|| body.get("guestName"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("Guest")
+        .to_string();
+    let party_size = body
+        .get("party_size")
+        .or_else(|| body.get("partySize"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(2) as u32;
+    let reservation_time = body
+        .get("reservation_time")
+        .or_else(|| body.get("reservationTime"))
+        .or_else(|| body.get("reserved_at"))
+        .or_else(|| body.get("time"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("2026-11-19T19:00:00Z")
+        .to_string();
+    let status = body
+        .get("status")
+        .and_then(|v| v.as_str())
+        .unwrap_or("confirmed")
+        .to_string();
+    let table_id = body
+        .get("table_id")
+        .or_else(|| body.get("tableId"))
+        .or_else(|| body.get("tableNumber"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("T1")
+        .to_string();
+    let notes = body
+        .get("notes")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let created = guard.store.create_reservation(ReservationRecord {
+        id,
+        guest_name,
+        party_size,
+        reservation_time,
+        status,
+        table_id,
+        notes,
+    })?;
+    ok(StatusCode::CREATED, serialize_reservation_for_ui(&created))
+}
+
+async fn delete_reservation_native_handler(
+    State(svc): State<StandaloneService>,
+    AxumPath(id): AxumPath<String>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let cancelled = guard.store.cancel_reservation(&id)?;
+    ok(StatusCode::OK, serialize_reservation_for_ui(&cancelled))
 }
 
 async fn update_reservation_status_native_handler(
+    State(svc): State<StandaloneService>,
     AxumPath(id): AxumPath<String>,
     Json(body): Json<Value>,
 ) -> ApiReply {
-    ok(
-        StatusCode::OK,
-        json!({
-            "id": id,
-            "status": body.get("status").cloned().unwrap_or(json!("seated")),
-            "table_id": body.get("table_id").cloned().unwrap_or(json!("T4"))
-        }),
-    )
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let status = body
+        .get("status")
+        .and_then(|v| v.as_str())
+        .unwrap_or("seated");
+    let table_id = body
+        .get("table_id")
+        .or_else(|| body.get("tableId"))
+        .or_else(|| body.get("tableNumber"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let updated = guard
+        .store
+        .update_reservation_status(&id, status, table_id)?;
+    ok(StatusCode::OK, serialize_reservation_for_ui(&updated))
 }
 
 async fn autopilot_status_native_handler() -> ApiReply {
@@ -2942,31 +3095,90 @@ async fn intelligence_skill_by_id_native_handler(AxumPath(id): AxumPath<String>)
     )
 }
 
-async fn commissary_transfers_native_handler() -> ApiReply {
+async fn commissary_transfers_native_handler(State(svc): State<StandaloneService>) -> ApiReply {
+    let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
     ok(
         StatusCode::OK,
-        json!([
-            {
-                "id": "trf-001",
-                "fromUnit": "Central Commissary Kitchen",
-                "toUnit": "Alley Katz Taproom & Kitchen",
-                "status": "in_transit",
-                "totalCostCents": 42500,
-                "itemsCount": 6
-            }
-        ]),
+        json!(guard.store.list_commissary_transfers()),
     )
 }
 
-async fn commissary_request_transfer_native_handler(Json(body): Json<Value>) -> ApiReply {
-    ok(
-        StatusCode::CREATED,
-        json!({
-            "id": format!("trf-{}", unix_now()),
-            "status": "requested",
-            "request": body
-        }),
-    )
+async fn commissary_request_transfer_native_handler(
+    State(svc): State<StandaloneService>,
+    Json(body): Json<Value>,
+) -> ApiReply {
+    let mut guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
+    let id = body
+        .get("id")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("trf-{}", Uuid::new_v4().as_simple()));
+    let from_unit = body
+        .get("fromUnit")
+        .or_else(|| body.get("from_unit"))
+        .or_else(|| body.get("sourceUnitId"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("Central Commissary Kitchen")
+        .to_string();
+    let to_unit = body
+        .get("toUnit")
+        .or_else(|| body.get("to_unit"))
+        .or_else(|| body.get("destinationUnitId"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_else(|| guard.store.restaurant_name())
+        .to_string();
+    let status = body
+        .get("status")
+        .and_then(|v| v.as_str())
+        .unwrap_or("requested")
+        .to_string();
+    let items_count = body
+        .get("itemsCount")
+        .or_else(|| body.get("items_count"))
+        .and_then(|v| v.as_u64())
+        .map(|n| n as u32)
+        .or_else(|| {
+            body.get("items")
+                .and_then(|v| v.as_array())
+                .map(|a| a.len() as u32)
+        })
+        .unwrap_or(1);
+    let total_cost_cents = body
+        .get("totalCostCents")
+        .or_else(|| body.get("total_cost_cents"))
+        .and_then(|v| v.as_i64())
+        .or_else(|| {
+            body.get("items").and_then(|v| v.as_array()).map(|arr| {
+                arr.iter()
+                    .map(|i| {
+                        let q = i
+                            .get("quantity")
+                            .or_else(|| i.get("qty"))
+                            .and_then(|v| v.as_i64())
+                            .unwrap_or(1);
+                        let c = i
+                            .get("unitCostCents")
+                            .or_else(|| i.get("unit_cost_cents"))
+                            .and_then(|v| v.as_i64())
+                            .unwrap_or(2500);
+                        q * c
+                    })
+                    .sum()
+            })
+        })
+        .unwrap_or(15000);
+
+    let transfer = guard
+        .store
+        .create_commissary_transfer(CommissaryTransferRecord {
+            id,
+            from_unit,
+            to_unit,
+            status,
+            total_cost_cents,
+            items_count,
+        })?;
+    ok(StatusCode::CREATED, json!(transfer))
 }
 
 async fn commissary_royalty_ledger_native_handler() -> ApiReply {
@@ -4082,5 +4294,229 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(sync_res.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn standalone_persists_reservations_voids_webhooks_commissary_and_tabs_across_restarts() {
+        let dir = tempfile::tempdir().unwrap();
+        let db_path = dir.path().join("persistence-restart.db");
+        let site_id = Uuid::from_u128(2026);
+        let secret = "test-saas-bridge-signing-secret-key".to_string();
+
+        {
+            let svc = StandaloneService::open(&db_path, site_id, secret.clone()).unwrap();
+            let app = svc.router();
+
+            // 1. Create reservation, update its status, and cancel res-002
+            let create_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/reservations")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"id":"res-777","guest_name":"Chef Auguste","party_size":6,"reservation_time":"2026-11-22T20:00:00Z","table_id":"T12","notes":"VIP tasting menu"}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(create_res.status(), StatusCode::CREATED);
+
+            let status_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("PATCH")
+                        .uri("/v1/reservations/res-777/status")
+                        .header("content-type", "application/json")
+                        .body(Body::from(r#"{"status":"seated","table_id":"T14"}"#))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(status_res.status(), StatusCode::OK);
+
+            let cancel_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("DELETE")
+                        .uri("/v1/reservations/res-002")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(cancel_res.status(), StatusCode::OK);
+
+            // 2. Create order with 2 items and void 1 line item
+            let order_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/orders")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"orderId":"ord-void-1","tableNumber":"T7","items":[{"menuItemId":"item-margherita","quantity":1},{"menuItemId":"item-caesar","quantity":1}]}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(order_res.status(), StatusCode::CREATED);
+
+            let void_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/orders/ord-void-1/items/item-caesar/void")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(void_res.status(), StatusCode::OK);
+
+            // 3. Update bar tab & display device
+            let tab_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("PATCH")
+                        .uri("/v1/tabs/tab-bar-1")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"customer_name":"Bar Tab - Hendricks","pre_auth_cents":12500,"is_open":false}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(tab_res.status(), StatusCode::OK);
+
+            let disp_update_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("PATCH")
+                        .uri("/v1/displays/disp-kds-1")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"name":"Pastry & Cold Rail KDS","screen_type":"pastry_kds"}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(disp_update_res.status(), StatusCode::OK);
+
+            let disp_del_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("DELETE")
+                        .uri("/v1/displays/disp-wall-1")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(disp_del_res.status(), StatusCode::OK);
+
+            // 4. Register webhook endpoint & replay webhook event
+            let wh_ep_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/webhooks/endpoints")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"id":"wh-ep-custom-99","url":"https://erp.alleykatz.io/hooks","description":"Alley Katz ERP Sync","events":["order.paid","z_report.closed"]}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(wh_ep_res.status(), StatusCode::CREATED);
+
+            let wh_replay_res = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/webhooks/events/wh-evt-stripe-001/replay")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(wh_replay_res.status(), StatusCode::OK);
+
+            // 5. Request commissary transfer
+            let trf_res = app
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/v1/commissary/transfers/request")
+                        .header("content-type", "application/json")
+                        .body(Body::from(
+                            r#"{"id":"trf-777","fromUnit":"Central Commissary","toUnit":"Alley Katz Taproom","totalCostCents":64000,"itemsCount":8}"#,
+                        ))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(trf_res.status(), StatusCode::CREATED);
+        }
+
+        // Reopen StandaloneService from disk and assert every mutation survived the restart
+        let reopened = StandaloneService::open(&db_path, site_id, secret).unwrap();
+        let guard = reopened.inner.lock().unwrap();
+
+        let reservations = guard.store.list_reservations();
+        let res_777 = reservations.iter().find(|r| r.id == "res-777").expect("res-777 persisted");
+        assert_eq!(res_777.guest_name, "Chef Auguste");
+        assert_eq!(res_777.party_size, 6);
+        assert_eq!(res_777.status, "seated");
+        assert_eq!(res_777.table_id, "T14");
+
+        let res_002 = reservations.iter().find(|r| r.id == "res-002").expect("res-002 persisted");
+        assert_eq!(res_002.status, "cancelled");
+
+        let order = guard.store.get_order("ord-void-1").expect("ord-void-1 persisted");
+        assert_eq!(order.items.len(), 1);
+        assert_eq!(order.items[0].menu_item_id, "item-margherita");
+        assert_eq!(order.subtotal_cents, 1800);
+        assert_eq!(order.tax_cents, 149);
+        assert_eq!(order.total_cents, 1949);
+
+        let tabs = guard.store.list_tabs();
+        let tab = tabs.iter().find(|t| t.id == "tab-bar-1").expect("tab-bar-1 persisted");
+        assert_eq!(tab.tab_name, "Bar Tab - Hendricks");
+        assert_eq!(tab.preauth_cents, 12500);
+        assert!(!tab.is_open);
+
+        let displays = guard.store.list_displays();
+        assert_eq!(displays.len(), 1);
+        assert_eq!(displays[0].id, "disp-kds-1");
+        assert_eq!(displays[0].name, "Pastry & Cold Rail KDS");
+        assert_eq!(displays[0].screen_type, "pastry_kds");
+
+        let endpoints = guard.store.list_webhook_endpoints();
+        assert!(endpoints.iter().any(|e| e.id == "wh-ep-custom-99" && e.url == "https://erp.alleykatz.io/hooks"));
+
+        let events = guard.store.list_webhook_events();
+        assert!(events.iter().any(|e| e.status == "replayed"));
+
+        let transfers = guard.store.list_commissary_transfers();
+        let trf = transfers.iter().find(|t| t.id == "trf-777").expect("trf-777 persisted");
+        assert_eq!(trf.total_cost_cents, 64000);
+        assert_eq!(trf.items_count, 8);
+        assert_eq!(trf.status, "requested");
     }
 }

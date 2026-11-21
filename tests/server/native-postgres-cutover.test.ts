@@ -62,6 +62,8 @@ describe('Live Server Entrypoint Native PostgreSQL Cutover (BLOCKER-2)', () => {
   beforeEach(() => {
     resetNativeStartupState();
     delete process.env.CULINARYOS_NATIVE_PG;
+    delete process.env.DATABASE_URL;
+    delete process.env.CULINARYOS_AUTO_MIGRATE;
   });
 
   afterEach(() => {
@@ -150,5 +152,30 @@ describe('Live Server Entrypoint Native PostgreSQL Cutover (BLOCKER-2)', () => {
       body: JSON.stringify({ tableNumber: '1', coverCount: 2, serverName: 'Test' }),
     });
     assert.equal(forgedRes.status, 403);
+  });
+
+  it('automatically enables native PostgreSQL cutover when DATABASE_URL is set without CULINARYOS_NATIVE_PG and runs migrations when CULINARYOS_AUTO_MIGRATE=true', async () => {
+    process.env.DATABASE_URL = 'postgresql://runtime:fictional@db.invalid/culinaryos';
+    process.env.CULINARYOS_AUTO_MIGRATE = 'true';
+    const pool = createCutoverPool();
+    const state = await setupNativePostgres(app, { pool: pool as never });
+    assert.equal(state.enabled, true);
+    assert.ok(Array.isArray(state.appliedMigrations));
+    assert.ok(state.appliedMigrations.length >= 9);
+
+    const token = `cs_${'z'.repeat(43)}`;
+    const resV1 = await app.request('/v1/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    assert.equal(resV1.status, 200);
+    const bodyV1 = (await resV1.json()) as {
+      ok: boolean;
+      data: { tenantId: string; role: string };
+    };
+    assert.equal(bodyV1.ok, true);
+    assert.equal(bodyV1.data.tenantId, TENANT_ID);
   });
 });

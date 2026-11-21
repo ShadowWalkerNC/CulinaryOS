@@ -2,7 +2,7 @@
 
 This guide covers deploying CulinaryOS for real-world restaurant operations.
 
-> Release status (2026-11-04): see [RELEASE_READINESS.md](RELEASE_READINESS.md) for the current three-deliverable plan and acceptance evidence. The existing compose/installers are still development/demo entrypoints, not a certified standalone live installation. Native PostgreSQL mode is explicitly selected with `CULINARYOS_NATIVE_PG=true` and a restricted runtime `DATABASE_URL`; startup verifies the role before listening. Unsupported native endpoints return unavailable, including public signup until its PostgreSQL implementation is complete. Do not connect the API using the migration-owner URL.
+> Release status (`v1.3.1`): All on-premise Rust workstation binaries (`culinaryos-desktop.exe`, `culinaryos-site.exe`, `culinaryos-edge-daemon.exe`) and all Railway cloud services (`@culinaryos/server`, `@culinaryos/cloud-bridge-server`, `@culinaryos/app-marketing`, `@culinaryos/admin`, `@culinaryos/app-web`) deploy directly from the unified **`ShadowWalkerNC/CulinaryOS`** monorepo (there is no separate `CulinaryOS-SaaS` repository). Native PostgreSQL Primary Cloud Mode is automatically enabled whenever `DATABASE_URL` is configured (or `CULINARYOS_NATIVE_PG=true` is set) with zero Supabase dependency required, and supports automatic boot-time schema migrations via `CULINARYOS_AUTO_MIGRATE=true`.
 
 Packaged POS/KDS/Admin/storefront builds use `VITE_API_URL=/` and forward `/v1/` through nginx to the compose backend. This keeps API requests on the address the client opened, including LAN IPs and HTTPS domains. It does not provide TLS certificates: a public installation still needs a TLS reverse proxy and DNS configuration. Independent cloud deployments continue to use an explicit API URL and CORS allowlist.
 
@@ -12,42 +12,59 @@ Workstation startup uses the installed checkout without pulling `main`. Schedule
 
 ## 1. Prerequisites & Environment Setup
 
-Copy `.env.example` to `.env` and populate production credentials:
+Copy `.env.example` to `.env` and populate production credentials.
+
+### Option 1A: Native PostgreSQL Primary Cloud Mode (Recommended — Zero Supabase Required)
 
 ```bash
-# Supabase Configuration
-SUPABASE_URL=https://<your-project-ref>.supabase.co
-SUPABASE_ANON_KEY=<your-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+# Primary Native PostgreSQL Configuration (Railway / Managed Postgres / Self-Hosted Postgres)
+DATABASE_URL=postgresql://culinaryos_runtime:<password>@<db-host>:5432/culinaryos
+CULINARYOS_NATIVE_PG=true
+CULINARYOS_AUTO_MIGRATE=true
+DATABASE_MIGRATION_URL=postgresql://postgres:<owner-password>@<db-host>:5432/culinaryos
+CULINARYOS_PIN_LOOKUP_SECRET=<32-plus-char-hmac-secret>
 
-# Direct PostgreSQL URL (Required for migrations/seed)
-DATABASE_URL=postgresql://postgres:<password>@db.<your-project-ref>.supabase.co:5432/postgres
-
-# Tenant Context
-VITE_TENANT_ID=00000000-0000-0000-0000-000000000001
-VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+# SaaS Cloud Bridge Signing Secret (@culinaryos/cloud-bridge-server)
+CULINARYOS_SAAS_SIGNING_SECRET=<16-plus-char-hmac-secret>
 
 # Client Endpoints
 VITE_API_URL=https://api.yourdomain.com
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 CULINARYOS_URL=https://api.yourdomain.com
 
-# Payments (Stripe)
+# Payments (Bring-Your-Own-Stripe Connect Standard)
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Optional AI Agent Layer
+# Optional AI Agent Layer (Off by default)
 ANTHROPIC_API_KEY=sk-ant-api03-...
+```
+
+### Option 1B: Legacy Supabase Configuration (Optional)
+
+```bash
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+VITE_TENANT_ID=00000000-0000-0000-0000-000000000001
+VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
 ---
 
 ## 2. Database Migrations & Initial Tenant Seed
 
-Apply all forward migrations (V1–V14) and seed initial restaurant data:
+Apply forward PostgreSQL migrations (`001_foundation.sql`–`009_native_device_pairing.sql`) using the `@culinaryos/db` migration CLI (or set `CULINARYOS_AUTO_MIGRATE=true` on `@culinaryos/server` to execute `runPostgresMigrations` automatically on boot):
 
 ```bash
+# Apply first-party PostgreSQL migrations via @culinaryos/db
+DATABASE_MIGRATION_URL=postgresql://postgres:<password>@<db-host>:5432/culinaryos pnpm --filter @culinaryos/db tsx src/cli.ts migrate --apply
+
+# Verify runtime role restrictions (culinaryos_app, NOBYPASSRLS, 0 owned tables)
+DATABASE_URL=postgresql://culinaryos_runtime:<password>@<db-host>:5432/culinaryos pnpm --filter @culinaryos/db tsx src/cli.ts check-role
+
 # Seed initial restaurant tenant, dinner menu, and staff PINs
 pnpm seed
 ```
@@ -95,30 +112,32 @@ Deploy individual apps by linking the monorepo root to Vercel and configuring ro
 
 ---
 
-## 5. Deployment Option C: Railway
+## 5. Deployment Option C: Railway (Unified `ShadowWalkerNC/CulinaryOS` Monorepo)
 
-Use separate Railpack services with the repository root as the build context. The current Railway project is `9d7feb1d-d852-4c93-a2a8-75de59bf43a0`. The root `railway.toml` selects the shared Railpack builder; service-specific commands and variables are managed in the dashboard. Railway reads the root file even when the dashboard builder appears to be Railpack: config-as-code overrides are not reflected in the dashboard settings. The former Docker override caused a confirmed `couldn't locate a dockerfile at path Dockerfile in code archive` failure after dependency scanning was fixed.
+All Railway services deploy directly from the unified **`ShadowWalkerNC/CulinaryOS`** monorepo (do not deploy from any separate `CulinaryOS-SaaS` repository). Use separate Railpack services with the repository root as the build context. The current Railway project is `9d7feb1d-d852-4c93-a2a8-75de59bf43a0`. The root `railway.toml` selects the shared Railpack builder; service-specific commands and variables are managed in the dashboard.
 
-| Service | Build command | Start command | Service variable |
-| --- | --- | --- | --- |
-| culinaryos-api | `pnpm --filter @culinaryos/server build` | `pnpm --filter @culinaryos/server start` | `NODE_ENV=production` |
-| culinaryos-web | `pnpm --filter @culinaryos/app-web build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/web/dist` |
-| culinaryos-admin | `pnpm --filter @culinaryos/admin build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist` |
+| Service | Monorepo Package | Build command | Start command | Service variables |
+| --- | --- | --- | --- | --- |
+| `culinaryos-api` | `@culinaryos/server` | `pnpm --filter @culinaryos/server build` | `pnpm --filter @culinaryos/server start` | `NODE_ENV=production`, `CULINARYOS_NATIVE_PG=true`, `DATABASE_URL`, `CULINARYOS_AUTO_MIGRATE=true`, `CULINARYOS_PIN_LOOKUP_SECRET` |
+| `culinaryos-cloud-bridge` | `@culinaryos/cloud-bridge-server` | `pnpm --filter @culinaryos/cloud-bridge-server build` | `pnpm --filter @culinaryos/cloud-bridge-server start` | `NODE_ENV=production`, `DATABASE_URL`, `CULINARYOS_SAAS_SIGNING_SECRET`, `STRIPE_WEBHOOK_SECRET` |
+| `culinaryos-marketing` | `@culinaryos/app-marketing` | `pnpm --filter @culinaryos/app-marketing build` | Leave unset for native SPA/static hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/marketing/out`, `NEXT_PUBLIC_API_URL` |
+| `culinaryos-admin` | `@culinaryos/admin` | `pnpm --filter @culinaryos/admin build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist`, `VITE_API_URL` |
+| `culinaryos-web` | `@culinaryos/app-web` | `pnpm --filter @culinaryos/app-web build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/web/dist`, `VITE_API_URL` |
 
-Railpack installs from the pnpm lockfile before the build command. Web and Admin explicitly build their compiled config package, so they do not depend on outputs from a prior local API build. The API starts TypeScript through its production `tsx` dependency because workspace packages export TypeScript source and the server typecheck does not emit `dist/index.js`.
+Railpack installs from the pnpm lockfile before the build command. Web, Admin, and Marketing explicitly build from the unified monorepo root. The API starts TypeScript through its production `tsx` dependency because workspace packages export TypeScript source.
 
-[Railpack native SPA hosting](https://railpack.com/languages/node) serves static assets with Caddy and supports client-side routes. A custom start command disables SPA mode. Do not use the repository's interactive root `start` command for these services. Set `VITE_API_URL` on each frontend **before building** to the API's public URL. Configure API healthcheck `/health` and frontend healthcheck `/`; API health is currently a process check, not a database readiness check.
+[Railpack native SPA hosting](https://railpack.com/languages/node) serves static assets with Caddy and supports client-side routes. A custom start command disables SPA mode. Do not use the repository's interactive root `start` command for these services. Set `VITE_API_URL` / `NEXT_PUBLIC_API_URL` on each frontend **before building** to the API's public URL. Configure API healthcheck `/health` and readiness `/ready`, and frontend healthcheck `/`.
 
 ### Deployment verification and rollback
 
-1. Run `pnpm install --frozen-lockfile`, then the three build commands above. Both Next apps elsewhere in this monorepo must also have patched dependencies: Railway scans the shared lockfile even when deploying a Vite app.
+1. Run `pnpm install --frozen-lockfile`, then the build commands above from the `ShadowWalkerNC/CulinaryOS` root.
 2. After the reviewed commit is pushed, inspect each service's build/deploy logs and verify the deployed commit. Never bypass Railway's vulnerability scan.
-3. Verify public Web/Admin HTML and nested-route fallback, API `/health`, and configured API calls. A green healthcheck alone does not prove authentication, tenant isolation, payment or database behavior.
+3. Verify public Marketing/Web/Admin HTML and nested-route fallback, API `/health` and `/ready` (`database: "postgres"`), and configured API calls.
 4. Record deployment IDs, commit, and results in [the shared ledger](AI_SHARED_LEDGER.md). Roll back a failed release by restoring the previous service settings and reverting the relevant logical commit; never reset the database as a deployment workaround.
 
-### Database transition status
+### Native PostgreSQL Primary Cloud Mode Status
 
-The user selected **fresh Railway PostgreSQL, replacing Supabase**, with no existing data to migrate. This is a target decision, not an implemented backend. Current code still uses Supabase Auth, data APIs, and realtime, and current migrations reference Supabase roles/functions/publications. A `DATABASE_URL` substitution is insufficient. Do not remove Supabase variables and label the resulting offline/demo behavior production-ready. Complete replacement authentication, restricted runtime database access with tenant RLS tests, query adapters, and realtime delivery before a database cutover.
+Railway PostgreSQL is a first-class production backend for `@culinaryos/server`. When `DATABASE_URL` is configured (or `CULINARYOS_NATIVE_PG=true` is set), `@culinaryos/server` automatically enables Native PostgreSQL mode without requiring `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY`. Setting `CULINARYOS_AUTO_MIGRATE=true` executes pending migrations (`001_foundation.sql`–`009_native_device_pairing.sql`) via `runPostgresMigrations` from `@culinaryos/db` before verifying the restricted `culinaryos_app` runtime role (`NOBYPASSRLS`, 0 owned tables) and opening the HTTP listener.
 
 ---
 

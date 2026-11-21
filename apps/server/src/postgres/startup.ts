@@ -1,6 +1,12 @@
 import { Pool } from 'pg';
-import { assertRuntimeDatabaseRole, type RuntimeDatabaseRoleInfo } from '@culinaryos/db';
+import {
+  assertRuntimeDatabaseRole,
+  runPostgresMigrations,
+  type AppliedMigration,
+  type RuntimeDatabaseRoleInfo,
+} from '@culinaryos/db';
 import { isNativePostgresEnabled, getNativeDatabaseUrl } from './config.js';
+import { isNativePostgresConfigured } from '../lib/secrets.js';
 import { createNativePostgresApp } from './app.js';
 import { createAuthRunner, createTenantRunner } from './transactions.js';
 import type { Hono } from 'hono';
@@ -11,6 +17,7 @@ export interface NativeStartupState {
   roleInfo: RuntimeDatabaseRoleInfo | null;
   nativeApp: Hono<any> | null;
   error: Error | null;
+  appliedMigrations?: AppliedMigration[] | undefined;
 }
 
 let state: NativeStartupState = {
@@ -47,9 +54,15 @@ export function resetNativeStartupState(): void {
  */
 export async function setupNativePostgres(
   _app: Hono<any>,
-  options?: { pool?: Pool; databaseUrl?: string; enabled?: boolean }
+  options?: {
+    pool?: Pool;
+    databaseUrl?: string;
+    enabled?: boolean;
+    autoMigrate?: boolean;
+    migrationsDir?: string;
+  }
 ): Promise<NativeStartupState> {
-  const enabled = options?.enabled ?? isNativePostgresEnabled();
+  const enabled = options?.enabled ?? (isNativePostgresEnabled() || isNativePostgresConfigured());
   if (!enabled) {
     state = { enabled: false, pool: null, roleInfo: null, nativeApp: null, error: null };
     return state;
@@ -71,6 +84,20 @@ export async function setupNativePostgres(
   });
 
   try {
+    let appliedMigrations: AppliedMigration[] | undefined;
+    const shouldAutoMigrate = options?.autoMigrate ?? (process.env.CULINARYOS_AUTO_MIGRATE === 'true');
+    if (shouldAutoMigrate) {
+      const migrationUrl = process.env.DATABASE_MIGRATION_URL;
+      if (migrationUrl && !options?.pool) {
+        appliedMigrations = await runPostgresMigrations(migrationUrl, { dir: options?.migrationsDir });
+      } else {
+        appliedMigrations = await runPostgresMigrations(pool, { dir: options?.migrationsDir });
+      }
+      console.log(
+        `[culinaryos-api] AUTO-MIGRATE: PostgreSQL schema verified (${appliedMigrations.length} migration(s) applied).`
+      );
+    }
+
     const roleInfo = await assertRuntimeDatabaseRole(pool);
 
     console.log(
@@ -84,7 +111,7 @@ export async function setupNativePostgres(
       runAuth: createAuthRunner(pool),
     });
 
-    state = { enabled: true, pool, roleInfo, nativeApp, error: null };
+    state = { enabled: true, pool, roleInfo, nativeApp, error: null, appliedMigrations };
     // The entrypoint dispatcher reads state; do not mutate its Hono router
     // after a request has compiled the matcher (e.g. a readiness probe).
     return state;

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ChefsIntelligenceHub } from '@culinaryos/ui';
 import { AuthProvider } from '@/context/AuthContext';
 import RequireAuth from '@/components/auth/RequireAuth';
 import Layout from '@/components/layout/Layout';
@@ -45,6 +46,9 @@ export default function App() {
           <Route path="prep/history" element={<PrepHistoryPage />} />
           <Route path="vendors"      element={<VendorsPage />} />
           <Route path="shelf-life"   element={<ShelfLifePage />} />
+          {/* Chef's Intelligence (121 Skills) */}
+          <Route path="chefs-intelligence" element={<ChefsIntelligenceHub surface="kitchenkit" />} />
+          <Route path="intelligence" element={<ChefsIntelligenceHub surface="kitchenkit" />} />
           <Route path="*"            element={<NotFoundPage />} />
         </Route>
 

@@ -12,7 +12,7 @@ import {interagencyRoutes} from './routes/interagency.js';
 import { withSupabase }        from './middleware/supabase';
 import { isNativePostgresEnabled } from './postgres/config.js';
 import { checkNativeHealth, getNativeStartupState, setupNativePostgres } from './postgres/startup.js';
-import { assertProductionAuthConfiguration, isAuthRelaxed, isLocalDemoMode, isLiveSupabaseConfigured } from './lib/secrets';
+import { assertProductionAuthConfiguration, isAuthRelaxed, isLocalDemoMode, isLiveSupabaseConfigured, isNativePostgresConfigured } from './lib/secrets';
 import {
   handleIncomingEvent,
   startRealtimeBridge,
@@ -91,7 +91,7 @@ app.use('*', cors({
 app.use('*', async (c, next) => {
   const path = c.req.path;
   const nativeState = getNativeStartupState();
-  if ((isNativePostgresEnabled() || nativeState.enabled) &&
+  if ((isNativePostgresEnabled() || isNativePostgresConfigured() || nativeState.enabled) &&
       (path === '/v1' || path.startsWith('/v1/') || path === '/internal' || path.startsWith('/internal/'))) {
     if (!nativeState.nativeApp) {
       return c.json({ ok: false, error: { code: 'NATIVE_BACKEND_UNAVAILABLE', message: 'PostgreSQL backend is not ready' } }, 503);
@@ -198,7 +198,7 @@ app.get('/health', (c) => c.json({
 }));
 
 app.get('/ready', async (c) => {
-  if (isNativePostgresEnabled()) {
+  if (isNativePostgresEnabled() || isNativePostgresConfigured() || getNativeStartupState().enabled) {
     const health = await checkNativeHealth();
     if (health.ok) {
       return c.json({
@@ -235,7 +235,7 @@ app.get('/ready', async (c) => {
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
-if (!isNativePostgresEnabled()) startRealtimeBridge();
+if (!isNativePostgresEnabled() && !isNativePostgresConfigured()) startRealtimeBridge();
 
 // Auth posture banner — make the server's security mode impossible to miss.
 if (isAuthRelaxed()) {
@@ -248,6 +248,8 @@ if (isAuthRelaxed()) {
     '[culinaryos-api] AUTH MODE: LOCAL DEMO — no live Supabase backend configured; ' +
     'serving mock data only. Demo PINs accepted. Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for live mode.'
   );
+} else if (isNativePostgresEnabled() || isNativePostgresConfigured()) {
+  console.log('[culinaryos-api] AUTH MODE: LIVE (NATIVE POSTGRESQL) — first-party PostgreSQL backend configured, token-derived RLS enforced.');
 } else if (isLiveSupabaseConfigured()) {
   console.log('[culinaryos-api] AUTH MODE: LIVE — Supabase backend configured, full authentication enforced.');
 } else {
@@ -257,7 +259,7 @@ if (isAuthRelaxed()) {
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   (async () => {
     try {
-      if (isNativePostgresEnabled()) {
+      if (isNativePostgresEnabled() || isNativePostgresConfigured() || getNativeStartupState().enabled) {
         await setupNativePostgres(app);
       }
       serve({ fetch: app.fetch, port: PORT, hostname: HOST }, () => {
