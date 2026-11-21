@@ -11,7 +11,7 @@ const RELEASE_VERSION = 'v1.3.1';
 const WINDOWS_INSTALLER_URL =
   'https://github.com/ShadowWalkerNC/CulinaryOS/releases/download/v1.3.1/CulinaryOS-v1.3.1-Windows-x64.zip';
 const WINDOWS_INSTALLER_SHA256 =
-  '2f13f343dc1845babcb0e65abd49856e8fc62f429613312e4613909bbdd18a0a';
+  'bf86464cc6a510bbf3c89b5932b490810f0d05a6e00d3153d2d9a70170c2afa2';
 
 const binaries = [
   {

@@ -474,6 +474,52 @@ struct Envelope {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+struct LegacyStoreStateV1 {
+    pub site_id: Uuid,
+    #[serde(default)]
+    pub setup_completed: bool,
+    #[serde(default)]
+    pub restaurant_name: String,
+    #[serde(default)]
+    pub city_state: String,
+    #[serde(default)]
+    pub concept_preset: String,
+    #[serde(default)]
+    pub tax_rate_bps: i64,
+    #[serde(default)]
+    pub tables_count: u32,
+    pub staff: Vec<StaffMember>,
+    pub menu: BTreeMap<String, MenuItem>,
+    pub orders: BTreeMap<String, OrderRecord>,
+    pub tickets: BTreeMap<String, KitchenTicket>,
+    pub drawer: CashDrawerSession,
+    pub applied_operations: BTreeSet<String>,
+    pub sync_outbox: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub pantry: BTreeMap<String, PantryItemRecord>,
+    #[serde(default)]
+    pub purchase_orders: BTreeMap<String, PurchaseOrderRecord>,
+    #[serde(default)]
+    pub vendors: Vec<VendorRecord>,
+    #[serde(default)]
+    pub talent_applications: Vec<TalentApplicationRecord>,
+    #[serde(default)]
+    pub talent_jobs: Vec<TalentJobRecord>,
+    #[serde(default)]
+    pub waste: Vec<WasteRecord>,
+    #[serde(default)]
+    pub tables: BTreeMap<String, TableRecord>,
+    #[serde(default)]
+    pub tabs: BTreeMap<String, BarTabRecord>,
+    #[serde(default)]
+    pub z_reports: Vec<ZReportSummaryRecord>,
+    #[serde(default)]
+    pub displays: Vec<DisplayRecord>,
+    #[serde(default)]
+    pub settings: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct RawEnvelope {
     sha256: String,
     state: serde_json::Value,
@@ -583,16 +629,20 @@ impl LocalStore {
             let file = File::open(path).map_err(|_| LocalStoreError::Storage)?;
             let raw_env: RawEnvelope = serde_json::from_reader(BufReader::new(file))
                 .map_err(|_| LocalStoreError::Storage)?;
-            let raw_serialized =
-                serde_json::to_vec(&raw_env.state).map_err(|_| LocalStoreError::Storage)?;
-            let raw_digest = hex::encode(Sha256::digest(&raw_serialized));
-            let state: StoreState = serde_json::from_value(raw_env.state)
+            let state: StoreState = serde_json::from_value(raw_env.state.clone())
                 .map_err(|_| LocalStoreError::Storage)?;
             let typed_serialized =
                 serde_json::to_vec(&state).map_err(|_| LocalStoreError::Storage)?;
             let typed_digest = hex::encode(Sha256::digest(&typed_serialized));
-            if typed_digest != raw_env.sha256 && raw_digest != raw_env.sha256 {
-                return Err(LocalStoreError::Storage);
+            if typed_digest != raw_env.sha256 {
+                let legacy_state: LegacyStoreStateV1 = serde_json::from_value(raw_env.state)
+                    .map_err(|_| LocalStoreError::Storage)?;
+                let legacy_serialized =
+                    serde_json::to_vec(&legacy_state).map_err(|_| LocalStoreError::Storage)?;
+                let legacy_digest = hex::encode(Sha256::digest(&legacy_serialized));
+                if legacy_digest != raw_env.sha256 {
+                    return Err(LocalStoreError::Storage);
+                }
             }
             let mut store = Self {
                 path: path.to_path_buf(),
