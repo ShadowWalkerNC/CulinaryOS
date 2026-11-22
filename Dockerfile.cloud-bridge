@@ -3,4 +3,4 @@ WORKDIR /app
 COPY packages/cloud-bridge-server ./packages/cloud-bridge-server
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", "packages/cloud-bridge-server/src/server.mjs"]
+ENTRYPOINT ["node", "packages/cloud-bridge-server/src/server.mjs"]

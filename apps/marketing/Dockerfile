@@ -17,4 +17,4 @@ COPY --from=build /app/apps/marketing/out /app/apps/marketing/out
 COPY --from=build /app/apps/marketing/serve.mjs /app/apps/marketing/serve.mjs
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", "/app/apps/marketing/serve.mjs"]
+ENTRYPOINT ["node", "/app/apps/marketing/serve.mjs"]
