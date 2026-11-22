@@ -17,7 +17,8 @@
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.23.0",
     "@culinaryos/shared": "workspace:*",
-    "@culinaryos/auth": "workspace:*"
+    "@culinaryos/auth": "workspace:*",
+    "lucide-react": "^0.378.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
