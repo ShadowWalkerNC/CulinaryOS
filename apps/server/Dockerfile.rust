@@ -1,0 +1,35 @@
+# Multi-stage production build for CulinaryOS Native Server (Rust / Axum)
+FROM rust:1.85-slim AS builder
+
+WORKDIR /usr/src/culinaryos
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy Rust workspace definition and native packages
+COPY Cargo.toml Cargo.lock ./
+COPY packages/native/ ./packages/native/
+COPY packages/hardware/ ./packages/hardware/
+COPY apps/desktop/src-tauri/ ./apps/desktop/src-tauri/
+
+# Build release binary for culinaryos-server
+RUN cargo build --release -p culinaryos-native --bin culinaryos-server
+
+# Runtime Stage
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y ca-certificates libssl3 && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /usr/src/culinaryos/target/release/culinaryos-server /usr/local/bin/culinaryos-server
+
+ENV PORT=3000
+ENV HOST=0.0.0.0
+ENV CULINARYOS_DATA_DIR=/app/data
+
+RUN mkdir -p /app/data
+
+EXPOSE 3000
+
+CMD ["culinaryos-server"]

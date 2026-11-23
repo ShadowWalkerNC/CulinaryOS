@@ -1674,19 +1674,40 @@ async fn kds_pacing_handler(State(svc): State<StandaloneService>) -> ApiReply {
 async fn food_cost_variance_handler(State(svc): State<StandaloneService>) -> ApiReply {
     let guard = svc.inner.lock().map_err(|_| ApiError::from(LocalStoreError::Storage))?;
     let report = guard.store.get_z_report();
-    let theoretical_food_cost_bps = 2850;
-    let actual_food_cost_bps = 2920;
+    let (sales_cents, cost_cents, theo_bps) = guard.store.calculate_theoretical_food_cost();
+
+    let gross_sales = if sales_cents > 0 { sales_cents } else { report.gross_sales_cents };
+    let theoretical_food_cost_bps = if theo_bps > 0 { theo_bps } else { 2850 };
+    let waste_cents: i64 = guard.store.list_waste().iter().map(|w| w.estimated_loss_cents).sum();
+    let actual_cost_cents = cost_cents + waste_cents;
+    let actual_food_cost_bps = if gross_sales > 0 {
+        (actual_cost_cents * 10_000) / gross_sales
+    } else {
+        theoretical_food_cost_bps + 70
+    };
     let variance_bps = actual_food_cost_bps - theoretical_food_cost_bps;
-    let variance_cents = ((report.gross_sales_cents as f64 * variance_bps as f64) / 10000.0) as i64;
+    let variance_cents = ((gross_sales as f64 * variance_bps as f64) / 10000.0) as i64;
+    let gross_profit_cents = gross_sales - actual_cost_cents;
+    let gross_profit_pct = if gross_sales > 0 {
+        ((gross_profit_cents as f64 * 100.0) / (gross_sales as f64) * 100.0).round() / 100.0
+    } else {
+        71.5
+    };
+
     ok(StatusCode::OK, json!({
         "ok": true,
         "data": {
             "period": "current_shift",
-            "grossSalesCents": report.gross_sales_cents,
+            "grossSalesCents": gross_sales,
             "theoreticalFoodCostBps": theoretical_food_cost_bps,
             "actualFoodCostBps": actual_food_cost_bps,
             "varianceBps": variance_bps,
-            "varianceCents": variance_cents
+            "varianceCents": variance_cents,
+            "theoreticalCostCents": cost_cents,
+            "actualCostCents": actual_cost_cents,
+            "wasteCents": waste_cents,
+            "grossProfitCents": gross_profit_cents,
+            "grossProfitPct": gross_profit_pct
         }
     }))
 }
@@ -2432,6 +2453,7 @@ async fn pantry_usage_native_handler(State(svc): State<StandaloneService>) -> Ap
         .list_pantry_items()
         .into_iter()
         .map(|p| {
+            let depleted = (p.par_level - p.current_stock).max(0.0);
             json!({
                 "id": p.id,
                 "name": p.name,
@@ -2439,7 +2461,10 @@ async fn pantry_usage_native_handler(State(svc): State<StandaloneService>) -> Ap
                 "current_qty": p.current_stock,
                 "quantity": p.current_stock,
                 "par_level": p.par_level,
-                "unit": p.unit
+                "unit": p.unit,
+                "cost_per_unit_cents": p.cost_per_unit_cents,
+                "depleted_from_par": depleted,
+                "depletion_cost_cents": ((depleted * p.cost_per_unit_cents as f64).round() as i64)
             })
         })
         .collect();

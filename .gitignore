@@ -53,6 +53,7 @@ test_output.log
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 .agents/
+.agent-center-data/
 Microsoft/
 *.tmp.mjs
 

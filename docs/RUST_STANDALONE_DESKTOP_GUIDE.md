@@ -1,7 +1,6 @@
 # CulinaryOS — Native Rust Standalone Desktop & Local Server Guide
 
 > **Public Open-Source Repository:** [`ShadowWalkerNC/CulinaryOS`](https://github.com/ShadowWalkerNC/CulinaryOS)
-> **Commercial SaaS Cloud Bridge Repository (Private):** [`ShadowWalkerNC/CulinaryOS-SaaS`](https://github.com/ShadowWalkerNC/CulinaryOS-SaaS)
 
 ---
 
@@ -9,14 +8,15 @@
 
 CulinaryOS is unified into a root **Rust Cargo Workspace** ([`Cargo.toml`](../Cargo.toml)) compiled with `#![forbid(unsafe_code)]`.
 
-Every restaurant—whether running the **Free Open-Source Community Edition** or subscribing to **CulinaryOS SaaS**—installs and runs the native Rust binaries locally on-premise so that Point-of-Sale (POS), Kitchen Display Systems (KDS), ESC/POS thermal/impact printers, and 24V cash drawers operate at sub-millisecond LAN speed with zero internet dependency.
+Every restaurant—whether running the **Free Open-Source Community Edition** or subscribing to **CulinaryOS SaaS**—can run the native Rust binaries locally on-premise so that Point-of-Sale (POS), Kitchen Display Systems (KDS), ESC/POS thermal/impact printers, and 24V cash drawers operate at sub-millisecond LAN speed with zero Node/cloud dependency.
 
 ### Workspace Crates & Binaries
 
 | Binary / Crate | Path | Description |
 |---|---|---|
+| `culinaryos-server` | [`packages/native/src/bin/culinaryos-server.rs`](../packages/native/src/bin/culinaryos-server.rs) | **Headless Unified Server:** Full-stack Axum REST engine replacing Node/Hono. Powers both Cloud SaaS (Postgres via SQLx) and on-premise LAN (SQLite zero-dependency). Serves SPAs when built. |
 | `culinaryos-desktop` | [`apps/desktop/src-tauri`](../apps/desktop/src-tauri) | Standalone restaurant workstation executable (`culinaryos-desktop.exe`). Auto-provisions the zero-config embedded database (`%APPDATA%/CulinaryOS/culinaryos.db` or `~/.local/share/culinaryos/culinaryos.db`), binds the local Axum HTTP/UI server (`127.0.0.1:3000`), and launches the workstation shell. |
-| `culinaryos-site` (`culinaryos-native`) | [`packages/native`](../packages/native) | Local LAN server & SaaS Cloud Bridge node (`culinaryos-site.exe`). Supports Dual-Engine storage: Embedded Local Store out-of-the-box or PostgreSQL `001-009` when `DATABASE_URL` is configured. |
+| `culinaryos-site` | [`packages/native/src/bin/culinaryos-site.rs`](../packages/native/src/bin/culinaryos-site.rs) | Local LAN server & SaaS Cloud Bridge node (`culinaryos-site.exe`) with mutual TLS enforcement. |
 | `culinaryos-edge-daemon` | [`packages/hardware/daemon`](../packages/hardware/daemon) | Direct TCP (`:9100`) and USB ESC/POS receipt printer spooler and RJ11/RJ12 cash drawer pulse daemon (`culinaryos-edge-daemon.exe`). |
 
 ---
@@ -30,11 +30,11 @@ cargo test --workspace
 # 2. Run the standalone desktop binary self-test (verifies embedded DB + HTTP + SaaS bridge readiness)
 cargo run --bin culinaryos-desktop -- --self-test
 
-# 3. Launch the standalone desktop workstation on port 3000
-cargo run --release --bin culinaryos-desktop -- --port 3000
+# 3. Launch the headless unified Axum server on port 3000
+cargo run --release --bin culinaryos-server -p culinaryos-native
 
-# 4. Run the headless local LAN site server (Dual-Engine: Embedded DB or DATABASE_URL Postgres)
-cargo run --release --bin culinaryos-site
+# 4. Launch the standalone desktop workstation with embedded webview
+cargo run --release --bin culinaryos-desktop -- --port 3000
 
 # 5. Run the ESC/POS hardware printer & cash drawer daemon
 cargo run --release --bin culinaryos-edge-daemon
@@ -48,7 +48,7 @@ cargo run --release --bin culinaryos-edge-daemon
    - Implemented in [`packages/native/src/local_store.rs`](../packages/native/src/local_store.rs).
    - Stores state in a crash-safe, SHA-256 checksum-verified envelope (`NamedTempFile` atomic rename) with starter menu items, default staff PINs (`1234` Owner / `5678` Server), POS orders, station-routed KDS tickets (`grill`, `fry`, `salad`, `expo`), idempotent cash payments, cash drawer shift closeouts, and outbound SaaS Cloud Bridge event outbox queues.
 2. **PostgreSQL Production / Multi-Terminal Mode (`DATABASE_URL` Set):**
-   - Automatically applies SQL migrations `001_site_enrollment.sql` through `009_audit_hardening.sql` in [`packages/native/migrations/`](../packages/native/migrations/).
+   - Automatically applies SQL migrations in [`packages/native/migrations/`](../packages/native/migrations/) and Supabase `V1-V17`.
    - Enforces device pairing (`device_pairing_sessions`, `enrolled_devices`), durable command idempotency (`processed_device_operations`), and append-only audit logs.
 
 ---
@@ -60,7 +60,7 @@ cargo run --release --bin culinaryos-edge-daemon
 | `GET /` | Embedded Native Rust Workstation HTML UI (POS + KDS + Cloud Bridge HUD) |
 | `GET /health` & `GET /ready` | Liveness and readiness probes (`mode`, `siteId`, `cloudBridge`) |
 | `POST /v1/auth/pin-login` | Staff PIN authentication (`1234` Owner, `5678` Server) |
-| `GET /v1/menu` | Active restaurant menu items (prices in integer cents) |
+| `GET /v1/menu` & `GET /v1/menu/items` | Active restaurant menu items (prices in integer cents) |
 | `GET /v1/orders` & `POST /v1/orders` | List or create dining room / counter / online orders in integer cents |
 | `POST /v1/orders/{id}/send` | Fire order to kitchen stations and generate KDS tickets |
 | `GET /v1/kds/tickets` | List active or bumped KDS tickets (filterable by `?station=`) |
@@ -84,26 +84,3 @@ While the standalone Rust application is 100% functional offline forever, subscr
 - `ai_autopilot` — Predictive prep scaling, waste forecasting & 86 countdowns
 - `multi_unit_commissary` — Multi-location commissary transfer orders & enterprise rollups
 - `managed_stripe_connect` — Bring-Your-Own-Stripe Connect Standard (SAQ-A compliant)
-
-```bash
-# Connect your local Rust node to CulinaryOS SaaS
-curl -X POST http://127.0.0.1:3000/v1/cloud/connect \
-  -H "Content-Type: application/json" \
-  -d '{
-    "signedGrant": {
-      "payload": {
-        "grantId": "grant-001",
-        "customerId": "cust-alley-katz",
-        "siteId": "00000000-0000-0000-0000-000000000001",
-        "planTier": "saas_pro",
-        "addons": ["ai_autopilot", "cloud_storage_sync", "managed_stripe_connect", "online_ordering_bridge"],
-        "cloudEndpoint": "https://culinaryos-api.up.railway.app",
-        "issuedAtUnix": 1763220000,
-        "expiresAtUnix": 1765812000,
-        "offlineGraceSeconds": 86400
-      },
-      "signatureHex": "<hmac-sha256-signature>"
-    },
-    "nowUnix": 1763220100
-  }'
-```

@@ -534,6 +534,44 @@ fn pin_digest(site_id: Uuid, pin: &str) -> String {
     hex::encode(Sha256::digest(format!("{site_id}:{pin}").as_bytes()))
 }
 
+pub fn recipe_for_menu_item(menu_item_id: &str) -> Vec<(&'static str, f64)> {
+    let key = menu_item_id.strip_prefix("item-").unwrap_or(menu_item_id);
+    match key {
+        "margherita" | "diavola" => vec![
+            ("pantry-flour", 0.25),
+            ("pantry-tomatoes", 0.5),
+            ("pantry-burrata", 1.0),
+        ],
+        "ribeye" => vec![("pantry-ribeye", 1.0)],
+        "smashburger" => vec![("pantry-wagyu", 1.0)],
+        "halibut" => vec![("pantry-halibut", 1.0)],
+        "caesar" => vec![("pantry-gem", 1.0)],
+        "burrata" => vec![("pantry-burrata", 1.0), ("pantry-tomatoes", 0.5)],
+        "negroni" => vec![("pantry-gin", 0.1)],
+        "tacos-birria" | "birria" => vec![("pantry-tomatoes", 0.25)],
+        "carnitas-bowl" | "carnitas" => vec![("pantry-gem", 0.5)],
+        "guac-chips" | "guac" => vec![("pantry-gem", 0.5)],
+        "horchata" => vec![("pantry-flour", 0.1)],
+        _ => {
+            if key.contains("margherita") || key.contains("pizza") || key.contains("diavola") {
+                vec![("pantry-flour", 0.25), ("pantry-tomatoes", 0.5), ("pantry-burrata", 1.0)]
+            } else if key.contains("ribeye") || key.contains("steak") {
+                vec![("pantry-ribeye", 1.0)]
+            } else if key.contains("burger") || key.contains("wagyu") {
+                vec![("pantry-wagyu", 1.0)]
+            } else if key.contains("halibut") || key.contains("fish") {
+                vec![("pantry-halibut", 1.0)]
+            } else if key.contains("caesar") || key.contains("salad") {
+                vec![("pantry-gem", 1.0)]
+            } else if key.contains("negroni") || key.contains("drink") || key.contains("gin") {
+                vec![("pantry-gin", 0.1)]
+            } else {
+                vec![]
+            }
+        }
+    }
+}
+
 impl LocalStore {
     pub fn default_state(default_site_id: Uuid) -> StoreState {
         let owner_id = Uuid::from_u128(1);
@@ -871,11 +909,26 @@ impl LocalStore {
                 "Cannot send empty order to kitchen",
             ));
         }
+        let was_already_sent = order.status == OrderStatus::Sent;
         order.status = OrderStatus::Sent;
         let table = order.table_number.clone();
+        let order_items = order.items.clone();
+
+        // Deplete recipe pantry inventory once per order lifecycle
+        if !was_already_sent {
+            for item in &order_items {
+                let recipe = recipe_for_menu_item(&item.menu_item_id);
+                for (pantry_id, qty_per_serving) in recipe {
+                    let total_qty = qty_per_serving * (item.quantity as f64);
+                    if let Some(pantry_item) = self.state.pantry.get_mut(pantry_id) {
+                        pantry_item.current_stock = (pantry_item.current_stock - total_qty).max(0.0);
+                    }
+                }
+            }
+        }
 
         let mut by_station: BTreeMap<String, Vec<OrderLineItem>> = BTreeMap::new();
-        for item in &order.items {
+        for item in &order_items {
             by_station
                 .entry(item.station.clone())
                 .or_default()
@@ -898,6 +951,36 @@ impl LocalStore {
         }
         self.save()?;
         Ok(created)
+    }
+
+    pub fn calculate_theoretical_food_cost(&self) -> (i64, i64, i64) {
+        let mut total_sales_cents: i64 = 0;
+        let mut total_ingredient_cost_cents: i64 = 0;
+
+        for order in self.state.orders.values() {
+            if order.status == OrderStatus::Sent || order.status == OrderStatus::Paid {
+                total_sales_cents += order.total_cents;
+                for item in &order.items {
+                    let recipe = recipe_for_menu_item(&item.menu_item_id);
+                    let mut dish_cost_cents: i64 = 0;
+                    for (pantry_id, qty) in recipe {
+                        if let Some(pantry_item) = self.state.pantry.get(pantry_id) {
+                            let item_cost = ((pantry_item.cost_per_unit_cents as f64) * qty).round() as i64;
+                            dish_cost_cents += item_cost;
+                        }
+                    }
+                    total_ingredient_cost_cents += dish_cost_cents * (item.quantity as i64);
+                }
+            }
+        }
+
+        let food_cost_bps = if total_sales_cents > 0 {
+            (total_ingredient_cost_cents * 10_000) / total_sales_cents
+        } else {
+            0
+        };
+
+        (total_sales_cents, total_ingredient_cost_cents, food_cost_bps)
     }
 
     pub fn list_tickets(&self, station: Option<&str>) -> Vec<KitchenTicket> {
@@ -2451,5 +2534,55 @@ mod tests {
                 + report_full_wage.allocations[2].allocated_cents,
             10_001
         );
+    }
+
+    #[test]
+    fn test_order_kitchen_send_depletes_pantry_inventory_and_is_idempotent() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("test_pantry_deplete.db");
+        let site_id = Uuid::from_u128(99);
+        let mut store = LocalStore::open_or_init(&db_path, site_id).unwrap();
+
+        let initial_flour = store.state.pantry.get("pantry-flour").unwrap().current_stock;
+        let initial_tomatoes = store.state.pantry.get("pantry-tomatoes").unwrap().current_stock;
+        let initial_burrata = store.state.pantry.get("pantry-burrata").unwrap().current_stock;
+        let initial_ribeye = store.state.pantry.get("pantry-ribeye").unwrap().current_stock;
+
+        // Create an order with 2x Margherita and 1x Ribeye
+        let items = vec![
+            ("item-margherita".to_string(), 2, 1, 1),
+            ("item-ribeye".to_string(), 1, 2, 1),
+        ];
+        let order = store.create_order(None, "T-1".to_string(), items).unwrap();
+
+        // Send order to kitchen
+        let tickets = store.send_order_to_kitchen(&order.id).unwrap();
+        assert_eq!(tickets.len(), 2); // hot and grill stations
+
+        // Verify recipe ingredient deductions:
+        // 2x Margherita -> 2 * 0.25kg flour = 0.5kg; 2 * 0.5 cans = 1.0 cans; 2 * 1.0 burrata = 2.0 pcs
+        // 1x Ribeye -> 1 * 1.0 lbs ribeye = 1.0 lbs
+        let after_flour = store.state.pantry.get("pantry-flour").unwrap().current_stock;
+        let after_tomatoes = store.state.pantry.get("pantry-tomatoes").unwrap().current_stock;
+        let after_burrata = store.state.pantry.get("pantry-burrata").unwrap().current_stock;
+        let after_ribeye = store.state.pantry.get("pantry-ribeye").unwrap().current_stock;
+
+        assert!((after_flour - (initial_flour - 0.5)).abs() < 1e-6);
+        assert!((after_tomatoes - (initial_tomatoes - 1.0)).abs() < 1e-6);
+        assert!((after_burrata - (initial_burrata - 2.0)).abs() < 1e-6);
+        assert!((after_ribeye - (initial_ribeye - 1.0)).abs() < 1e-6);
+
+        // Idempotency: Re-sending the same order must NOT deplete again
+        let _ = store.send_order_to_kitchen(&order.id).unwrap();
+        let second_flour = store.state.pantry.get("pantry-flour").unwrap().current_stock;
+        let second_ribeye = store.state.pantry.get("pantry-ribeye").unwrap().current_stock;
+        assert_eq!(second_flour, after_flour);
+        assert_eq!(second_ribeye, after_ribeye);
+
+        // Theoretical food cost check
+        let (sales, cost, bps) = store.calculate_theoretical_food_cost();
+        assert_eq!(sales, 8877); // 8200 cents subtotal + 677 cents tax (8.25%)
+        assert!(cost > 0);
+        assert!(bps > 0 && bps < 10000);
     }
 }

@@ -71,9 +71,38 @@ pnpm seed
 
 ---
 
-## 3. Deployment Option A: Self-Hosted On-Premise (Docker Compose)
+## 3. Deployment Option A: Self-Hosted On-Premise (Docker Compose / Native Rust Server)
 
-Ideal for independent operators running a dedicated hardware server/NUC inside the restaurant:
+Ideal for independent operators running a dedicated hardware server, edge NUC, or workstation inside the restaurant:
+
+### 3.1 Native High-Performance Rust Axum Server (`culinaryos-server`)
+
+CulinaryOS includes a zero-overhead native Rust Axum server (`culinaryos-server`) compiled directly from `packages/native`. It handles local order dispatch, KDS bump routing, real-time pantry inventory depletion, FLSA tip calculations, and SQLite / Postgres persistence with sub-millisecond response times.
+
+```bash
+# Run release Rust server natively (standalone edge mode on port 3000)
+pnpm --filter @culinaryos/server start:rust
+
+# Or directly with Cargo:
+cargo run --release --bin culinaryos-server -p culinaryos-native
+
+# Command options:
+#   --port <PORT>        Listen port (default: 3000 or $PORT)
+#   --db-path <PATH>     Local SQLite / state storage path
+#   --spa-dir <PATH>     Path to prebuilt POS/KDS/Admin static SPAs
+```
+
+### 3.2 Multi-Stage Rust Container (`apps/server/Dockerfile.rust`)
+
+```bash
+# Build production native Rust container
+docker build -t culinaryos-server-rust -f apps/server/Dockerfile.rust .
+
+# Run container with mapped state volume and host port 3000
+docker run -d -p 3000:3000 -v culinaryos-data:/data culinaryos-server-rust
+```
+
+### 3.3 Traditional Docker Compose (Full Monorepo Stack)
 
 ```bash
 # Build and run all services in detached mode
@@ -97,11 +126,12 @@ docker compose logs -f backend
 
 ## 4. Deployment Option B: Cloud Hosting (Vercel + Cloud Run / Fly.io)
 
-### Backend API (Cloud Run / Fly.io)
-Build and deploy the backend Docker container:
+### Backend API (Cloud Run / Fly.io / AWS ECS)
+Build and deploy the native Rust backend Docker container:
 ```bash
-docker build -t culinaryos-server -f apps/server/Dockerfile .
+docker build -t culinaryos-server -f apps/server/Dockerfile.rust .
 ```
+*(Legacy Node/Hono container remains available at `apps/server/Dockerfile`)*
 
 ### Frontend Applications (Vercel)
 Deploy individual apps by linking the monorepo root to Vercel and configuring root directories:

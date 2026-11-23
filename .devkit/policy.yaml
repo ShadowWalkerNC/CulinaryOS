@@ -22,6 +22,14 @@ commands:
     - opencode
     - armada
     - cursor
+    - hc
+    - muse
+    - codex
+    - agy
+    - playwright
+    - npx
+    - culinaryos-server
+    - culinaryos-server.exe
 secrets:
   canary_detection: true
   strip_env_in_logs: true

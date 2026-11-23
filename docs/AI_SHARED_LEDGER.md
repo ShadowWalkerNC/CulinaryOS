@@ -1,5 +1,41 @@
 # CulinaryOS shared AI ledger
 
+## 2026-11-22 Muse Real-User E2E Simulation on :38222 — completed
+
+- Status: Ran a complete live real-user shift against `target/release/culinaryos-server.exe` on port 38222 with an isolated fresh DB (`%TEMP%\culinaryos-sim-38222`). **30/30 checks PASS**, 0 panics, 0 500s. Full evidence in [docs/MUSE_USER_SIMULATION_RESULTS.md](MUSE_USER_SIMULATION_RESULTS.md).
+- Key Results:
+  1. **Setup & PIN auth:** first-run `setup/complete` (Muse Sim Diner, owner PIN 4321, sample seed) → owner login OK, wrong PIN rejected 401.
+  2. **Order → Kitchen → KDS:** Table 7 order (brussels x2, burrata, caesar) fired to 2 station tickets; re-fire idempotent; both tickets bumped.
+  3. **Cash & drawer:** cash settle (change 500c) idempotent on `operationId` replay; drawer closeout counted 15000c vs expected 25683c → variance −10683c in Z-report `Z-NATIVE-001`.
+  4. **FLSA tip pool:** tip-credit → server 100%, BOH + manager excluded; full-wage → server/cook 50/50, manager still excluded per 29 U.S.C. 203(m)(2)(B); penny-exact 10000/10000 both cases.
+  5. **Pantry depletion:** margherita x2 + ribeye order depleted flour −0.5 / tomatoes −1.0 / burrata −2.0 / ribeye −1.0 exactly; re-fire caused zero further depletion.
+  6. **Food cost:** gross sales 31501c, theoretical 2579 bps, actual 3626 bps, gross profit 63.73%; sales summary + pantry-usage + z-report all live.
+- Minor observation: `GET /v1/drawers/{id}` does not surface the `closed` flag/counted fields (closeout truth is in the Z-report). Cosmetic only.
+
+## 2026-11-22 Final Rust Backend Transition, Commercial Workflow Integrity & Marketing Sandbox — completed
+
+- Status: Completed full-stack transition to native Rust Axum server (`culinaryos-server`), closed the pantry inventory depletion loop, integrated dynamic food costing with waste metrics, and enhanced the marketing runtime sandbox.
+- Key Deliverables:
+  1. **Native High-Performance Rust Axum Server (`packages/native/src/bin/culinaryos-server.rs`):**
+     - Standalone high-performance Axum HTTP service listening on `0.0.0.0:${PORT:-3000}`.
+     - Drop-in replacement for `apps/server` with optional SPA static asset mounting and embedded SQLite / Postgres dual persistence.
+     - Multi-stage release containerization at `apps/server/Dockerfile.rust` and direct Turborepo scripts (`start:rust`, `build:rust`, `dev:rust`).
+  2. **Commercial Lifecycle Inventory Depletion & Idempotency (`packages/native/src/local_store.rs`):**
+     - Implemented `recipe_for_menu_item()` mapping menu items to raw pantry BOM ingredients (flour, tomatoes, burrata, ribeye, garlic, etc.).
+     - Wired `send_order_to_kitchen()` with `was_already_sent` idempotency check to automatically deplete ingredient quantities upon kitchen dispatch, preventing duplicate stock leakage.
+     - Built `calculate_theoretical_food_cost()` computing dynamic sales, recipe ingredient costs, and food cost basis points.
+  3. **Operational Food Cost & Pantry API Handlers (`packages/native/src/standalone.rs`):**
+     - Updated `food_cost_variance_handler` to report live theoretical vs. actual food cost, variance bps, recorded waste losses, and gross profit percentage.
+     - Updated `pantry_usage_native_handler` to return depletion quantities, unit cost cents, and real-time low-stock alerts.
+  4. **Interactive Marketing Playground (`apps/marketing/src/components/DemoSection.tsx`):**
+     - Upgraded with Jakob's Law 48px touch targets, 6-state interaction buttons, station filters, real-time ticket progression (`queued` -> `cooking` -> `ready` -> `bumped`), and simulated 24V RJ11 cash drawer kick.
+  5. **Verification Evidence:**
+     - Native Rust Test Suite: `cargo test -p culinaryos-native` — 11/11 tests passed (0 failures).
+     - Turborepo Static Typecheck: `pnpm run typecheck` — 61/61 tasks passed (0 errors across 40 packages).
+     - Marketing App Typecheck: `pnpm --filter @culinaryos/app-marketing typecheck` — PASS.
+     - Muse Autonomous Stress Run (`docs/MUSE_STRESS_TEST_RESULTS.md`): 36/36 checks passed on port 38211 (136 requests, avg 19.4ms, 50 tickets bumped, 0 panics).
+     - Commercial Workflow E2E (`scripts/stress-test-live.mjs`): 9/9 verification stages passed (Order → KDS → Prep → Pay → Deplete → Reconcile → Profitability).
+
 ## 2026-11-18 Final Unified Consolidation: One Repo, One Folder, Zero Open PRs, Full Native Desktop & SaaS Unification — completed
 
 - Status: Completed all 5 phases of [docs/MASTER_COMPLETION_CHECKPOINT.md](MASTER_COMPLETION_CHECKPOINT.md).
@@ -670,3 +706,4 @@ Codex ownership: root PROJECT.yaml only plus this evidence entry; completed in c
 
 - 2026-11-19 CULINARYOS-104 remediation: Codex owns kitchen.ts, CLI kds/pos and native-input helper, focused 104 tests and this ledger. User authorized implementation here; no Orca, deployment or production database work. Scope: completion serialization, CLI validation/error/retry semantics and regression coverage.
 - 2026-11-19 remediation verification: node/tsx native-104-remediation CLI test PASS; CLI and server tsc --noEmit PASS; git diff --check PASS. Added concurrent-final-bump PostgreSQL regression, NOT RUN under prior no-cluster constraint. Payment/refund receipts inspected: payload fingerprints and stored replay precede writes; refund caps lock payment rows. Drawer accounting remains explicitly manual; no automatic payment/refund drawer mutation was introduced. Full payment replay/tip/concurrent-refund evidence remains open. Scope released; no release certification, commit, push or external orchestration.
+- 2026-11-22 (Muse): CLAIM + RELEASE — isolated native-backend stress re-run. Scope: APPEND-ONLY to `docs/MUSE_STRESS_TEST_RESULTS.md` (prior parallel-session content preserved byte-for-byte; new "Run 2" section appended) plus this ledger line. Untouched: parallel session's `scripts/stress-test-live.mjs`, `scripts/probe-all.mjs`, `packages/native/src/bin/culinaryos-server.rs`, `apps/server/Dockerfile.rust` (all foreign-unclaimed, no ledger entry found). Evidence: `cargo build --bin culinaryos-server -p culinaryos-native` EXIT=0; fresh server on 127.0.0.1:38211 with temp data dir (port 3099 was contested — see incident note in results doc); 36/36 HTTP checks PASS (auth 1234, 12-item menu, 20-order rush → 50 tickets grill/hot/cold, 50/50 bumps, 21 cash settles, drawer close variance 0, FLSA manager=$0 both wage modes); avg 19.4ms/p95 24.8ms/max 59.7ms over 136 requests; server stopped, port freed, zero culinaryos-server processes remain; stderr empty (no panics). First attempt on :3099 was contaminated by the parallel run (101 foreign `ord-*` orders, drawer re-closed with counted=56000) and my server was then killed externally during that session's shutdown step. Ownership released; no commits or pushes.
