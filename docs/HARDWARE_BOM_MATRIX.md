@@ -1,8 +1,10 @@
 # CulinaryOS — Hardware Bill of Materials (BOM) & Device Matrix (v1.0)
 
+> **2026-11-24 planning clarification:** The [hospitality blueprint](HOSPITALITY_BLUEPRINT.md), [device catalog](HARDWARE_PRODUCT_CATALOG.md), [compliance policy](HARDWARE_COMPLIANCE.md) and [economics](HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
 > **Standard:** Stage 7 Hardware Certification  
-> **Status:** Production Reference Architecture  
-> **Target:** Blessed Kit v1 ($440 Total Hardware vs Toast $799–$999/terminal)
+> **Status:** Candidate Reference Architecture — physical acceptance pending  
+> **Target:** Candidate Kit v1 (historical cost assumptions below)
 
 ---
 
@@ -14,9 +16,9 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 
 ---
 
-## 2. Blessed Kit v1 (Certified Production Stack)
+## 2. Blessed Kit v1 (Candidate Production Stack)
 
-| Role | Certified Device Class | Recommended Model | Approx. Cost | Communication Protocols |
+| Role | Candidate Device Class | Recommended Model | Approx. Cost | Communication Protocols |
 |---|---|---|---|---|
 | **FOH Receipt Printer** | 80mm Thermal Receipt Printer | **Star Micronics TSP143IV** (or Epson TM-m30) | $289 – $310 | ESC/POS, StarPRNT, LAN, WLAN, USB-C, CloudPRNT |
 | **BOH Kitchen Printer** | 3" Impact Dot-Matrix Kitchen Printer | **Star Micronics SP742** (or Epson TM-U220B) | $235 – $320 | Impact Ribbon (Red/Black), ESC/POS Emulation, Ethernet (LAN) |
@@ -24,7 +26,7 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 | **Payment Terminal** | Card-Present EMV / NFC Reader | **Stripe WisePOS E** (or Stripe S700 Handheld) | $249 – $349 | Stripe Terminal SDK, Wi-Fi / Ethernet Dock, Offline Mode |
 | **Terminal Tablet** | Commercial Touchscreen Tablet | **10.2" iPad (9th/10th Gen)** or Galaxy Tab A9+ | $249 – $329 | Web POS (Chrome / Safari / PWA), VESA Counter Stand |
 
-**Total Blessed Kit Hardware Cost:** **$878 – $1,093 complete FOH + BOH station**  
+**Total Blessed Kit Hardware Cost:** **$1,117 – $1,433 complete FOH + BOH station (sum of listed ranges)**  
 *(Single FOH countertop station = Tablet $250 + Thermal Printer $290 + Cash Drawer $95 + WisePOS E $249 = **$884 total** with dual printers, or **$634** without kitchen impact printer).*
 
 ---
