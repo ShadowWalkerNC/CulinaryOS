@@ -2,9 +2,9 @@
 
 > **2026-11-24 planning clarification:** The [hospitality blueprint](HOSPITALITY_BLUEPRINT.md), [device catalog](HARDWARE_PRODUCT_CATALOG.md), [compliance policy](HARDWARE_COMPLIANCE.md) and [economics](HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
 
-Date: 2026-10-02. Status: planned; physical compatibility and combined runtime acceptance NOT RUN.
+Date: 2026-10-02. Status: historical restaurant appliance proposal. For current Rust site-server work, start with the [native platform plan](NATIVE_PLATFORM_PLAN.md) and [native execution report](NATIVE_EXECUTION_REPORT.md). See [product status](PRODUCT_STATUS.md) for evidence and release gates.
 
-## Objective and scope
+## Original appliance objective and scope
 
 Deliver a supported restaurant appliance: Raspberry Pi 5 reference hub, existing TypeScript/PWA POS and KDS, local Hono/PostgreSQL, bounded Rust hardware service, and controlled cloud synchronization. This answers R8/P7 hardware and recovery requirements and extends the existing full-service split-check/coursing pilot. No application rewrite or custom payment hardware. Planning does not authorize purchases or certify devices.
 

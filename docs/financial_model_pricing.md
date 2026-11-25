@@ -1,5 +1,7 @@
 # 💸 CulinaryOS Financial Model & SaaS Pricing Benchmark
 
+> Internal planning assumptions. Proposed prices and competitor estimates are historical inputs. See [product status](PRODUCT_STATUS.md) for availability.
+
 This document establishes the commercial economics, competitive benchmarking against legacy incumbents (Toast, Square, Clover), Stripe Connect Standard monetization architecture, and unit economics for CulinaryOS.
 
 ---

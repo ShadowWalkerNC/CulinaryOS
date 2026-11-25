@@ -2,21 +2,17 @@
 
 > **2026-11-24 planning clarification:** The [hospitality blueprint](HOSPITALITY_BLUEPRINT.md), [device catalog](HARDWARE_PRODUCT_CATALOG.md), [compliance policy](HARDWARE_COMPLIANCE.md) and [economics](HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
 
-> **Standard:** Stage 7 Hardware Certification  
-> **Status:** Candidate Reference Architecture — physical acceptance pending  
+> **Standard:** CulinaryOS hardware acceptance target
+> **Status:** Candidate Reference Architecture — physical acceptance pending
 > **Target:** Candidate Kit v1 (historical cost assumptions below)
 
 ---
 
-## 1. Executive Summary & Competitive Positioning
+## 1. Sourcing approach
 
-Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary hardware locks and high upfront terminal markups:
-- **Toast Incumbent Math:** ~$799 to $999 per primary terminal upfront, mandatory proprietary locked Android tablets, plus ~$69/month per terminal SaaS fee and closed processing rates (2.49%–2.99% + $0.15).
-- **CulinaryOS Positioning:** Standard commercial open hardware speaking universal ESC/POS over LAN/Wi-Fi/USB-C. Restaurants own their hardware with zero vendor lock-in, utilize Bring-Your-Own-Stripe (Connect Standard, merchant KYC/AML handled by Stripe), and pay a flat per-location software subscription.
+Qualify exact off-the-shelf models against the restaurant pilot workflow. Verify printer language, transport, cable and drawer pairing, and payment setup per device. The estimates below are historical hardware-only assumptions.
 
----
-
-## 2. Blessed Kit v1 (Candidate Production Stack)
+## 2. Candidate Kit v1
 
 | Role | Candidate Device Class | Recommended Model | Approx. Cost | Communication Protocols |
 |---|---|---|---|---|
@@ -26,7 +22,7 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 | **Payment Terminal** | Card-Present EMV / NFC Reader | **Stripe WisePOS E** (or Stripe S700 Handheld) | $249 – $349 | Stripe Terminal SDK, Wi-Fi / Ethernet Dock, Offline Mode |
 | **Terminal Tablet** | Commercial Touchscreen Tablet | **10.2" iPad (9th/10th Gen)** or Galaxy Tab A9+ | $249 – $329 | Web POS (Chrome / Safari / PWA), VESA Counter Stand |
 
-**Total Blessed Kit Hardware Cost:** **$1,117 – $1,433 complete FOH + BOH station (sum of listed ranges)**  
+**Total Candidate Kit Hardware Cost:** **$1,117 – $1,433 complete FOH + BOH station (sum of listed ranges)**
 *(Single FOH countertop station = Tablet $250 + Thermal Printer $290 + Cash Drawer $95 + WisePOS E $249 = **$884 total** without kitchen impact printer; adding a $250 kitchen printer gives **$1,134**).*
 
 ---
@@ -35,7 +31,7 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 
 ### 3.1 FOH Receipt Printer (Thermal)
 - **Why Thermal:** Silent operation, ultra-fast throughput (250mm/sec), zero ink or ribbon consumable costs.
-- **Certified Models:**
+- **Candidate Models:**
   - **Star Micronics TSP143IV (X4):** Multi-interface (USB-C + LAN + WLAN + Bluetooth + CloudPRNT).
   - **Epson TM-m30II / TM-T20III:** Universal ESC/POS standard, compact cube footprint for tight counter spaces.
 - **Paper Specification:** 80mm wide thermal roll paper (3 1/8" width, 230ft length, 48 column default font).
@@ -43,7 +39,7 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 ### 3.2 BOH Kitchen Printer (Impact / Dot-Matrix)
 - **Why Impact Is Mandatory for BOH:**
   Thermal paper turns completely black when exposed to radiant heat above 140°F (60°C). Installing a thermal printer on a sauté, grill, or wok line will destroy kitchen tickets within minutes.
-- **Certified Models:** **Star SP742** (with Ethernet LAN) or **Epson TM-U220B**.
+- **Candidate Models:** **Star SP742** (with Ethernet LAN) or **Epson TM-U220B**.
 - **Ribbon:** Two-color red/black ink ribbon (RC700BR). CulinaryOS encodes red ink highlighting for modifiers, allergies, and rush tickets.
 
 ### 3.3 Cash Drawer & DK Port Pinout
@@ -57,17 +53,17 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 
 ### 3.4 Payment Terminal (Stripe Terminal)
 - **Models:** Stripe WisePOS E (Countertop Ethernet/Wi-Fi), Stripe S700 (Handheld All-in-One).
-- **PCI Scope & Architecture:** Card-present payments operate exclusively through Stripe Terminal SDK. Card numbers and CVVs never touch CulinaryOS application memory or servers, qualifying the merchant for the lightest SAQ-A class.
-- **Offline Card Collection:** Supported via Stripe Terminal local forward-and-store on network loss, auto-capturing upon reconnect.
+- **PCI Scope & Architecture:** Card-present integration targets provider-managed Stripe Terminal workflows. Confirm payment scope and applicable assessment with the payment provider before rollout.
+- **Offline Card Collection:** Evaluate offline collection for the exact integration and reader. Record outage and reconciliation results before advertising offline card support.
 
 ---
 
 ## 4. Diagnostics & Remote Verification Runbook
 
-All certified hardware components can be audited and tested directly from the terminal via the CulinaryOS CLI:
+The CulinaryOS CLI provides candidate listings and selected diagnostics. Record the exact model and physical test result separately.
 
 ```bash
-# 1. Display Certified Hardware Bill of Materials & Pricing
+# 1. Display candidate hardware and historical cost assumptions
 culinary hardware bom
 
 # 2. Print Diagnostic Thermal Test Receipt with QR Code & Cut
@@ -82,4 +78,4 @@ culinary hardware scan
 
 ---
 
-*Version: 1.0 | CulinaryOS Stage 7 Hardware Certification Architecture*
+*Version: 1.0 | CulinaryOS Hardware Candidate Reference*

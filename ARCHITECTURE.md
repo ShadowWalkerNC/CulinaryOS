@@ -1,5 +1,7 @@
 # CulinaryOS System Architecture
 
+> See [product status](docs/PRODUCT_STATUS.md) for availability and [native execution evidence](docs/NATIVE_EXECUTION_REPORT.md) for the active site-server direction.
+
 > **Document Version:** 2.0.0
 > **Status:** Canonical Architecture Baseline
 > **Ecosystem:** Unified Restaurant Technology Monorepo

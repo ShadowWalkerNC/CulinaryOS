@@ -1,5 +1,7 @@
 # CulinaryOS — Go-to-Market Strategy
 
+> Historical strategy. See the [company charter](../README.md) and [product status](PRODUCT_STATUS.md) for current public positioning.
+
 > Updated September 2026 — reflects v1.2.1, the security-first hardening phase, and the current web-first, MIT open-source positioning.
 
 ---

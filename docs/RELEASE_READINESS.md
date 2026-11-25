@@ -1,5 +1,7 @@
 # CulinaryOS release control record
 
+> See [product status](PRODUCT_STATUS.md) for the current public summary. This record preserves earlier release evidence.
+
 Current execution checklist: [HYBRID_RELEASE_PLAN.md](HYBRID_RELEASE_PLAN.md) (2026-11-10). Dedicated database per approved SaaS customer is now an explicit requirement; the shared-database diagram below is historical and does not satisfy it.
 
 Evidence snapshot updated: 2026-11-04. Status: IN PROGRESS; not certified for public beta.

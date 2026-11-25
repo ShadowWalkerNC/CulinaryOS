@@ -400,7 +400,7 @@ export function WebsiteStudioPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-black uppercase tracking-wider text-white">
-                  Storefront Studio & Website Builder
+                  Storefront Studio Preview
                 </h1>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
                   Phase 4 Live

@@ -23,8 +23,7 @@ export default function CareersPage() {
         </p>
         <p className="text-white/50 leading-relaxed mb-10">
           If you&apos;re a restaurant operator with strong opinions about POS software, or an
-          engineer who wants to contribute, the best way in is through the open-source
-          side: RecipeOS is MIT-licensed and takes contributions today.
+          engineer who wants to contribute, you can explore the MIT-licensed CulinaryOS source and its contribution guide.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

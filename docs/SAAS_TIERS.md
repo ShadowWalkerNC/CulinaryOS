@@ -1,5 +1,7 @@
 # CulinaryOS SaaS Tiers & Turnkey Packaging Specification
 
+> Internal proposal. Tier names, prices and entitlements below are design assumptions. See [product status](PRODUCT_STATUS.md) for hosted-service readiness.
+
 This document details the functional boundary between the **Free & Open-Source Core ($0 Forever, MIT License)** and the **Paid SaaS Subscriptions** (**Cloud Pro $49/mo** & **Enterprise Multi-Unit $149/mo**), enforced in code via [packages/shared/src/saasTiers.ts](../packages/shared/src/saasTiers.ts) and HMAC-SHA256 signed grants in [packages/native/src/cloud_bridge.rs](../packages/native/src/cloud_bridge.rs).
 
 For complete REST API, TypeScript SDK (`@culinaryos/sdk`), Role/PIN mappings, and Failure-Mode Fallbacks, see [docs/DEVELOPER_AND_API_SDK_GUIDE.md](DEVELOPER_AND_API_SDK_GUIDE.md).

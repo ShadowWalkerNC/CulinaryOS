@@ -1,5 +1,7 @@
 # CulinaryOS Product Roadmap & Consolidation Milestones
 
+> Use [product status](docs/PRODUCT_STATUS.md) for current availability and test evidence. Restaurants and food trucks are the first delivery focus. The hospitality blueprint describes future segments and their entry gates.
+
 > **2026-11-24 planning clarification:** The [hospitality blueprint](docs/HOSPITALITY_BLUEPRINT.md), [device catalog](docs/HARDWARE_PRODUCT_CATALOG.md), [compliance policy](docs/HARDWARE_COMPLIANCE.md) and [economics](docs/HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
 
 > **Document Version:** 2.0.0
