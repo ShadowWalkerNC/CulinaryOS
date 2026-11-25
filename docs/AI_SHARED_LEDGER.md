@@ -713,3 +713,5 @@ Codex ownership: root PROJECT.yaml only plus this evidence entry; completed in c
 
 - Scope: dedicated review branch `docs/hospitality-hardware-blueprint-v2`; new `docs/HOSPITALITY_BLUEPRINT.md`, `docs/HARDWARE_COMPLIANCE.md`, `docs/HARDWARE_PRODUCT_CATALOG.md`, `docs/HARDWARE_ECONOMICS.md`; targeted documentation links and claim corrections in HARDWARE.md, ROADMAP.md and hardware BOM documents. No application, database, payment, deployment or production changes. Operator authorized branch/PR review workflow. No merge authorized.
 - Baseline: main 610e67792b7e32ee85c91f1c6c7b52f68ebe2821. Remote tree and selected docs inspected; local worktrees unavailable. Preserve deployment stabilization and existing pilot gates.
+
+- RELEASE: Four planning documents created and five existing documents reconciled; all nine read back from review branch, BOM arithmetic corrected. No code/runtime tests, physical testing, live competitor quotes, lab certification or complete repository audit performed. Existing pilot and runtime ownership unchanged. Scope released; review required before merge. Rollback: close PR or revert documentation commits; no schema or runtime impact.
