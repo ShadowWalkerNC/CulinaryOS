@@ -1,5 +1,7 @@
 # CulinaryOS hardware and software integration plan
 
+> **2026-11-24 planning clarification:** The [hospitality blueprint](HOSPITALITY_BLUEPRINT.md), [device catalog](HARDWARE_PRODUCT_CATALOG.md), [compliance policy](HARDWARE_COMPLIANCE.md) and [economics](HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
 Date: 2026-10-02. Status: planned; physical compatibility and combined runtime acceptance NOT RUN.
 
 ## Objective and scope
