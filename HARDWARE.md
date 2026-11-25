@@ -1,5 +1,7 @@
 # CulinaryOS Hardware Architecture & Peripheral Integration
 
+> **2026-11-24 planning clarification:** The [hospitality blueprint](docs/HOSPITALITY_BLUEPRINT.md), [device catalog](docs/HARDWARE_PRODUCT_CATALOG.md), [compliance policy](docs/HARDWARE_COMPLIANCE.md) and [economics](docs/HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
 > **Document Version:** 1.0.0
 > **Status:** Architecture Specification & Hardware BOM
 > **Target Peripheral Set:** Thermal Receipts, Kitchen Printers, Cash Drawers, Scales, Scanners, IoT Probes
@@ -12,11 +14,11 @@ CulinaryOS rejects the proprietary terminal lock-in model ($800–$1,200 per ter
 1. **Universal Protocol:** Standard ESC/POS over Network (LAN/Wi-Fi), USB, Bluetooth, or CloudPRNT.
 2. **Printer-Driven Peripherals:** Cash drawers connect to the standard RJ11/RJ12 DK kick port on receipt printers (matching 24V pinouts).
 3. **Bring-Your-Own Tablets:** Web-first architecture runs identically across iPads, Android tablets, touchscreen PCs, and Raspberry Pi displays.
-4. **Certified First-Party Payments:** Out-of-the-box support for Stripe Terminal (WisePOS E countertop, S700 / S710 handheld readers) to achieve strict SAQ-A PCI compliance.
+4. **Provider-supported payment hardware:** Out-of-the-box support for Stripe Terminal (WisePOS E countertop, S700 / S710 handheld readers) subject to applicable PCI scope determination and integration validation.
 
 ---
 
-## 2. Certified Hardware Bill of Materials (BOM)
+## 2. Candidate Hardware Bill of Materials (BOM)
 
 | Role | Device Model | Connectivity | Protocol / Standard | Notes |
 | :--- | :--- | :--- | :--- | :--- |
