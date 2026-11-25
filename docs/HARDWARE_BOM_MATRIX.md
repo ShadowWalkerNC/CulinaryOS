@@ -27,7 +27,7 @@ Incumbent restaurant POS providers (e.g. Toast, TouchBistro) rely on proprietary
 | **Terminal Tablet** | Commercial Touchscreen Tablet | **10.2" iPad (9th/10th Gen)** or Galaxy Tab A9+ | $249 – $329 | Web POS (Chrome / Safari / PWA), VESA Counter Stand |
 
 **Total Blessed Kit Hardware Cost:** **$1,117 – $1,433 complete FOH + BOH station (sum of listed ranges)**  
-*(Single FOH countertop station = Tablet $250 + Thermal Printer $290 + Cash Drawer $95 + WisePOS E $249 = **$884 total** with dual printers, or **$634** without kitchen impact printer).*
+*(Single FOH countertop station = Tablet $250 + Thermal Printer $290 + Cash Drawer $95 + WisePOS E $249 = **$884 total** without kitchen impact printer; adding a $250 kitchen printer gives **$1,134**).*
 
 ---
 
