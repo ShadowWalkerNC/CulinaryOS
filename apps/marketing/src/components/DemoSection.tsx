@@ -177,21 +177,13 @@ export default function DemoSection() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <span className="inline-block px-3 py-1 rounded bg-[#181c24] border border-[#2a303c] text-[#ff6b35] text-xs font-mono font-bold uppercase tracking-widest mb-3">
-            INTERACTIVE RUNTIME SANDBOX (ZERO-INSTALL DEMO)
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Live POS Dispatch & KDS Kitchen Rail
-          </h2>
-        </div>
+      <div className="my-6">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400">Preset:</span>
           <button
             type="button"
             onClick={() => handleMenuSwitch('bistro')}
-            className={`min-h-[44px] px-3.5 rounded-lg text-xs font-bold transition-all ${
+            className={`min-h-12 px-3.5 rounded-lg text-xs font-bold transition-all ${
               activeMenuKey === 'bistro'
                 ? 'bg-[#ff6b35] text-white shadow'
                 : 'bg-[#181c24] text-slate-300 border border-[#2a303c] hover:bg-[#222834]'
@@ -202,7 +194,7 @@ export default function DemoSection() {
           <button
             type="button"
             onClick={() => handleMenuSwitch('fastcasual')}
-            className={`min-h-[44px] px-3.5 rounded-lg text-xs font-bold transition-all ${
+            className={`min-h-12 px-3.5 rounded-lg text-xs font-bold transition-all ${
               activeMenuKey === 'fastcasual'
                 ? 'bg-[#ff6b35] text-white shadow'
                 : 'bg-[#181c24] text-slate-300 border border-[#2a303c] hover:bg-[#222834]'
@@ -213,14 +205,14 @@ export default function DemoSection() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* POS Panel */}
-        <div className="rounded-xl bg-[#12151b] border border-[#232832] p-6 flex flex-col justify-between">
+        <div className="rounded-xl bg-[#12151b] border border-[#232832] min-w-0 p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#232832]">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-[#ff6b35] block">
-                  SURFACE :5172 • POS TERMINAL
+                  ORDER ENTRY
                 </span>
                 <h3 className="font-bold text-lg text-white">Check Builder & Register</h3>
               </div>
@@ -235,10 +227,10 @@ export default function DemoSection() {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-[#0e1116] border border-[#1c2029]"
+                    className="flex flex-wrap items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-[#0e1116] border border-[#1c2029]"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#181c24] text-slate-300 border border-[#2a303c]">
                           {item.station}
                         </span>
@@ -278,7 +270,7 @@ export default function DemoSection() {
 
             <div className="flex items-center justify-between border-t border-[#232832] pt-4 mb-5">
               <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
-                Authoritative Integer Subtotal
+                Subtotal
               </span>
               <span className="text-xl font-bold font-mono text-white">
                 {formatCents(draftTotal)}
@@ -296,7 +288,7 @@ export default function DemoSection() {
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400
                 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {sending ? 'DISPATCHING TO KDS RAIL...' : 'FIRE ORDER TO KITCHEN (PATCH /v1/orders/:id/send)'}
+              {sending ? 'Sending to kitchen…' : 'Send order to kitchen'}
             </button>
 
             <button
@@ -305,25 +297,25 @@ export default function DemoSection() {
               className="w-full min-h-[48px] px-4 rounded-lg bg-[#141820] hover:bg-[#1c222d] border border-[#2a303c] text-slate-200 hover:text-white font-mono text-xs uppercase tracking-wider
                 active:scale-[0.97] transition-all duration-75 ease-out flex items-center justify-center gap-2"
             >
-              <span>{cashDrawerKicked ? '⚡ CASH DRAWER KICKED (ESC/POS 24V RJ11DK)' : 'SIMULATE CASH DRAWER KICK (POST /v1/drawers/open)'}</span>
+              <span>{cashDrawerKicked ? 'Drawer opened in demo' : 'Simulate opening cash drawer'}</span>
             </button>
           </div>
         </div>
 
         {/* KDS Panel */}
-        <div className="rounded-xl bg-[#12151b] border border-[#232832] p-6 flex flex-col justify-between">
+        <div className="rounded-xl bg-[#12151b] border border-[#232832] min-w-0 p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#232832]">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 block">
-                  SURFACE :5173 • KDS EXPEDITE RAIL
+                  TICKET ROUTING
                 </span>
                 <h3 className="font-bold text-lg text-white">Kitchen Display Station</h3>
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  RUST ENGINE ACTIVE
+                  SIMULATION
                 </span>
               </div>
             </div>
@@ -335,7 +327,7 @@ export default function DemoSection() {
                   key={station}
                   type="button"
                   onClick={() => setSelectedStationFilter(station)}
-                  className={`min-h-[36px] px-3 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-colors ${
+                  className={`min-h-12 px-3 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-colors ${
                     selectedStationFilter === station
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                       : 'bg-[#181c24] text-slate-400 border border-[#2a303c] hover:text-white'
@@ -352,7 +344,7 @@ export default function DemoSection() {
                   [KDS RAIL ALL CLEAR]
                 </span>
                 <p className="text-xs text-slate-400 max-w-xs">
-                  Fire an order from the POS check builder on the left to see live real-time kitchen chits routed by station.
+                  Send an order to see sample kitchen tickets routed by station.
                 </p>
               </div>
             ) : (
@@ -420,14 +412,14 @@ export default function DemoSection() {
                         ))}
                       </ul>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-[#1c2029]">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#1c2029]">
                         <span className="text-[10px] font-mono text-slate-500">
                           KEY: {ticket.key.slice(0, 8)}
                         </span>
                         <button
                           type="button"
                           onClick={() => bumpTicket(ticket.key)}
-                          className={`min-h-[40px] px-4 rounded font-mono text-xs font-bold uppercase tracking-wider active:scale-[0.97] transition-all duration-75 ${
+                          className={`min-h-12 px-4 rounded font-mono text-xs font-bold uppercase tracking-wider active:scale-[0.97] transition-all duration-75 ${
                             isReady
                               ? 'bg-emerald-500 hover:bg-emerald-400 text-black'
                               : 'bg-[#ff6b35] hover:bg-[#e85d2a] text-white'
@@ -443,10 +435,6 @@ export default function DemoSection() {
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#232832] flex items-center justify-between text-[11px] font-mono text-slate-400">
-            <span>FLSA TIP POOL: HOURS-WEIGHTED</span>
-            <span>ESC/POS DRIVERS: STAR & EPSON</span>
-          </div>
         </div>
       </div>
     </div>

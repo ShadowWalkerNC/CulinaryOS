@@ -229,7 +229,7 @@ export default function CampaignStudioPage() {
               <span className="text-[11px] font-mono font-bold text-[#ff6b35] uppercase tracking-wider">
                 STUDIO / DISPATCH ENGINE
               </span>
-              <h1 className="text-base font-bold text-white tracking-tight">Campaign Planning Studio</h1>
+              <h1 className="text-base font-bold text-white tracking-tight">Campaign Planning Studio Preview</h1>
             </div>
             <p className="text-xs text-slate-400">Menu specials, event announcements, and brand compliance verification</p>
           </div>

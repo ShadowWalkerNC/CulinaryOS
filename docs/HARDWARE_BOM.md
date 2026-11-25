@@ -1,18 +1,20 @@
-# CulinaryOS — Hardware Bill of Materials (BOM) & Certified Kit v1
+# CulinaryOS — Hardware Bill of Materials (BOM) & Candidate Kit v1
 
-> **Status:** Production Standard — Stage 7 Certified  
+> **2026-11-24 planning clarification:** The [hospitality blueprint](HOSPITALITY_BLUEPRINT.md), [device catalog](HARDWARE_PRODUCT_CATALOG.md), [compliance policy](HARDWARE_COMPLIANCE.md) and [economics](HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
+> **Status:** Candidate reference — physical acceptance pending
 > **Philosophy:** Open, commercial-off-the-shelf POS hardware. Zero proprietary hardware lock-in.
 
 ---
 
 ## 1. The Blessed Kit v1 (Turnkey Station Target)
 
-Unlike legacy incumbent systems (such as Toast) which lock operators into \$800–\$1,200 proprietary terminals and forced processing contracts, CulinaryOS is built to run on universal web standards and certified, industry-standard peripherals:
+Unlike legacy incumbent systems (such as Toast) which lock operators into \$800–\$1,200 proprietary terminals and forced processing contracts, CulinaryOS is built to run on universal web standards and commercial peripherals requiring model-specific evidence:
 
-| Role | Certified Model | Protocol / Interface | Est. Retail Cost | Toast Incumbent Benchmark |
+| Role | Candidate Model | Protocol / Interface | Est. Retail Cost | Toast Incumbent Benchmark |
 | :--- | :--- | :--- | :--- | :--- |
 | **Receipt Printer (FOH)** | Star TSP143IV / Epson TM-m30 | ESC/POS over LAN, USB-C, CloudPRNT | \$289 – \$310 | \$399 (Proprietary locked) |
-| **Kitchen Printer (BOH)** | Star SP742 / Epson TM-U220 | Impact Dot-Matrix with ribbon, LAN (Heat/grease-proof) | \$235 – \$320 | \$380 (Proprietary locked) |
+| **Kitchen Printer (BOH)** | Star SP742 / Epson TM-U220 | Impact Dot-Matrix with ribbon, LAN (verify environmental ratings) | \$235 – \$320 | \$380 (Proprietary locked) |
 | **Cash Drawer** | APG Vasario 1616 / CD4-1616 | 24V RJ12 Printer-Driven DK Port | \$95 – \$125 | \$170 |
 | **Card Reader (Card-Present)** | Stripe WisePOS E / S700 | Stripe Terminal SDK (EMV, NFC, Apple/Google Pay) | \$249 – \$349 | \$799 – \$999 (Locked terminal) |
 | **Terminal Tablet** | iPad 10.2 / Galaxy Tab A9+ | Universal PWA / React Chrome Browser | \$249 – \$329 | \$450 (Locked Android) |

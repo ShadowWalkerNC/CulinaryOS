@@ -17,10 +17,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary fallbackTitle="CulinaryOS Platform Recovery">
       <BrowserRouter>
         <Routes>
-          {/* Landing / Marketing Page for CulinaryOS Platform */}
+          {/* Guest storefront landing and demo */}
           <Route path="/"                                 element={<LandingPage />} />
           <Route path="/demo"                             element={<Navigate to="/menu/demo" replace />} />
-          {/* Team & Leadership Guild */}
+          {/* Company information */}
           <Route path="/team"                             element={<TeamPage />} />
           {/* Public CulinaryJobs Restaurant Career Board */}
           <Route path="/jobs"                             element={<JobsPage />} />

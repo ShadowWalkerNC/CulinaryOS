@@ -2,7 +2,7 @@
 
 This guide covers deploying CulinaryOS for real-world restaurant operations.
 
-> Release status (`v1.3.1`): All on-premise Rust workstation binaries (`culinaryos-desktop.exe`, `culinaryos-site.exe`, `culinaryos-edge-daemon.exe`) and all Railway cloud services (`@culinaryos/server`, `@culinaryos/cloud-bridge-server`, `@culinaryos/app-marketing`, `@culinaryos/admin`, `@culinaryos/app-web`) deploy directly from the unified **`ShadowWalkerNC/CulinaryOS`** monorepo (there is no separate `CulinaryOS-SaaS` repository). Native PostgreSQL Primary Cloud Mode is automatically enabled whenever `DATABASE_URL` is configured (or `CULINARYOS_NATIVE_PG=true` is set) with zero Supabase dependency required, and supports automatic boot-time schema migrations via `CULINARYOS_AUTO_MIGRATE=true`.
+> Use [product status](PRODUCT_STATUS.md) for current availability and the [hybrid release plan](HYBRID_RELEASE_PLAN.md) for acceptance gates. This guide describes deployment configurations in the monorepo.
 
 Packaged POS/KDS/Admin/storefront builds use `VITE_API_URL=/` and forward `/v1/` through nginx to the compose backend. This keeps API requests on the address the client opened, including LAN IPs and HTTPS domains. It does not provide TLS certificates: a public installation still needs a TLS reverse proxy and DNS configuration. Independent cloud deployments continue to use an explicit API URL and CORS allowlist.
 
@@ -29,7 +29,6 @@ CULINARYOS_SAAS_SIGNING_SECRET=<16-plus-char-hmac-secret>
 
 # Client Endpoints
 VITE_API_URL=https://api.yourdomain.com
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 CULINARYOS_URL=https://api.yourdomain.com
 
 # Payments (Bring-Your-Own-Stripe Connect Standard)
@@ -150,13 +149,13 @@ All Railway services deploy directly from the unified **`ShadowWalkerNC/Culinary
 | --- | --- | --- | --- | --- |
 | `culinaryos-api` | `@culinaryos/server` | `pnpm --filter @culinaryos/server build` | `pnpm --filter @culinaryos/server start` | `NODE_ENV=production`, `CULINARYOS_NATIVE_PG=true`, `DATABASE_URL`, `CULINARYOS_AUTO_MIGRATE=true`, `CULINARYOS_PIN_LOOKUP_SECRET` |
 | `culinaryos-cloud-bridge` | `@culinaryos/cloud-bridge-server` | `pnpm --filter @culinaryos/cloud-bridge-server build` | `pnpm --filter @culinaryos/cloud-bridge-server start` | `NODE_ENV=production`, `DATABASE_URL`, `CULINARYOS_SAAS_SIGNING_SECRET`, `STRIPE_WEBHOOK_SECRET` |
-| `culinaryos-marketing` | `@culinaryos/app-marketing` | `pnpm --filter @culinaryos/app-marketing build` | Leave unset for native SPA/static hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/marketing/out`, `NEXT_PUBLIC_API_URL` |
+| `culinaryos-marketing` | `@culinaryos/app-marketing` | `pnpm --filter @culinaryos/app-marketing build` | Leave unset for native SPA/static hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/marketing/out` |
 | `culinaryos-admin` | `@culinaryos/admin` | `pnpm --filter @culinaryos/admin build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/admin/dist`, `VITE_API_URL` |
 | `culinaryos-web` | `@culinaryos/app-web` | `pnpm --filter @culinaryos/app-web build` | Leave unset for native SPA hosting | `RAILPACK_SPA_OUTPUT_DIR=apps/web/dist`, `VITE_API_URL` |
 
 Railpack installs from the pnpm lockfile before the build command. Web, Admin, and Marketing explicitly build from the unified monorepo root. The API starts TypeScript through its production `tsx` dependency because workspace packages export TypeScript source.
 
-[Railpack native SPA hosting](https://railpack.com/languages/node) serves static assets with Caddy and supports client-side routes. A custom start command disables SPA mode. Do not use the repository's interactive root `start` command for these services. Set `VITE_API_URL` / `NEXT_PUBLIC_API_URL` on each frontend **before building** to the API's public URL. Configure API healthcheck `/health` and readiness `/ready`, and frontend healthcheck `/`.
+[Railpack native SPA hosting](https://railpack.com/languages/node) serves static assets with Caddy and supports client-side routes. A custom start command disables SPA mode. Do not use the repository's interactive root `start` command for these services. Set `VITE_API_URL` on application frontends **before building** to the API's public URL. The marketing site builds as static pages. Configure API healthcheck `/health` and readiness `/ready`, and frontend healthcheck `/`.
 
 ### Deployment verification and rollback
 

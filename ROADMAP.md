@@ -1,5 +1,9 @@
 # CulinaryOS Product Roadmap & Consolidation Milestones
 
+> Use [product status](docs/PRODUCT_STATUS.md) for current availability and test evidence. Restaurants and food trucks are the first delivery focus. The hospitality blueprint describes future segments and their entry gates.
+
+> **2026-11-24 planning clarification:** The [hospitality blueprint](docs/HOSPITALITY_BLUEPRINT.md), [device catalog](docs/HARDWARE_PRODUCT_CATALOG.md), [compliance policy](docs/HARDWARE_COMPLIANCE.md) and [economics](docs/HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
 > **Document Version:** 2.0.0
 > **Status:** Active Master Roadmap
 > **Strategy:** Phased Consolidation, Zero-Downtime Migration, Edge Acceleration
@@ -90,3 +94,8 @@
 2. Core services (POS, KDS, Admin, Server) retain 100% test pass rate with zero regression.
 3. Front-of-House and Back-of-House applications run in offline demo mode with zero cloud credentials.
 4. All non-absorbed external projects (ShorelineOps, MuseLab, ForgeSatchel) maintain clean, decoupled interface boundaries.
+
+
+## Future hospitality discovery (not an active implementation milestone)
+
+See [hospitality blueprint V2](docs/HOSPITALITY_BLUEPRINT.md) for package priorities, phase gates and future research. Preserve the current restaurant pilot and native backend stabilization. No phase activation or procurement implied.

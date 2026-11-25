@@ -50,10 +50,9 @@ export default function TermsPage() {
           <div>
             <h2 className="text-xl font-bold text-white mb-3">3. Open source components</h2>
             <p>
-              RecipeOS and other designated components are licensed under the MIT License,
-              which governs those components instead of these terms where they conflict.
-              The CulinaryOS platform itself is commercial software; a separate subscription
-              agreement applies to paying customers.
+              The published core software is available under the MIT License. Component licenses
+              govern use of the published source. Separate terms apply to optional commercial
+              services when offered.
             </p>
           </div>
 

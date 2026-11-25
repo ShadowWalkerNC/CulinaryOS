@@ -4,15 +4,15 @@ import { table } from "table";
 import net from "node:net";
 
 export const hardwareCommand = new Command("hardware")
-  .description("Certified Hardware Matrix, Thermal ESC/POS Diagnostics & Cash Drawer Verification");
+  .description("Candidate Hardware Matrix, Thermal ESC/POS Diagnostics & Cash Drawer Verification");
 
-// 1. Hardware Bill of Materials (BOM) & Certified Hardware Matrix
+// 1. Hardware Bill of Materials (BOM) & Candidate Hardware Matrix
 hardwareCommand
   .command("bom")
-  .description("Display certified production hardware BOM and competitive pricing benchmark")
+  .description("Display candidate hardware and historical pricing assumptions")
   .action(() => {
     const rows = [
-      ["Role", "Certified Model", "Interface / Protocol", "Est. Cost", "Toast Incumbent"],
+      ["Role", "Candidate Model", "Interface / Protocol", "Est. Cost", "Toast Incumbent"],
       ["FOH Receipt Printer", "Star TSP143IV / Epson TM-m30", "ESC/POS, LAN, USB-C, CloudPRNT", "$289 - $310", "$399 (Proprietary)"],
       ["BOH Kitchen Printer", "Star SP742 Impact Ribbon", "Impact Dot-Matrix, LAN (Heatproof)", "$235 - $320", "$380 (Proprietary)"],
       ["Cash Drawer", "APG Vasario 1616 / CD4-1616", "24V RJ12 Printer-Driven DK Port", "$95 - $125", "$170"],

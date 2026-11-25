@@ -27,8 +27,9 @@ export async function saveOrder(order: OnlineOrder): Promise<OnlineOrder> {
   orders[order.id] = order;
   saveStoredOrders(orders);
 
-  // 2. Sync via public online-orders endpoint if API is configured
-  if (API && typeof fetch !== 'undefined') {
+  // Sample orders stay in the browser.
+  const isDemo = order.tenantSlug === 'demo' || order.tenantSlug === 'default';
+  if (!isDemo && API && typeof fetch !== 'undefined') {
     try {
       const res = await fetch(`${API}/v1/online-orders`, {
         method: 'POST',

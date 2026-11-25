@@ -1,5 +1,9 @@
 # CulinaryOS Hardware Architecture & Peripheral Integration
 
+> Use [product status](docs/PRODUCT_STATUS.md) for availability. The equipment model includes compatible operator-owned devices, supported COS equipment when offered, and published designs for self-builds. Exact models and configurations require their own evidence.
+
+> **2026-11-24 planning clarification:** The [hospitality blueprint](docs/HOSPITALITY_BLUEPRINT.md), [device catalog](docs/HARDWARE_PRODUCT_CATALOG.md), [compliance policy](docs/HARDWARE_COMPLIANCE.md) and [economics](docs/HARDWARE_ECONOMICS.md) describe proposed expansion. Existing restaurant stabilization and physical acceptance gates remain in force. Historical price, protocol and certification claims require model-specific verification; manufacturer certification, COS compatibility and finished COS product certification are distinct. No new production readiness is claimed.
+
 > **Document Version:** 1.0.0
 > **Status:** Architecture Specification & Hardware BOM
 > **Target Peripheral Set:** Thermal Receipts, Kitchen Printers, Cash Drawers, Scales, Scanners, IoT Probes
@@ -9,14 +13,14 @@
 ## 1. Hardware Philosophy & Non-Lock-In Standard
 
 CulinaryOS rejects the proprietary terminal lock-in model ($800–$1,200 per terminal forced by legacy vendors). The platform operates on universal standards:
-1. **Universal Protocol:** Standard ESC/POS over Network (LAN/Wi-Fi), USB, Bluetooth, or CloudPRNT.
+1. **Model-specific printing:** Validate the exact printer language and transport. Evaluate ESC/POS, StarPRNT and CloudPRNT as separate capabilities.
 2. **Printer-Driven Peripherals:** Cash drawers connect to the standard RJ11/RJ12 DK kick port on receipt printers (matching 24V pinouts).
-3. **Bring-Your-Own Tablets:** Web-first architecture runs identically across iPads, Android tablets, touchscreen PCs, and Raspberry Pi displays.
-4. **Certified First-Party Payments:** Out-of-the-box support for Stripe Terminal (WisePOS E countertop, S700 / S710 handheld readers) to achieve strict SAQ-A PCI compliance.
+3. **Bring-Your-Own Tablets:** Qualify supported browser, OS and hardware combinations on each target device.
+4. **Provider-supported payment hardware:** Stripe Terminal readers are integration candidates. Validate the model, provider account, integration and applicable PCI scope before rollout.
 
 ---
 
-## 2. Certified Hardware Bill of Materials (BOM)
+## 2. Candidate Hardware Bill of Materials (BOM)
 
 | Role | Device Model | Connectivity | Protocol / Standard | Notes |
 | :--- | :--- | :--- | :--- | :--- |
