@@ -58,13 +58,12 @@ pnpm --filter @culinaryos/server dev
 
 ### culinaryops-server
 
+The standalone server follows the CulinaryOps satellite contract. For restaurant settings and station routing, use `start-unified` or `dev-unified`. Those entry points expose `get_restaurant_settings`, `update_restaurant_settings`, `get_station_routing`, and `update_item_routing` through the CulinaryOS API.
+
 | Tool | Description |
 |---|---|
-| `get_ops_summary` | Shift performance: covers, revenue, waste, food cost % |
 | `log_waste` | Log a food waste event with cost and reason |
 | `get_waste_summary` | Aggregated waste trends and top financial loss items |
-| `get_plate_economics` | Theoretical vs actual food cost per menu item |
-| `analyze_food_cost` | Cost variance against theoretical recipe cost |
 | `get_labor_summary` | Summarize labor cost for a date range |
 | `get_food_cost` | Get the food cost % and ingredient breakdown for a menu item |
 | `list_vendors` | List vendors with open PO counts |

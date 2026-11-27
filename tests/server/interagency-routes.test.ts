@@ -1,4 +1,4 @@
-import { describe, expect, it, afterAll, beforeAll } from 'bun:test';
+import { describe, expect, it, afterAll, afterEach, beforeAll } from 'bun:test';
 import { Hono } from 'hono';
 import { createHash } from 'node:crypto';
 import {
@@ -141,6 +141,10 @@ function createTestHarness(enabled = true) {
 }
 
 describe('Interagency HTTP Routes — /v1/interagency', () => {
+  afterEach(() => {
+    setAdminSupabaseForTesting(null);
+  });
+
   it('returns 404 when INTERAGENCY_READ_ENABLED is false', async () => {
     const { app } = createTestHarness(false);
     const res = await app.request('/v1/interagency/snapshots?resource=recipes');
