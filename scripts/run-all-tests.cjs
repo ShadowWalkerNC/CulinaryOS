@@ -66,6 +66,7 @@ for (const file of testFiles) {
   } catch (err) {
     console.error(`FAILED: ${file}`);
     console.error(err.stdout || err.message);
+    if (err.stderr) console.error(err.stderr);
     totalFailed++;
   }
 }

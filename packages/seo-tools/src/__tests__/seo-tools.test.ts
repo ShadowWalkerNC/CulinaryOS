@@ -1,4 +1,5 @@
-import { describe, it, expect } from '../../../../scripts/bun-test-impl.js';
+import testRunner from '../../../../scripts/bun-test-impl.js';
+const { describe, it, expect } = testRunner;
 import {
   generateSitemap,
   generateRobotsTxt,
