@@ -509,6 +509,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      lucide-react:
+        specifier: ^0.378.0
+        version: 0.378.0(react@18.3.1)
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -867,6 +870,15 @@ importers:
       vitest:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.49.0)
+
+  packages/agent-center:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
 
   packages/asset-tools:
     dependencies:

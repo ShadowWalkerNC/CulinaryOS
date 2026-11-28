@@ -80,6 +80,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Build SDK workspace dependencies
+        run: pnpm exec turbo run build --filter='@culinaryos/sdk^...'
+
       - name: Run server integration tests
         run: bun test tests/server/
 

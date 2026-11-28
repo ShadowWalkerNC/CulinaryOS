@@ -76,11 +76,16 @@ describe('H1 Native startup role guard and readiness', () => {
     resetNativeStartupState();
     delete process.env.CULINARYOS_NATIVE_PG;
     delete process.env.DATABASE_URL;
+    delete process.env.TEST_DATABASE_URL;
+    delete process.env.CULINARYOS_AUTO_MIGRATE;
   });
 
   afterEach(() => {
     resetNativeStartupState();
-    process.env = { ...originalEnv };
+    for (const key of Object.keys(process.env)) {
+      if (!(key in originalEnv)) delete process.env[key];
+    }
+    Object.assign(process.env, originalEnv);
   });
 
   it('skips native postgres setup when CULINARYOS_NATIVE_PG is unset', async () => {

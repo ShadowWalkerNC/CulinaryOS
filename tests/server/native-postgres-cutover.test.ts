@@ -63,12 +63,16 @@ describe('Live Server Entrypoint Native PostgreSQL Cutover (BLOCKER-2)', () => {
     resetNativeStartupState();
     delete process.env.CULINARYOS_NATIVE_PG;
     delete process.env.DATABASE_URL;
+    delete process.env.TEST_DATABASE_URL;
     delete process.env.CULINARYOS_AUTO_MIGRATE;
   });
 
   afterEach(() => {
     resetNativeStartupState();
-    process.env = { ...originalEnv };
+    for (const key of Object.keys(process.env)) {
+      if (!(key in originalEnv)) delete process.env[key];
+    }
+    Object.assign(process.env, originalEnv);
   });
 
   it('allows the idempotency header used by cross-origin POS writes', async () => {
