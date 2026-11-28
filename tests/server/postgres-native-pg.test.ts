@@ -19,7 +19,7 @@ import { hashPin } from '../../apps/server/src/lib/pin.ts';
 // every test reports NOT RUN and the file exits 0 — never a fake pass.
 // This file never prints the URL or any credential.
 //
-// Contract target: migrations 001–007 (token-derived RLS). The native runner
+// Contract target: migrations 001–009 (including token-derived RLS). The native runner
 // pins app.token_hash from the verified credential; the legacy tenant
 // settings it also pins are ignored by 007 policies. PIN mint passes the
 // lookup HMAC as the 007 PIN proof. See the shared ledger and
@@ -29,7 +29,7 @@ const TEST_URL = process.env.TEST_DATABASE_URL ?? '';
 const RUN_REAL = Boolean(TEST_URL) && !TEST_URL.includes('placeholder');
 const PIN_SECRET = 'native-pg-test-pin-lookup-secret-40-chars!';
 const MANAGER_PIN = '2468';
-const NATIVE_CONTRACT_VERSION = '008';
+const NATIVE_CONTRACT_VERSION = '009';
 
 interface Fixtures {
   tenantA: string;
@@ -66,7 +66,7 @@ async function ownerQuery<T = Record<string, unknown>>(text: string, params: unk
   }
 }
 
-/** Copy the 001–008 chain to a temp dir so future peer files never surprise this suite. */
+/** Copy the pinned migration chain to a temp dir. */
 function contractMigrationsDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const source = join(here, '..', '..', 'packages', 'db', 'migrations');
@@ -80,6 +80,7 @@ function contractMigrationsDir(): string {
     '006': '006_identity_hardening.sql',
     '007': '007_token_derived_rls.sql',
     '008': '008_membership_serialization.sql',
+    '009': '009_native_device_pairing.sql',
   };
   for (const [version, filename] of Object.entries(wanted)) {
     try {

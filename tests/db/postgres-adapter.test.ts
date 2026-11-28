@@ -514,8 +514,8 @@ if (!OWNER_URL) {
   });
 } else {
   describe('postgres integration (disposable database)', () => {
-    const RUNTIME_ROLE = 'culinaryos_runtime_test';
     const runTag = randomBytes(6).toString('hex');
+    const RUNTIME_ROLE = `culinaryos_runtime_test_${runTag}`;
 
     let owner: Pool | null = null;
     let runtime: Pool | null = null;
@@ -570,9 +570,6 @@ if (!OWNER_URL) {
       }
       if (owner) {
         try {
-          await owner.query(
-            `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = '${RUNTIME_ROLE}' AND pid <> pg_backend_pid()`,
-          );
           await owner.query(`DROP ROLE IF EXISTS ${RUNTIME_ROLE}`);
         } catch {
           // Teardown best-effort.
@@ -679,10 +676,6 @@ if (!OWNER_URL) {
         const runtimePassword = randomBytes(24).toString('hex');
         const ac = await owner.connect();
         try {
-          await ac.query(
-            `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = '${RUNTIME_ROLE}' AND pid <> pg_backend_pid()`,
-          );
-          await ac.query(`DROP ROLE IF EXISTS ${RUNTIME_ROLE}`);
           await ac.query(`CREATE ROLE ${RUNTIME_ROLE} WITH LOGIN NOBYPASSRLS PASSWORD '${runtimePassword}'`);
           await ac.query(`GRANT culinaryos_app TO ${RUNTIME_ROLE}`);
         } finally {
@@ -1406,7 +1399,7 @@ if (!OWNER_URL) {
       const ledger = await (owner as Pool).query<{ version: string; checksum: string }>(
         'SELECT version, checksum FROM public.schema_migrations ORDER BY version',
       );
-      expect(ledger.rows.map((r) => r.version)).toEqual(['001', '002', '003', '004', '005', '006', '007', '008']);
+      expect(ledger.rows.map((r) => r.version)).toEqual(['001', '002', '003', '004', '005', '006', '007', '008', '009']);
       const files = listMigrationFiles(defaultMigrationsDir());
       for (const f of files) {
         const row = ledger.rows.find((r) => r.version === f.version);
@@ -1450,10 +1443,11 @@ if (!OWNER_URL) {
       const rows = await (owner as Pool).query<{
         tablename: string;
         policyname: string;
+        roles: string;
         qual: string | null;
         with_check: string | null;
       }>(
-        "SELECT tablename, policyname, qual, with_check FROM pg_policies WHERE schemaname = 'public'",
+        "SELECT tablename, policyname, roles::text, qual, with_check FROM pg_policies WHERE schemaname = 'public'",
       );
       const skip = new Set([
         'schema_migrations_all',
@@ -1473,6 +1467,14 @@ if (!OWNER_URL) {
         'pins_identity_update',
       ]);
       expect(rows.rows.length > 90).toBe(true);
+      const pairingPolicies = rows.rows.filter((r) => r.tablename === 'native_device_pairings');
+      expect(pairingPolicies.map((r) => [r.policyname, r.roles])).toEqual([
+        ['native_device_pairings_identity', '{culinaryos_identity}'],
+      ]);
+      const privileges = await (runtime as Pool).query<{ allowed: boolean }>(
+        "SELECT has_table_privilege('public.native_device_pairings', 'SELECT, INSERT, UPDATE, DELETE') AS allowed",
+      );
+      expect(privileges.rows[0]?.allowed).toBe(false);
       for (const r of rows.rows) {
         const def = `${r.qual ?? ''} ${r.with_check ?? ''}`;
         expect(
@@ -1482,6 +1484,7 @@ if (!OWNER_URL) {
             def.includes('app.user_id'),
         ).toBe(false);
         if (skip.has(r.policyname)) continue;
+        if (r.tablename === 'native_device_pairings') continue;
         expect(def.includes('app_verified_tenant_id()') || def.includes('app_verified_user_id()')).toBe(true);
       }
       // Every tenant-carrying table is covered by at least one policy.
